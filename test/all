@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -eux 
+set -o pipefail
+
+check_for_resource_version() {
+  jq -n "{
+    source: {
+       api_token: \"a_token\",
+       resource_name: \"some_resource\"
+    },
+    version: {}
+  }" | "${resource_dir}/check" | jq -r '.[]'
+}
+
+main() {
+  resource_dir="/opt/resource"
+  check_for_resource_version
+}
+
+if [ "$(basename "${0}")" = "all" ]; then
+  main
+fi

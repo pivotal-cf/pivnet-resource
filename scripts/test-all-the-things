@@ -1,5 +1,22 @@
 #!/bin/sh -eux
 
-/opt/resource/check
-/opt/resource/check
-/opt/resource/check
+not_installed() {
+  ! command -v "${1}" > /dev/null 2>&1
+}
+
+pivnet_resource_dir=$(cd "$(dirname "${0}")/.." && pwd)
+
+if not_installed docker; then
+  echo "# docker is not installed! run the following commands:"
+  echo "    brew install docker"
+  echo "    brew cask install docker-machine"
+  echo "    docker-machine create dev --driver virtualbox"
+  echo '    eval $(docker-machine env dev)'
+  echo "    docker login"
+  exit 1
+fi
+
+./scripts/build
+
+cd "${pivnet_resource_dir}" || exit
+docker build -t pivotal-cf-experimental/pivnet-resource .

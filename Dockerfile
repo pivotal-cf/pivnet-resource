@@ -7,7 +7,8 @@ RUN apk --update add \
 ADD check /opt/resource/check
 ADD in /opt/resource/in
 ADD out /opt/resource/out
+RUN chmod +x /opt/resource/*
 
-copy ./scripts/test-all-the-things /test-all-the-things
+ADD ./test/ /opt/resource-tests/
 
-ENTRYPOINT "/test-all-the-things"
+RUN /opt/resource-tests/all
