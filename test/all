@@ -3,19 +3,24 @@
 set -eux 
 set -o pipefail
 
-check_for_resource_version() {
+get_resource_version() {
   jq -n "{
-    source: {
-       api_token: \"a_token\",
-       resource_name: \"some_resource\"
-    },
-    version: {}
-  }" | "${resource_dir}/check" | jq -r '.[]'
+      source: {
+         api_token: \"${1}\",
+         resource_name: \"${2}\"
+      },
+      version: {}
+    }" | "${resource_dir}/check" | jq -r '.[0].version'
 }
 
 main() {
   resource_dir="/opt/resource"
-  check_for_resource_version
+
+  version=$(get_resource_version token p-gitlab)
+  test "${version}" = "0.1.1 BETA"
+
+  version=$(get_resource_version token p-mysql)
+  test "${version}" = "1.7.1.0"
 }
 
 if [ "$(basename "${0}")" = "all" ]; then

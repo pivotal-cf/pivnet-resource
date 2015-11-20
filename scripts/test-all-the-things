@@ -16,7 +16,7 @@ if not_installed docker; then
   exit 1
 fi
 
-./scripts/build
+# ./scripts/build
 
 cd "${pivnet_resource_dir}" || exit
 docker build -t pivotal-cf-experimental/pivnet-resource .
