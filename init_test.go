@@ -1,4 +1,4 @@
-package pivnet_resource_test
+package pivnet_test
 
 import (
 	. "github.com/onsi/ginkgo"

@@ -1,5 +1,5 @@
 #!/bin/bash -eux
 
 GOOS=linux go build -o check ./cmd/check
-# GOOS=linux go build -o in ./cmd/in
-# GOOS=linux go build -o out ./cmd/out
+GOOS=linux go build -o in ./cmd/in
+GOOS=linux go build -o out ./cmd/out
