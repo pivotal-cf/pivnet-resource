@@ -20,3 +20,4 @@ fi
 
 cd "${pivnet_resource_dir}" || exit
 docker build -t pivotal-cf-experimental/pivnet-resource .
+
