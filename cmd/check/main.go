@@ -3,6 +3,12 @@ package main
 import (
 	"encoding/json"
 	"os"
+
+	"github.com/pivotal-cf-experimental/pivnet-resource"
+)
+
+const (
+	url = "https://network.pivotal.io/api/v2"
 )
 
 type input struct {
@@ -10,6 +16,12 @@ type input struct {
 		APIToken     string `json:"api_token"`
 		ResourceName string `json:"resource_name"`
 	} `json:"source"`
+}
+
+type output []Release
+
+type Release struct {
+	Version string `json:"version"`
 }
 
 type version []map[string]string
@@ -22,15 +34,20 @@ func main() {
 		panic(err)
 	}
 
-	v := version{}
-	switch i.Source.ResourceName {
-	case "p-gitlab":
-		v = append(v, map[string]string{"version": "0.1.1 BETA"})
-	default:
-		v = append(v, map[string]string{"version": "1.7.1.0"})
+	// TODO: have the client know about it's own version
+	client := pivnet.NewClient(url, i.Source.APIToken)
+
+	versions, err := client.ProductVersions(i.Source.ResourceName)
+	if err != nil {
+		panic(err)
 	}
 
-	err = json.NewEncoder(os.Stdout).Encode(v)
+	var out output
+	for _, v := range versions {
+		out = append(out, Release{Version: v})
+	}
+
+	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {
 		panic(err)
 	}

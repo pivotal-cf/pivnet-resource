@@ -1,7 +1,6 @@
 #!/bin/sh
 
-set -eux 
-set -o pipefail
+set -eu
 
 get_resource_version() {
   jq -n "{
@@ -14,15 +13,31 @@ get_resource_version() {
 }
 
 main() {
+  set -x
+
   resource_dir="/opt/resource"
 
   version=$(get_resource_version token p-gitlab)
   test "${version}" = "0.1.1 BETA"
 
   version=$(get_resource_version token p-mysql)
-  test "${version}" = "1.7.1.0"
+  test "${version}" = "1.7.0.2"
 }
 
 if [ "$(basename "${0}")" = "all" ]; then
-  main
+  temp_file=$(mktemp)
+
+  set +e
+  main > "${temp_file}" 2>&1
+  result=$?
+  set +x
+  set -e
+  
+  if [ "${result}" -eq 0 ]; then 
+    printf '\e[32m%s\e[0m\n' "all tests passed!"
+  else 
+    cat "${temp_file}"
+    printf '\e[31m%s\e[0m\n' "test failure!"
+    exit 1
+  fi
 fi
