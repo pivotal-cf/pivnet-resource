@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource"
@@ -31,15 +32,14 @@ func main() {
 
 	err := json.NewDecoder(os.Stdin).Decode(&i)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
-	// TODO: have the client know about it's own version
 	client := pivnet.NewClient(url, i.Source.APIToken)
 
 	versions, err := client.ProductVersions(i.Source.ResourceName)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	var out output
@@ -49,6 +49,6 @@ func main() {
 
 	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 }

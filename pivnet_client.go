@@ -34,20 +34,20 @@ func (c client) ProductVersions(id string) ([]string, error) {
 	releasesURL := c.url + "/products/" + id + "/releases"
 	req, err := http.NewRequest("GET", releasesURL, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Token: %s", c.token))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	response := Response{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	var versions []string
