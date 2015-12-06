@@ -24,8 +24,7 @@ jobs:
 - name: shipit
   public: true
   plan:
-  - get: pivnet-resource
-    resource: pivnet-resource-develop
+  - get: pivnet-resource-develop
     passed: [test-unit]
   - put: pivnet-resource-master
     params:
