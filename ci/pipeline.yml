@@ -1,0 +1,34 @@
+---
+resources:
+- name: pivnet-resource-develop
+  type: git
+  source:
+    branch: develop
+    private_key: {{pivnet-resource-git-deploy-private-key}}
+    uri: git@github.com:pivotal-cf-experimental/pivnet-resource.git
+- name: pivnet-resource-master
+  type: git
+  source:
+    branch: master
+    private_key: {{pivnet-resource-git-deploy-private-key}}
+    uri: git@github.com:pivotal-cf-experimental/pivnet-resource.git
+
+jobs:
+- name: test-unit
+  public: true
+  plan:
+  - get: pivnet-resource
+    resource: pivnet-resource-develop
+  - task: test-unit
+    file: pivnet-resource/ci/test-unit/task.yml
+- name: shipit
+  public: true
+  plan:
+  - get: pivnet-resource
+    resource: pivnet-resource-develop
+    passed: [test-unit]
+  - put: pivnet-resource-master
+    params:
+      repository: pivnet-resource-develop
+
+

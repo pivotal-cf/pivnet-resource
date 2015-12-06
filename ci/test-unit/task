@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -eux
+
+my_dir="$( cd "$( dirname "${0}" )" && pwd )"
+base_dir="$( cd "${my_dir}/../.." && pwd )"
+scripts_dir="$( cd "${base_dir}/scripts" && pwd )"
+
+export GOPATH=$PWD/gopath
+export PATH=$GOPATH/bin:$PATH
+
+cd "${GOPATH}/src/github.com/pivotal-cf-experimental/pivnet-resource"
+
+go get github.com/onsi/ginkgo/ginkgo
+go get github.com/onsi/gomega
+go get github.com/golang/protobuf/proto # transitive dependency of gomega
+
+"${scripts_dir}/test-unit" "$@"
