@@ -19,6 +19,7 @@ jobs:
   plan:
   - get: pivnet-resource
     resource: pivnet-resource-develop
+    trigger: true
   - task: test-unit
     file: pivnet-resource/ci/test-unit/task.yml
 - name: shipit
