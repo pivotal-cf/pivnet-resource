@@ -44,6 +44,10 @@ func (c client) ProductVersions(id string) ([]string, error) {
 		return nil, err
 	}
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Pivnet returned status code: %d for the request", resp.StatusCode)
+	}
+
 	response := Response{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {

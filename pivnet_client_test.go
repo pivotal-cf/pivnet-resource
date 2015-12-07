@@ -73,6 +73,21 @@ var _ = Describe("PivnetClient", func() {
 			})
 		})
 
+		Context("when a non-200 comes back from Pivnet", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", apiPrefix+"/products/my-product-id/releases"),
+						ghttp.RespondWith(http.StatusNotFound, nil),
+					),
+				)
+
+				_, err := client.ProductVersions("my-product-id")
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError("Pivnet returned status code: 404 for the request"))
+			})
+		})
+
 		Context("when the json unmarshalling fails with error", func() {
 			It("forwards the error", func() {
 				server.AppendHandlers(
