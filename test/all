@@ -26,20 +26,22 @@ get_resource_version() {
 main() {
   set -x
 
+  token="token"
   resource_dir="/opt/resource"
 
   product="p-gitlab"
-  expected_version=$(get_resource_version_pivnet "${resource_name}")
-  version=$(get_resource_version token "${resource_name}")
+  expected_version=$(get_resource_version_pivnet "${product}")
+  version=$(get_resource_version "${token}" "${product}")
   test "${version}" = "${expected_version}"
 
   product="p-mysql"
-  expected_version=$(get_resource_version_pivnet "${resource_name}")
-  version=$(get_resource_version token "${resource_name}")
+  expected_version=$(get_resource_version_pivnet "${product}")
+  version=$(get_resource_version "${token}" "${product}")
   test "${version}" = "${expected_version}"
 }
 
 if [ "$(basename "${0}")" = "all" ]; then
+  set -x
   temp_file=$(mktemp)
 
   set +e

@@ -37,7 +37,7 @@ func (c client) ProductVersions(id string) ([]string, error) {
 		return nil, err
 	}
 
-	req.Header.Add("Authorization", fmt.Sprintf("Token: %s", c.token))
+	req.Header.Add("Authorization", fmt.Sprintf("Token %s", c.token))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
