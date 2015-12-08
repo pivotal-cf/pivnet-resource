@@ -8,7 +8,3 @@ ADD check /opt/resource/check
 ADD in /opt/resource/in
 ADD out /opt/resource/out
 RUN chmod +x /opt/resource/*
-
-ADD ./test/ /opt/resource-tests/
-
-RUN /opt/resource-tests/all
