@@ -7,4 +7,7 @@ inputs:
   path: gopath/src/github.com/pivotal-cf-experimental/pivnet-resource
 
 run:
-  path: gopath/src/github.com/pivotal-cf-experimental/pivnet-resource/ci/test-unit/task
+  path: gopath/src/github.com/pivotal-cf-experimental/pivnet-resource/ci/test/task
+
+params:
+  API_TOKEN:

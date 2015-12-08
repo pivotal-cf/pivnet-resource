@@ -1,5 +1,7 @@
 #!/bin/sh -eux
 
+API_TOKEN="${API_TOKEN:?"API_TOKEN must be provided"}"
+
 CGO_ENABLED=1 ginkgo \
   -r \
   -race \

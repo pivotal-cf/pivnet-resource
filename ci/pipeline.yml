@@ -14,21 +14,22 @@ resources:
     uri: git@github.com:pivotal-cf-experimental/pivnet-resource.git
 
 jobs:
-- name: test-unit
+- name: test
   public: true
   plan:
   - get: pivnet-resource
     resource: pivnet-resource-develop
     trigger: true
   - task: test-unit
-    file: pivnet-resource/ci/test-unit/task.yml
+    file: pivnet-resource/ci/test/task.yml
+      params:
+        API_TOKEN: {{api_token}}
 - name: shipit
   public: true
   plan:
   - get: pivnet-resource-develop
-    passed: [test-unit]
+    passed: [test]
   - put: pivnet-resource-master
     params:
       repository: pivnet-resource-develop
-
 
