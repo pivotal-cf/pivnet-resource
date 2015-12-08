@@ -22,8 +22,9 @@ jobs:
     trigger: true
   - task: test-unit
     file: pivnet-resource/ci/test/task.yml
+    config:
       params:
-        API_TOKEN: {{api_token}}
+        API_TOKEN: {{api-token}}
 - name: shipit
   public: true
   plan:
