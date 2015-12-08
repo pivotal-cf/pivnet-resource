@@ -20,7 +20,7 @@ jobs:
   - get: pivnet-resource
     resource: pivnet-resource-develop
     trigger: true
-  - task: test-unit
+  - task: test
     file: pivnet-resource/ci/test/task.yml
     config:
       params:
