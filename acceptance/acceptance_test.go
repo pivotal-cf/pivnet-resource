@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/pivotal-cf-experimental/pivnet-resource"
 )
 
 const (
@@ -26,8 +27,8 @@ var _ = Describe("Acceptance", func() {
 			writer, err := command.StdinPipe()
 			Expect(err).ShouldNot(HaveOccurred())
 
-			raw, err := json.Marshal(concourseRequest{
-				Source: Source{
+			raw, err := json.Marshal(pivnet.ConcourseRequest{
+				Source: pivnet.ConcourseSource{
 					APIToken:     os.Getenv("API_TOKEN"),
 					ResourceName: productName,
 				}})
@@ -41,7 +42,7 @@ var _ = Describe("Acceptance", func() {
 
 			Eventually(session, checkTimeout).Should(gexec.Exit(0))
 
-			response := concourseResponse{}
+			response := pivnet.ConcourseResponse{}
 			err = json.Unmarshal(session.Out.Contents(), &response)
 			Expect(err).ShouldNot(HaveOccurred())
 

@@ -8,35 +8,12 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/pivotal-cf-experimental/pivnet-resource"
 
 	"testing"
 )
 
 var checkPath string
-
-type PivNetResponse struct {
-	Releases []PivNetRelease `json:"releases"`
-}
-
-type PivNetRelease struct {
-	Version string `json:"version"`
-}
-
-type concourseRequest struct {
-	Source  Source   `json:"source"`
-	Version struct{} `json:"version"`
-}
-
-type concourseResponse []Release
-
-type Release struct {
-	Version string `json:"version"`
-}
-
-type Source struct {
-	APIToken     string `json:"api_token"`
-	ResourceName string `json:"resource_name"`
-}
 
 func TestAcceptance(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -54,7 +31,7 @@ var _ = AfterSuite(func() {
 	gexec.CleanupBuildArtifacts()
 })
 
-func getProductRelease(product string) PivNetRelease {
+func getProductRelease(product string) pivnet.Release {
 	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases", product)
 
 	req, err := http.NewRequest("GET", product_url, nil)
@@ -63,7 +40,7 @@ func getProductRelease(product string) PivNetRelease {
 	resp, err := http.DefaultClient.Do(req)
 	Expect(err).NotTo(HaveOccurred())
 
-	response := PivNetResponse{}
+	response := pivnet.Response{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	Expect(err).NotTo(HaveOccurred())
 

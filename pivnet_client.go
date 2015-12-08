@@ -6,14 +6,6 @@ import (
 	"net/http"
 )
 
-type Response struct {
-	Releases []Release `json:"releases"`
-}
-
-type Release struct {
-	Version string `json:"version"`
-}
-
 type Client interface {
 	ProductVersions(string) ([]string, error)
 }
