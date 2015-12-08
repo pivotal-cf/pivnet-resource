@@ -25,8 +25,6 @@ type Release struct {
 	Version string `json:"version"`
 }
 
-type version []map[string]string
-
 func main() {
 	var i input
 

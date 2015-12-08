@@ -41,7 +41,7 @@ var _ = Describe("PivnetClient", func() {
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
 				ghttp.VerifyRequest("GET", apiPrefix+"/products/my-product-id/releases"),
-				ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token: %s", token)),
+				ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
 				ghttp.RespondWith(http.StatusOK, response),
 			),
 		)
