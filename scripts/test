@@ -1,6 +1,8 @@
-#!/bin/sh -eux
+#!/bin/sh -eu
 
 API_TOKEN="${API_TOKEN:?"API_TOKEN must be provided"}"
+
+set -x
 
 CGO_ENABLED=1 ginkgo \
   -r \
