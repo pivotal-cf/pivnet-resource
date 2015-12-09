@@ -5,44 +5,40 @@ import (
 	"log"
 	"os"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource"
+	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 const (
 	url = "https://network.pivotal.io/api/v2"
 )
 
-type input struct {
-	Source struct {
-		APIToken     string `json:"api_token"`
-		ResourceName string `json:"resource_name"`
-	} `json:"source"`
-}
-
-type output []Release
-
-type Release struct {
-	Version string `json:"version"`
-}
-
 func main() {
-	var i input
+	var input concourse.Request
 
-	err := json.NewDecoder(os.Stdin).Decode(&i)
+	err := json.NewDecoder(os.Stdin).Decode(&input)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	client := pivnet.NewClient(url, i.Source.APIToken)
+	client := pivnet.NewClient(url, input.Source.APIToken)
 
-	versions, err := client.ProductVersions(i.Source.ResourceName)
+	allVersions, err := client.ProductVersions(input.Source.ResourceName)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	var out output
-	for _, v := range versions {
-		out = append(out, Release{Version: v})
+	newVersions, err := versions.Since(allVersions, input.Version["version"])
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var out concourse.Response
+
+	for i := len(newVersions) - 1; i >= 0; i-- {
+		v := newVersions[i]
+		out = append(out, pivnet.Release{Version: v})
 	}
 
 	err = json.NewEncoder(os.Stdout).Encode(out)

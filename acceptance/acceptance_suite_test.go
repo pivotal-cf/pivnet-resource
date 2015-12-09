@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf-experimental/pivnet-resource"
+	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 
 	"testing"
 )
@@ -31,7 +31,8 @@ var _ = AfterSuite(func() {
 	gexec.CleanupBuildArtifacts()
 })
 
-func getProductRelease(product string) pivnet.Release {
+func getProductReleases(product string) []string {
+	var versions []string
 	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases", product)
 
 	req, err := http.NewRequest("GET", product_url, nil)
@@ -44,5 +45,9 @@ func getProductRelease(product string) pivnet.Release {
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	Expect(err).NotTo(HaveOccurred())
 
-	return response.Releases[0]
+	for _, release := range response.Releases {
+		versions = append(versions, string(release.Version))
+	}
+
+	return versions
 }
