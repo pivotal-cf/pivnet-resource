@@ -6,12 +6,21 @@ resources:
     branch: develop
     private_key: {{pivnet-resource-git-deploy-private-key}}
     uri: git@github.com:pivotal-cf-experimental/pivnet-resource.git
+
 - name: pivnet-resource-master
   type: git
   source:
     branch: master
     private_key: {{pivnet-resource-git-deploy-private-key}}
     uri: git@github.com:pivotal-cf-experimental/pivnet-resource.git
+
+- name: pivnet-resource-image
+  type: docker-image
+  source:
+    username: {{docker-username}}
+    email: {{docker-email}}
+    password: {{docker-password}}
+    repository: pivotalcf/pivnet-resource
 
 jobs:
 - name: test
@@ -25,6 +34,7 @@ jobs:
     config:
       params:
         API_TOKEN: {{api-token}}
+
 - name: shipit
   public: true
   plan:
@@ -34,3 +44,16 @@ jobs:
     params:
       repository: pivnet-resource-develop
 
+- name: pivnet-resource-docker-image
+  serial: true
+  plan:
+  - get: pivnet-resource
+    resource: pivnet-resource-master
+    passed: [shipit]
+    trigger: true
+  - task: build
+    file: pivnet-resource/build.yml
+  - put: resource-image
+    resource: pivnet-resource-image
+    params: {build: build/gopath/src/github.com/concourse/pivnet-resource}
+    get_params: {rootfs: true}

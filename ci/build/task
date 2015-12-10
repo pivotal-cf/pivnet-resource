@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eux
+
+my_dir="$( cd "$( dirname "${0}" )" && pwd )"
+base_dir="$( cd "${my_dir}/../.." && pwd )"
+scripts_dir="$( cd "${base_dir}/scripts" && pwd )"
+
+"${scripts_dir}/build" "$@"

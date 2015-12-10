@@ -1,0 +1,10 @@
+---
+platform: linux
+image: docker:///concourse/static-golang
+
+inputs:
+- name: pivnet-resource
+  path: gopath/src/github.com/pivotal-cf-experimental/pivnet-resource
+
+run:
+  path: gopath/src/github.com/pivotal-cf-experimental/pivnet-resource/ci/build/task
