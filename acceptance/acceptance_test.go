@@ -19,11 +19,45 @@ const (
 
 var _ = Describe("Acceptance", func() {
 	Context("Check", func() {
-		Context("when a version is provided", func() {
-			It("returns the next version", func() {
-				productName := "p-mysql"
-				releases := getProductReleases(productName)
+		var releases []string
+		productName := "p-mysql"
+		BeforeEach(func() {
+			releases = getProductReleases(productName)
+		})
 
+		Context("when no version is provided", func() {
+			It("returns the most recent version", func() {
+				command := exec.Command(checkPath)
+				writer, err := command.StdinPipe()
+				Expect(err).ShouldNot(HaveOccurred())
+
+				raw, err := json.Marshal(concourse.Request{
+					Source: concourse.Source{
+						APIToken:     os.Getenv("API_TOKEN"),
+						ResourceName: productName,
+					},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(writer, string(raw))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Eventually(session, checkTimeout).Should(gexec.Exit(0))
+
+				response := concourse.Response{}
+				err = json.Unmarshal(session.Out.Contents(), &response)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(response).To(HaveLen(1))
+
+				Expect(response[0].Version).To(Equal(releases[0]))
+			})
+		})
+
+		Context("when a version is provided", func() {
+			It("returns all newever versions", func() {
 				command := exec.Command(checkPath)
 				writer, err := command.StdinPipe()
 				Expect(err).ShouldNot(HaveOccurred())

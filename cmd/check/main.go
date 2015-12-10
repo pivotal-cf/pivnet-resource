@@ -41,6 +41,10 @@ func main() {
 		out = append(out, pivnet.Release{Version: v})
 	}
 
+	if len(out) == 0 {
+		out = append(out, pivnet.Release{Version: allVersions[0]})
+	}
+
 	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {
 		log.Fatalln(err)
