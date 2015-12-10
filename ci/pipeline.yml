@@ -55,5 +55,5 @@ jobs:
     file: pivnet-resource/ci/build/task.yml
   - put: resource-image
     resource: pivnet-resource-image
-    params: {build: build/gopath/src/github.com/concourse/pivnet-resource}
+    params: {build: build/gopath/src/github.com/pivotal-cf-experimental/pivnet-resource}
     get_params: {rootfs: true}
