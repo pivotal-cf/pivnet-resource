@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eux
 
@@ -8,8 +8,6 @@ scripts_dir="$( cd "${base_dir}/scripts" && pwd )"
 
 export GOPATH=$PWD/gopath
 export PATH=$GOPATH/bin:$PATH
-
-cd "${GOPATH}/src/github.com/pivotal-cf-experimental/pivnet-resource"
 
 go get github.com/onsi/ginkgo/ginkgo
 go get github.com/onsi/gomega
