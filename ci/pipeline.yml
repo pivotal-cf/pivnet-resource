@@ -22,6 +22,14 @@ resources:
     password: {{docker-password}}
     repository: pivotalcf/pivnet-resource
 
+- name: pivnet-resource-rootfs
+  type: s3
+  source:
+    bucket: pivnet-resource-artifacts
+    versioned_file: pivnet-resource-rootfs
+    access_key_id: {{aws-access-key-id}}
+    secret_access_key: {{aws-secret-access-key}}
+
 jobs:
 - name: test
   public: true
@@ -53,7 +61,8 @@ jobs:
     trigger: true
   - task: build
     file: pivnet-resource/ci/build/task.yml
-  - put: resource-image
-    resource: pivnet-resource-image
+  - put: pivnet-resource-image
     params: {build: build/gopath/src/github.com/pivotal-cf-experimental/pivnet-resource}
     get_params: {rootfs: true}
+  - put: pivnet-resource-rootfs
+    params: {from: pivnet-resource-image/rootfs.tar}
