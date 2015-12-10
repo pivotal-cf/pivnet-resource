@@ -52,7 +52,7 @@ jobs:
     passed: [shipit]
     trigger: true
   - task: build
-    file: pivnet-resource/build.yml
+    file: pivnet-resource/ci/build/task.yml
   - put: resource-image
     resource: pivnet-resource-image
     params: {build: build/gopath/src/github.com/concourse/pivnet-resource}
