@@ -30,6 +30,15 @@ resources:
     access_key_id: {{aws-access-key-id}}
     secret_access_key: {{aws-secret-access-key}}
 
+- name: version
+  type: semver
+  source:
+    bucket: pivnet-resource-artifacts
+    key: current-version
+    access_key_id: {{aws-access-key-id}}
+    secret_access_key: {{aws-secret-access-key}}
+    initial_version: 0.0.1
+
 jobs:
 - name: test
   public: true
@@ -43,14 +52,35 @@ jobs:
       params:
         API_TOKEN: {{api-token}}
 
+- name: rc
+  serial_groups: [version]
+  public: true
+  plan:
+  - do:
+    - aggregate:
+      - get: pivnet-resource-develop
+        passed: [test]
+        trigger: true
+      - get: version
+        params: {pre: rc}
+    - put: version
+      params: {file: version/number}
+
 - name: shipit
   public: true
   plan:
-  - get: pivnet-resource-develop
-    passed: [test]
-  - put: pivnet-resource-master
-    params:
-      repository: pivnet-resource-develop
+  - aggregate:
+    - get: pivnet-resource-develop
+      passed: [rc]
+    - get: version
+      passed: [rc]
+      params: {bump: final}
+  - aggregate:
+    - put: pivnet-resource-master
+      params:
+        repository: pivnet-resource-develop
+    - put: version
+      params: {file: version/number}
 
 - name: pivnet-resource-docker-image
   serial: true
@@ -66,3 +96,32 @@ jobs:
     get_params: {rootfs: true}
   - put: pivnet-resource-rootfs
     params: {from: pivnet-resource-image/rootfs.tar}
+
+- name: major
+  public: true
+  serial_groups: [version]
+  plan:
+  - get: version
+    params: {bump: major, pre: rc}
+  - put: version
+    params: {file: version/number}
+
+- name: minor
+  public: true
+  serial_groups: [version]
+  plan:
+  - get: version
+    params: {bump: minor, pre: rc}
+  - put: version
+    params: {file: version/number}
+
+- name: patch
+  public: true
+  serial_groups: [version]
+  plan:
+  - get: version
+    passed: [shipit]
+    params: {bump: patch, pre: rc}
+    trigger: true
+  - put: version
+    params: {file: version/number}
