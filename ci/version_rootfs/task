@@ -1,8 +1,0 @@
-#!/bin/sh
-
-set -eux
-
-root_dir="$PWD"
-version="$(cat version/number)"
-
-mv pivnet-resource-image/rootfs.tar "${root_dir}/pivnet-resource-image/rootfs-${version}.tar"

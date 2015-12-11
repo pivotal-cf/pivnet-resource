@@ -39,6 +39,20 @@ resources:
     secret_access_key: {{aws-secret-access-key}}
     initial_version: 0.0.1
 
+- name: tracker
+  type: tracker
+  source:
+    token: {{tracker-token}}
+    project_id: {{tracker-project-id}}
+    tracker_url: https://www.pivotaltracker.com
+
+- name: pivnet-resource-github-release
+  type: github-release
+  source:
+    access_token: {{pivnet-resource-github-release-access-token}}
+    repository: pivnet-resource
+    user: pivotal-cf-experimental
+
 jobs:
 - name: test
   public: true
@@ -56,17 +70,33 @@ jobs:
   serial_groups: [version]
   public: true
   plan:
-  - do:
-    - aggregate:
-      - get: pivnet-resource-develop
-        passed: [test]
-        trigger: true
-      - get: version
-        params: {pre: rc}
+  - aggregate:
+    - get: pivnet-resource
+      resource: pivnet-resource-develop
+      passed: [test]
+      trigger: true
+    - get: version
+      params: {pre: rc}
+  - task: build
+    file: pivnet-resource/ci/build/task.yml
+  - put: pivnet-resource-image
+    params:
+      build: build/gopath/src/github.com/pivotal-cf-experimental/pivnet-resource
+      tag: version/number
+      tag_prefix: v
+    get_params: {rootfs: true}
+  - task: version-rootfs
+    file: pivnet-resource/ci/version-rootfs/task.yml
+  - aggregate:
+    - put: pivnet-resource-rootfs
+      params: {from: pivnet-resource-image/rootfs-(.*).tar}
     - put: version
       params: {file: version/number}
+    - put: tracker
+      params:
+        repos: [pivnet-resource]
 
-- name: pivnet-resource-docker-image-rc
+- name: shipit
   serial_groups: [version]
   public: true
   plan:
@@ -74,9 +104,9 @@ jobs:
     - get: pivnet-resource
       resource: pivnet-resource-develop
       passed: [rc]
-      trigger: true
     - get: version
       passed: [rc]
+      params: {bump: final}
   - task: build
     file: pivnet-resource/ci/build/task.yml
   - put: pivnet-resource-image
@@ -86,29 +116,19 @@ jobs:
       tag_prefix: v
     get_params: {rootfs: true}
   - task: version-rootfs
-    file: pivnet-resource/ci/version_rootfs/task.yml
-  - put: pivnet-resource-rootfs
-    params: {from: pivnet-resource-image/rootfs-(.*).tar}
-
-- name: shipit
-  serial_groups: [version]
-  public: true
-  plan:
+    file: pivnet-resource/ci/version-rootfs/task.yml
   - aggregate:
-    - get: pivnet-resource-develop
-      passed: [pivnet-resource-docker-image-rc]
-    - get: version
-      passed: [pivnet-resource-docker-image-rc]
-      params: {bump: final}
-  - aggregate:
+    - put: pivnet-resource-rootfs
+      params: {from: pivnet-resource-image/rootfs-(.*).tar}
     - put: pivnet-resource-master
       params:
-        repository: pivnet-resource-develop
+        repository: pivnet-resource
+        tag: version/number
+        tag_prefix: v
     - put: version
       params: {file: version/number}
 
-- name: pivnet-resource-docker-image
-  serial_groups: [version]
+- name: github-release
   public: true
   plan:
   - aggregate:
@@ -116,20 +136,17 @@ jobs:
       resource: pivnet-resource-master
       passed: [shipit]
       trigger: true
-    - get: version
+    - get: pivnet-resource-rootfs
       passed: [shipit]
-  - task: build
-    file: pivnet-resource/ci/build/task.yml
-  - put: pivnet-resource-image
+      trigger: true
+  - task: most-recent-tag
+    file: pivnet-resource/ci/most-recent-tag/task.yml
+  - put: pivnet-resource-github-release
     params:
-      build: build/gopath/src/github.com/pivotal-cf-experimental/pivnet-resource
-      tag: version/number
-      tag_prefix: v
-    get_params: {rootfs: true}
-  - task: version-rootfs
-    file: pivnet-resource/ci/version_rootfs/task.yml
-  - put: pivnet-resource-rootfs
-    params: {from: pivnet-resource-image/rootfs-(.*).tar}
+      name: most-recent-tag/tagname
+      tag: most-recent-tag/tagname
+      globs:
+      - pivnet-resource-rootfs/rootfs-*
 
 - name: major
   public: true
@@ -154,7 +171,7 @@ jobs:
   serial_groups: [version]
   plan:
   - get: version
-    passed: [pivnet-resource-docker-image]
+    passed: [shipit]
     params: {bump: patch, pre: rc}
     trigger: true
   - put: version
