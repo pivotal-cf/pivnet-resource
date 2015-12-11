@@ -42,10 +42,13 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	var out concourse.Response
+	reversedVersions, err := versions.Reverse(newVersions)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	for i := len(newVersions) - 1; i >= 0; i-- {
-		v := newVersions[i]
+	var out concourse.Response
+	for _, v := range reversedVersions {
 		out = append(out, pivnet.Release{Version: v})
 	}
 

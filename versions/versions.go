@@ -9,3 +9,12 @@ func Since(versions []string, since string) ([]string, error) {
 
 	return versions[:0], nil
 }
+
+func Reverse(versions []string) ([]string, error) {
+	var reversed []string
+	for i := len(versions) - 1; i >= 0; i-- {
+		reversed = append(reversed, versions[i])
+	}
+
+	return reversed, nil
+}
