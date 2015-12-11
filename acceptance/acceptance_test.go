@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 )
@@ -57,7 +58,7 @@ var _ = Describe("Acceptance", func() {
 		})
 
 		Context("when a version is provided", func() {
-			It("returns all newever versions", func() {
+			It("returns all newer versions", func() {
 				command := exec.Command(checkPath)
 				writer, err := command.StdinPipe()
 				Expect(err).ShouldNot(HaveOccurred())
@@ -89,6 +90,62 @@ var _ = Describe("Acceptance", func() {
 				Expect(response[0].Version).To(Equal(releases[2]))
 				Expect(response[1].Version).To(Equal(releases[1]))
 				Expect(response[2].Version).To(Equal(releases[0]))
+			})
+		})
+
+		Context("when no api_token is provided", func() {
+			It("exits with error", func() {
+				command := exec.Command(checkPath)
+				writer, err := command.StdinPipe()
+				Expect(err).ShouldNot(HaveOccurred())
+
+				raw, err := json.Marshal(concourse.Request{
+					Source: concourse.Source{
+						APIToken:    "",
+						ProductName: productName,
+					},
+					Version: map[string]string{
+						"version": releases[0],
+					},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(writer, string(raw))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Eventually(session, checkTimeout).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("api_token must be provided"))
+			})
+		})
+
+		Context("when no product_name is provided", func() {
+			It("exits with error", func() {
+				command := exec.Command(checkPath)
+				writer, err := command.StdinPipe()
+				Expect(err).ShouldNot(HaveOccurred())
+
+				raw, err := json.Marshal(concourse.Request{
+					Source: concourse.Source{
+						APIToken:    "some-api-token",
+						ProductName: "",
+					},
+					Version: map[string]string{
+						"version": releases[0],
+					},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(writer, string(raw))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Eventually(session, checkTimeout).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("product_name must be provided"))
 			})
 		})
 	})

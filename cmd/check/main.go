@@ -22,6 +22,14 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	if input.Source.APIToken == "" {
+		log.Fatalln("api_token must be provided")
+	}
+
+	if input.Source.ProductName == "" {
+		log.Fatalln("product_name must be provided")
+	}
+
 	client := pivnet.NewClient(url, input.Source.APIToken)
 
 	allVersions, err := client.ProductVersions(input.Source.ProductName)
