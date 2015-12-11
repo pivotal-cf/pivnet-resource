@@ -1,0 +1,11 @@
+---
+platform: linux
+image: docker:///concourse/static-golang
+
+inputs:
+- name: pivnet-resource
+- name: pivnet-resource-image
+- name: version
+
+run:
+  path: pivnet-resource/ci/version_rootfs/task
