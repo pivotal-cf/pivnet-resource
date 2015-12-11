@@ -4,7 +4,7 @@
 
 * `api_token`: *Required.*  Token from your pivnet profile.
 
-* `resource_name`: *Required.*  Name of pivnet resource.
+* `product_name`: *Required.*  Name of product on Pivotal Network.
 
 ### Example
 
@@ -16,16 +16,16 @@ resources:
   type: pivnet
   source:
     api_token: my-api-token
-    resource_name: p-gitlab
+    product_name: p-gitlab
 ```
 
 ## Behavior
 
-### `check`: Check for new resource versions.
+### `check`: Check for new product versions on Pivotal Network.
 
 Discovers all versions of the provided product.
 
-### `in`: Clone the repository, at the given ref.
+### `in`: Download the product from Pivotal Network.
 
 TBD
 
@@ -33,7 +33,7 @@ TBD
 
 TBD
 
-### `out`: Push to a repository.
+### `out`: Upload a product to Pivotal Network.
 
 TBD
 

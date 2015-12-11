@@ -10,6 +10,6 @@ type Request struct {
 type Response []pivnet.Release
 
 type Source struct {
-	APIToken     string `json:"api_token"`
-	ResourceName string `json:"resource_name"`
+	APIToken    string `json:"api_token"`
+	ProductName string `json:"product_name"`
 }

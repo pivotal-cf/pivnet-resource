@@ -24,7 +24,7 @@ func main() {
 
 	client := pivnet.NewClient(url, input.Source.APIToken)
 
-	allVersions, err := client.ProductVersions(input.Source.ResourceName)
+	allVersions, err := client.ProductVersions(input.Source.ProductName)
 	if err != nil {
 		log.Fatalln(err)
 	}

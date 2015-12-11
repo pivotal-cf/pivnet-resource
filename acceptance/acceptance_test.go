@@ -33,8 +33,8 @@ var _ = Describe("Acceptance", func() {
 
 				raw, err := json.Marshal(concourse.Request{
 					Source: concourse.Source{
-						APIToken:     os.Getenv("API_TOKEN"),
-						ResourceName: productName,
+						APIToken:    os.Getenv("API_TOKEN"),
+						ProductName: productName,
 					},
 				})
 				Expect(err).ShouldNot(HaveOccurred())
@@ -64,8 +64,8 @@ var _ = Describe("Acceptance", func() {
 
 				raw, err := json.Marshal(concourse.Request{
 					Source: concourse.Source{
-						APIToken:     os.Getenv("API_TOKEN"),
-						ResourceName: productName,
+						APIToken:    os.Getenv("API_TOKEN"),
+						ProductName: productName,
 					},
 					Version: map[string]string{
 						"version": releases[3],
