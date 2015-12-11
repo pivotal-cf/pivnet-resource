@@ -96,9 +96,9 @@ jobs:
   plan:
   - aggregate:
     - get: pivnet-resource-develop
-      passed: [rc]
+      passed: [pivnet-resource-docker-image-rc]
     - get: version
-      passed: [rc]
+      passed: [pivnet-resource-docker-image-rc]
       params: {bump: final}
   - aggregate:
     - put: pivnet-resource-master
