@@ -1,5 +1,11 @@
 # Pivnet Resource
 
+## Installing
+
+The rootfs of the docker image is available with each release on the [releases page](https://github.com/pivotal-cf-experimental/pivnet-resource/releases).
+
+The docker image is `pivotalcf/pivnet-resource`; the images are available on [dockerhub](https://hub.docker.com/r/pivotalcf/pivnet-resource).
+
 ## Source Configuration
 
 * `api_token`: *Required.*  Token from your pivnet profile.
