@@ -2,9 +2,17 @@
 
 ## Installing
 
-The rootfs of the docker image is available with each release on the [releases page](https://github.com/pivotal-cf-experimental/pivnet-resource/releases).
+The recommended way to add this resource to a Concourse instance is via the
+[BOSH release](https://github.com/pivotal-cf-experimental/pivnet-resource-boshrelease)
 
-The docker image is `pivotalcf/pivnet-resource`; the images are available on [dockerhub](https://hub.docker.com/r/pivotalcf/pivnet-resource).
+The rootfs of the docker image is available with each release on the
+[releases page](https://github.com/pivotal-cf-experimental/pivnet-resource/releases).
+
+The docker image is `pivotalcf/pivnet-resource`; the images are available on
+[dockerhub](https://hub.docker.com/r/pivotalcf/pivnet-resource).
+
+Both the docker images and the BOSH releases are semantically versioned, but
+in general their versions will be different.
 
 ## Source Configuration
 
@@ -68,8 +76,9 @@ go get -u github.com/golang/protobuf/proto # transitive dependency of gomega
 
 The tests require a valid Pivotal Network API token.
 
-Refer to the [official
-docs](https://network.pivotal.io/docs/api#how-to-authenticate) for more details.
+Refer to the
+[official docs](https://network.pivotal.io/docs/api#how-to-authenticate)
+for more details.
 
 Run the tests with the following command:
 
