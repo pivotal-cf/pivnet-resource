@@ -53,7 +53,7 @@ var _ = Describe("Acceptance", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(response).To(HaveLen(1))
 
-				Expect(response[0].Version).To(Equal(releases[0]))
+				Expect(response[0].ProductVersion).To(Equal(releases[0]))
 			})
 		})
 
@@ -87,9 +87,9 @@ var _ = Describe("Acceptance", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(response).To(HaveLen(3))
 
-				Expect(response[0].Version).To(Equal(releases[2]))
-				Expect(response[1].Version).To(Equal(releases[1]))
-				Expect(response[2].Version).To(Equal(releases[0]))
+				Expect(response[0].ProductVersion).To(Equal(releases[2]))
+				Expect(response[1].ProductVersion).To(Equal(releases[1]))
+				Expect(response[2].ProductVersion).To(Equal(releases[0]))
 			})
 		})
 

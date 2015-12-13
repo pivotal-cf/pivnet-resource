@@ -49,11 +49,11 @@ func main() {
 
 	var out concourse.Response
 	for _, v := range reversedVersions {
-		out = append(out, pivnet.Release{Version: v})
+		out = append(out, concourse.Release{ProductVersion: v})
 	}
 
 	if len(out) == 0 {
-		out = append(out, pivnet.Release{Version: allVersions[0]})
+		out = append(out, concourse.Release{ProductVersion: allVersions[0]})
 	}
 
 	err = json.NewEncoder(os.Stdout).Encode(out)

@@ -1,13 +1,15 @@
 package concourse
 
-import "github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
-
 type Request struct {
 	Source  Source            `json:"source"`
 	Version map[string]string `json:"version"`
 }
 
-type Response []pivnet.Release
+type Response []Release
+
+type Release struct {
+	ProductVersion string `json:"product_version"`
+}
 
 type Source struct {
 	APIToken    string `json:"api_token"`
