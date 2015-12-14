@@ -15,5 +15,7 @@ type Release struct {
 }
 
 type Eula struct {
-	Slug string `json:"slug"`
+	Slug    string `json:"slug"`
+	ID      int    `json:"id"`
+	Version string `json:"version"`
 }
