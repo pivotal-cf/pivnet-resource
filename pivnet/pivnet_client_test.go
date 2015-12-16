@@ -49,6 +49,23 @@ var _ = Describe("PivnetClient", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
+	Describe("Get Release", func() {
+		It("returns the release based on the name and version", func() {
+			response := `{"releases": [{"id": "3", "version": "3.2.1", "_links": {"href":"https://banana.org/cookies/download"}}]}`
+
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
+					ghttp.RespondWith(http.StatusOK, response),
+				),
+			)
+
+			release, err := client.GetRelease("banana", "3.2.1")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(release.Links.ProductFiles["href"]).To(Equal("https://banana.org/cookies/download"))
+		})
+	})
+
 	Describe("Product Versions", func() {
 		Context("when parsing the url fails with error", func() {
 			It("forwards the error", func() {
