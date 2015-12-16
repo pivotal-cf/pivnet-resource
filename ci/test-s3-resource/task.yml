@@ -1,0 +1,19 @@
+---
+platform: linux
+image: docker:///concourse/static-golang
+
+inputs:
+- name: pivnet-resource
+  path: gopath/src/github.com/pivotal-cf-experimental/pivnet-resource
+- name: s3-resource
+  path: gopath/src/github.com/concourse/s3-resource
+
+run:
+  path: gopath/src/github.com/pivotal-cf-experimental/pivnet-resource/ci/test-s3-resource/task
+
+params:
+  S3_TESTING_ACCESS_KEY_ID:
+  S3_TESTING_SECRET_ACCESS_KEY:
+  S3_VERSIONED_TESTING_BUCKET:
+  S3_TESTING_BUCKET:
+  S3_TESTING_REGION:

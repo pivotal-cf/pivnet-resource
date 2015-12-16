@@ -53,7 +53,31 @@ resources:
     repository: pivnet-resource
     user: pivotal-cf-experimental
 
+- name: s3-resource
+  type: git
+  source:
+    branch: master
+    uri: https://github.com/concourse/s3-resource
+
 jobs:
+- name: test-s3-resource
+  public: true
+  plan:
+  - get: s3-resource
+    trigger: true
+  - get: pivnet-resource
+    resource: pivnet-resource-develop
+    trigger: true
+  - task: test
+    file: pivnet-resource/ci/test-s3-resource/task.yml
+    config:
+      params:
+        S3_TESTING_ACCESS_KEY_ID: {{s3-resource-testing-access-key-id}}
+        S3_TESTING_SECRET_ACCESS_KEY: {{s3-resource-testing-secret-access-key}}
+        S3_VERSIONED_TESTING_BUCKET: {{s3-resource-testing-versioned-bucket}}
+        S3_TESTING_BUCKET: {{s3-resource-testing-bucket}}
+        S3_TESTING_REGION: {{s3-resource-testing-region}}
+
 - name: test
   public: true
   plan:
