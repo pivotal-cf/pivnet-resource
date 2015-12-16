@@ -27,6 +27,5 @@ pushd "${s3_resource_dir}" > /dev/null
     -p \
     -randomizeSuites \
     -randomizeAllSpecs \
-    -v \
     .
 popd > /dev/null
