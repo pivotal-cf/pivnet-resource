@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -eux
+
+my_dir="$( cd "$( dirname "${0}" )" && pwd )"
+base_dir="$( cd "${my_dir}/../.." && pwd )"
+s3_resource_dir="$( cd "${base_dir}/../../concourse/s3-resource" && pwd )"
+
+output_dir="${s3_resource_dir}/outputs"
+
+export GOPATH=$PWD/gopath
+export PATH=$GOPATH/bin:$PATH
+
+mkdir -p "${output_dir}"
+
+pushd "${s3_resource_dir}" > /dev/null
+  curl \
+    -L \
+    https://github.com/tools/godep/releases/download/v32/godep_linux_amd64 \
+    > godep
+
+  chmod +x ./godep
+  ./godep restore
+
+  GOOS=linux go build -o "${output_dir}/check" ./cmd/check
+  GOOS=linux go build -o "${output_dir}/in" ./cmd/in
+  GOOS=linux go build -o "${output_dir}/out" ./cmd/out
+popd > /dev/null

@@ -59,6 +59,14 @@ resources:
     branch: master
     uri: https://github.com/concourse/s3-resource
 
+- name: s3-out-binary
+  type: s3
+  source:
+    bucket: pivnet-resource-artifacts
+    versioned_file: s3-out
+    access_key_id: {{aws-access-key-id}}
+    secret_access_key: {{aws-secret-access-key}}
+
 jobs:
 - name: test-s3-resource
   public: true
@@ -77,6 +85,12 @@ jobs:
         S3_VERSIONED_TESTING_BUCKET: {{s3-resource-testing-versioned-bucket}}
         S3_TESTING_BUCKET: {{s3-resource-testing-bucket}}
         S3_TESTING_REGION: {{s3-resource-testing-region}}
+  - task: build-s3-binaries
+    file: pivnet-resource/ci/build-s3-binaries/task.yml
+  - put: s3-out-binary
+    params:
+      file: s3-binaries/out
+      to: s3-out
 
 - name: test
   public: true
