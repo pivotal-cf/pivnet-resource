@@ -68,7 +68,7 @@ resources:
     secret_access_key: {{aws-secret-access-key}}
 
 jobs:
-- name: test-s3-resource
+- name: s3-resource-build-and-test
   public: true
   plan:
   - get: s3-resource
@@ -97,6 +97,10 @@ jobs:
   plan:
   - get: pivnet-resource
     resource: pivnet-resource-develop
+    trigger: true
+  - get: s3-out-binary
+    resource: s3-out-binary
+    passed: [s3-resource-build-and-test]
     trigger: true
   - task: test
     file: pivnet-resource/ci/test/task.yml
