@@ -71,11 +71,12 @@ jobs:
 - name: s3-resource-build-and-test
   public: true
   plan:
-  - get: s3-resource
-    trigger: true
-  - get: pivnet-resource
-    resource: pivnet-resource-develop
-    trigger: true
+  - aggregate:
+    - get: s3-resource
+      trigger: true
+    - get: pivnet-resource
+      resource: pivnet-resource-develop
+      trigger: true
   - task: test
     file: pivnet-resource/ci/test-s3-resource/task.yml
     config:
@@ -95,13 +96,14 @@ jobs:
 - name: test
   public: true
   plan:
-  - get: pivnet-resource
-    resource: pivnet-resource-develop
-    trigger: true
-  - get: s3-out-binary
-    resource: s3-out-binary
-    passed: [s3-resource-build-and-test]
-    trigger: true
+  - aggregate:
+    - get: pivnet-resource
+      resource: pivnet-resource-develop
+      trigger: true
+    - get: s3-out-binary
+      resource: s3-out-binary
+      passed: [s3-resource-build-and-test]
+      trigger: true
   - task: test
     file: pivnet-resource/ci/test/task.yml
     config:
@@ -116,6 +118,10 @@ jobs:
     - get: pivnet-resource
       resource: pivnet-resource-develop
       passed: [test]
+      trigger: true
+    - get: s3-out-binary
+      resource: s3-out-binary
+      passed: [s3-resource-build-and-test]
       trigger: true
     - get: version
       params: {pre: rc}
