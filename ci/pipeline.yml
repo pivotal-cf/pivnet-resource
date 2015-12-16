@@ -76,7 +76,6 @@ jobs:
       trigger: true
     - get: pivnet-resource
       resource: pivnet-resource-develop
-      trigger: true
   - task: test
     file: pivnet-resource/ci/test-s3-resource/task.yml
     config:
