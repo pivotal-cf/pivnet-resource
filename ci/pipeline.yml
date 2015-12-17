@@ -108,6 +108,11 @@ jobs:
     config:
       params:
         API_TOKEN: {{api-token}}
+        AWS_ACCESS_KEY_ID: {{pivnet-aws-access-key-id}}
+        AWS_SECRET_ACCESS_KEY: {{pivnet-aws-secret-access-key}}
+        PIVNET_S3_REGION: {{pivnet-s3-region}}
+        PIVNET_BUCKET_NAME: {{pivnet-bucket-name}}
+        S3_FILEPATH_PREFIX: {{s3-filepath-prefix}}
 
 - name: rc
   serial_groups: [version]
