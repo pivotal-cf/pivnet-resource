@@ -156,6 +156,10 @@ jobs:
     - get: pivnet-resource
       resource: pivnet-resource-develop
       passed: [rc]
+    - get: s3-out-binary
+      resource: s3-out-binary
+      passed: [rc]
+      trigger: true
     - get: version
       passed: [rc]
       params: {bump: final}
