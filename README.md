@@ -20,17 +20,57 @@ in general their versions will be different.
 
 * `product_name`: *Required.*  Name of product on Pivotal Network.
 
-### Example
+* `access_key_id`: *Optional.*  AWS access key id. Required for uploading products via `out`.
 
-Resource configuration:
+* `secret_access_key`: *Optional.*  AWS secret access key. Required for uploading products via `out`.
+
+### Example Pipeline Configuration
+
+#### Check
 
 ``` yaml
+---
 resources:
 - name: p-gitlab-pivnet-resource
   type: pivnet
   source:
     api_token: my-api-token
     product_name: p-gitlab
+```
+
+#### Get
+
+Resource configuration as above for Check, with the following job configuration.
+
+``` yaml
+---
+jobs:
+- name: p-gitlab-pivnet-resource
+  plan:
+  - get: p-gitlab-pivnet-resource
+```
+
+#### Put
+
+``` yaml
+---
+resources:
+- name: p-gitlab-pivnet-resource
+  type: pivnet
+  source:
+    api_token: my-api-token
+    product_name: p-gitlab
+    access_key_id: my-aws-access-key-id
+    secret_access_key: my-aws-secret-access-key
+
+---
+jobs:
+- name: p-gitlab-pivnet-resource
+  plan:
+  - put: p-gitlab-pivnet-resource
+    params:
+      file: some-directory/*
+      s3_filepath_prefix: P-Gitlab
 ```
 
 ## Behavior
@@ -49,11 +89,18 @@ TBD
 
 ### `out`: Upload a product to Pivotal Network.
 
-TBD
+Uploads a single file to the pivnet bucket.
 
 #### Parameters
 
-TBD
+* `file`: *Required.* Path to the file to upload. If multiple files are
+  matched by the glob, an error is raised.
+
+* `s3_filepath_prefix`: *Required.* Case-sensitive prefix of the
+  path in the S3 bucket.
+  Generally similar to, but not the same as, `product_name`. For example,
+  a `product_name` might be `pivotal-diego-pcf` (lower-case) but the
+  `s3_filepath_prefix` could be `Pivotal-Diego-PCF`.
 
 ## Developing
 
@@ -63,25 +110,43 @@ A valid install of golang >= 1.4 is required.
 
 ### Dependencies
 
-There are no external dependencies for the resource. The tests require ginkgo
-and gomega. Obtain them with:
+There are no external dependencies for the resource.
+The test dependencies are vendored using [godep](https://github.com/tools/godep).
+Install godep and the ginkgo executable with:
 
 ```
+go get -u github.com/tools/godep
 go get -u github.com/onsi/ginkgo/ginkgo
-go get -u github.com/onsi/gomega
-go get -u github.com/golang/protobuf/proto # transitive dependency of gomega
+```
+
+Restore dependencies with:
+
+```
+godep restore
 ```
 
 ### Running the tests
 
-The tests require a valid Pivotal Network API token.
+The tests require a valid Pivotal Network API token and valid AWS S3 configuration.
 
 Refer to the
 [official docs](https://network.pivotal.io/docs/api#how-to-authenticate)
-for more details.
+for more details on obtaining a Pivotal Network API token.
+
+For the AWS S3 configuration, as the tests will actually upload a small test
+file to the specified S3 bucket, ensure the bucket is already created and
+permissions are set correctly such that the user associated with the provided
+credentials can upload, download and delete.
 
 Run the tests with the following command:
 
 ```
-API_TOKEN=my-token ./scripts/test
+API_TOKEN=my-token \
+AWS_ACCESS_KEY_ID=my-aws-access-key-id \
+AWS_SECRET_ACCESS_KEY=my-aws-secret-access-key \
+S3_OUT_LOCATION=location-of-s3-out-binary \
+PIVNET_S3_REGION=region-of-pivnet-eg-us-east-1 \
+PIVNET_BUCKET_NAME=bucket-of-pivnet-eg-pivnet-bucket \
+S3_FILEPATH_PREFIX=Case-Sensitive-Path-eg-Pivotal-Diego-PCF \
+./scripts/test
 ```
