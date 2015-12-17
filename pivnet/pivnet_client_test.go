@@ -1,6 +1,7 @@
 package pivnet_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -51,7 +52,7 @@ var _ = Describe("PivnetClient", func() {
 
 	Describe("Get Release", func() {
 		It("returns the release based on the name and version", func() {
-			response := `{"releases": [{"id": "3", "version": "3.2.1", "_links": {"href":"https://banana.org/cookies/download"}}]}`
+			response := `{"releases": [{"id": 3, "version": "3.2.1", "_links": {"product_files": {"href":"https://banana.org/cookies/download"}}}]}`
 
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
@@ -63,6 +64,22 @@ var _ = Describe("PivnetClient", func() {
 			release, err := client.GetRelease("banana", "3.2.1")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(release.Links.ProductFiles["href"]).To(Equal("https://banana.org/cookies/download"))
+		})
+
+		Context("when the requested version is not available but the request is successful", func() {
+			It("returns an error", func() {
+				response := `{"releases": [{"id": 3, "version": "3.2.1"}]}`
+
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
+						ghttp.RespondWith(http.StatusOK, response),
+					),
+				)
+
+				_, err := client.GetRelease("banana", "1.0.0")
+				Expect(err).To(MatchError(errors.New("The requested version: 1.0.0 - could not be found")))
+			})
 		})
 	})
 

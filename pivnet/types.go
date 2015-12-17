@@ -18,4 +18,7 @@ type Eula struct {
 	Slug    string `json:"slug"`
 	ID      int    `json:"id"`
 	Version string `json:"version"`
+	Links   struct {
+		ProductFiles map[string]string `json:"product_files"`
+	} `json:"_links"`
 }
