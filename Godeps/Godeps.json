@@ -1,0 +1,78 @@
+{
+	"ImportPath": "github.com/pivotal-cf-experimental/pivnet-resource",
+	"GoVersion": "go1.5",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws",
+			"Comment": "v1.0.5",
+			"Rev": "9e7816464bb6044ae17fff44ce59387d2658e2cb"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/endpoints",
+			"Comment": "v1.0.5",
+			"Rev": "9e7816464bb6044ae17fff44ce59387d2658e2cb"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/query",
+			"Comment": "v1.0.5",
+			"Rev": "9e7816464bb6044ae17fff44ce59387d2658e2cb"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/rest",
+			"Comment": "v1.0.5",
+			"Rev": "9e7816464bb6044ae17fff44ce59387d2658e2cb"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/restxml",
+			"Comment": "v1.0.5",
+			"Rev": "9e7816464bb6044ae17fff44ce59387d2658e2cb"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
+			"Comment": "v1.0.5",
+			"Rev": "9e7816464bb6044ae17fff44ce59387d2658e2cb"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/signer/v4",
+			"Comment": "v1.0.5",
+			"Rev": "9e7816464bb6044ae17fff44ce59387d2658e2cb"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/private/waiter",
+			"Comment": "v1.0.5",
+			"Rev": "9e7816464bb6044ae17fff44ce59387d2658e2cb"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/s3",
+			"Comment": "v1.0.5",
+			"Rev": "9e7816464bb6044ae17fff44ce59387d2658e2cb"
+		},
+		{
+			"ImportPath": "github.com/go-ini/ini",
+			"Comment": "v1.8.5-1-g467243b",
+			"Rev": "467243bad6cb295e0fe72366da5ba85b069874cb"
+		},
+		{
+			"ImportPath": "github.com/golang/protobuf/proto",
+			"Rev": "3d2510a4dd961caffa2ae781669c628d82db700a"
+		},
+		{
+			"ImportPath": "github.com/jmespath/go-jmespath",
+			"Comment": "0.2.2-2-gc01cf91",
+			"Rev": "c01cf91b011868172fdcd9f41838e80c9d716264"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo",
+			"Comment": "v1.2.0-18-g921b64f",
+			"Rev": "921b64f1ba23533e629656e7973741006f4e66ea"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega",
+			"Comment": "v1.0-71-g2152b45",
+			"Rev": "2152b45fa28a361beba9aab0885972323a444e28"
+		}
+	]
+}
