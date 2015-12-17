@@ -120,7 +120,7 @@ jobs:
       trigger: true
     - get: s3-out-binary
       resource: s3-out-binary
-      passed: [s3-resource-build-and-test]
+      passed: [test]
       trigger: true
     - get: version
       params: {pre: rc}

@@ -5,6 +5,7 @@ image: docker:///concourse/static-golang
 inputs:
 - name: pivnet-resource
   path: gopath/src/github.com/pivotal-cf-experimental/pivnet-resource
+- name: s3-out-binary
 
 run:
   path: gopath/src/github.com/pivotal-cf-experimental/pivnet-resource/ci/build/task
