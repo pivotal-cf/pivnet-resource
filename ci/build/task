@@ -9,4 +9,6 @@ scripts_dir="$( cd "${base_dir}/scripts" && pwd )"
 export GOPATH=$PWD/gopath
 export PATH=$GOPATH/bin:$PATH
 
+cp "${PWD}/s3-out-binary/s3-out" "${base_dir}/s3-out"
+
 "${scripts_dir}/build" "$@"
