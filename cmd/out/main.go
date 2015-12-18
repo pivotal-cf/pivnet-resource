@@ -48,6 +48,10 @@ func main() {
 		log.Fatalln("version_file must be provided")
 	}
 
+	if input.Params.ReleaseTypeFile == "" {
+		log.Fatalln("release_type_file must be provided")
+	}
+
 	if input.Params.File == "" && input.Params.FilepathPrefix == "" {
 		fmt.Fprintln(os.Stderr, "file glob and s3_filepath_prefix not provided - skipping upload to s3")
 	} else {

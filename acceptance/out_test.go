@@ -52,14 +52,16 @@ func run(command *exec.Cmd, stdinContents []byte) *gexec.Session {
 
 var _ = Describe("Out", func() {
 	var (
-		versionFile    *os.File
-		productVersion string
-		productName    = "pivotal-diego-pcf"
-		command        *exec.Cmd
-		stdinContents  []byte
-		err            error
-		outRequest     concourse.OutRequest
-		sourcesDir     string
+		versionFile     *os.File
+		releaseTypeFile *os.File
+		releaseType     = "Minor Release"
+		productVersion  string
+		productName     = "pivotal-diego-pcf"
+		command         *exec.Cmd
+		stdinContents   []byte
+		err             error
+		outRequest      concourse.OutRequest
+		sourcesDir      string
 	)
 
 	BeforeEach(func() {
@@ -71,6 +73,13 @@ var _ = Describe("Out", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		_, err = versionFile.WriteString(productVersion)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		By("Writing release type to file")
+		releaseTypeFile, err = ioutil.TempFile("", "")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = releaseTypeFile.WriteString(releaseType)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Creating a temporary sources dir")
@@ -87,9 +96,10 @@ var _ = Describe("Out", func() {
 				ProductName:     productName,
 			},
 			Params: concourse.OutParams{
-				File:           "*",
-				FilepathPrefix: s3FilepathPrefix,
-				VersionFile:    versionFile.Name(),
+				File:            "*",
+				FilepathPrefix:  s3FilepathPrefix,
+				VersionFile:     versionFile.Name(),
+				ReleaseTypeFile: releaseTypeFile.Name(),
 			},
 		}
 
@@ -224,6 +234,22 @@ var _ = Describe("Out", func() {
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Err).Should(gbytes.Say("version_file must be provided"))
+			})
+		})
+
+		Context("when no release_type_file is provided", func() {
+			BeforeEach(func() {
+				outRequest.Params.ReleaseTypeFile = ""
+
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("exits with error", func() {
+				session := run(command, stdinContents)
+
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("release_type_file must be provided"))
 			})
 		})
 	})
