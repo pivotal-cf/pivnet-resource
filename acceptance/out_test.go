@@ -45,6 +45,36 @@ var _ = Describe("Out", func() {
 			})
 		})
 
+		Context("when no api_token is provided", func() {
+			It("exits with error", func() {
+				command := exec.Command(outPath, "/tmp")
+				writer, err := command.StdinPipe()
+				Expect(err).ShouldNot(HaveOccurred())
+
+				raw, err := json.Marshal(concourse.OutRequest{
+					Source: concourse.Source{
+						APIToken:        "",
+						AccessKeyID:     awsAccessKeyID,
+						SecretAccessKey: awsSecretAccessKey,
+					},
+					Params: concourse.OutParams{
+						File:           "*",
+						FilepathPrefix: s3FilepathPrefix,
+					},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(writer, string(raw))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("api_token must be provided"))
+			})
+		})
+
 		Context("when no aws access key id is provided", func() {
 			It("exits with error", func() {
 				command := exec.Command(outPath, "/tmp")
@@ -53,6 +83,7 @@ var _ = Describe("Out", func() {
 
 				raw, err := json.Marshal(concourse.OutRequest{
 					Source: concourse.Source{
+						APIToken:        pivnetAPIToken,
 						AccessKeyID:     "",
 						SecretAccessKey: awsSecretAccessKey,
 					},
@@ -82,6 +113,7 @@ var _ = Describe("Out", func() {
 
 				raw, err := json.Marshal(concourse.OutRequest{
 					Source: concourse.Source{
+						APIToken:        pivnetAPIToken,
 						AccessKeyID:     awsAccessKeyID,
 						SecretAccessKey: "",
 					},
@@ -111,6 +143,7 @@ var _ = Describe("Out", func() {
 
 				raw, err := json.Marshal(concourse.OutRequest{
 					Source: concourse.Source{
+						APIToken:        pivnetAPIToken,
 						AccessKeyID:     awsAccessKeyID,
 						SecretAccessKey: awsSecretAccessKey,
 					},
@@ -140,6 +173,7 @@ var _ = Describe("Out", func() {
 
 				raw, err := json.Marshal(concourse.OutRequest{
 					Source: concourse.Source{
+						APIToken:        pivnetAPIToken,
 						AccessKeyID:     awsAccessKeyID,
 						SecretAccessKey: awsSecretAccessKey,
 					},
