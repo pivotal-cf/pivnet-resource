@@ -44,6 +44,10 @@ func main() {
 		log.Fatalln("product_name must be provided")
 	}
 
+	if input.Params.VersionFile == "" {
+		log.Fatalln("version_file must be provided")
+	}
+
 	if input.Params.File == "" && input.Params.FilepathPrefix == "" {
 		fmt.Fprintln(os.Stderr, "file glob and s3_filepath_prefix not provided - skipping upload to s3")
 	} else {

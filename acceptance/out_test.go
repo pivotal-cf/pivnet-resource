@@ -210,6 +210,22 @@ var _ = Describe("Out", func() {
 				Expect(session.Err).Should(gbytes.Say("s3_filepath_prefix must be provided"))
 			})
 		})
+
+		Context("when no version_file is provided", func() {
+			BeforeEach(func() {
+				outRequest.Params.VersionFile = ""
+
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("exits with error", func() {
+				session := run(command, stdinContents)
+
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("version_file must be provided"))
+			})
+		})
 	})
 
 	Describe("Creating a new release", func() {
