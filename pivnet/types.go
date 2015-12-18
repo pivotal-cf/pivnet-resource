@@ -5,6 +5,7 @@ type Response struct {
 }
 
 type Release struct {
+	ID           int    `json:"id"`
 	Availability string `json:"availability"`
 	Eula         Eula   `json:"eula"`
 	OSSCompliant string `json:"oss_compliant"`

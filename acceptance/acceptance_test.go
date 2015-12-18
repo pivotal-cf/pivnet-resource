@@ -23,7 +23,7 @@ var _ = Describe("Acceptance", func() {
 		var releases []string
 		productName := "p-mysql"
 		BeforeEach(func() {
-			releases = getProductReleases(productName)
+			releases = getProductVersions(productName)
 		})
 
 		Context("when no version is provided", func() {

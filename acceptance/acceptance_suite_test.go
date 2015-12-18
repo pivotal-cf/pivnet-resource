@@ -83,9 +83,8 @@ var _ = AfterSuite(func() {
 	gexec.CleanupBuildArtifacts()
 })
 
-func getProductReleases(product string) []string {
-	var versions []string
-	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases", product)
+func getProductReleases(productName string) []pivnet.Release {
+	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases", productName)
 
 	req, err := http.NewRequest("GET", product_url, nil)
 	Expect(err).NotTo(HaveOccurred())
@@ -100,11 +99,38 @@ func getProductReleases(product string) []string {
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	Expect(err).NotTo(HaveOccurred())
 
-	for _, release := range response.Releases {
+	return response.Releases
+}
+
+func getProductVersions(productName string) []string {
+	var versions []string
+	for _, release := range getProductReleases(productName) {
 		versions = append(versions, string(release.Version))
 	}
 
 	return versions
+}
+
+func deletePivnetRelease(productName, productVersion string) {
+	var releaseID int
+	for _, release := range getProductReleases(productName) {
+		if release.Version == productVersion {
+			releaseID = release.ID
+			break
+		}
+	}
+	Expect(releaseID).NotTo(Equal(0))
+
+	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases/%d", productName, releaseID)
+
+	req, err := http.NewRequest("DELETE", product_url, nil)
+	Expect(err).NotTo(HaveOccurred())
+
+	req.Header.Add("Authorization", fmt.Sprintf("Token %s", pivnetAPIToken))
+
+	resp, err := http.DefaultClient.Do(req)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 }
 
 // copyFileContents copies the contents of the file named src to the file named

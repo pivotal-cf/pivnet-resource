@@ -198,34 +198,38 @@ var _ = Describe("Out", func() {
 
 	Describe("Creating a new release", func() {
 		var (
-			versionFile *os.File
-			productName = "pivotal-diego-pcf"
+			versionFile    *os.File
+			productName    = "pivotal-diego-pcf"
+			productVersion string
 		)
 
 		BeforeEach(func() {
 			var err error
 			versionFile, err = ioutil.TempFile("", "")
 			Expect(err).ShouldNot(HaveOccurred())
+
+			By("Generating 'random' product version")
+			productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
+
+			By("Writing product version to file")
+			_, err = versionFile.WriteString(productVersion)
+			Expect(err).ShouldNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
+			By("Deleting newly-created release")
+			deletePivnetRelease(productName, productVersion)
+
 			By("Removing local temp version file")
 			err := os.RemoveAll(versionFile.Name())
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
 		It("Successfully creates a release", func() {
-			By("Generating 'random' product version")
-			productVersion := fmt.Sprintf("%d", time.Now().Nanosecond())
-
 			By("Validating the new product version does not yet exist")
-			productReleases := getProductReleases(productName)
-			Expect(productReleases).NotTo(BeEmpty())
-			Expect(productReleases).NotTo(ContainElement(productVersion))
-
-			By("Writing product version to file")
-			_, err := versionFile.WriteString(productVersion)
-			Expect(err).ShouldNot(HaveOccurred())
+			productVersions := getProductVersions(productName)
+			Expect(productVersions).NotTo(BeEmpty())
+			Expect(productVersions).NotTo(ContainElement(productVersion))
 
 			By("Running the command")
 			command := exec.Command(outPath, "/tmp")
@@ -255,11 +259,10 @@ var _ = Describe("Out", func() {
 			Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
 			By("Validating new release exists on pivnet")
-			productReleases = getProductReleases("pivotal-diego-pcf")
-			Expect(productReleases).To(ContainElement(productVersion))
+			productVersions = getProductVersions("pivotal-diego-pcf")
+			Expect(productVersions).To(ContainElement(productVersion))
 
-			By("Outputting a meaningful json response")
-
+			By("Outputting a valid json response")
 			response := concourse.OutResponse{}
 			err = json.Unmarshal(session.Out.Contents(), &response)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -320,6 +323,7 @@ var _ = Describe("Out", func() {
 						APIToken:        pivnetAPIToken,
 						AccessKeyID:     awsAccessKeyID,
 						SecretAccessKey: awsSecretAccessKey,
+						ProductName:     productName,
 					},
 					Params: concourse.OutParams{
 						File:           "*",
