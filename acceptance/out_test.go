@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	s3UploadTimeout = 5 * time.Second
+	s3UploadTimeout   = 5 * time.Second
+	executableTimeout = 5 * time.Second
 )
 
 type s3client struct {
@@ -175,7 +176,38 @@ var _ = Describe("Out", func() {
 		})
 	})
 
-	Context("when everything is configured correctly", func() {
+	Context("when neither file glob nor prefix are provided", func() {
+		It("runs successfully", func() {
+			command := exec.Command(outPath, "/tmp")
+			writer, err := command.StdinPipe()
+			Expect(err).ShouldNot(HaveOccurred())
+
+			raw, err := json.Marshal(concourse.OutRequest{
+				Source: concourse.Source{
+					AccessKeyID:     awsAccessKeyID,
+					SecretAccessKey: awsSecretAccessKey,
+				},
+				Params: concourse.OutParams{
+					File:           "",
+					FilepathPrefix: "",
+				},
+			})
+			Expect(err).ShouldNot(HaveOccurred())
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = io.WriteString(writer, string(raw))
+			Expect(err).ShouldNot(HaveOccurred())
+			err = writer.Close()
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Eventually(session, executableTimeout).Should(gexec.Exit(0))
+			Expect(session.Err).Should(gbytes.Say("file glob and s3_filepath_prefix not provided - skipping upload to s3"))
+		})
+	})
+
+	Context("when file glob and prefix configured correctly", func() {
 		var (
 			sourcesDir     string
 			sourceFileName string
@@ -229,6 +261,8 @@ var _ = Describe("Out", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = io.WriteString(writer, string(raw))
+			Expect(err).ShouldNot(HaveOccurred())
+			err = writer.Close()
 			Expect(err).ShouldNot(HaveOccurred())
 
 			Eventually(session, s3UploadTimeout).Should(gexec.Exit(0))

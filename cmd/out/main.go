@@ -34,41 +34,45 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	if input.Source.AccessKeyID == "" {
-		log.Fatalln("access_key_id must be provided")
-	}
+	if input.Params.File == "" && input.Params.FilepathPrefix == "" {
+		fmt.Fprintln(os.Stderr, "file glob and s3_filepath_prefix not provided - skipping upload to s3")
+	} else {
+		if input.Source.AccessKeyID == "" {
+			log.Fatalln("access_key_id must be provided")
+		}
 
-	if input.Source.SecretAccessKey == "" {
-		log.Fatalln("secret_access_key must be provided")
-	}
+		if input.Source.SecretAccessKey == "" {
+			log.Fatalln("secret_access_key must be provided")
+		}
 
-	if input.Params.File == "" {
-		log.Fatalln("file glob must be provided")
-	}
+		if input.Params.File == "" {
+			log.Fatalln("file glob must be provided")
+		}
 
-	if input.Params.FilepathPrefix == "" {
-		log.Fatalln("s3_filepath_prefix must be provided")
-	}
+		if input.Params.FilepathPrefix == "" {
+			log.Fatalln("s3_filepath_prefix must be provided")
+		}
 
-	s3Client := s3.NewClient(s3.NewClientConfig{
-		AccessKeyID:     input.Source.AccessKeyID,
-		SecretAccessKey: input.Source.SecretAccessKey,
-		RegionName:      "eu-west-1",
-		Bucket:          "pivotalnetwork",
+		s3Client := s3.NewClient(s3.NewClientConfig{
+			AccessKeyID:     input.Source.AccessKeyID,
+			SecretAccessKey: input.Source.SecretAccessKey,
+			RegionName:      "eu-west-1",
+			Bucket:          "pivotalnetwork",
 
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
+			Stdout: os.Stdout,
+			Stderr: os.Stderr,
 
-		OutBinaryPath: filepath.Join(myDir, s3OutBinaryName),
-	})
+			OutBinaryPath: filepath.Join(myDir, s3OutBinaryName),
+		})
 
-	err = s3Client.Out(
-		input.Params.File,
-		"product_files/"+input.Params.FilepathPrefix+"/",
-		sourcesDir,
-	)
+		err = s3Client.Out(
+			input.Params.File,
+			"product_files/"+input.Params.FilepathPrefix+"/",
+			sourcesDir,
+		)
 
-	if err != nil {
-		log.Fatal(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
