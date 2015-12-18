@@ -14,7 +14,7 @@ const (
 
 type Client interface {
 	ProductVersions(string) ([]string, error)
-	CreateRelease(productName, productVersion string) (Release, error)
+	CreateRelease(productName, productVersion, ReleaseType string) (Release, error)
 }
 
 type client struct {
@@ -61,7 +61,7 @@ func (c client) ProductVersions(id string) ([]string, error) {
 	return versions, nil
 }
 
-func (c client) CreateRelease(productName, productVersion string) (Release, error) {
+func (c client) CreateRelease(productName, productVersion, releaseType string) (Release, error) {
 	releasesURL := c.url + "/products/" + productName + "/releases"
 
 	body := createReleaseBody{
@@ -72,7 +72,7 @@ func (c client) CreateRelease(productName, productVersion string) (Release, erro
 			},
 			OSSCompliant: "confirm",
 			ReleaseDate:  "2015-12-18",
-			ReleaseType:  "Minor Release",
+			ReleaseType:  releaseType,
 			Version:      productVersion,
 		},
 	}

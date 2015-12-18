@@ -286,6 +286,11 @@ var _ = Describe("Out", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			Expect(response.Version.ProductVersion).To(Equal(productVersion))
+
+			By("Validating the release was created correctly")
+			release := getPivnetRelease(productName, productVersion)
+			Expect(release.Version).To(Equal(productVersion))
+			Expect(release.ReleaseType).To(Equal(releaseType))
 		})
 
 		Context("when S3 source and params configured correctly", func() {

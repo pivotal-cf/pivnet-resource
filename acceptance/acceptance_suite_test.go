@@ -111,14 +111,20 @@ func getProductVersions(productName string) []string {
 	return versions
 }
 
-func deletePivnetRelease(productName, productVersion string) {
-	var releaseID int
+func getPivnetRelease(productName, productVersion string) pivnet.Release {
 	for _, release := range getProductReleases(productName) {
 		if release.Version == productVersion {
-			releaseID = release.ID
-			break
+			return release
 		}
 	}
+	Fail(fmt.Sprintf("Could not find release for productName: %s and productVersion: %s", productName, productVersion))
+	// We won't get here
+	return pivnet.Release{}
+}
+
+func deletePivnetRelease(productName, productVersion string) {
+	pivnetRelease := getPivnetRelease(productName, productVersion)
+	releaseID := pivnetRelease.ID
 	Expect(releaseID).NotTo(Equal(0))
 
 	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases/%d", productName, releaseID)

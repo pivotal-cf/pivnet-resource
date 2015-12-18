@@ -96,14 +96,22 @@ func main() {
 
 	pivnetClient := pivnet.NewClient(pivnet.URL, input.Source.APIToken)
 
-	contents, err := ioutil.ReadFile(input.Params.VersionFile)
+	releaseTypeContents, err := ioutil.ReadFile(input.Params.ReleaseTypeFile)
 	if err != nil {
 		log.Fatal(err)
 	}
-	productVersion := string(contents)
+
+	releaseType := string(releaseTypeContents)
+
+	versionContents, err := ioutil.ReadFile(input.Params.VersionFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	productVersion := string(versionContents)
 	productName := input.Source.ProductName
 
-	pivnetClient.CreateRelease(productName, productVersion)
+	pivnetClient.CreateRelease(productName, productVersion, releaseType)
 
 	out := concourse.OutResponse{
 		Version: concourse.Release{
