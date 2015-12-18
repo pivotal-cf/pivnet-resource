@@ -32,7 +32,77 @@ type s3client struct {
 	session *session.Session
 }
 
+func run(command *exec.Cmd, stdinContents []byte) *gexec.Session {
+	fmt.Fprintf(GinkgoWriter, string(stdinContents))
+
+	stdin, err := command.StdinPipe()
+	Expect(err).ShouldNot(HaveOccurred())
+
+	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+
+	_, err = io.WriteString(stdin, string(stdinContents))
+	Expect(err).ShouldNot(HaveOccurred())
+
+	err = stdin.Close()
+	Expect(err).ShouldNot(HaveOccurred())
+
+	return session
+}
+
 var _ = Describe("Out", func() {
+	var (
+		versionFile    *os.File
+		productVersion string
+		productName    = "pivotal-diego-pcf"
+		command        *exec.Cmd
+		stdinContents  []byte
+		err            error
+		outRequest     concourse.OutRequest
+		sourcesDir     string
+	)
+
+	BeforeEach(func() {
+		By("Generating 'random' product version")
+		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
+
+		By("Writing product version to file")
+		versionFile, err = ioutil.TempFile("", "")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = versionFile.WriteString(productVersion)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		By("Creating a temporary sources dir")
+		sourcesDir, err = ioutil.TempDir("", "")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		command = exec.Command(outPath, sourcesDir)
+
+		outRequest = concourse.OutRequest{
+			Source: concourse.Source{
+				APIToken:        pivnetAPIToken,
+				AccessKeyID:     awsAccessKeyID,
+				SecretAccessKey: awsSecretAccessKey,
+				ProductName:     productName,
+			},
+			Params: concourse.OutParams{
+				File:           "*",
+				FilepathPrefix: s3FilepathPrefix,
+				VersionFile:    versionFile.Name(),
+			},
+		}
+
+		stdinContents, err = json.Marshal(outRequest)
+		Expect(err).ShouldNot(HaveOccurred())
+	})
+
+	AfterEach(func() {
+		By("Removing local temp version file")
+		err := os.RemoveAll(versionFile.Name())
+		Expect(err).ShouldNot(HaveOccurred())
+	})
+
 	Describe("Argument validation", func() {
 		Context("when no sources directory is provided via args", func() {
 			It("exits with error", func() {
@@ -46,59 +116,47 @@ var _ = Describe("Out", func() {
 		})
 
 		Context("when no api_token is provided", func() {
+			BeforeEach(func() {
+				outRequest.Source.APIToken = ""
+
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
 			It("exits with error", func() {
-				command := exec.Command(outPath, "/tmp")
-				writer, err := command.StdinPipe()
-				Expect(err).ShouldNot(HaveOccurred())
-
-				raw, err := json.Marshal(concourse.OutRequest{
-					Source: concourse.Source{
-						APIToken:        "",
-						AccessKeyID:     awsAccessKeyID,
-						SecretAccessKey: awsSecretAccessKey,
-					},
-					Params: concourse.OutParams{
-						File:           "*",
-						FilepathPrefix: s3FilepathPrefix,
-					},
-				})
-				Expect(err).ShouldNot(HaveOccurred())
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = io.WriteString(writer, string(raw))
-				Expect(err).ShouldNot(HaveOccurred())
+				session := run(command, stdinContents)
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Err).Should(gbytes.Say("api_token must be provided"))
 			})
 		})
 
-		Context("when no aws access key id is provided", func() {
+		Context("when no product_name is provided", func() {
+			BeforeEach(func() {
+				outRequest.Source.ProductName = ""
+
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
 			It("exits with error", func() {
-				command := exec.Command(outPath, "/tmp")
-				writer, err := command.StdinPipe()
-				Expect(err).ShouldNot(HaveOccurred())
+				session := run(command, stdinContents)
 
-				raw, err := json.Marshal(concourse.OutRequest{
-					Source: concourse.Source{
-						APIToken:        pivnetAPIToken,
-						AccessKeyID:     "",
-						SecretAccessKey: awsSecretAccessKey,
-					},
-					Params: concourse.OutParams{
-						File:           "*",
-						FilepathPrefix: s3FilepathPrefix,
-					},
-				})
-				Expect(err).ShouldNot(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("product_name must be provided"))
+			})
+		})
 
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
+		Context("when no aws access key id is provided", func() {
+			BeforeEach(func() {
+				outRequest.Source.AccessKeyID = ""
 
-				_, err = io.WriteString(writer, string(raw))
+				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("exits with error", func() {
+				session := run(command, stdinContents)
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Err).Should(gbytes.Say("access_key_id must be provided"))
@@ -106,29 +164,15 @@ var _ = Describe("Out", func() {
 		})
 
 		Context("when no aws secret access key is provided", func() {
+			BeforeEach(func() {
+				outRequest.Source.SecretAccessKey = ""
+
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
 			It("exits with error", func() {
-				command := exec.Command(outPath, "/tmp")
-				writer, err := command.StdinPipe()
-				Expect(err).ShouldNot(HaveOccurred())
-
-				raw, err := json.Marshal(concourse.OutRequest{
-					Source: concourse.Source{
-						APIToken:        pivnetAPIToken,
-						AccessKeyID:     awsAccessKeyID,
-						SecretAccessKey: "",
-					},
-					Params: concourse.OutParams{
-						File:           "*",
-						FilepathPrefix: s3FilepathPrefix,
-					},
-				})
-				Expect(err).ShouldNot(HaveOccurred())
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = io.WriteString(writer, string(raw))
-				Expect(err).ShouldNot(HaveOccurred())
+				session := run(command, stdinContents)
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Err).Should(gbytes.Say("secret_access_key must be provided"))
@@ -136,29 +180,15 @@ var _ = Describe("Out", func() {
 		})
 
 		Context("when no file glob is provided", func() {
+			BeforeEach(func() {
+				outRequest.Params.File = ""
+
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
 			It("exits with error", func() {
-				command := exec.Command(outPath, "/tmp")
-				writer, err := command.StdinPipe()
-				Expect(err).ShouldNot(HaveOccurred())
-
-				raw, err := json.Marshal(concourse.OutRequest{
-					Source: concourse.Source{
-						APIToken:        pivnetAPIToken,
-						AccessKeyID:     awsAccessKeyID,
-						SecretAccessKey: awsSecretAccessKey,
-					},
-					Params: concourse.OutParams{
-						File:           "",
-						FilepathPrefix: s3FilepathPrefix,
-					},
-				})
-				Expect(err).ShouldNot(HaveOccurred())
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = io.WriteString(writer, string(raw))
-				Expect(err).ShouldNot(HaveOccurred())
+				session := run(command, stdinContents)
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Err).Should(gbytes.Say("file glob must be provided"))
@@ -166,29 +196,15 @@ var _ = Describe("Out", func() {
 		})
 
 		Context("when no s3 filepath prefix is provided", func() {
+			BeforeEach(func() {
+				outRequest.Params.FilepathPrefix = ""
+
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
 			It("exits with error", func() {
-				command := exec.Command(outPath, "/tmp")
-				writer, err := command.StdinPipe()
-				Expect(err).ShouldNot(HaveOccurred())
-
-				raw, err := json.Marshal(concourse.OutRequest{
-					Source: concourse.Source{
-						APIToken:        pivnetAPIToken,
-						AccessKeyID:     awsAccessKeyID,
-						SecretAccessKey: awsSecretAccessKey,
-					},
-					Params: concourse.OutParams{
-						File:           "*",
-						FilepathPrefix: "",
-					},
-				})
-				Expect(err).ShouldNot(HaveOccurred())
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = io.WriteString(writer, string(raw))
-				Expect(err).ShouldNot(HaveOccurred())
+				session := run(command, stdinContents)
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Err).Should(gbytes.Say("s3_filepath_prefix must be provided"))
@@ -197,65 +213,25 @@ var _ = Describe("Out", func() {
 	})
 
 	Describe("Creating a new release", func() {
-		var (
-			versionFile    *os.File
-			productName    = "pivotal-diego-pcf"
-			productVersion string
-		)
-
-		BeforeEach(func() {
-			var err error
-			versionFile, err = ioutil.TempFile("", "")
-			Expect(err).ShouldNot(HaveOccurred())
-
-			By("Generating 'random' product version")
-			productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
-
-			By("Writing product version to file")
-			_, err = versionFile.WriteString(productVersion)
-			Expect(err).ShouldNot(HaveOccurred())
-		})
-
 		AfterEach(func() {
 			By("Deleting newly-created release")
 			deletePivnetRelease(productName, productVersion)
-
-			By("Removing local temp version file")
-			err := os.RemoveAll(versionFile.Name())
-			Expect(err).ShouldNot(HaveOccurred())
 		})
 
 		It("Successfully creates a release", func() {
+			outRequest.Params.File = ""
+			outRequest.Params.FilepathPrefix = ""
+
+			stdinContents, err = json.Marshal(outRequest)
+			Expect(err).ShouldNot(HaveOccurred())
+
 			By("Validating the new product version does not yet exist")
 			productVersions := getProductVersions(productName)
 			Expect(productVersions).NotTo(BeEmpty())
 			Expect(productVersions).NotTo(ContainElement(productVersion))
 
 			By("Running the command")
-			command := exec.Command(outPath, "/tmp")
-			writer, err := command.StdinPipe()
-			Expect(err).ShouldNot(HaveOccurred())
-
-			raw, err := json.Marshal(concourse.OutRequest{
-				Source: concourse.Source{
-					APIToken:    pivnetAPIToken,
-					ProductName: productName,
-				},
-				Params: concourse.OutParams{
-					VersionFile: versionFile.Name(),
-				},
-			})
-			Expect(err).ShouldNot(HaveOccurred())
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = io.WriteString(writer, string(raw))
-			Expect(err).ShouldNot(HaveOccurred())
-
-			err = writer.Close()
-			Expect(err).ShouldNot(HaveOccurred())
-
+			session := run(command, stdinContents)
 			Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
 			By("Validating new release exists on pivnet")
@@ -274,7 +250,6 @@ var _ = Describe("Out", func() {
 			var (
 				client *s3client
 
-				sourcesDir     string
 				sourceFileName string
 				sourceFilePath string
 				remotePath     string
@@ -294,9 +269,6 @@ var _ = Describe("Out", func() {
 				sourceFileName = fmt.Sprintf("pivnet-resource-test-file-%d", time.Now().Nanosecond())
 
 				By("Creating local temp files")
-				sourcesDir, err = ioutil.TempDir("", "")
-				Expect(err).ShouldNot(HaveOccurred())
-
 				sourceFilePath = filepath.Join(sourcesDir, sourceFileName)
 				err = ioutil.WriteFile(sourceFilePath, []byte("some content"), os.ModePerm)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -314,33 +286,8 @@ var _ = Describe("Out", func() {
 			})
 
 			It("uploads a single file to s3", func() {
-				command := exec.Command(outPath, sourcesDir)
-				writer, err := command.StdinPipe()
-				Expect(err).ShouldNot(HaveOccurred())
-
-				raw, err := json.Marshal(concourse.OutRequest{
-					Source: concourse.Source{
-						APIToken:        pivnetAPIToken,
-						AccessKeyID:     awsAccessKeyID,
-						SecretAccessKey: awsSecretAccessKey,
-						ProductName:     productName,
-					},
-					Params: concourse.OutParams{
-						File:           "*",
-						FilepathPrefix: s3FilepathPrefix,
-						VersionFile:    versionFile.Name(),
-					},
-				})
-				Expect(err).ShouldNot(HaveOccurred())
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = io.WriteString(writer, string(raw))
-				Expect(err).ShouldNot(HaveOccurred())
-				err = writer.Close()
-				Expect(err).ShouldNot(HaveOccurred())
-
+				By("Running the command")
+				session := run(command, stdinContents)
 				Eventually(session, s3UploadTimeout).Should(gexec.Exit(0))
 
 				By("Verifying uploaded file can be downloaded")
