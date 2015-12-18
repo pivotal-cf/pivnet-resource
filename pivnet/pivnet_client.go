@@ -1,8 +1,10 @@
 package pivnet
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -12,6 +14,7 @@ const (
 
 type Client interface {
 	ProductVersions(string) ([]string, error)
+	CreateRelease(productName, productVersion string) (Release, error)
 }
 
 type client struct {
@@ -56,4 +59,49 @@ func (c client) ProductVersions(id string) ([]string, error) {
 	}
 
 	return versions, nil
+}
+
+func (c client) CreateRelease(productName, productVersion string) (Release, error) {
+	releasesURL := c.url + "/products/" + productName + "/releases"
+
+	body := createReleaseBody{
+		Release: Release{
+			Availability: "Admins Only",
+			Eula: Eula{
+				Slug: "pivotal_software_eula",
+			},
+			OSSCompliant: "confirm",
+			ReleaseDate:  "2015-12-18",
+			ReleaseType:  "Minor Release",
+			Version:      productVersion,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		panic(err)
+	}
+
+	req, err := http.NewRequest("POST", releasesURL, bytes.NewReader(b))
+	if err != nil {
+		panic(err)
+	}
+
+	req.Header.Add("Authorization", fmt.Sprintf("Token %s", c.token))
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	return Release{}, nil
+}
+
+type createReleaseBody struct {
+	Release Release `json:"release"`
 }

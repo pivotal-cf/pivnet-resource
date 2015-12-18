@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
 )
 
@@ -74,5 +76,28 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+
+	pivnetClient := pivnet.NewClient(pivnet.URL, input.Source.APIToken)
+
+	contents, err := ioutil.ReadFile(input.Params.VersionFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	productVersion := string(contents)
+	productName := input.Source.ProductName
+
+	pivnetClient.CreateRelease(productName, productVersion)
+
+	out := concourse.OutResponse{
+		Version: concourse.Release{
+			ProductVersion: productVersion,
+		},
+		Metadata: []string{},
+	}
+
+	err = json.NewEncoder(os.Stdout).Encode(out)
+	if err != nil {
+		log.Fatalln(err)
 	}
 }

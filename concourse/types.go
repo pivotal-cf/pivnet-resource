@@ -7,6 +7,7 @@ type Request struct {
 
 type Response []Release
 
+// TODO: Rename to Version
 type Release struct {
 	ProductVersion string `json:"product_version"`
 }
@@ -26,4 +27,10 @@ type OutRequest struct {
 type OutParams struct {
 	File           string `json:"file"`
 	FilepathPrefix string `json:"s3_filepath_prefix"`
+	VersionFile    string `json:"version_file"`
+}
+
+type OutResponse struct {
+	Version  Release  `json:"version"`
+	Metadata []string `json:"metadata"`
 }

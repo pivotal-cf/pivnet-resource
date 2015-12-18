@@ -33,47 +33,178 @@ type s3client struct {
 }
 
 var _ = Describe("Out", func() {
-	var (
-		client *s3client
-	)
+	Describe("Argument validation", func() {
+		Context("when no sources directory is provided via args", func() {
+			It("exits with error", func() {
+				command := exec.Command(outPath)
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
 
-	BeforeEach(func() {
-		By("Creating aws client")
-		var err error
-		client, err = NewS3Client(
-			awsAccessKeyID,
-			awsSecretAccessKey,
-			pivnetRegion,
-			pivnetBucketName,
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("sources"))
+			})
+		})
+
+		Context("when no aws access key id is provided", func() {
+			It("exits with error", func() {
+				command := exec.Command(outPath, "/tmp")
+				writer, err := command.StdinPipe()
+				Expect(err).ShouldNot(HaveOccurred())
+
+				raw, err := json.Marshal(concourse.OutRequest{
+					Source: concourse.Source{
+						AccessKeyID:     "",
+						SecretAccessKey: awsSecretAccessKey,
+					},
+					Params: concourse.OutParams{
+						File:           "*",
+						FilepathPrefix: s3FilepathPrefix,
+					},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(writer, string(raw))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("access_key_id must be provided"))
+			})
+		})
+
+		Context("when no aws secret access key is provided", func() {
+			It("exits with error", func() {
+				command := exec.Command(outPath, "/tmp")
+				writer, err := command.StdinPipe()
+				Expect(err).ShouldNot(HaveOccurred())
+
+				raw, err := json.Marshal(concourse.OutRequest{
+					Source: concourse.Source{
+						AccessKeyID:     awsAccessKeyID,
+						SecretAccessKey: "",
+					},
+					Params: concourse.OutParams{
+						File:           "*",
+						FilepathPrefix: s3FilepathPrefix,
+					},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(writer, string(raw))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("secret_access_key must be provided"))
+			})
+		})
+
+		Context("when no file glob is provided", func() {
+			It("exits with error", func() {
+				command := exec.Command(outPath, "/tmp")
+				writer, err := command.StdinPipe()
+				Expect(err).ShouldNot(HaveOccurred())
+
+				raw, err := json.Marshal(concourse.OutRequest{
+					Source: concourse.Source{
+						AccessKeyID:     awsAccessKeyID,
+						SecretAccessKey: awsSecretAccessKey,
+					},
+					Params: concourse.OutParams{
+						File:           "",
+						FilepathPrefix: s3FilepathPrefix,
+					},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(writer, string(raw))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("file glob must be provided"))
+			})
+		})
+
+		Context("when no s3 filepath prefix is provided", func() {
+			It("exits with error", func() {
+				command := exec.Command(outPath, "/tmp")
+				writer, err := command.StdinPipe()
+				Expect(err).ShouldNot(HaveOccurred())
+
+				raw, err := json.Marshal(concourse.OutRequest{
+					Source: concourse.Source{
+						AccessKeyID:     awsAccessKeyID,
+						SecretAccessKey: awsSecretAccessKey,
+					},
+					Params: concourse.OutParams{
+						File:           "*",
+						FilepathPrefix: "",
+					},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(writer, string(raw))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("s3_filepath_prefix must be provided"))
+			})
+		})
+	})
+
+	Describe("Creating a new release", func() {
+		var (
+			versionFile *os.File
+			productName = "pivotal-diego-pcf"
 		)
-		Expect(err).ShouldNot(HaveOccurred())
-	})
 
-	Context("when no sources directory is provided via args", func() {
-		It("exits with error", func() {
-			command := exec.Command(outPath)
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-
-			Eventually(session).Should(gexec.Exit(1))
-			Expect(session.Err).Should(gbytes.Say("sources"))
+		BeforeEach(func() {
+			var err error
+			versionFile, err = ioutil.TempFile("", "")
+			Expect(err).ShouldNot(HaveOccurred())
 		})
-	})
 
-	Context("when no aws access key id is provided", func() {
-		It("exits with error", func() {
+		AfterEach(func() {
+			By("Removing local temp version file")
+			err := os.RemoveAll(versionFile.Name())
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		It("Successfully creates a release", func() {
+			By("Generating 'random' product version")
+			productVersion := fmt.Sprintf("%d", time.Now().Nanosecond())
+
+			By("Validating the new product version does not yet exist")
+			productReleases := getProductReleases(productName)
+			Expect(productReleases).NotTo(BeEmpty())
+			Expect(productReleases).NotTo(ContainElement(productVersion))
+
+			By("Writing product version to file")
+			_, err := versionFile.WriteString(productVersion)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			By("Running the command")
 			command := exec.Command(outPath, "/tmp")
 			writer, err := command.StdinPipe()
 			Expect(err).ShouldNot(HaveOccurred())
 
 			raw, err := json.Marshal(concourse.OutRequest{
 				Source: concourse.Source{
-					AccessKeyID:     "",
-					SecretAccessKey: awsSecretAccessKey,
+					APIToken:    pivnetAPIToken,
+					ProductName: productName,
 				},
 				Params: concourse.OutParams{
-					File:           "*",
-					FilepathPrefix: s3FilepathPrefix,
+					VersionFile: versionFile.Name(),
 				},
 			})
 			Expect(err).ShouldNot(HaveOccurred())
@@ -84,193 +215,101 @@ var _ = Describe("Out", func() {
 			_, err = io.WriteString(writer, string(raw))
 			Expect(err).ShouldNot(HaveOccurred())
 
-			Eventually(session).Should(gexec.Exit(1))
-			Expect(session.Err).Should(gbytes.Say("access_key_id must be provided"))
-		})
-	})
-
-	Context("when no aws secret access key is provided", func() {
-		It("exits with error", func() {
-			command := exec.Command(outPath, "/tmp")
-			writer, err := command.StdinPipe()
-			Expect(err).ShouldNot(HaveOccurred())
-
-			raw, err := json.Marshal(concourse.OutRequest{
-				Source: concourse.Source{
-					AccessKeyID:     awsAccessKeyID,
-					SecretAccessKey: "",
-				},
-				Params: concourse.OutParams{
-					File:           "*",
-					FilepathPrefix: s3FilepathPrefix,
-				},
-			})
-			Expect(err).ShouldNot(HaveOccurred())
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = io.WriteString(writer, string(raw))
-			Expect(err).ShouldNot(HaveOccurred())
-
-			Eventually(session).Should(gexec.Exit(1))
-			Expect(session.Err).Should(gbytes.Say("secret_access_key must be provided"))
-		})
-	})
-
-	Context("when no file glob is provided", func() {
-		It("exits with error", func() {
-			command := exec.Command(outPath, "/tmp")
-			writer, err := command.StdinPipe()
-			Expect(err).ShouldNot(HaveOccurred())
-
-			raw, err := json.Marshal(concourse.OutRequest{
-				Source: concourse.Source{
-					AccessKeyID:     awsAccessKeyID,
-					SecretAccessKey: awsSecretAccessKey,
-				},
-				Params: concourse.OutParams{
-					File:           "",
-					FilepathPrefix: s3FilepathPrefix,
-				},
-			})
-			Expect(err).ShouldNot(HaveOccurred())
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = io.WriteString(writer, string(raw))
-			Expect(err).ShouldNot(HaveOccurred())
-
-			Eventually(session).Should(gexec.Exit(1))
-			Expect(session.Err).Should(gbytes.Say("file glob must be provided"))
-		})
-	})
-
-	Context("when no s3 filepath prefix is provided", func() {
-		It("exits with error", func() {
-			command := exec.Command(outPath, "/tmp")
-			writer, err := command.StdinPipe()
-			Expect(err).ShouldNot(HaveOccurred())
-
-			raw, err := json.Marshal(concourse.OutRequest{
-				Source: concourse.Source{
-					AccessKeyID:     awsAccessKeyID,
-					SecretAccessKey: awsSecretAccessKey,
-				},
-				Params: concourse.OutParams{
-					File:           "*",
-					FilepathPrefix: "",
-				},
-			})
-			Expect(err).ShouldNot(HaveOccurred())
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = io.WriteString(writer, string(raw))
-			Expect(err).ShouldNot(HaveOccurred())
-
-			Eventually(session).Should(gexec.Exit(1))
-			Expect(session.Err).Should(gbytes.Say("s3_filepath_prefix must be provided"))
-		})
-	})
-
-	Context("when neither file glob nor prefix are provided", func() {
-		It("runs successfully", func() {
-			command := exec.Command(outPath, "/tmp")
-			writer, err := command.StdinPipe()
-			Expect(err).ShouldNot(HaveOccurred())
-
-			raw, err := json.Marshal(concourse.OutRequest{
-				Source: concourse.Source{
-					AccessKeyID:     awsAccessKeyID,
-					SecretAccessKey: awsSecretAccessKey,
-				},
-				Params: concourse.OutParams{
-					File:           "",
-					FilepathPrefix: "",
-				},
-			})
-			Expect(err).ShouldNot(HaveOccurred())
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = io.WriteString(writer, string(raw))
-			Expect(err).ShouldNot(HaveOccurred())
 			err = writer.Close()
 			Expect(err).ShouldNot(HaveOccurred())
 
 			Eventually(session, executableTimeout).Should(gexec.Exit(0))
-			Expect(session.Err).Should(gbytes.Say("file glob and s3_filepath_prefix not provided - skipping upload to s3"))
-		})
-	})
 
-	Context("when file glob and prefix configured correctly", func() {
-		var (
-			sourcesDir     string
-			sourceFileName string
-			sourceFilePath string
-			remotePath     string
-		)
+			By("Validating new release exists on pivnet")
+			productReleases = getProductReleases("pivotal-diego-pcf")
+			Expect(productReleases).To(ContainElement(productVersion))
 
-		BeforeEach(func() {
-			sourceFileName = fmt.Sprintf("pivnet-resource-test-file-%d", time.Now().Nanosecond())
+			By("Outputting a meaningful json response")
 
-			By("Creating local temp files")
-			var err error
-			sourcesDir, err = ioutil.TempDir("", "")
+			response := concourse.OutResponse{}
+			err = json.Unmarshal(session.Out.Contents(), &response)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			sourceFilePath = filepath.Join(sourcesDir, sourceFileName)
-			err = ioutil.WriteFile(sourceFilePath, []byte("some content"), os.ModePerm)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			remotePath = fmt.Sprintf("product_files/%s/%s", s3FilepathPrefix, sourceFileName)
+			Expect(response.Version.ProductVersion).To(Equal(productVersion))
 		})
 
-		AfterEach(func() {
-			By("Removing uploaded file")
-			client.DeleteFile(pivnetBucketName, remotePath)
+		Context("when S3 source and params configured correctly", func() {
+			var (
+				client *s3client
 
-			By("Removing local temp files")
-			err := os.RemoveAll(sourcesDir)
-			Expect(err).ShouldNot(HaveOccurred())
-		})
+				sourcesDir     string
+				sourceFileName string
+				sourceFilePath string
+				remotePath     string
+			)
 
-		It("uploads a single file to s3", func() {
-			command := exec.Command(outPath, sourcesDir)
-			writer, err := command.StdinPipe()
-			Expect(err).ShouldNot(HaveOccurred())
+			BeforeEach(func() {
+				By("Creating aws client")
+				var err error
+				client, err = NewS3Client(
+					awsAccessKeyID,
+					awsSecretAccessKey,
+					pivnetRegion,
+					pivnetBucketName,
+				)
+				Expect(err).ShouldNot(HaveOccurred())
 
-			raw, err := json.Marshal(concourse.OutRequest{
-				Source: concourse.Source{
-					APIToken:        pivnetAPIToken,
-					AccessKeyID:     awsAccessKeyID,
-					SecretAccessKey: awsSecretAccessKey,
-				},
-				Params: concourse.OutParams{
-					File:           "*",
-					FilepathPrefix: s3FilepathPrefix,
-				},
+				sourceFileName = fmt.Sprintf("pivnet-resource-test-file-%d", time.Now().Nanosecond())
+
+				By("Creating local temp files")
+				sourcesDir, err = ioutil.TempDir("", "")
+				Expect(err).ShouldNot(HaveOccurred())
+
+				sourceFilePath = filepath.Join(sourcesDir, sourceFileName)
+				err = ioutil.WriteFile(sourceFilePath, []byte("some content"), os.ModePerm)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				remotePath = fmt.Sprintf("product_files/%s/%s", s3FilepathPrefix, sourceFileName)
 			})
-			Expect(err).ShouldNot(HaveOccurred())
 
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
+			AfterEach(func() {
+				By("Removing uploaded file")
+				client.DeleteFile(pivnetBucketName, remotePath)
 
-			_, err = io.WriteString(writer, string(raw))
-			Expect(err).ShouldNot(HaveOccurred())
-			err = writer.Close()
-			Expect(err).ShouldNot(HaveOccurred())
+				By("Removing local temp files")
+				err := os.RemoveAll(sourcesDir)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
 
-			Eventually(session, s3UploadTimeout).Should(gexec.Exit(0))
+			It("uploads a single file to s3", func() {
+				command := exec.Command(outPath, sourcesDir)
+				writer, err := command.StdinPipe()
+				Expect(err).ShouldNot(HaveOccurred())
 
-			By("Verifying uploaded file can be downloaded")
-			localDownloadPath := fmt.Sprintf("%s-downloaded", sourceFilePath)
-			err = client.DownloadFile(pivnetBucketName, remotePath, localDownloadPath)
-			Expect(err).ShouldNot(HaveOccurred())
+				raw, err := json.Marshal(concourse.OutRequest{
+					Source: concourse.Source{
+						APIToken:        pivnetAPIToken,
+						AccessKeyID:     awsAccessKeyID,
+						SecretAccessKey: awsSecretAccessKey,
+					},
+					Params: concourse.OutParams{
+						File:           "*",
+						FilepathPrefix: s3FilepathPrefix,
+						VersionFile:    versionFile.Name(),
+					},
+				})
+				Expect(err).ShouldNot(HaveOccurred())
+
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(writer, string(raw))
+				Expect(err).ShouldNot(HaveOccurred())
+				err = writer.Close()
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Eventually(session, s3UploadTimeout).Should(gexec.Exit(0))
+
+				By("Verifying uploaded file can be downloaded")
+				localDownloadPath := fmt.Sprintf("%s-downloaded", sourceFilePath)
+				err = client.DownloadFile(pivnetBucketName, remotePath, localDownloadPath)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
 		})
 	})
 })
