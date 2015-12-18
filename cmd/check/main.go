@@ -10,10 +10,6 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
-const (
-	url = "https://network.pivotal.io/api/v2"
-)
-
 func main() {
 	var input concourse.Request
 
@@ -30,7 +26,7 @@ func main() {
 		log.Fatalln("product_name must be provided")
 	}
 
-	client := pivnet.NewClient(url, input.Source.APIToken)
+	client := pivnet.NewClient(pivnet.URL, input.Source.APIToken)
 
 	allVersions, err := client.ProductVersions(input.Source.ProductName)
 	if err != nil {

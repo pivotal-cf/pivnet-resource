@@ -90,8 +90,11 @@ func getProductReleases(product string) []string {
 	req, err := http.NewRequest("GET", product_url, nil)
 	Expect(err).NotTo(HaveOccurred())
 
+	req.Header.Add("Authorization", fmt.Sprintf("Token %s", pivnetAPIToken))
+
 	resp, err := http.DefaultClient.Do(req)
 	Expect(err).NotTo(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
 	response := pivnet.Response{}
 	err = json.NewDecoder(resp.Body).Decode(&response)

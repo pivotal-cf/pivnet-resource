@@ -6,6 +6,10 @@ import (
 	"net/http"
 )
 
+const (
+	URL = "https://network.pivotal.io/api/v2"
+)
+
 type Client interface {
 	ProductVersions(string) ([]string, error)
 }
