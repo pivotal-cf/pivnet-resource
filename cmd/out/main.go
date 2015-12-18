@@ -111,7 +111,11 @@ func main() {
 	productVersion := string(versionContents)
 	productName := input.Source.ProductName
 
-	pivnetClient.CreateRelease(productName, productVersion, releaseType)
+	pivnetClient.CreateRelease(pivnet.CreateReleaseConfig{
+		ProductName:    productName,
+		ProductVersion: productVersion,
+		ReleaseType:    releaseType,
+	})
 
 	out := concourse.OutResponse{
 		Version: concourse.Release{

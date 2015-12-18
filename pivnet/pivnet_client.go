@@ -12,9 +12,15 @@ const (
 	URL = "https://network.pivotal.io/api/v2"
 )
 
+type CreateReleaseConfig struct {
+	ProductName    string
+	ProductVersion string
+	ReleaseType    string
+}
+
 type Client interface {
 	ProductVersions(string) ([]string, error)
-	CreateRelease(productName, productVersion, ReleaseType string) (Release, error)
+	CreateRelease(config CreateReleaseConfig) (Release, error)
 }
 
 type client struct {
@@ -61,8 +67,8 @@ func (c client) ProductVersions(id string) ([]string, error) {
 	return versions, nil
 }
 
-func (c client) CreateRelease(productName, productVersion, releaseType string) (Release, error) {
-	releasesURL := c.url + "/products/" + productName + "/releases"
+func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
+	releasesURL := c.url + "/products/" + config.ProductName + "/releases"
 
 	body := createReleaseBody{
 		Release: Release{
@@ -72,8 +78,8 @@ func (c client) CreateRelease(productName, productVersion, releaseType string) (
 			},
 			OSSCompliant: "confirm",
 			ReleaseDate:  "2015-12-18",
-			ReleaseType:  releaseType,
-			Version:      productVersion,
+			ReleaseType:  config.ReleaseType,
+			Version:      config.ProductVersion,
 		},
 	}
 
