@@ -33,7 +33,7 @@ type s3client struct {
 }
 
 func run(command *exec.Cmd, stdinContents []byte) *gexec.Session {
-	fmt.Fprintf(GinkgoWriter, string(stdinContents))
+	fmt.Fprintln(GinkgoWriter, sanitize(string(stdinContents)))
 
 	stdin, err := command.StdinPipe()
 	Expect(err).ShouldNot(HaveOccurred())

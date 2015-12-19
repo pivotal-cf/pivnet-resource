@@ -151,6 +151,10 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 		panic(err)
 	}
 
+	if resp.StatusCode != http.StatusCreated {
+		panic(fmt.Errorf("Pivnet returned status code: %d for the request", resp.StatusCode))
+	}
+
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)

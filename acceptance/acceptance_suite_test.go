@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -170,4 +171,12 @@ func copyFileContents(src, dst string) (err error) {
 	}
 	err = out.Sync()
 	return
+}
+
+func sanitize(contents string) string {
+	output := contents
+	output = strings.Replace(output, pivnetAPIToken, "***sanitized-api-token***", -1)
+	output = strings.Replace(output, awsAccessKeyID, "***sanitized-aws-access-key-id***", -1)
+	output = strings.Replace(output, awsSecretAccessKey, "***sanitized-aws-secret-access-key***", -1)
+	return output
 }
