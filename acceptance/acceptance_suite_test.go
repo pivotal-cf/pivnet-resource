@@ -69,7 +69,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Compiling out binary")
-	outPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/in", "-race")
+	inPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/in", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Copying s3-out to compilation location")
