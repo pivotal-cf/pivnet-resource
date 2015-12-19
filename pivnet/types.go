@@ -18,7 +18,20 @@ type Eula struct {
 	Slug    string `json:"slug"`
 	ID      int    `json:"id"`
 	Version string `json:"version"`
-	Links   struct {
-		ProductFiles map[string]string `json:"product_files"`
-	} `json:"_links"`
+	Links   Links  `json:"_links"`
+}
+
+type ProductFiles struct {
+	ProductFiles []ProductFile `json:"product_files"`
+}
+
+type ProductFile struct {
+	ID           int
+	AWSObjectKey string `json:"aws_object_key"`
+	Links        Links  `json:"_links"`
+}
+
+type Links struct {
+	Download     map[string]string `json:"download"`
+	ProductFiles map[string]string `json:"product_files"`
 }

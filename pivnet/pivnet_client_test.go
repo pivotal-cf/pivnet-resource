@@ -1,6 +1,7 @@
 package pivnet_test
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -19,14 +20,15 @@ const (
 
 var _ = Describe("PivnetClient", func() {
 	var (
-		server *ghttp.Server
-		client pivnet.Client
-		token  string
+		server     *ghttp.Server
+		client     pivnet.Client
+		token      string
+		apiAddress string
 	)
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
-		apiAddress := server.URL() + apiPrefix
+		apiAddress = server.URL() + apiPrefix
 		token = "my-auth-token"
 		client = pivnet.NewClient(apiAddress, token)
 	})
@@ -79,6 +81,73 @@ var _ = Describe("PivnetClient", func() {
 
 				_, err := client.GetRelease("banana", "1.0.0")
 				Expect(err).To(MatchError(errors.New("The requested version: 1.0.0 - could not be found")))
+			})
+		})
+
+		Context("when the server responds with a non-2XX status code", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
+						ghttp.RespondWith(http.StatusTeapot, nil),
+					),
+				)
+
+				_, err := client.GetRelease("banana", "1.0.0")
+				Expect(err).To(MatchError(errors.New("Pivnet returned status code: 418 for the request")))
+			})
+		})
+	})
+
+	Describe("Get Product Files", func() {
+		It("returns the product files for the given release", func() {
+			response, err := json.Marshal(pivnet.ProductFiles{[]pivnet.ProductFile{
+				{ID: 3, AWSObjectKey: "anything", Links: pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/6/download"}}},
+				{ID: 4, AWSObjectKey: "something", Links: pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}}},
+			},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases/666/product_files"),
+					ghttp.RespondWith(http.StatusOK, response),
+				),
+			)
+
+			release := pivnet.Release{
+				Links: pivnet.Links{
+					ProductFiles: map[string]string{"href": apiAddress + "/products/banana/releases/666/product_files"},
+				},
+			}
+
+			product, err := client.GetProductFiles(release)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(product.ProductFiles).To(HaveLen(2))
+
+			Expect(product.ProductFiles[0].AWSObjectKey).To(Equal("anything"))
+			Expect(product.ProductFiles[1].AWSObjectKey).To(Equal("something"))
+
+			Expect(product.ProductFiles[0].Links.Download["href"]).To(Equal("/products/banana/releases/666/product_files/6/download"))
+			Expect(product.ProductFiles[1].Links.Download["href"]).To(Equal("/products/banana/releases/666/product_files/8/download"))
+		})
+
+		Context("when the server responds with a non-2XX status code", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases/666/product_files"),
+						ghttp.RespondWith(http.StatusTeapot, nil),
+					),
+				)
+				release := pivnet.Release{
+					Links: pivnet.Links{
+						ProductFiles: map[string]string{"href": apiAddress + "/products/banana/releases/666/product_files"},
+					},
+				}
+
+				_, err := client.GetProductFiles(release)
+				Expect(err).To(MatchError(errors.New("Pivnet returned status code: 418 for the request")))
 			})
 		})
 	})

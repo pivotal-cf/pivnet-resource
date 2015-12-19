@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
+	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 )
 
@@ -15,7 +17,6 @@ const (
 
 func main() {
 	var input concourse.Request
-
 	if len(os.Args) < 2 {
 		panic("Not enough args")
 	}
@@ -27,28 +28,31 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	client := pivnet.NewClient(url, input.Source.APIToken)
+	if input.Source.APIToken == "" {
+		log.Fatalln("api_token must be provided")
+	}
+
+	token := input.Source.APIToken
+
+	client := pivnet.NewClient(url, token)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to create client: %s", err)
 	}
 
 	release, err := client.GetRelease(input.Source.ProductName, input.Version["version"])
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to get Release: %s", err)
 	}
 
 	productFiles, err := client.GetProductFiles(release)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to get Product Files: %s", err)
 	}
 
-	downloadLinks, err := filter.DownloadLinks(productFiles)
-	if err != nil {
-		panic(err)
-	}
+	downloadLinks := filter.DownloadLinks(productFiles)
 
-	err = downloader.Download(downloadDir, downloadLinks)
+	err = downloader.Download(downloadDir, downloadLinks, token)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to Download Files: %s", err)
 	}
 }

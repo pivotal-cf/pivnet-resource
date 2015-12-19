@@ -19,6 +19,7 @@ var _ = Describe("Acceptance", func() {
 		productVersion string
 		destDirectory  string
 	)
+
 	BeforeEach(func() {
 		var err error
 		productName = "push-notification-service"
@@ -62,9 +63,13 @@ var _ = Describe("Acceptance", func() {
 			files, err := dataDir.Readdir(2)
 			Expect(err).ShouldNot(HaveOccurred())
 
+			var fileNames []string
 			for _, f := range files {
+				fileNames = append(fileNames, f.Name())
 				Expect(f.Size()).ToNot(BeZero())
 			}
+
+			Expect(fileNames).To(ConsistOf([]string{"PCFPush-1.4.0.aar", "PCFPush-1.4.0.framework.zip"}))
 		})
 	})
 })
