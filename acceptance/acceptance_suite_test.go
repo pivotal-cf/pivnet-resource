@@ -18,6 +18,7 @@ import (
 )
 
 var (
+	inPath             string
 	checkPath          string
 	outPath            string
 	pivnetAPIToken     string
@@ -59,12 +60,16 @@ var _ = BeforeSuite(func() {
 	s3FilepathPrefix = os.Getenv("S3_FILEPATH_PREFIX")
 	Expect(s3FilepathPrefix).NotTo(BeEmpty(), "$S3_FILEPATH_PREFIX must be provided")
 
-	By("Compiling binary")
+	By("Compiling check binary")
 	checkPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/check", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Compiling out binary")
 	outPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/out", "-race")
+	Expect(err).NotTo(HaveOccurred())
+
+	By("Compiling out binary")
+	outPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/in", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Copying s3-out to compilation location")

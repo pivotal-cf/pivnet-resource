@@ -12,6 +12,7 @@ type Release struct {
 	ReleaseDate  string `json:"release_date"`
 	ReleaseType  string `json:"release_type"`
 	Version      string `json:"version"`
+	Links        Links  `json:"_links"`
 }
 
 type Eula struct {
