@@ -55,7 +55,7 @@ var _ = Describe("Acceptance", func() {
 			_, err = io.WriteString(writer, string(raw))
 			Expect(err).ShouldNot(HaveOccurred())
 
-			Eventually(session, checkTimeout).Should(gexec.Exit(0))
+			Eventually(session, "10s").Should(gexec.Exit(0))
 
 			dataDir, err := os.Open(destDirectory)
 			Expect(err).ShouldNot(HaveOccurred())
