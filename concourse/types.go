@@ -29,6 +29,7 @@ type OutParams struct {
 	FilepathPrefix  string `json:"s3_filepath_prefix"`
 	VersionFile     string `json:"version_file"`
 	ReleaseTypeFile string `json:"release_type_file"`
+	ReleaseDateFile string `json:"release_date_file"`
 }
 
 type OutResponse struct {

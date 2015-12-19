@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
@@ -103,6 +104,17 @@ func main() {
 
 	releaseType := string(releaseTypeContents)
 
+	var releaseDate string
+	if input.Params.ReleaseDateFile == "" {
+		releaseDate = time.Now().Format("2006-01-02")
+	} else {
+		releaseDateContents, err := ioutil.ReadFile(input.Params.ReleaseDateFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		releaseDate = string(releaseDateContents)
+	}
+
 	versionContents, err := ioutil.ReadFile(input.Params.VersionFile)
 	if err != nil {
 		log.Fatal(err)
@@ -115,6 +127,7 @@ func main() {
 		ProductName:    productName,
 		ProductVersion: productVersion,
 		ReleaseType:    releaseType,
+		ReleaseDate:    releaseDate,
 	})
 
 	out := concourse.OutResponse{

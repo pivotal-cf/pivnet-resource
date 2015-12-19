@@ -55,6 +55,8 @@ var _ = Describe("Out", func() {
 		versionFile     *os.File
 		releaseTypeFile *os.File
 		releaseType     = "Minor Release"
+		releaseDateFile *os.File
+		releaseDate     = "2015-12-17"
 		productVersion  string
 		productName     = "pivotal-diego-pcf"
 		command         *exec.Cmd
@@ -82,6 +84,13 @@ var _ = Describe("Out", func() {
 		_, err = releaseTypeFile.WriteString(releaseType)
 		Expect(err).ShouldNot(HaveOccurred())
 
+		By("Writing release date to file")
+		releaseDateFile, err = ioutil.TempFile("", "")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = releaseDateFile.WriteString(releaseDate)
+		Expect(err).ShouldNot(HaveOccurred())
+
 		By("Creating a temporary sources dir")
 		sourcesDir, err = ioutil.TempDir("", "")
 		Expect(err).ShouldNot(HaveOccurred())
@@ -100,6 +109,7 @@ var _ = Describe("Out", func() {
 				FilepathPrefix:  s3FilepathPrefix,
 				VersionFile:     versionFile.Name(),
 				ReleaseTypeFile: releaseTypeFile.Name(),
+				ReleaseDateFile: releaseDateFile.Name(),
 			},
 		}
 
@@ -110,6 +120,14 @@ var _ = Describe("Out", func() {
 	AfterEach(func() {
 		By("Removing local temp version file")
 		err := os.RemoveAll(versionFile.Name())
+		Expect(err).ShouldNot(HaveOccurred())
+
+		By("Removing local temp release type file")
+		err = os.RemoveAll(releaseTypeFile.Name())
+		Expect(err).ShouldNot(HaveOccurred())
+
+		By("Removing local temp release date file")
+		err = os.RemoveAll(releaseDateFile.Name())
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
@@ -291,9 +309,33 @@ var _ = Describe("Out", func() {
 			release := getPivnetRelease(productName, productVersion)
 			Expect(release.Version).To(Equal(productVersion))
 			Expect(release.ReleaseType).To(Equal(releaseType))
+			Expect(release.ReleaseDate).To(Equal(releaseDate))
 		})
 
-		Context("when S3 source and params configured correctly", func() {
+		Context("when no release_date_file is provided", func() {
+			BeforeEach(func() {
+				outRequest.Params.ReleaseDateFile = ""
+
+				outRequest.Params.File = ""
+				outRequest.Params.FilepathPrefix = ""
+
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("Defaults the release_date to the current date", func() {
+				todayDate := time.Now().Format("2006-01-02")
+
+				session := run(command, stdinContents)
+
+				Eventually(session, executableTimeout).Should(gexec.Exit(0))
+
+				release := getPivnetRelease(productName, productVersion)
+				Expect(release.ReleaseDate).To(Equal(todayDate))
+			})
+		})
+
+		Context("when S3 source and params are configured correctly", func() {
 			var (
 				client *s3client
 

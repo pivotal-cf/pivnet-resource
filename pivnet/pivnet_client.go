@@ -16,6 +16,7 @@ type CreateReleaseConfig struct {
 	ProductName    string
 	ProductVersion string
 	ReleaseType    string
+	ReleaseDate    string
 }
 
 type Client interface {
@@ -77,7 +78,7 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 				Slug: "pivotal_software_eula",
 			},
 			OSSCompliant: "confirm",
-			ReleaseDate:  "2015-12-18",
+			ReleaseDate:  config.ReleaseDate,
 			ReleaseType:  config.ReleaseType,
 			Version:      config.ProductVersion,
 		},
