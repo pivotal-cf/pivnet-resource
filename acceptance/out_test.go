@@ -52,21 +52,28 @@ func run(command *exec.Cmd, stdinContents []byte) *gexec.Session {
 
 var _ = Describe("Out", func() {
 	var (
-		versionFile     *os.File
+		versionFile *os.File
+
 		releaseTypeFile *os.File
 		releaseType     = "Minor Release"
+
 		releaseDateFile *os.File
 		releaseDate     = "2015-12-17"
-		productVersion  string
-		productName     = "pivotal-diego-pcf"
-		command         *exec.Cmd
-		stdinContents   []byte
-		err             error
-		outRequest      concourse.OutRequest
-		sourcesDir      string
+
+		eulaSlugFile *os.File
+		eulaSlug     = "pivotal_beta_eula"
+
+		productVersion string
+		productName    = "pivotal-diego-pcf"
+
+		command       *exec.Cmd
+		stdinContents []byte
+		outRequest    concourse.OutRequest
+		sourcesDir    string
 	)
 
 	BeforeEach(func() {
+		var err error
 		By("Generating 'random' product version")
 		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
 
@@ -91,6 +98,13 @@ var _ = Describe("Out", func() {
 		_, err = releaseDateFile.WriteString(releaseDate)
 		Expect(err).ShouldNot(HaveOccurred())
 
+		By("Writing eula slug to file")
+		eulaSlugFile, err = ioutil.TempFile("", "")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = eulaSlugFile.WriteString(eulaSlug)
+		Expect(err).ShouldNot(HaveOccurred())
+
 		By("Creating a temporary sources dir")
 		sourcesDir, err = ioutil.TempDir("", "")
 		Expect(err).ShouldNot(HaveOccurred())
@@ -110,6 +124,7 @@ var _ = Describe("Out", func() {
 				VersionFile:     versionFile.Name(),
 				ReleaseTypeFile: releaseTypeFile.Name(),
 				ReleaseDateFile: releaseDateFile.Name(),
+				EulaSlugFile:    eulaSlugFile.Name(),
 			},
 		}
 
@@ -129,6 +144,10 @@ var _ = Describe("Out", func() {
 		By("Removing local temp release date file")
 		err = os.RemoveAll(releaseDateFile.Name())
 		Expect(err).ShouldNot(HaveOccurred())
+
+		By("Removing local temp eula slug file")
+		err = os.RemoveAll(eulaSlugFile.Name())
+		Expect(err).ShouldNot(HaveOccurred())
 	})
 
 	Describe("Argument validation", func() {
@@ -147,6 +166,7 @@ var _ = Describe("Out", func() {
 			BeforeEach(func() {
 				outRequest.Source.APIToken = ""
 
+				var err error
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
@@ -163,6 +183,7 @@ var _ = Describe("Out", func() {
 			BeforeEach(func() {
 				outRequest.Source.ProductName = ""
 
+				var err error
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
@@ -179,6 +200,7 @@ var _ = Describe("Out", func() {
 			BeforeEach(func() {
 				outRequest.Source.AccessKeyID = ""
 
+				var err error
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
@@ -195,6 +217,7 @@ var _ = Describe("Out", func() {
 			BeforeEach(func() {
 				outRequest.Source.SecretAccessKey = ""
 
+				var err error
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
@@ -211,6 +234,7 @@ var _ = Describe("Out", func() {
 			BeforeEach(func() {
 				outRequest.Params.File = ""
 
+				var err error
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
@@ -227,6 +251,7 @@ var _ = Describe("Out", func() {
 			BeforeEach(func() {
 				outRequest.Params.FilepathPrefix = ""
 
+				var err error
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
@@ -243,6 +268,7 @@ var _ = Describe("Out", func() {
 			BeforeEach(func() {
 				outRequest.Params.VersionFile = ""
 
+				var err error
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
@@ -259,6 +285,7 @@ var _ = Describe("Out", func() {
 			BeforeEach(func() {
 				outRequest.Params.ReleaseTypeFile = ""
 
+				var err error
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
@@ -268,6 +295,23 @@ var _ = Describe("Out", func() {
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Err).Should(gbytes.Say("release_type_file must be provided"))
+			})
+		})
+
+		Context("when no eula_slug_file is provided", func() {
+			BeforeEach(func() {
+				outRequest.Params.EulaSlugFile = ""
+
+				var err error
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("exits with error", func() {
+				session := run(command, stdinContents)
+
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("eula_slug_file must be provided"))
 			})
 		})
 	})
@@ -282,6 +326,7 @@ var _ = Describe("Out", func() {
 			outRequest.Params.File = ""
 			outRequest.Params.FilepathPrefix = ""
 
+			var err error
 			stdinContents, err = json.Marshal(outRequest)
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -310,6 +355,7 @@ var _ = Describe("Out", func() {
 			Expect(release.Version).To(Equal(productVersion))
 			Expect(release.ReleaseType).To(Equal(releaseType))
 			Expect(release.ReleaseDate).To(Equal(releaseDate))
+			Expect(release.Eula.Slug).To(Equal(eulaSlug))
 		})
 
 		Context("when no release_date_file is provided", func() {
@@ -319,6 +365,7 @@ var _ = Describe("Out", func() {
 				outRequest.Params.File = ""
 				outRequest.Params.FilepathPrefix = ""
 
+				var err error
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
@@ -381,7 +428,7 @@ var _ = Describe("Out", func() {
 
 				By("Verifying uploaded file can be downloaded")
 				localDownloadPath := fmt.Sprintf("%s-downloaded", sourceFilePath)
-				err = client.DownloadFile(pivnetBucketName, remotePath, localDownloadPath)
+				err := client.DownloadFile(pivnetBucketName, remotePath, localDownloadPath)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
 		})

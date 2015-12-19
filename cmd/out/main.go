@@ -53,6 +53,10 @@ func main() {
 		log.Fatalln("release_type_file must be provided")
 	}
 
+	if input.Params.EulaSlugFile == "" {
+		log.Fatalln("eula_slug_file must be provided")
+	}
+
 	if input.Params.File == "" && input.Params.FilepathPrefix == "" {
 		fmt.Fprintln(os.Stderr, "file glob and s3_filepath_prefix not provided - skipping upload to s3")
 	} else {
@@ -115,6 +119,12 @@ func main() {
 		releaseDate = string(releaseDateContents)
 	}
 
+	eulaSlugContents, err := ioutil.ReadFile(input.Params.EulaSlugFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	eulaSlug := string(eulaSlugContents)
+
 	versionContents, err := ioutil.ReadFile(input.Params.VersionFile)
 	if err != nil {
 		log.Fatal(err)
@@ -128,6 +138,7 @@ func main() {
 		ProductVersion: productVersion,
 		ReleaseType:    releaseType,
 		ReleaseDate:    releaseDate,
+		EulaSlug:       eulaSlug,
 	})
 
 	out := concourse.OutResponse{

@@ -30,6 +30,7 @@ type OutParams struct {
 	VersionFile     string `json:"version_file"`
 	ReleaseTypeFile string `json:"release_type_file"`
 	ReleaseDateFile string `json:"release_date_file"`
+	EulaSlugFile    string `json:"eula_slug_file"`
 }
 
 type OutResponse struct {
