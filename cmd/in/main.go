@@ -39,7 +39,9 @@ func main() {
 		log.Fatalf("Failed to create client: %s", err)
 	}
 
-	release, err := client.GetRelease(input.Source.ProductName, input.Version["product_version"])
+	version := input.Version["product_version"]
+
+	release, err := client.GetRelease(input.Source.ProductName, version)
 	if err != nil {
 		log.Fatalf("Failed to get Release: %s", err)
 	}
@@ -54,5 +56,17 @@ func main() {
 	err = downloader.Download(downloadDir, downloadLinks, token)
 	if err != nil {
 		log.Fatalf("Failed to Download Files: %s", err)
+	}
+
+	out := concourse.InResponse{
+		Version: concourse.Release{
+			ProductVersion: version,
+		},
+		Metadata: []concourse.Metadata{},
+	}
+
+	err = json.NewEncoder(os.Stdout).Encode(out)
+	if err != nil {
+		log.Fatalln(err)
 	}
 }

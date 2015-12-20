@@ -19,6 +19,16 @@ type Source struct {
 	SecretAccessKey string `json:"secret_access_key"`
 }
 
+type InResponse struct {
+	Version  Release    `json:"version"`
+	Metadata []Metadata `json:"metadata"`
+}
+
+type Metadata struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 type OutRequest struct {
 	Params OutParams `json:"params"`
 	Source Source    `json:"source"`
