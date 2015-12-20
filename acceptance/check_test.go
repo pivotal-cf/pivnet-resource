@@ -69,7 +69,7 @@ var _ = Describe("Acceptance", func() {
 						ProductName: productName,
 					},
 					Version: map[string]string{
-						"version": releases[3],
+						"product_version": releases[3],
 					},
 				})
 				Expect(err).ShouldNot(HaveOccurred())

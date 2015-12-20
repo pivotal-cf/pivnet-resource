@@ -33,7 +33,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	newVersions, err := versions.Since(allVersions, input.Version["version"])
+	newVersions, err := versions.Since(allVersions, input.Version["product_version"])
 	if err != nil {
 		log.Fatalln(err)
 	}
