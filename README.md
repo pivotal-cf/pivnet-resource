@@ -31,7 +31,7 @@ in general their versions will be different.
 ``` yaml
 ---
 resources:
-- name: p-gitlab-pivnet-resource
+- name: p-gitlab-pivnet
   type: pivnet
   source:
     api_token: my-api-token
@@ -45,9 +45,9 @@ Resource configuration as above for Check, with the following job configuration.
 ``` yaml
 ---
 jobs:
-- name: p-gitlab-pivnet-resource
+- name: download-p-gitlab-pivnet
   plan:
-  - get: p-gitlab-pivnet-resource
+  - get: p-gitlab-pivnet
 ```
 
 #### Put
@@ -55,7 +55,7 @@ jobs:
 ``` yaml
 ---
 resources:
-- name: p-gitlab-pivnet-resource
+- name: p-gitlab-pivnet
   type: pivnet
   source:
     api_token: my-api-token
@@ -65,9 +65,9 @@ resources:
 
 ---
 jobs:
-- name: p-gitlab-pivnet-resource
+- name: create-p-gitlab-pivnet
   plan:
-  - put: p-gitlab-pivnet-resource
+  - put: p-gitlab-pivnet
     params:
       file: some-directory/*
       s3_filepath_prefix: P-Gitlab
@@ -81,11 +81,14 @@ Discovers all versions of the provided product.
 
 ### `in`: Download the product from Pivotal Network.
 
-TBD
+Downloads the provided product from Pivotal Network. Any EULAs must have already
+been signed. Due to caching, it is advisable to sign the EULAs before the first
+execution of `in` (i.e. the first `get` in the pipeline) as the resource will be
+cached and therefore signing the EULA will have no effect.
 
 #### Parameters
 
-TBD
+None.
 
 ### `out`: Upload a product to Pivotal Network.
 
