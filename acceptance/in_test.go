@@ -33,6 +33,38 @@ var _ = Describe("Acceptance", func() {
 	})
 
 	Context("In", func() {
+		It("returns valid json", func() {
+			command := exec.Command(inPath, destDirectory)
+			writer, err := command.StdinPipe()
+			Expect(err).ShouldNot(HaveOccurred())
+
+			raw, err := json.Marshal(concourse.Request{
+				Source: concourse.Source{
+					APIToken:    os.Getenv("API_TOKEN"),
+					ProductName: productName,
+				},
+				Version: map[string]string{
+					"product_version": productVersion,
+				},
+			})
+			Expect(err).ShouldNot(HaveOccurred())
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = io.WriteString(writer, string(raw))
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Eventually(session, "10s").Should(gexec.Exit(0))
+
+			By("Outputting a valid json response")
+			response := concourse.InResponse{}
+			err = json.Unmarshal(session.Out.Contents(), &response)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Expect(response.Version.ProductVersion).To(Equal(productVersion))
+		})
+
 		It("successfully downloads all of the files in the specified release", func() {
 			command := exec.Command(inPath, destDirectory)
 			writer, err := command.StdinPipe()
