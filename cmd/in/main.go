@@ -39,7 +39,7 @@ func main() {
 		log.Fatalf("Failed to create client: %s", err)
 	}
 
-	release, err := client.GetRelease(input.Source.ProductName, input.Version["version"])
+	release, err := client.GetRelease(input.Source.ProductName, input.Version["product_version"])
 	if err != nil {
 		log.Fatalf("Failed to get Release: %s", err)
 	}
