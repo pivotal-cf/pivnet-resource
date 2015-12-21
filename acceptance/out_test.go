@@ -427,6 +427,13 @@ var _ = Describe("Out", func() {
 				localDownloadPath := fmt.Sprintf("%s-downloaded", sourceFilePath)
 				err := client.DownloadFile(pivnetBucketName, remotePath, localDownloadPath)
 				Expect(err).ShouldNot(HaveOccurred())
+
+				By("Outputting a valid json response")
+				response := concourse.OutResponse{}
+				err = json.Unmarshal(session.Out.Contents(), &response)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Expect(response.Version.ProductVersion).To(Equal(productVersion))
 			})
 		})
 	})

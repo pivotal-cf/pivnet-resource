@@ -67,7 +67,7 @@ func (c client) Out(fileGlob string, to string, sourcesDir string) error {
 		return err
 	}
 
-	cmd.Stdout = c.stdout
+	cmd.Stdout = c.stderr
 	cmd.Stderr = c.stderr
 
 	err = cmd.Start()
