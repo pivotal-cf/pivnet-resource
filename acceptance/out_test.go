@@ -120,7 +120,7 @@ var _ = Describe("Out", func() {
 				ProductName:     productName,
 			},
 			Params: concourse.OutParams{
-				File:            "*",
+				FileGlob:        "*",
 				FilepathPrefix:  s3FilepathPrefix,
 				VersionFile:     productVersionFile,
 				ReleaseTypeFile: releaseTypeFile,
@@ -221,7 +221,7 @@ var _ = Describe("Out", func() {
 
 		Context("when no file glob is provided", func() {
 			BeforeEach(func() {
-				outRequest.Params.File = ""
+				outRequest.Params.FileGlob = ""
 
 				var err error
 				stdinContents, err = json.Marshal(outRequest)
@@ -312,7 +312,7 @@ var _ = Describe("Out", func() {
 		})
 
 		It("Successfully creates a release", func() {
-			outRequest.Params.File = ""
+			outRequest.Params.FileGlob = ""
 			outRequest.Params.FilepathPrefix = ""
 
 			var err error
@@ -351,7 +351,7 @@ var _ = Describe("Out", func() {
 			BeforeEach(func() {
 				outRequest.Params.ReleaseDateFile = ""
 
-				outRequest.Params.File = ""
+				outRequest.Params.FileGlob = ""
 				outRequest.Params.FilepathPrefix = ""
 
 				var err error
@@ -406,7 +406,7 @@ var _ = Describe("Out", func() {
 
 				remotePath = fmt.Sprintf("product_files/%s/%s", s3FilepathPrefix, sourceFileName)
 
-				outRequest.Params.File = fmt.Sprintf("%s/*", sourcesDir)
+				outRequest.Params.FileGlob = fmt.Sprintf("%s/*", sourcesDir)
 				outRequest.Params.FilepathPrefix = s3FilepathPrefix
 
 				stdinContents, err = json.Marshal(outRequest)

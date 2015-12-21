@@ -92,11 +92,16 @@ None.
 
 ### `out`: Upload a product to Pivotal Network.
 
-Uploads a single file to the pivnet bucket.
+Creates a new release on Pivotal Network with the provided version and metadata.
+
+Also optionally uploads a single file to the Pivotal Network bucket under the
+provided filepath.
+If a file is uploaded, that file is not currently added to
+Pivotal Network or to the newly-created release.
 
 #### Parameters
 
-* `file`: *Required.* Path to the file to upload. If multiple files are
+* `file_glob`: *Required.* Path to the file to upload. If multiple files are
   matched by the glob, an error is raised.
 
 * `s3_filepath_prefix`: *Required.* Case-sensitive prefix of the
@@ -104,6 +109,24 @@ Uploads a single file to the pivnet bucket.
   Generally similar to, but not the same as, `product_name`. For example,
   a `product_name` might be `pivotal-diego-pcf` (lower-case) but the
   `s3_filepath_prefix` could be `Pivotal-Diego-PCF`.
+
+* `version_file`: *Required.* File containing the version string.
+  Will be read to determine the new release version.
+
+* `release_type_file`: *Required.* File containing the release type.
+  Will be read to determine the release type. Valid types are:
+  - All-In-One
+  - Major Release
+  - Minor Release
+  - Service Release
+  - Maintenance Release
+  - Security Release
+
+* `release_date_file`: *Optional.* File containing the release date.
+  If it is not present, the release date will be set to the current date.
+
+* `eula_slug_file`: *Required.* File containing the eula slug
+  e.g. `pivotal_software_eula`
 
 ## Developing
 

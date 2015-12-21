@@ -57,7 +57,7 @@ func main() {
 		log.Fatalln("eula_slug_file must be provided")
 	}
 
-	if input.Params.File == "" && input.Params.FilepathPrefix == "" {
+	if input.Params.FileGlob == "" && input.Params.FilepathPrefix == "" {
 		fmt.Fprintln(os.Stderr, "file glob and s3_filepath_prefix not provided - skipping upload to s3")
 	} else {
 		if input.Source.AccessKeyID == "" {
@@ -68,7 +68,7 @@ func main() {
 			log.Fatalln("secret_access_key must be provided")
 		}
 
-		if input.Params.File == "" {
+		if input.Params.FileGlob == "" {
 			log.Fatalln("file glob must be provided")
 		}
 
@@ -89,7 +89,7 @@ func main() {
 		})
 
 		err = s3Client.Out(
-			input.Params.File,
+			input.Params.FileGlob,
 			"product_files/"+input.Params.FilepathPrefix+"/",
 			sourcesDir,
 		)
