@@ -15,15 +15,14 @@ import (
 
 var _ = Describe("Acceptance", func() {
 	var (
-		productName    string
+		productName    = "pivotal-diego-pcf"
 		productVersion string
 		destDirectory  string
 	)
 
 	BeforeEach(func() {
 		var err error
-		productName = "push-notification-service"
-		productVersion = "1.4.0"
+		productVersion = "pivnet-testing"
 		destDirectory, err = ioutil.TempDir("", "pivnet-resource")
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -87,8 +86,10 @@ var _ = Describe("Acceptance", func() {
 			_, err = io.WriteString(writer, string(raw))
 			Expect(err).ShouldNot(HaveOccurred())
 
+			By("Starting the process")
 			Eventually(session, "10s").Should(gexec.Exit(0))
 
+			By("Reading downloaded files")
 			dataDir, err := os.Open(destDirectory)
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -101,7 +102,7 @@ var _ = Describe("Acceptance", func() {
 				Expect(f.Size()).ToNot(BeZero())
 			}
 
-			Expect(fileNames).To(ConsistOf([]string{"PCFPush-1.4.0.aar", "PCFPush-1.4.0.framework.zip"}))
+			Expect(fileNames).To(ConsistOf([]string{"setup.ps1"}))
 		})
 	})
 })
