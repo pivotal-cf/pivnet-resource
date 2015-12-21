@@ -21,12 +21,12 @@ type Source struct {
 
 type InResponse struct {
 	Version  Release    `json:"version"`
-	Metadata []Metadata `json:"metadata"`
+	Metadata []Metadata `json:"metadata,omitempty"`
 }
 
 type Metadata struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 type OutRequest struct {
@@ -45,5 +45,5 @@ type OutParams struct {
 
 type OutResponse struct {
 	Version  Release  `json:"version"`
-	Metadata []string `json:"metadata"`
+	Metadata []string `json:"metadata,omitempty"`
 }
