@@ -1,8 +1,0 @@
-#!/bin/sh
-
-set -eux
-
-my_dir="$( cd "$( dirname "${0}" )" && pwd )"
-base_dir="$( cd "${my_dir}/../.." && pwd )"
-
-git -C "${base_dir}" tag --sort=version:refname | tail -1 > tagname && cat tagname
