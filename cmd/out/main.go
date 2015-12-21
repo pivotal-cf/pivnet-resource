@@ -101,7 +101,8 @@ func main() {
 
 	pivnetClient := pivnet.NewClient(pivnet.URL, input.Source.APIToken)
 
-	releaseTypeContents, err := ioutil.ReadFile(input.Params.ReleaseTypeFile)
+	releaseTypeFilepath := filepath.Join(sourcesDir, input.Params.ReleaseTypeFile)
+	releaseTypeContents, err := ioutil.ReadFile(releaseTypeFilepath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -112,25 +113,29 @@ func main() {
 	if input.Params.ReleaseDateFile == "" {
 		releaseDate = time.Now().Format("2006-01-02")
 	} else {
-		releaseDateContents, err := ioutil.ReadFile(input.Params.ReleaseDateFile)
+		releaseDateFilepath := filepath.Join(sourcesDir, input.Params.ReleaseDateFile)
+		releaseDateContents, err := ioutil.ReadFile(releaseDateFilepath)
 		if err != nil {
 			log.Fatal(err)
 		}
 		releaseDate = string(releaseDateContents)
 	}
 
-	eulaSlugContents, err := ioutil.ReadFile(input.Params.EulaSlugFile)
+	eulaSlugFilepath := filepath.Join(sourcesDir, input.Params.EulaSlugFile)
+	eulaSlugContents, err := ioutil.ReadFile(eulaSlugFilepath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	eulaSlug := string(eulaSlugContents)
 
-	versionContents, err := ioutil.ReadFile(input.Params.VersionFile)
+	versionFilepath := filepath.Join(sourcesDir, input.Params.VersionFile)
+	versionContents, err := ioutil.ReadFile(versionFilepath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	productVersion := string(versionContents)
+
 	productName := input.Source.ProductName
 
 	pivnetClient.CreateRelease(pivnet.CreateReleaseConfig{

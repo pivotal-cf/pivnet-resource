@@ -52,64 +52,65 @@ func run(command *exec.Cmd, stdinContents []byte) *gexec.Session {
 
 var _ = Describe("Out", func() {
 	var (
-		versionFile *os.File
-
-		releaseTypeFile *os.File
+		releaseTypeFile = "release_type"
 		releaseType     = "Minor Release"
 
-		releaseDateFile *os.File
+		releaseDateFile = "release_date"
 		releaseDate     = "2015-12-17"
 
-		eulaSlugFile *os.File
+		eulaSlugFile = "eula_slug"
 		eulaSlug     = "pivotal_beta_eula"
 
-		productVersion string
-		productName    = "pivotal-diego-pcf"
+		productVersionFile = "version"
+		productVersion     string
+
+		productName = "pivotal-diego-pcf"
 
 		command       *exec.Cmd
 		stdinContents []byte
 		outRequest    concourse.OutRequest
-		sourcesDir    string
+		rootDir       string
 	)
 
 	BeforeEach(func() {
 		var err error
+
+		By("Creating a temporary root dir")
+		rootDir, err = ioutil.TempDir("", "")
+		Expect(err).ShouldNot(HaveOccurred())
+
 		By("Generating 'random' product version")
 		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
 
 		By("Writing product version to file")
-		versionFile, err = ioutil.TempFile("", "")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		_, err = versionFile.WriteString(productVersion)
+		err = ioutil.WriteFile(
+			filepath.Join(rootDir, productVersionFile),
+			[]byte(productVersion),
+			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Writing release type to file")
-		releaseTypeFile, err = ioutil.TempFile("", "")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		_, err = releaseTypeFile.WriteString(releaseType)
+		err = ioutil.WriteFile(
+			filepath.Join(rootDir, releaseTypeFile),
+			[]byte(releaseType),
+			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Writing release date to file")
-		releaseDateFile, err = ioutil.TempFile("", "")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		_, err = releaseDateFile.WriteString(releaseDate)
+		err = ioutil.WriteFile(
+			filepath.Join(rootDir, releaseDateFile),
+			[]byte(releaseDate),
+			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Writing eula slug to file")
-		eulaSlugFile, err = ioutil.TempFile("", "")
+		err = ioutil.WriteFile(
+			filepath.Join(rootDir, eulaSlugFile),
+			[]byte(eulaSlug),
+			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		_, err = eulaSlugFile.WriteString(eulaSlug)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		By("Creating a temporary sources dir")
-		sourcesDir, err = ioutil.TempDir("", "")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		command = exec.Command(outPath, sourcesDir)
+		command = exec.Command(outPath, rootDir)
 
 		outRequest = concourse.OutRequest{
 			Source: concourse.Source{
@@ -121,10 +122,10 @@ var _ = Describe("Out", func() {
 			Params: concourse.OutParams{
 				File:            "*",
 				FilepathPrefix:  s3FilepathPrefix,
-				VersionFile:     versionFile.Name(),
-				ReleaseTypeFile: releaseTypeFile.Name(),
-				ReleaseDateFile: releaseDateFile.Name(),
-				EulaSlugFile:    eulaSlugFile.Name(),
+				VersionFile:     productVersionFile,
+				ReleaseTypeFile: releaseTypeFile,
+				ReleaseDateFile: releaseDateFile,
+				EulaSlugFile:    eulaSlugFile,
 			},
 		}
 
@@ -133,32 +134,20 @@ var _ = Describe("Out", func() {
 	})
 
 	AfterEach(func() {
-		By("Removing local temp version file")
-		err := os.RemoveAll(versionFile.Name())
-		Expect(err).ShouldNot(HaveOccurred())
-
-		By("Removing local temp release type file")
-		err = os.RemoveAll(releaseTypeFile.Name())
-		Expect(err).ShouldNot(HaveOccurred())
-
-		By("Removing local temp release date file")
-		err = os.RemoveAll(releaseDateFile.Name())
-		Expect(err).ShouldNot(HaveOccurred())
-
-		By("Removing local temp eula slug file")
-		err = os.RemoveAll(eulaSlugFile.Name())
+		By("Removing local temp files")
+		err := os.RemoveAll(rootDir)
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
 	Describe("Argument validation", func() {
-		Context("when no sources directory is provided via args", func() {
+		Context("when no root directory is provided via args", func() {
 			It("exits with error", func() {
 				command := exec.Command(outPath)
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).Should(gbytes.Say("sources"))
+				Expect(session.Err).Should(gbytes.Say("usage"))
 			})
 		})
 
@@ -386,6 +375,7 @@ var _ = Describe("Out", func() {
 			var (
 				client *s3client
 
+				sourcesDir     = "sources"
 				sourceFileName string
 				sourceFilePath string
 				remotePath     string
@@ -404,21 +394,28 @@ var _ = Describe("Out", func() {
 
 				sourceFileName = fmt.Sprintf("pivnet-resource-test-file-%d", time.Now().Nanosecond())
 
+				By("Creating a temporary sources dir")
+				sourcesFullPath := filepath.Join(rootDir, sourcesDir)
+				err = os.Mkdir(sourcesFullPath, os.ModePerm)
+				Expect(err).ShouldNot(HaveOccurred())
+
 				By("Creating local temp files")
-				sourceFilePath = filepath.Join(sourcesDir, sourceFileName)
+				sourceFilePath = filepath.Join(sourcesFullPath, sourceFileName)
 				err = ioutil.WriteFile(sourceFilePath, []byte("some content"), os.ModePerm)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				remotePath = fmt.Sprintf("product_files/%s/%s", s3FilepathPrefix, sourceFileName)
+
+				outRequest.Params.File = fmt.Sprintf("%s/*", sourcesDir)
+				outRequest.Params.FilepathPrefix = s3FilepathPrefix
+
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
 			})
 
 			AfterEach(func() {
 				By("Removing uploaded file")
 				client.DeleteFile(pivnetBucketName, remotePath)
-
-				By("Removing local temp files")
-				err := os.RemoveAll(sourcesDir)
-				Expect(err).ShouldNot(HaveOccurred())
 			})
 
 			It("uploads a single file to s3", func() {
