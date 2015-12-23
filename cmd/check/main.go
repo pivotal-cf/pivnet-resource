@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	var input concourse.Request
+	var input concourse.CheckRequest
 
 	err := json.NewDecoder(os.Stdin).Decode(&input)
 	if err != nil {
@@ -43,13 +43,13 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	var out concourse.Response
+	var out concourse.CheckResponse
 	for _, v := range reversedVersions {
-		out = append(out, concourse.Release{ProductVersion: v})
+		out = append(out, concourse.Version{ProductVersion: v})
 	}
 
 	if len(out) == 0 {
-		out = append(out, concourse.Release{ProductVersion: allVersions[0]})
+		out = append(out, concourse.Version{ProductVersion: allVersions[0]})
 	}
 
 	err = json.NewEncoder(os.Stdout).Encode(out)

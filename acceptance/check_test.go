@@ -22,7 +22,7 @@ var _ = Describe("Check", func() {
 
 		releases      []string
 		command       *exec.Cmd
-		checkRequest  concourse.Request
+		checkRequest  concourse.CheckRequest
 		stdinContents []byte
 	)
 
@@ -34,12 +34,12 @@ var _ = Describe("Check", func() {
 		command = exec.Command(checkPath)
 
 		By("Creating default request")
-		checkRequest = concourse.Request{
+		checkRequest = concourse.CheckRequest{
 			Source: concourse.Source{
 				APIToken:    pivnetAPIToken,
 				ProductName: productName,
 			},
-			Version: concourse.Release{
+			Version: concourse.Version{
 				ProductVersion: releases[3],
 			},
 		}
@@ -51,7 +51,7 @@ var _ = Describe("Check", func() {
 
 	Context("when no version is provided", func() {
 		BeforeEach(func() {
-			checkRequest.Version = concourse.Release{}
+			checkRequest.Version = concourse.Version{}
 
 			var err error
 			stdinContents, err = json.Marshal(checkRequest)
@@ -64,7 +64,7 @@ var _ = Describe("Check", func() {
 			Eventually(session, checkTimeout).Should(gexec.Exit(0))
 
 			By("Outputting a valid json response")
-			response := concourse.Response{}
+			response := concourse.CheckResponse{}
 			err := json.Unmarshal(session.Out.Contents(), &response)
 			Expect(err).ShouldNot(HaveOccurred())
 
@@ -83,7 +83,7 @@ var _ = Describe("Check", func() {
 			Eventually(session, checkTimeout).Should(gexec.Exit(0))
 
 			By("Outputting a valid json response")
-			response := concourse.Response{}
+			response := concourse.CheckResponse{}
 			err := json.Unmarshal(session.Out.Contents(), &response)
 			Expect(err).ShouldNot(HaveOccurred())
 

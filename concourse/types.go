@@ -1,17 +1,5 @@
 package concourse
 
-type Request struct {
-	Source  Source  `json:"source"`
-	Version Release `json:"version"`
-}
-
-type Response []Release
-
-// TODO: Rename to Version
-type Release struct {
-	ProductVersion string `json:"product_version"`
-}
-
 type Source struct {
 	APIToken        string `json:"api_token"`
 	ProductName     string `json:"product_name"`
@@ -19,13 +7,24 @@ type Source struct {
 	SecretAccessKey string `json:"secret_access_key"`
 }
 
+type CheckRequest struct {
+	Source  Source  `json:"source"`
+	Version Version `json:"version"`
+}
+
+type Version struct {
+	ProductVersion string `json:"product_version"`
+}
+
+type CheckResponse []Version
+
 type InRequest struct {
 	Source  Source  `json:"source"`
-	Version Release `json:"version"`
+	Version Version `json:"version"`
 }
 
 type InResponse struct {
-	Version  Release    `json:"version"`
+	Version  Version    `json:"version"`
 	Metadata []Metadata `json:"metadata,omitempty"`
 }
 
@@ -49,6 +48,6 @@ type OutParams struct {
 }
 
 type OutResponse struct {
-	Version  Release  `json:"version"`
+	Version  Version  `json:"version"`
 	Metadata []string `json:"metadata,omitempty"`
 }

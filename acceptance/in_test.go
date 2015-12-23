@@ -37,7 +37,7 @@ var _ = Describe("In", func() {
 				APIToken:    pivnetAPIToken,
 				ProductName: productName,
 			},
-			Version: concourse.Release{
+			Version: concourse.Version{
 				ProductVersion: productVersion,
 			},
 		}

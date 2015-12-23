@@ -16,7 +16,7 @@ const (
 )
 
 func main() {
-	var input concourse.Request
+	var input concourse.CheckRequest
 	if len(os.Args) < 2 {
 		panic("Not enough args")
 	}
@@ -59,7 +59,7 @@ func main() {
 	}
 
 	out := concourse.InResponse{
-		Version: concourse.Release{
+		Version: concourse.Version{
 			ProductVersion: version,
 		},
 		Metadata: []concourse.Metadata{},

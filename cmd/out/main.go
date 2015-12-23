@@ -147,7 +147,7 @@ func main() {
 	})
 
 	out := concourse.OutResponse{
-		Version: concourse.Release{
+		Version: concourse.Version{
 			ProductVersion: productVersion,
 		},
 		Metadata: []string{},
