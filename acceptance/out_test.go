@@ -3,7 +3,6 @@ package acceptance
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -30,24 +29,6 @@ const (
 type s3client struct {
 	client  *s3.S3
 	session *session.Session
-}
-
-func run(command *exec.Cmd, stdinContents []byte) *gexec.Session {
-	fmt.Fprintln(GinkgoWriter, sanitize(string(stdinContents)))
-
-	stdin, err := command.StdinPipe()
-	Expect(err).ShouldNot(HaveOccurred())
-
-	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-	Expect(err).NotTo(HaveOccurred())
-
-	_, err = io.WriteString(stdin, string(stdinContents))
-	Expect(err).ShouldNot(HaveOccurred())
-
-	err = stdin.Close()
-	Expect(err).ShouldNot(HaveOccurred())
-
-	return session
 }
 
 var _ = Describe("Out", func() {
@@ -110,8 +91,10 @@ var _ = Describe("Out", func() {
 			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
+		By("Creating command object")
 		command = exec.Command(outPath, rootDir)
 
+		By("Creating default request")
 		outRequest = concourse.OutRequest{
 			Source: concourse.Source{
 				APIToken:        pivnetAPIToken,

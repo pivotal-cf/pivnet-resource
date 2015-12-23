@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -19,9 +20,10 @@ import (
 )
 
 var (
-	inPath             string
-	checkPath          string
-	outPath            string
+	inPath    string
+	checkPath string
+	outPath   string
+
 	pivnetAPIToken     string
 	awsAccessKeyID     string
 	awsSecretAccessKey string
@@ -179,4 +181,22 @@ func sanitize(contents string) string {
 	output = strings.Replace(output, awsAccessKeyID, "***sanitized-aws-access-key-id***", -1)
 	output = strings.Replace(output, awsSecretAccessKey, "***sanitized-aws-secret-access-key***", -1)
 	return output
+}
+
+func run(command *exec.Cmd, stdinContents []byte) *gexec.Session {
+	fmt.Fprintf(GinkgoWriter, "input: %s\n", sanitize(string(stdinContents)))
+
+	stdin, err := command.StdinPipe()
+	Expect(err).ShouldNot(HaveOccurred())
+
+	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+
+	_, err = io.WriteString(stdin, string(stdinContents))
+	Expect(err).ShouldNot(HaveOccurred())
+
+	err = stdin.Close()
+	Expect(err).ShouldNot(HaveOccurred())
+
+	return session
 }

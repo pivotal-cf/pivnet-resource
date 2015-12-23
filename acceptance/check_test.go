@@ -2,8 +2,6 @@ package acceptance
 
 import (
 	"encoding/json"
-	"io"
-	"os"
 	"os/exec"
 	"time"
 
@@ -18,135 +16,122 @@ const (
 	checkTimeout = 5 * time.Second
 )
 
-var _ = Describe("Acceptance", func() {
-	Context("Check", func() {
-		var releases []string
-		productName := "p-mysql"
+var _ = Describe("Check", func() {
+	var (
+		productName = "p-mysql"
+
+		releases      []string
+		command       *exec.Cmd
+		checkRequest  concourse.Request
+		stdinContents []byte
+	)
+
+	BeforeEach(func() {
+		By("Getting expected releases")
+		releases = getProductVersions(productName)
+
+		By("Creating command object")
+		command = exec.Command(checkPath)
+
+		By("Creating default request")
+		checkRequest = concourse.Request{
+			Source: concourse.Source{
+				APIToken:    pivnetAPIToken,
+				ProductName: productName,
+			},
+			Version: concourse.Release{
+				ProductVersion: releases[3],
+			},
+		}
+
+		var err error
+		stdinContents, err = json.Marshal(checkRequest)
+		Expect(err).ShouldNot(HaveOccurred())
+	})
+
+	Context("when no version is provided", func() {
 		BeforeEach(func() {
-			releases = getProductVersions(productName)
+			checkRequest.Version = concourse.Release{}
+
+			var err error
+			stdinContents, err = json.Marshal(checkRequest)
+			Expect(err).ShouldNot(HaveOccurred())
 		})
 
-		Context("when no version is provided", func() {
-			It("returns the most recent version", func() {
-				command := exec.Command(checkPath)
-				writer, err := command.StdinPipe()
-				Expect(err).ShouldNot(HaveOccurred())
+		It("returns the most recent version", func() {
+			By("Running the command")
+			session := run(command, stdinContents)
+			Eventually(session, checkTimeout).Should(gexec.Exit(0))
 
-				raw, err := json.Marshal(concourse.Request{
-					Source: concourse.Source{
-						APIToken:    os.Getenv("API_TOKEN"),
-						ProductName: productName,
-					},
-				})
-				Expect(err).ShouldNot(HaveOccurred())
+			By("Outputting a valid json response")
+			response := concourse.Response{}
+			err := json.Unmarshal(session.Out.Contents(), &response)
+			Expect(err).ShouldNot(HaveOccurred())
 
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
+			By("Validating exactly one element was returned")
+			Expect(response).To(HaveLen(1))
 
-				_, err = io.WriteString(writer, string(raw))
-				Expect(err).ShouldNot(HaveOccurred())
+			By("Validating the returned element has the expected product version")
+			Expect(response[0].ProductVersion).To(Equal(releases[0]))
+		})
+	})
 
-				Eventually(session, checkTimeout).Should(gexec.Exit(0))
+	Context("when a version is provided", func() {
+		It("returns all newer versions", func() {
+			By("Running the command")
+			session := run(command, stdinContents)
+			Eventually(session, checkTimeout).Should(gexec.Exit(0))
 
-				response := concourse.Response{}
-				err = json.Unmarshal(session.Out.Contents(), &response)
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(response).To(HaveLen(1))
+			By("Outputting a valid json response")
+			response := concourse.Response{}
+			err := json.Unmarshal(session.Out.Contents(), &response)
+			Expect(err).ShouldNot(HaveOccurred())
 
-				Expect(response[0].ProductVersion).To(Equal(releases[0]))
-			})
+			By("Validating all the expected elements were returned")
+			Expect(response).To(HaveLen(3))
+
+			By("Validating the returned elements have the expected product versions")
+			Expect(response[0].ProductVersion).To(Equal(releases[2]))
+			Expect(response[1].ProductVersion).To(Equal(releases[1]))
+			Expect(response[2].ProductVersion).To(Equal(releases[0]))
+		})
+	})
+
+	Context("when no api_token is provided", func() {
+		BeforeEach(func() {
+			checkRequest.Source.APIToken = ""
+
+			var err error
+			stdinContents, err = json.Marshal(checkRequest)
+			Expect(err).ShouldNot(HaveOccurred())
 		})
 
-		Context("when a version is provided", func() {
-			It("returns all newer versions", func() {
-				command := exec.Command(checkPath)
-				writer, err := command.StdinPipe()
-				Expect(err).ShouldNot(HaveOccurred())
+		It("exits with error", func() {
+			By("Running the command")
+			session := run(command, stdinContents)
 
-				raw, err := json.Marshal(concourse.Request{
-					Source: concourse.Source{
-						APIToken:    os.Getenv("API_TOKEN"),
-						ProductName: productName,
-					},
-					Version: map[string]string{
-						"product_version": releases[3],
-					},
-				})
-				Expect(err).ShouldNot(HaveOccurred())
+			By("Validating command exited with error")
+			Eventually(session, checkTimeout).Should(gexec.Exit(1))
+			Expect(session.Err).Should(gbytes.Say("api_token must be provided"))
+		})
+	})
 
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
+	Context("when no product_name is provided", func() {
+		BeforeEach(func() {
+			checkRequest.Source.ProductName = ""
 
-				_, err = io.WriteString(writer, string(raw))
-				Expect(err).ShouldNot(HaveOccurred())
-
-				Eventually(session, checkTimeout).Should(gexec.Exit(0))
-
-				response := concourse.Response{}
-				err = json.Unmarshal(session.Out.Contents(), &response)
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(response).To(HaveLen(3))
-
-				Expect(response[0].ProductVersion).To(Equal(releases[2]))
-				Expect(response[1].ProductVersion).To(Equal(releases[1]))
-				Expect(response[2].ProductVersion).To(Equal(releases[0]))
-			})
+			var err error
+			stdinContents, err = json.Marshal(checkRequest)
+			Expect(err).ShouldNot(HaveOccurred())
 		})
 
-		Context("when no api_token is provided", func() {
-			It("exits with error", func() {
-				command := exec.Command(checkPath)
-				writer, err := command.StdinPipe()
-				Expect(err).ShouldNot(HaveOccurred())
+		It("exits with error", func() {
+			By("Running the command")
+			session := run(command, stdinContents)
 
-				raw, err := json.Marshal(concourse.Request{
-					Source: concourse.Source{
-						APIToken:    "",
-						ProductName: productName,
-					},
-					Version: map[string]string{
-						"version": releases[0],
-					},
-				})
-				Expect(err).ShouldNot(HaveOccurred())
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = io.WriteString(writer, string(raw))
-				Expect(err).ShouldNot(HaveOccurred())
-
-				Eventually(session, checkTimeout).Should(gexec.Exit(1))
-				Expect(session.Err).Should(gbytes.Say("api_token must be provided"))
-			})
-		})
-
-		Context("when no product_name is provided", func() {
-			It("exits with error", func() {
-				command := exec.Command(checkPath)
-				writer, err := command.StdinPipe()
-				Expect(err).ShouldNot(HaveOccurred())
-
-				raw, err := json.Marshal(concourse.Request{
-					Source: concourse.Source{
-						APIToken:    "some-api-token",
-						ProductName: "",
-					},
-					Version: map[string]string{
-						"version": releases[0],
-					},
-				})
-				Expect(err).ShouldNot(HaveOccurred())
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = io.WriteString(writer, string(raw))
-				Expect(err).ShouldNot(HaveOccurred())
-
-				Eventually(session, checkTimeout).Should(gexec.Exit(1))
-				Expect(session.Err).Should(gbytes.Say("product_name must be provided"))
-			})
+			By("Validating command exited with error")
+			Eventually(session, checkTimeout).Should(gexec.Exit(1))
+			Expect(session.Err).Should(gbytes.Say("product_name must be provided"))
 		})
 	})
 })

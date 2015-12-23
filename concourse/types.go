@@ -1,8 +1,8 @@
 package concourse
 
 type Request struct {
-	Source  Source            `json:"source"`
-	Version map[string]string `json:"version"`
+	Source  Source  `json:"source"`
+	Version Release `json:"version"`
 }
 
 type Response []Release
@@ -17,6 +17,11 @@ type Source struct {
 	ProductName     string `json:"product_name"`
 	AccessKeyID     string `json:"access_key_id"`
 	SecretAccessKey string `json:"secret_access_key"`
+}
+
+type InRequest struct {
+	Source  Source  `json:"source"`
+	Version Release `json:"version"`
 }
 
 type InResponse struct {

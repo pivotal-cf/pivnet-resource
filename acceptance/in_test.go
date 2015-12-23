@@ -2,7 +2,6 @@ package acceptance
 
 import (
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -13,96 +12,80 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 )
 
-var _ = Describe("Acceptance", func() {
+var _ = Describe("In", func() {
 	var (
 		productName    = "pivotal-diego-pcf"
-		productVersion string
+		productVersion = "pivnet-testing"
 		destDirectory  string
+
+		command       *exec.Cmd
+		inRequest     concourse.InRequest
+		stdinContents []byte
 	)
 
 	BeforeEach(func() {
 		var err error
-		productVersion = "pivnet-testing"
 		destDirectory, err = ioutil.TempDir("", "pivnet-resource")
 		Expect(err).NotTo(HaveOccurred())
+
+		By("Creating command object")
+		command = exec.Command(inPath, destDirectory)
+
+		By("Creating default request")
+		inRequest = concourse.InRequest{
+			Source: concourse.Source{
+				APIToken:    pivnetAPIToken,
+				ProductName: productName,
+			},
+			Version: concourse.Release{
+				ProductVersion: productVersion,
+			},
+		}
+
+		stdinContents, err = json.Marshal(inRequest)
+		Expect(err).ShouldNot(HaveOccurred())
 	})
 
 	AfterEach(func() {
+		By("Removing temporary destination directory")
 		os.RemoveAll(destDirectory)
 	})
 
-	Context("In", func() {
-		It("returns valid json", func() {
-			command := exec.Command(inPath, destDirectory)
-			writer, err := command.StdinPipe()
-			Expect(err).ShouldNot(HaveOccurred())
+	It("returns valid json", func() {
+		By("Running the command")
+		session := run(command, stdinContents)
+		Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
-			raw, err := json.Marshal(concourse.Request{
-				Source: concourse.Source{
-					APIToken:    os.Getenv("API_TOKEN"),
-					ProductName: productName,
-				},
-				Version: map[string]string{
-					"product_version": productVersion,
-				},
-			})
-			Expect(err).ShouldNot(HaveOccurred())
+		By("Outputting a valid json response")
+		response := concourse.InResponse{}
+		err := json.Unmarshal(session.Out.Contents(), &response)
+		Expect(err).ShouldNot(HaveOccurred())
 
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
+		By("Validating output contains correct product version")
+		Expect(response.Version.ProductVersion).To(Equal(productVersion))
+	})
 
-			_, err = io.WriteString(writer, string(raw))
-			Expect(err).ShouldNot(HaveOccurred())
+	It("successfully downloads all of the files in the specified release", func() {
+		By("Running the command")
+		session := run(command, stdinContents)
+		Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
-			Eventually(session, "10s").Should(gexec.Exit(0))
+		By("Reading downloaded files")
+		dataDir, err := os.Open(destDirectory)
+		Expect(err).ShouldNot(HaveOccurred())
 
-			By("Outputting a valid json response")
-			response := concourse.InResponse{}
-			err = json.Unmarshal(session.Out.Contents(), &response)
-			Expect(err).ShouldNot(HaveOccurred())
+		By("Validating number of downloaded files")
+		files, err := dataDir.Readdir(1)
+		Expect(err).ShouldNot(HaveOccurred())
 
-			Expect(response.Version.ProductVersion).To(Equal(productVersion))
-		})
+		By("Validating files have non-zero-length content")
+		var fileNames []string
+		for _, f := range files {
+			fileNames = append(fileNames, f.Name())
+			Expect(f.Size()).ToNot(BeZero())
+		}
 
-		It("successfully downloads all of the files in the specified release", func() {
-			command := exec.Command(inPath, destDirectory)
-			writer, err := command.StdinPipe()
-			Expect(err).ShouldNot(HaveOccurred())
-
-			raw, err := json.Marshal(concourse.Request{
-				Source: concourse.Source{
-					APIToken:    os.Getenv("API_TOKEN"),
-					ProductName: productName,
-				},
-				Version: map[string]string{
-					"product_version": productVersion,
-				},
-			})
-			Expect(err).ShouldNot(HaveOccurred())
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = io.WriteString(writer, string(raw))
-			Expect(err).ShouldNot(HaveOccurred())
-
-			By("Starting the process")
-			Eventually(session, "10s").Should(gexec.Exit(0))
-
-			By("Reading downloaded files")
-			dataDir, err := os.Open(destDirectory)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			files, err := dataDir.Readdir(2)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			var fileNames []string
-			for _, f := range files {
-				fileNames = append(fileNames, f.Name())
-				Expect(f.Size()).ToNot(BeZero())
-			}
-
-			Expect(fileNames).To(ConsistOf([]string{"setup.ps1"}))
-		})
+		By("Validating filenames are correct")
+		Expect(fileNames).To(ConsistOf([]string{"setup.ps1"}))
 	})
 })
