@@ -94,7 +94,8 @@ var _ = Describe("PivnetClient", func() {
 				)
 
 				_, err := client.GetRelease("banana", "1.0.0")
-				Expect(err).To(MatchError(errors.New("Pivnet returned status code: 418 for the request")))
+				Expect(err).To(MatchError(errors.New(
+					"Pivnet returned status code: 418 for the request - expected 200")))
 			})
 		})
 	})
@@ -147,7 +148,8 @@ var _ = Describe("PivnetClient", func() {
 				}
 
 				_, err := client.GetProductFiles(release)
-				Expect(err).To(MatchError(errors.New("Pivnet returned status code: 418 for the request")))
+				Expect(err).To(MatchError(errors.New(
+					"Pivnet returned status code: 418 for the request - expected 200")))
 			})
 		})
 	})
@@ -186,7 +188,8 @@ var _ = Describe("PivnetClient", func() {
 
 				_, err := client.ProductVersions("my-product-id")
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError("Pivnet returned status code: 404 for the request"))
+				Expect(err).To(MatchError(
+					"Pivnet returned status code: 404 for the request - expected 200"))
 			})
 		})
 
@@ -225,6 +228,80 @@ var _ = Describe("PivnetClient", func() {
 			Expect(versions).To(HaveLen(2))
 			Expect(versions[0]).Should(Equal(productVersion))
 			Expect(versions[1]).Should(Equal(productVersion))
+		})
+	})
+
+	Describe("Create Release", func() {
+		var (
+			productVersion      string
+			createReleaseConfig pivnet.CreateReleaseConfig
+		)
+
+		BeforeEach(func() {
+			productVersion = "1.2.3.4"
+
+			createReleaseConfig = pivnet.CreateReleaseConfig{
+				ReleaseDate:    "2016-09-27",
+				EulaSlug:       "some_eula",
+				ReleaseType:    "Not a real release",
+				ProductVersion: productVersion,
+				ProductName:    "some-product-name",
+			}
+		})
+
+		Context("when the config is valid", func() {
+			It("sets availability to 'Admins Only'", func() {
+			})
+
+			It("confirms oss compliance", func() {
+
+			})
+
+			It("creates the release", func() {
+				response := `{"release": {"id": 3, "version": "1.2.3.4"}}`
+
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
+						ghttp.RespondWith(http.StatusCreated, response),
+					),
+				)
+
+				release, err := client.CreateRelease(createReleaseConfig)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(release.Version).To(Equal(productVersion))
+			})
+		})
+
+		Context("when the requested version is not available but the request is successful", func() {
+			It("returns an error", func() {
+				response := `{"releases": [{"id": 3, "version": "3.2.1"}]}`
+
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
+						ghttp.RespondWith(http.StatusOK, response),
+					),
+				)
+
+				_, err := client.GetRelease("banana", "1.0.0")
+				Expect(err).To(MatchError(errors.New("The requested version: 1.0.0 - could not be found")))
+			})
+		})
+
+		Context("when the server responds with a non-2XX status code", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
+						ghttp.RespondWith(http.StatusTeapot, nil),
+					),
+				)
+
+				_, err := client.GetRelease("banana", "1.0.0")
+				Expect(err).To(MatchError(errors.New(
+					"Pivnet returned status code: 418 for the request - expected 200")))
+			})
 		})
 	})
 })

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -44,7 +43,7 @@ func (c client) ProductVersions(id string) ([]string, error) {
 	releasesURL := c.url + "/products/" + id + "/releases"
 
 	var response Response
-	err := c.makeRequest("GET", releasesURL, nil, &response)
+	err := c.makeRequest("GET", releasesURL, http.StatusOK, nil, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +62,7 @@ func (c client) GetRelease(productName, version string) (Release, error) {
 	releasesURL := c.url + "/products/" + productName + "/releases"
 
 	var response Response
-	err := c.makeRequest("GET", releasesURL, nil, &response)
+	err := c.makeRequest("GET", releasesURL, http.StatusOK, nil, &response)
 	if err != nil {
 		return Release{}, err
 	}
@@ -85,7 +84,7 @@ func (c client) GetRelease(productName, version string) (Release, error) {
 func (c client) GetProductFiles(release Release) (ProductFiles, error) {
 	productFiles := ProductFiles{}
 
-	err := c.makeRequest("GET", release.Links.ProductFiles["href"], nil, &productFiles)
+	err := c.makeRequest("GET", release.Links.ProductFiles["href"], http.StatusOK, nil, &productFiles)
 	if err != nil {
 		return ProductFiles{}, err
 	}
@@ -93,7 +92,13 @@ func (c client) GetProductFiles(release Release) (ProductFiles, error) {
 	return productFiles, nil
 }
 
-func (c client) makeRequest(requestType string, url string, body io.Reader, data interface{}) error {
+func (c client) makeRequest(
+	requestType string,
+	url string,
+	expectedStatusCode int,
+	body io.Reader,
+	data interface{},
+) error {
 	req, err := http.NewRequest(requestType, url, body)
 	if err != nil {
 		return err
@@ -106,8 +111,8 @@ func (c client) makeRequest(requestType string, url string, body io.Reader, data
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Pivnet returned status code: %d for the request", resp.StatusCode)
+	if resp.StatusCode != expectedStatusCode {
+		return fmt.Errorf("Pivnet returned status code: %d for the request - expected %d", resp.StatusCode, expectedStatusCode)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(data)
@@ -139,28 +144,19 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 		panic(err)
 	}
 
-	req, err := http.NewRequest("POST", releasesURL, bytes.NewReader(b))
+	var response CreateReleaseResponse
+	err = c.makeRequest(
+		"POST",
+		releasesURL,
+		http.StatusCreated,
+		bytes.NewReader(b),
+		&response,
+	)
 	if err != nil {
-		panic(err)
+		return Release{}, err
 	}
 
-	req.Header.Add("Authorization", fmt.Sprintf("Token %s", c.token))
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		panic(fmt.Errorf("Pivnet returned status code: %d for the request", resp.StatusCode))
-	}
-
-	_, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	return Release{}, nil
+	return response.Release, nil
 }
 
 type createReleaseBody struct {

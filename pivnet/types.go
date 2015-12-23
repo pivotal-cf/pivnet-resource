@@ -4,6 +4,10 @@ type Response struct {
 	Releases []Release `json:"releases,omitempty"`
 }
 
+type CreateReleaseResponse struct {
+	Release Release `json:"release,omitempty"`
+}
+
 type Release struct {
 	ID           int    `json:"id,omitempty"`
 	Availability string `json:"availability,omitempty"`
