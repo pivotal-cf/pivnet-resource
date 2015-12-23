@@ -11,8 +11,8 @@ The rootfs of the docker image is available with each release on the
 The docker image is `pivotalcf/pivnet-resource`; the images are available on
 [dockerhub](https://hub.docker.com/r/pivotalcf/pivnet-resource).
 
-Both the docker images and the BOSH releases are semantically versioned, but
-in general their versions will be different.
+Both the docker images and the BOSH releases are semantically versioned;
+they have the same version.
 
 ## Source Configuration
 
