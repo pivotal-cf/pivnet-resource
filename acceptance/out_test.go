@@ -330,30 +330,6 @@ var _ = Describe("Out", func() {
 			Expect(release.Eula.Slug).To(Equal(eulaSlug))
 		})
 
-		Context("when no release_date_file is provided", func() {
-			BeforeEach(func() {
-				outRequest.Params.ReleaseDateFile = ""
-
-				outRequest.Params.FileGlob = ""
-				outRequest.Params.FilepathPrefix = ""
-
-				var err error
-				stdinContents, err = json.Marshal(outRequest)
-				Expect(err).ShouldNot(HaveOccurred())
-			})
-
-			It("Defaults the release_date to the current date", func() {
-				todayDate := time.Now().Format("2006-01-02")
-
-				session := run(command, stdinContents)
-
-				Eventually(session, executableTimeout).Should(gexec.Exit(0))
-
-				release := getPivnetRelease(productName, productVersion)
-				Expect(release.ReleaseDate).To(Equal(todayDate))
-			})
-		})
-
 		Context("when S3 source and params are configured correctly", func() {
 			var (
 				client *s3client

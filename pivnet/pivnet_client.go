@@ -87,7 +87,8 @@ func (c client) GetRelease(productName, version string) (Release, error) {
 		}
 
 		if i == len(response.Releases)-1 {
-			return Release{}, fmt.Errorf("The requested version: %s - could not be found", version)
+			return Release{}, fmt.Errorf(
+				"The requested version: %s - could not be found", version)
 		}
 	}
 
@@ -132,7 +133,11 @@ func (c client) makeRequest(
 	}
 
 	if resp.StatusCode != expectedStatusCode {
-		return fmt.Errorf("Pivnet returned status code: %d for the request - expected %d", resp.StatusCode, expectedStatusCode)
+		return fmt.Errorf(
+			"Pivnet returned status code: %d for the request - expected %d",
+			resp.StatusCode,
+			expectedStatusCode,
+		)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(data)

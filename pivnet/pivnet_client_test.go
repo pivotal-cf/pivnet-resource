@@ -250,19 +250,21 @@ var _ = Describe("PivnetClient", func() {
 		})
 
 		Context("when the config is valid", func() {
+			type requestBody struct {
+				Release pivnet.Release `json:"release"`
+			}
+
 			var (
 				expectedReleaseDate string
+				expectedRequestBody requestBody
+
+				validResponse string
 			)
 
 			BeforeEach(func() {
 				expectedReleaseDate = time.Now().Format("2006-01-02")
-			})
 
-			It("creates the release with the minimum required fields", func() {
-				type requestBody struct {
-					Release pivnet.Release `json:"release"`
-				}
-				expectedRequestBody := requestBody{
+				expectedRequestBody = requestBody{
 					Release: pivnet.Release{
 						Availability: "Admins Only",
 						OSSCompliant: "confirm",
@@ -274,13 +276,16 @@ var _ = Describe("PivnetClient", func() {
 						Version: createReleaseConfig.ProductVersion,
 					},
 				}
-				response := `{"release": {"id": 3, "version": "1.2.3.4"}}`
 
+				validResponse = `{"release": {"id": 3, "version": "1.2.3.4"}}`
+			})
+
+			It("creates the release with the minimum required fields", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
 						ghttp.VerifyJSONRepresenting(&expectedRequestBody),
-						ghttp.RespondWith(http.StatusCreated, response),
+						ghttp.RespondWith(http.StatusCreated, validResponse),
 					),
 				)
 
@@ -288,36 +293,46 @@ var _ = Describe("PivnetClient", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(release.Version).To(Equal(productVersion))
 			})
-		})
 
-		Context("when the requested version is not available but the request is successful", func() {
-			It("returns an error", func() {
-				response := `{"releases": [{"id": 3, "version": "3.2.1"}]}`
-
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
-						ghttp.RespondWith(http.StatusOK, response),
-					),
+			Context("when the optional release date is present", func() {
+				var (
+					releaseDate string
 				)
 
-				_, err := client.GetRelease("banana", "1.0.0")
-				Expect(err).To(MatchError(errors.New("The requested version: 1.0.0 - could not be found")))
+				BeforeEach(func() {
+					releaseDate = "2015-12-24"
+
+					expectedRequestBody.Release.ReleaseDate = releaseDate
+				})
+
+				It("creates the release with the release date field", func() {
+					server.AppendHandlers(
+						ghttp.CombineHandlers(
+							ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
+							ghttp.VerifyJSONRepresenting(&expectedRequestBody),
+							ghttp.RespondWith(http.StatusCreated, validResponse),
+						),
+					)
+
+					release, err := client.CreateRelease(createReleaseConfig)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(release.Version).To(Equal(productVersion))
+				})
 			})
 		})
 
-		Context("when the server responds with a non-2XX status code", func() {
+		Context("when the server responds with a non-201 status code", func() {
 			It("returns an error", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
+						ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
 						ghttp.RespondWith(http.StatusTeapot, nil),
 					),
 				)
 
-				_, err := client.GetRelease("banana", "1.0.0")
+				_, err := client.CreateRelease(createReleaseConfig)
 				Expect(err).To(MatchError(errors.New(
-					"Pivnet returned status code: 418 for the request - expected 200")))
+					"Pivnet returned status code: 418 for the request - expected 201")))
 			})
 		})
 	})
