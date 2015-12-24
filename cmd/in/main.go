@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
@@ -39,9 +41,9 @@ func main() {
 		log.Fatalf("Failed to create client: %s", err)
 	}
 
-	version := input.Version.ProductVersion
+	productVersion := input.Version.ProductVersion
 
-	release, err := client.GetRelease(input.Source.ProductName, version)
+	release, err := client.GetRelease(input.Source.ProductName, productVersion)
 	if err != nil {
 		log.Fatalf("Failed to get Release: %s", err)
 	}
@@ -58,9 +60,16 @@ func main() {
 		log.Fatalf("Failed to Download Files: %s", err)
 	}
 
+	versionFilepath := filepath.Join(downloadDir, "version")
+
+	err = ioutil.WriteFile(versionFilepath, []byte(productVersion), os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+
 	out := concourse.InResponse{
 		Version: concourse.Version{
-			ProductVersion: version,
+			ProductVersion: productVersion,
 		},
 		Metadata: []concourse.Metadata{},
 	}

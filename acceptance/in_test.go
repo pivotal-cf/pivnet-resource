@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -25,6 +26,8 @@ var _ = Describe("In", func() {
 
 	BeforeEach(func() {
 		var err error
+
+		By("Creating temp directory")
 		destDirectory, err = ioutil.TempDir("", "pivnet-resource")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -48,7 +51,8 @@ var _ = Describe("In", func() {
 
 	AfterEach(func() {
 		By("Removing temporary destination directory")
-		os.RemoveAll(destDirectory)
+		err := os.RemoveAll(destDirectory)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("returns valid json", func() {
@@ -75,7 +79,7 @@ var _ = Describe("In", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Validating number of downloaded files")
-		files, err := dataDir.Readdir(1)
+		files, err := dataDir.Readdir(2)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Validating files have non-zero-length content")
@@ -86,6 +90,19 @@ var _ = Describe("In", func() {
 		}
 
 		By("Validating filenames are correct")
-		Expect(fileNames).To(ConsistOf([]string{"setup.ps1"}))
+		Expect(fileNames).To(ContainElement("setup.ps1"))
+	})
+
+	It("creates a version file with the downloaded version", func() {
+		versionFilepath := filepath.Join(destDirectory, "version")
+
+		By("Running the command")
+		session := run(command, stdinContents)
+		Eventually(session, executableTimeout).Should(gexec.Exit(0))
+
+		By("Validating version file has correct contents")
+		contents, err := ioutil.ReadFile(versionFilepath)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(string(contents)).To(Equal(productVersion))
 	})
 })
