@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 const (
@@ -43,7 +44,13 @@ func (c client) ProductVersions(id string) ([]string, error) {
 	releasesURL := c.url + "/products/" + id + "/releases"
 
 	var response Response
-	err := c.makeRequest("GET", releasesURL, http.StatusOK, nil, &response)
+	err := c.makeRequest(
+		"GET",
+		releasesURL,
+		http.StatusOK,
+		nil,
+		&response,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +69,13 @@ func (c client) GetRelease(productName, version string) (Release, error) {
 	releasesURL := c.url + "/products/" + productName + "/releases"
 
 	var response Response
-	err := c.makeRequest("GET", releasesURL, http.StatusOK, nil, &response)
+	err := c.makeRequest(
+		"GET",
+		releasesURL,
+		http.StatusOK,
+		nil,
+		&response,
+	)
 	if err != nil {
 		return Release{}, err
 	}
@@ -84,7 +97,13 @@ func (c client) GetRelease(productName, version string) (Release, error) {
 func (c client) GetProductFiles(release Release) (ProductFiles, error) {
 	productFiles := ProductFiles{}
 
-	err := c.makeRequest("GET", release.Links.ProductFiles["href"], http.StatusOK, nil, &productFiles)
+	err := c.makeRequest(
+		"GET",
+		release.Links.ProductFiles["href"],
+		http.StatusOK,
+		nil,
+		&productFiles,
+	)
 	if err != nil {
 		return ProductFiles{}, err
 	}
@@ -104,6 +123,7 @@ func (c client) makeRequest(
 		return err
 	}
 
+	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", c.token))
 
 	resp, err := http.DefaultClient.Do(req)
@@ -137,6 +157,10 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 			ReleaseType:  config.ReleaseType,
 			Version:      config.ProductVersion,
 		},
+	}
+
+	if config.ReleaseDate == "" {
+		body.Release.ReleaseDate = time.Now().Format("2006-01-02")
 	}
 
 	b, err := json.Marshal(body)

@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -241,7 +242,6 @@ var _ = Describe("PivnetClient", func() {
 			productVersion = "1.2.3.4"
 
 			createReleaseConfig = pivnet.CreateReleaseConfig{
-				ReleaseDate:    "2016-09-27",
 				EulaSlug:       "some_eula",
 				ReleaseType:    "Not a real release",
 				ProductVersion: productVersion,
@@ -250,19 +250,36 @@ var _ = Describe("PivnetClient", func() {
 		})
 
 		Context("when the config is valid", func() {
-			It("sets availability to 'Admins Only'", func() {
+			var (
+				expectedReleaseDate string
+			)
+
+			BeforeEach(func() {
+				expectedReleaseDate = time.Now().Format("2006-01-02")
 			})
 
-			It("confirms oss compliance", func() {
-
-			})
-
-			It("creates the release", func() {
+			It("creates the release with the minimum required fields", func() {
+				type requestBody struct {
+					Release pivnet.Release `json:"release"`
+				}
+				expectedRequestBody := requestBody{
+					Release: pivnet.Release{
+						Availability: "Admins Only",
+						OSSCompliant: "confirm",
+						ReleaseDate:  expectedReleaseDate,
+						ReleaseType:  createReleaseConfig.ReleaseType,
+						Eula: pivnet.Eula{
+							Slug: createReleaseConfig.EulaSlug,
+						},
+						Version: createReleaseConfig.ProductVersion,
+					},
+				}
 				response := `{"release": {"id": 3, "version": "1.2.3.4"}}`
 
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
+						ghttp.VerifyJSONRepresenting(&expectedRequestBody),
 						ghttp.RespondWith(http.StatusCreated, response),
 					),
 				)

@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
@@ -110,9 +109,7 @@ func main() {
 	releaseType := string(releaseTypeContents)
 
 	var releaseDate string
-	if input.Params.ReleaseDateFile == "" {
-		releaseDate = time.Now().Format("2006-01-02")
-	} else {
+	if input.Params.ReleaseDateFile != "" {
 		releaseDateFilepath := filepath.Join(sourcesDir, input.Params.ReleaseDateFile)
 		releaseDateContents, err := ioutil.ReadFile(releaseDateFilepath)
 		if err != nil {
