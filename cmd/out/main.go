@@ -36,44 +36,19 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	if input.Source.APIToken == "" {
-		log.Fatalln("api_token must be provided")
-	}
-
-	if input.Source.ProductName == "" {
-		log.Fatalln("product_name must be provided")
-	}
-
-	if input.Params.VersionFile == "" {
-		log.Fatalln("version_file must be provided")
-	}
-
-	if input.Params.ReleaseTypeFile == "" {
-		log.Fatalln("release_type_file must be provided")
-	}
-
-	if input.Params.EulaSlugFile == "" {
-		log.Fatalln("eula_slug_file must be provided")
-	}
+	mustBeNonEmpty(input.Source.APIToken, "api_token")
+	mustBeNonEmpty(input.Source.ProductName, "product_name")
+	mustBeNonEmpty(input.Params.VersionFile, "version_file")
+	mustBeNonEmpty(input.Params.ReleaseTypeFile, "release_type_file")
+	mustBeNonEmpty(input.Params.EulaSlugFile, "eula_slug_file")
 
 	if input.Params.FileGlob == "" && input.Params.FilepathPrefix == "" {
 		fmt.Fprintln(os.Stderr, "file glob and s3_filepath_prefix not provided - skipping upload to s3")
 	} else {
-		if input.Source.AccessKeyID == "" {
-			log.Fatalln("access_key_id must be provided")
-		}
-
-		if input.Source.SecretAccessKey == "" {
-			log.Fatalln("secret_access_key must be provided")
-		}
-
-		if input.Params.FileGlob == "" {
-			log.Fatalln("file glob must be provided")
-		}
-
-		if input.Params.FilepathPrefix == "" {
-			log.Fatalln("s3_filepath_prefix must be provided")
-		}
+		mustBeNonEmpty(input.Source.AccessKeyID, "access_key_id")
+		mustBeNonEmpty(input.Source.SecretAccessKey, "secret_access_key")
+		mustBeNonEmpty(input.Params.FileGlob, "file glob")
+		mustBeNonEmpty(input.Params.FilepathPrefix, "s3_filepath_prefix")
 
 		s3Client := s3.NewClient(s3.NewClientConfig{
 			AccessKeyID:     input.Source.AccessKeyID,
@@ -100,63 +75,20 @@ func main() {
 
 	pivnetClient := pivnet.NewClient(pivnet.URL, input.Source.APIToken)
 
-	releaseTypeFilepath := filepath.Join(sourcesDir, input.Params.ReleaseTypeFile)
-	releaseTypeContents, err := ioutil.ReadFile(releaseTypeFilepath)
-	if err != nil {
-		log.Fatal(err)
+	config := pivnet.CreateReleaseConfig{
+		ProductName:    input.Source.ProductName,
+		ReleaseType:    readStringContents(sourcesDir, input.Params.ReleaseTypeFile),
+		EulaSlug:       readStringContents(sourcesDir, input.Params.EulaSlugFile),
+		ProductVersion: readStringContents(sourcesDir, input.Params.VersionFile),
+		Description:    readStringContents(sourcesDir, input.Params.DescriptionFile),
+		ReleaseDate:    readStringContents(sourcesDir, input.Params.ReleaseDateFile),
 	}
 
-	releaseType := string(releaseTypeContents)
-
-	var releaseDate string
-	if input.Params.ReleaseDateFile != "" {
-		releaseDateFilepath := filepath.Join(sourcesDir, input.Params.ReleaseDateFile)
-		releaseDateContents, err := ioutil.ReadFile(releaseDateFilepath)
-		if err != nil {
-			log.Fatal(err)
-		}
-		releaseDate = string(releaseDateContents)
-	}
-
-	eulaSlugFilepath := filepath.Join(sourcesDir, input.Params.EulaSlugFile)
-	eulaSlugContents, err := ioutil.ReadFile(eulaSlugFilepath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	eulaSlug := string(eulaSlugContents)
-
-	versionFilepath := filepath.Join(sourcesDir, input.Params.VersionFile)
-	versionContents, err := ioutil.ReadFile(versionFilepath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var description string
-	if input.Params.DescriptionFile != "" {
-		descriptionFilepath := filepath.Join(sourcesDir, input.Params.DescriptionFile)
-		descriptionContents, err := ioutil.ReadFile(descriptionFilepath)
-		if err != nil {
-			log.Fatal(err)
-		}
-		description = string(descriptionContents)
-	}
-
-	productVersion := string(versionContents)
-
-	productName := input.Source.ProductName
-
-	pivnetClient.CreateRelease(pivnet.CreateReleaseConfig{
-		ProductName:    productName,
-		ProductVersion: productVersion,
-		ReleaseType:    releaseType,
-		ReleaseDate:    releaseDate,
-		EulaSlug:       eulaSlug,
-		Description:    description,
-	})
+	pivnetClient.CreateRelease(config)
 
 	out := concourse.OutResponse{
 		Version: concourse.Version{
-			ProductVersion: productVersion,
+			ProductVersion: config.ProductVersion,
 		},
 		Metadata: []string{},
 	}
@@ -165,4 +97,22 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func mustBeNonEmpty(input string, key string) {
+	if input == "" {
+		log.Fatalf("%s must be provided\n", key)
+	}
+}
+
+func readStringContents(sourcesDir, file string) string {
+	if file == "" {
+		return ""
+	}
+	fullPath := filepath.Join(sourcesDir, file)
+	contents, err := ioutil.ReadFile(fullPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(contents)
 }
