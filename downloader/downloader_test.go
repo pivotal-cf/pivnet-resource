@@ -45,16 +45,7 @@ var _ = Describe("Downloader", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/the-first-post", ""),
-						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", "1234")),
-						ghttp.RespondWith(http.StatusFound, nil, header),
-					),
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("GET", "/some-redirect-link"),
-						ghttp.RespondWith(http.StatusOK, make([]byte, 10, 14)),
-					),
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", "/the-second-post", ""),
-						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", "1234")),
+						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
 						ghttp.RespondWith(http.StatusFound, nil, header),
 					),
 					ghttp.CombineHandlers(
@@ -66,8 +57,7 @@ var _ = Describe("Downloader", func() {
 
 			It("Downloads the files into the directory provided", func() {
 				fileNames := map[string]string{
-					"the-first-post":  apiAddress + "/the-first-post",
-					"the-second-post": apiAddress + "/the-second-post",
+					"the-first-post": apiAddress + "/the-first-post",
 				}
 
 				err := downloader.Download(dir, fileNames, token)
@@ -76,9 +66,9 @@ var _ = Describe("Downloader", func() {
 				dataDir, err := os.Open(dir)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				files, err := dataDir.Readdir(2)
+				files, err := dataDir.Readdir(1)
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(files).To(HaveLen(2))
+				Expect(files).To(HaveLen(1))
 
 				for _, f := range files {
 					Expect(f.Size()).ToNot(BeZero())
@@ -88,7 +78,11 @@ var _ = Describe("Downloader", func() {
 
 		Context("when it fails to make a request", func() {
 			It("raises an error", func() {
-				Expect(downloader.Download(dir, map[string]string{"^731drop": "&h%%%%"}, token)).NotTo(Succeed())
+				Expect(downloader.Download(
+					dir,
+					map[string]string{"^731drop": "&h%%%%"},
+					token,
+				)).NotTo(Succeed())
 			})
 		})
 	})
