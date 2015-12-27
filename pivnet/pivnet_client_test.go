@@ -302,6 +302,7 @@ var _ = Describe("PivnetClient", func() {
 				BeforeEach(func() {
 					releaseDate = "2015-12-24"
 
+					createReleaseConfig.ReleaseDate = releaseDate
 					expectedRequestBody.Release.ReleaseDate = releaseDate
 				})
 
