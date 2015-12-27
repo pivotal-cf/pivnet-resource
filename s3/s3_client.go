@@ -7,7 +7,7 @@ import (
 )
 
 type Client interface {
-	Out(fileGlob string, to string, sourcesDir string) error
+	Upload(fileGlob string, to string, sourcesDir string) error
 }
 
 type client struct {
@@ -46,7 +46,7 @@ func NewClient(config NewClientConfig) Client {
 	}
 }
 
-func (c client) Out(fileGlob string, to string, sourcesDir string) error {
+func (c client) Upload(fileGlob string, to string, sourcesDir string) error {
 	s3Input := Request{
 		Source: Source{
 			AccessKeyID:     c.accessKeyID,

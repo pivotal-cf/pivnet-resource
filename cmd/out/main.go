@@ -11,6 +11,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
+	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 )
 
 const (
@@ -61,12 +62,15 @@ func main() {
 
 			OutBinaryPath: filepath.Join(myDir, s3OutBinaryName),
 		})
+		uploaderClient := uploader.NewClient(uploader.Config{
+			FileGlob:       input.Params.FileGlob,
+			FilepathPrefix: input.Params.FilepathPrefix,
+			SourcesDir:     sourcesDir,
 
-		err = s3Client.Out(
-			input.Params.FileGlob,
-			"product_files/"+input.Params.FilepathPrefix+"/",
-			sourcesDir,
-		)
+			Transport: s3Client,
+		})
+
+		err := uploaderClient.Upload()
 
 		if err != nil {
 			log.Fatal(err)
