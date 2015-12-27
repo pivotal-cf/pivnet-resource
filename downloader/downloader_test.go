@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
 
@@ -34,13 +36,18 @@ var _ = Describe("Downloader", func() {
 	})
 
 	Describe("Download", func() {
-		var token string
+		var (
+			token string
+		)
+
+		BeforeEach(func() {
+			token = "1234-abcd"
+		})
 
 		Context("Success", func() {
-			BeforeEach(func() {
+			It("follows redirects", func() {
 				header := http.Header{}
 				header.Add("Location", apiAddress+"/some-redirect-link")
-				token = "1234"
 
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
@@ -53,25 +60,51 @@ var _ = Describe("Downloader", func() {
 						ghttp.RespondWith(http.StatusOK, make([]byte, 10, 14)),
 					),
 				)
-			})
 
-			It("Downloads the files into the directory provided", func() {
 				fileNames := map[string]string{
 					"the-first-post": apiAddress + "/the-first-post",
 				}
 
 				err := downloader.Download(dir, fileNames, token)
 				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("Downloads the files into the directory provided", func() {
+				fileNames := map[string]string{
+					"file-0": apiAddress + "/post-0",
+					"file-1": apiAddress + "/post-1",
+					"file-2": apiAddress + "/post-2",
+				}
+
+				for i := 0; i < len(fileNames); i++ {
+					url := fmt.Sprintf("/post-%d", i)
+					server.RouteToHandler("POST", url, ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", url, ""),
+						ghttp.RespondWith(http.StatusOK, fmt.Sprintf("contents-%d", i)),
+					))
+				}
+
+				err := downloader.Download(dir, fileNames, token)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(server.ReceivedRequests())).To(Equal(3))
 
 				dataDir, err := os.Open(dir)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				files, err := dataDir.Readdir(1)
+				files, err := dataDir.Readdir(3)
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(files).To(HaveLen(1))
+				Expect(files).To(HaveLen(3))
 
 				for _, f := range files {
-					Expect(f.Size()).ToNot(BeZero())
+					fullPath := filepath.Join(dir, f.Name())
+					contents, err := ioutil.ReadFile(fullPath)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					split := strings.Split(f.Name(), "-")
+					index := split[1]
+
+					expectedContents := []byte(fmt.Sprintf("contents-%s", index))
+					Expect(contents).To(Equal(expectedContents))
 				}
 			})
 		})
