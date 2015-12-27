@@ -101,10 +101,17 @@ Pivotal Network or to the newly-created release.
 
 #### Parameters
 
-* `file_glob`: *Required.* Path to the file to upload. If multiple files are
+It is valid to provide both `file_glob` and `s3_filepath_prefix`, or to provide
+neither. If only one is present, release creation will fail.
+
+If both `file_glob` and `s3_filepath_prefix` are present, then the source
+configuration must also have `access_key_id` and `secret_access_key` or
+release creation will fail.
+
+* `file_glob`: *Optional.* Path to the file to upload. If multiple files are
   matched by the glob, an error is raised.
 
-* `s3_filepath_prefix`: *Required.* Case-sensitive prefix of the
+* `s3_filepath_prefix`: *Optional.* Case-sensitive prefix of the
   path in the S3 bucket.
   Generally similar to, but not the same as, `product_name`. For example,
   a `product_name` might be `pivotal-diego-pcf` (lower-case) but the
@@ -127,6 +134,9 @@ Pivotal Network or to the newly-created release.
 
 * `eula_slug_file`: *Required.* File containing the eula slug
   e.g. `pivotal_software_eula`
+
+* `description_file`: *Optional.* File containing the free-form description text.
+  e.g. `The description for this release. May contain line breaks.`
 
 ## Developing
 
