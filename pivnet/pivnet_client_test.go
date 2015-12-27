@@ -320,6 +320,58 @@ var _ = Describe("PivnetClient", func() {
 					Expect(release.Version).To(Equal(productVersion))
 				})
 			})
+
+			Describe("optional description field", func() {
+				var (
+					description string
+				)
+
+				Context("when the optional description field is present", func() {
+					BeforeEach(func() {
+						description = "some description"
+
+						createReleaseConfig.Description = description
+						expectedRequestBody.Release.Description = description
+					})
+
+					It("creates the release with the description field", func() {
+						server.AppendHandlers(
+							ghttp.CombineHandlers(
+								ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
+								ghttp.VerifyJSONRepresenting(&expectedRequestBody),
+								ghttp.RespondWith(http.StatusCreated, validResponse),
+							),
+						)
+
+						release, err := client.CreateRelease(createReleaseConfig)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(release.Version).To(Equal(productVersion))
+					})
+				})
+
+				Context("when the optional description field is not present", func() {
+					BeforeEach(func() {
+						description = ""
+
+						createReleaseConfig.Description = description
+						expectedRequestBody.Release.Description = description
+					})
+
+					It("creates the release with an empty description field", func() {
+						server.AppendHandlers(
+							ghttp.CombineHandlers(
+								ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
+								ghttp.VerifyJSONRepresenting(&expectedRequestBody),
+								ghttp.RespondWith(http.StatusCreated, validResponse),
+							),
+						)
+
+						release, err := client.CreateRelease(createReleaseConfig)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(release.Version).To(Equal(productVersion))
+					})
+				})
+			})
 		})
 
 		Context("when the server responds with a non-201 status code", func() {

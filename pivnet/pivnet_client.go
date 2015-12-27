@@ -19,6 +19,7 @@ type CreateReleaseConfig struct {
 	ReleaseType    string
 	ReleaseDate    string
 	EulaSlug       string
+	Description    string
 }
 
 type Client interface {
@@ -161,6 +162,7 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 			ReleaseDate:  config.ReleaseDate,
 			ReleaseType:  config.ReleaseType,
 			Version:      config.ProductVersion,
+			Description:  config.Description,
 		},
 	}
 

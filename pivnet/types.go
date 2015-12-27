@@ -17,6 +17,7 @@ type Release struct {
 	ReleaseType  string `json:"release_type,omitempty"`
 	Version      string `json:"version,omitempty"`
 	Links        Links  `json:"_links,omitempty"`
+	Description  string `json:"description,omitempty"`
 }
 
 type Eula struct {

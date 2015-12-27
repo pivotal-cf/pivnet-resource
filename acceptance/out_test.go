@@ -45,6 +45,9 @@ var _ = Describe("Out", func() {
 		productVersionFile = "version"
 		productVersion     string
 
+		descriptionFile = "description"
+		description     = "this release is for automated-testing only."
+
 		productName = "pivotal-diego-pcf"
 
 		command       *exec.Cmd
@@ -91,6 +94,13 @@ var _ = Describe("Out", func() {
 			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
+		By("Writing description to file")
+		err = ioutil.WriteFile(
+			filepath.Join(rootDir, descriptionFile),
+			[]byte(description),
+			os.ModePerm)
+		Expect(err).ShouldNot(HaveOccurred())
+
 		By("Creating command object")
 		command = exec.Command(outPath, rootDir)
 
@@ -109,6 +119,7 @@ var _ = Describe("Out", func() {
 				ReleaseTypeFile: releaseTypeFile,
 				ReleaseDateFile: releaseDateFile,
 				EulaSlugFile:    eulaSlugFile,
+				DescriptionFile: descriptionFile,
 			},
 		}
 
@@ -328,6 +339,7 @@ var _ = Describe("Out", func() {
 			Expect(release.ReleaseType).To(Equal(releaseType))
 			Expect(release.ReleaseDate).To(Equal(releaseDate))
 			Expect(release.Eula.Slug).To(Equal(eulaSlug))
+			Expect(release.Description).To(Equal(description))
 		})
 
 		Context("when S3 source and params are configured correctly", func() {

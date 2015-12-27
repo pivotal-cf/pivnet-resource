@@ -131,6 +131,16 @@ func main() {
 		log.Fatal(err)
 	}
 
+	var description string
+	if input.Params.DescriptionFile != "" {
+		descriptionFilepath := filepath.Join(sourcesDir, input.Params.DescriptionFile)
+		descriptionContents, err := ioutil.ReadFile(descriptionFilepath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		description = string(descriptionContents)
+	}
+
 	productVersion := string(versionContents)
 
 	productName := input.Source.ProductName
@@ -141,6 +151,7 @@ func main() {
 		ReleaseType:    releaseType,
 		ReleaseDate:    releaseDate,
 		EulaSlug:       eulaSlug,
+		Description:    description,
 	})
 
 	out := concourse.OutResponse{
