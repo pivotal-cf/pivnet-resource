@@ -69,7 +69,10 @@ jobs:
   plan:
   - put: p-gitlab-pivnet
     params:
-      file: some-directory/*
+      version_file: some-metadata-files/version
+      release_type_file: some-metadata-files/release_type
+      eula_slug_file: some-metadata-files/eula_slug
+      file_glob: some-source-files/*
       s3_filepath_prefix: P-Gitlab
 ```
 
@@ -83,8 +86,9 @@ Discovers all versions of the provided product.
 
 Downloads the provided product from Pivotal Network. Any EULAs must have already
 been signed. Due to caching, it is advisable to sign the EULAs before the first
-execution of `in` (i.e. the first `get` in the pipeline) as the resource will be
-cached and therefore signing the EULA will have no effect.
+execution of `in` (i.e. the first `get` in the pipeline) as the failed download
+of the resource will be cached and therefore retrospectively signing the EULA
+will have no effect.
 
 #### Parameters
 
@@ -94,22 +98,24 @@ None.
 
 Creates a new release on Pivotal Network with the provided version and metadata.
 
-Also optionally uploads a single file to the Pivotal Network bucket under the
-provided filepath.
-If a file is uploaded, that file is not currently added to
-Pivotal Network or to the newly-created release.
+Also optionally uploads one or more files to the Pivotal Network bucket under
+the provided filepath.
+Uploaded files are not currently added to Pivotal Network or to the
+newly-created release.
 
 #### Parameters
 
-It is valid to provide both `file_glob` and `s3_filepath_prefix`, or to provide
-neither. If only one is present, release creation will fail.
+It is valid to provide both `file_glob` and `s3_filepath_prefix` or to provide
+neither. If only one is present, release creation will fail. If neither are
+present, file uploading is skipped.
 
 If both `file_glob` and `s3_filepath_prefix` are present, then the source
 configuration must also have `access_key_id` and `secret_access_key` or
 release creation will fail.
 
-* `file_glob`: *Optional.* Path to the file to upload. If multiple files are
-  matched by the glob, an error is raised.
+* `file_glob`: *Optional.* Glob matching files to upload. If multiple files are
+  matched by the glob, they are all uploaded. If no files are matched, release
+  creation fails with error.
 
 * `s3_filepath_prefix`: *Optional.* Case-sensitive prefix of the
   path in the S3 bucket.
@@ -121,7 +127,7 @@ release creation will fail.
   Will be read to determine the new release version.
 
 * `release_type_file`: *Required.* File containing the release type.
-  Will be read to determine the release type. Valid types are:
+  Will be read to determine the release type. Valid file contents are:
   - All-In-One
   - Major Release
   - Minor Release
@@ -129,7 +135,8 @@ release creation will fail.
   - Maintenance Release
   - Security Release
 
-* `release_date_file`: *Optional.* File containing the release date.
+* `release_date_file`: *Optional.* File containing the release date in the form
+  `YYYY-MM-DD`.
   If it is not present, the release date will be set to the current date.
 
 * `eula_slug_file`: *Required.* File containing the eula slug
