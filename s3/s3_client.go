@@ -2,7 +2,9 @@ package s3
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
+	"os"
 	"os/exec"
 )
 
@@ -59,6 +61,8 @@ func (c client) Upload(fileGlob string, to string, sourcesDir string) error {
 			To:   to,
 		},
 	}
+
+	fmt.Fprintf(os.Stderr, "input: %+v, sourcesDir: %s\n", s3Input, sourcesDir)
 
 	cmd := exec.Command(c.outBinaryPath, sourcesDir)
 

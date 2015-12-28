@@ -346,10 +346,12 @@ var _ = Describe("Out", func() {
 			var (
 				client *s3client
 
-				sourcesDir     = "sources"
-				sourceFileName string
-				sourceFilePath string
-				remotePath     string
+				sourcesDir      = "sources"
+				sourceFileNames []string
+				sourceFilePaths []string
+				remotePaths     []string
+
+				totalFiles = 3
 			)
 
 			BeforeEach(func() {
@@ -363,19 +365,23 @@ var _ = Describe("Out", func() {
 				)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				sourceFileName = fmt.Sprintf("pivnet-resource-test-file-%d", time.Now().Nanosecond())
-
 				By("Creating a temporary sources dir")
 				sourcesFullPath := filepath.Join(rootDir, sourcesDir)
 				err = os.Mkdir(sourcesFullPath, os.ModePerm)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				By("Creating local temp files")
-				sourceFilePath = filepath.Join(sourcesFullPath, sourceFileName)
-				err = ioutil.WriteFile(sourceFilePath, []byte("some content"), os.ModePerm)
-				Expect(err).ShouldNot(HaveOccurred())
+				sourceFileNames = make([]string, totalFiles)
+				sourceFilePaths = make([]string, totalFiles)
+				remotePaths = make([]string, totalFiles)
+				for i := 0; i < totalFiles; i++ {
+					sourceFileNames[i] = fmt.Sprintf("pivnet-resource-test-file-%d", time.Now().Nanosecond())
+					sourceFilePaths[i] = filepath.Join(sourcesFullPath, sourceFileNames[i])
+					err = ioutil.WriteFile(sourceFilePaths[i], []byte("some content"), os.ModePerm)
+					Expect(err).ShouldNot(HaveOccurred())
 
-				remotePath = fmt.Sprintf("product_files/%s/%s", s3FilepathPrefix, sourceFileName)
+					remotePaths[i] = fmt.Sprintf("product_files/%s/%s", s3FilepathPrefix, sourceFileNames[i])
+				}
 
 				outRequest.Params.FileGlob = fmt.Sprintf("%s/*", sourcesDir)
 				outRequest.Params.FilepathPrefix = s3FilepathPrefix
@@ -386,22 +392,26 @@ var _ = Describe("Out", func() {
 
 			AfterEach(func() {
 				By("Removing uploaded file")
-				client.DeleteFile(pivnetBucketName, remotePath)
+				for i := 0; i < totalFiles; i++ {
+					client.DeleteFile(pivnetBucketName, remotePaths[i])
+				}
 			})
 
-			It("uploads a single file to s3", func() {
+			It("uploads multiple files to s3", func() {
 				By("Running the command")
 				session := run(command, stdinContents)
 				Eventually(session, s3UploadTimeout).Should(gexec.Exit(0))
 
-				By("Verifying uploaded file can be downloaded")
-				localDownloadPath := fmt.Sprintf("%s-downloaded", sourceFilePath)
-				err := client.DownloadFile(pivnetBucketName, remotePath, localDownloadPath)
-				Expect(err).ShouldNot(HaveOccurred())
+				By("Verifying uploaded files can be downloaded")
+				for i := 0; i < totalFiles; i++ {
+					localDownloadPath := fmt.Sprintf("%s-downloaded", sourceFilePaths[i])
+					err := client.DownloadFile(pivnetBucketName, remotePaths[i], localDownloadPath)
+					Expect(err).ShouldNot(HaveOccurred())
+				}
 
 				By("Outputting a valid json response")
 				response := concourse.OutResponse{}
-				err = json.Unmarshal(session.Out.Contents(), &response)
+				err := json.Unmarshal(session.Out.Contents(), &response)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				Expect(response.Version.ProductVersion).To(Equal(productVersion))
