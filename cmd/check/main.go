@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
@@ -22,20 +23,38 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	sanitized := make(map[string]string)
 	logFile, err := ioutil.TempFile("", "pivnet-resource-check.log")
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	fmt.Fprintf(os.Stderr, "logging to %s\n", logFile.Name())
+
+	sanitized := concourse.SanitizedSource(input.Source)
 	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
+
 	logger := logger.NewLogger(sanitizer)
 
+	logDir := filepath.Dir(logFile.Name())
+	existingLogFiles, err := filepath.Glob(filepath.Join(logDir, "pivnet-resource-check.log*"))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	for _, f := range existingLogFiles {
+		if filepath.Base(f) != filepath.Base(logFile.Name()) {
+			logger.Debugf("Removing existing log file: %s\n", f)
+			err := os.Remove(f)
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}
+	}
+
 	mustBeNonEmpty(input.Source.APIToken, "api_token")
-	sanitized[input.Source.APIToken] = "***REDACTED-PIVNET_API_TOKEN***"
 	mustBeNonEmpty(input.Source.ProductName, "product_name")
 
-	logger.Debugf("received input: %v\n", input)
+	logger.Debugf("received input: %+v\n", input)
 
 	client := pivnet.NewClient(
 		pivnet.URL,
@@ -67,7 +86,7 @@ func main() {
 		out = append(out, concourse.Version{ProductVersion: allVersions[0]})
 	}
 
-	logger.Debugf("returning output: %v\n", out)
+	logger.Debugf("returning output: %+v\n", out)
 
 	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {

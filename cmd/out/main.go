@@ -47,12 +47,12 @@ func main() {
 
 	fmt.Fprintf(os.Stderr, "logging to %s\n", logFile.Name())
 
-	sanitized := make(map[string]string)
+	sanitized := concourse.SanitizedSource(input.Source)
 	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
+
 	logger := logger.NewLogger(sanitizer)
 
 	mustBeNonEmpty(input.Source.APIToken, "api_token")
-	sanitized[input.Source.APIToken] = "***REDACTED-PIVNET_API_TOKEN***"
 	mustBeNonEmpty(input.Source.ProductName, "product_name")
 	mustBeNonEmpty(input.Params.VersionFile, "version_file")
 	mustBeNonEmpty(input.Params.ReleaseTypeFile, "release_type_file")
@@ -62,16 +62,12 @@ func main() {
 
 	if !skipUpload {
 		mustBeNonEmpty(input.Source.AccessKeyID, "access_key_id")
-		sanitized[input.Source.AccessKeyID] = "***REDACTED-AWS_ACCESS_KEY_ID***"
-
 		mustBeNonEmpty(input.Source.SecretAccessKey, "secret_access_key")
-		sanitized[input.Source.SecretAccessKey] = "***REDACTED-AWS_SECRET_ACCESS_KEY***"
-
 		mustBeNonEmpty(input.Params.FileGlob, "file glob")
 		mustBeNonEmpty(input.Params.FilepathPrefix, "s3_filepath_prefix")
 	}
 
-	logger.Debugf("received input: %v\n", input)
+	logger.Debugf("received input: %+v\n", input)
 
 	if skipUpload {
 		logger.Debugf("file glob and s3_filepath_prefix not provided - skipping upload to s3")
@@ -131,7 +127,7 @@ func main() {
 		Metadata: []string{},
 	}
 
-	logger.Debugf("returning output: %v\n", out)
+	logger.Debugf("returning output: %+v\n", out)
 
 	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {

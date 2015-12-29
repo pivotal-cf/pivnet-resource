@@ -41,13 +41,15 @@ func main() {
 
 	fmt.Fprintf(os.Stderr, "logging to %s\n", logFile.Name())
 
-	sanitized := make(map[string]string)
+	sanitized := concourse.SanitizedSource(input.Source)
 	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
+
 	logger := logger.NewLogger(sanitizer)
 
 	token := input.Source.APIToken
 	mustBeNonEmpty(token, "api_token")
-	sanitized[input.Source.APIToken] = "***REDACTED-PIVNET_API_TOKEN***"
+
+	logger.Debugf("received input: %+v\n", input)
 
 	client := pivnet.NewClient(
 		url,
