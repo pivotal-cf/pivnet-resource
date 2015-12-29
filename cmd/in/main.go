@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -10,7 +11,9 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
+	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 )
 
 const (
@@ -30,13 +33,24 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	if input.Source.APIToken == "" {
-		log.Fatalln("api_token must be provided")
+	sanitized := make(map[string]string)
+	logFile, err := ioutil.TempFile("", "pivnet-resource-in.log")
+	if err != nil {
+		log.Fatalln(err)
 	}
+	fmt.Fprintf(os.Stderr, "logging to %s\n", logFile.Name())
+	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
+	logger := logger.NewLogger(sanitizer)
 
 	token := input.Source.APIToken
+	mustBeNonEmpty(token, "api_token")
+	sanitized[input.Source.APIToken] = "***REDACTED-PIVNET_API_TOKEN***"
 
-	client := pivnet.NewClient(url, token)
+	client := pivnet.NewClient(
+		url,
+		token,
+		logger,
+	)
 	if err != nil {
 		log.Fatalf("Failed to create client: %s", err)
 	}
@@ -64,7 +78,7 @@ func main() {
 
 	err = ioutil.WriteFile(versionFilepath, []byte(productVersion), os.ModePerm)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
 	out := concourse.InResponse{
@@ -77,5 +91,11 @@ func main() {
 	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {
 		log.Fatalln(err)
+	}
+}
+
+func mustBeNonEmpty(input string, key string) {
+	if input == "" {
+		log.Fatalf("%s must be provided\n", key)
 	}
 }

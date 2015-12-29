@@ -9,8 +9,10 @@ import (
 	"path/filepath"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
+	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 )
 
@@ -37,17 +39,31 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	sanitized := make(map[string]string)
+	logFile, err := ioutil.TempFile("", "pivnet-resource-out.log")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Fprintf(os.Stderr, "logging to %s\n", logFile.Name())
+	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
+	logger := logger.NewLogger(sanitizer)
+
 	mustBeNonEmpty(input.Source.APIToken, "api_token")
+	sanitized[input.Source.APIToken] = "***REDACTED-PIVNET_API_TOKEN***"
 	mustBeNonEmpty(input.Source.ProductName, "product_name")
 	mustBeNonEmpty(input.Params.VersionFile, "version_file")
 	mustBeNonEmpty(input.Params.ReleaseTypeFile, "release_type_file")
 	mustBeNonEmpty(input.Params.EulaSlugFile, "eula_slug_file")
 
 	if input.Params.FileGlob == "" && input.Params.FilepathPrefix == "" {
-		fmt.Fprintln(os.Stderr, "file glob and s3_filepath_prefix not provided - skipping upload to s3")
+		logger.Debugf("file glob and s3_filepath_prefix not provided - skipping upload to s3")
 	} else {
 		mustBeNonEmpty(input.Source.AccessKeyID, "access_key_id")
+		sanitized[input.Source.AccessKeyID] = "***REDACTED-AWS_ACCESS_KEY_ID***"
+
 		mustBeNonEmpty(input.Source.SecretAccessKey, "secret_access_key")
+		sanitized[input.Source.SecretAccessKey] = "***REDACTED-AWS_SECRET_ACCESS_KEY***"
+
 		mustBeNonEmpty(input.Params.FileGlob, "file glob")
 		mustBeNonEmpty(input.Params.FilepathPrefix, "s3_filepath_prefix")
 
@@ -57,8 +73,10 @@ func main() {
 			RegionName:      "eu-west-1",
 			Bucket:          "pivotalnetwork",
 
+			Logger: logger,
+
 			Stdout: os.Stdout,
-			Stderr: os.Stderr,
+			Stderr: logFile,
 
 			OutBinaryPath: filepath.Join(myDir, s3OutBinaryName),
 		})
@@ -66,6 +84,8 @@ func main() {
 			FileGlob:       input.Params.FileGlob,
 			FilepathPrefix: input.Params.FilepathPrefix,
 			SourcesDir:     sourcesDir,
+
+			Logger: logger,
 
 			Transport: s3Client,
 		})
@@ -77,7 +97,11 @@ func main() {
 		}
 	}
 
-	pivnetClient := pivnet.NewClient(pivnet.URL, input.Source.APIToken)
+	pivnetClient := pivnet.NewClient(
+		pivnet.URL,
+		input.Source.APIToken,
+		logger,
+	)
 
 	config := pivnet.CreateReleaseConfig{
 		ProductName:    input.Source.ProductName,

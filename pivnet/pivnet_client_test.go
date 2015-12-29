@@ -12,6 +12,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
+	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	logger_fakes "github.com/pivotal-cf-experimental/pivnet-resource/logger/fakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 )
 
@@ -25,13 +27,17 @@ var _ = Describe("PivnetClient", func() {
 		client     pivnet.Client
 		token      string
 		apiAddress string
+
+		fakeLogger logger.Logger
 	)
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
 		apiAddress = server.URL() + apiPrefix
 		token = "my-auth-token"
-		client = pivnet.NewClient(apiAddress, token)
+
+		fakeLogger = &logger_fakes.FakeLogger{}
+		client = pivnet.NewClient(apiAddress, token, fakeLogger)
 	})
 
 	AfterEach(func() {
@@ -159,7 +165,7 @@ var _ = Describe("PivnetClient", func() {
 		Context("when parsing the url fails with error", func() {
 			It("forwards the error", func() {
 				badURL := "%%%"
-				client = pivnet.NewClient(badURL, token)
+				client = pivnet.NewClient(badURL, token, fakeLogger)
 
 				_, err := client.ProductVersions("some product")
 				Expect(err).To(HaveOccurred())
@@ -170,7 +176,7 @@ var _ = Describe("PivnetClient", func() {
 		Context("when making the request fails with error", func() {
 			It("forwards the error", func() {
 				badURL := "https://not-a-real-url.com"
-				client = pivnet.NewClient(badURL, token)
+				client = pivnet.NewClient(badURL, token, fakeLogger)
 
 				_, err := client.ProductVersions("some product")
 				Expect(err).To(HaveOccurred())

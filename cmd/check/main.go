@@ -2,11 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
@@ -18,15 +22,24 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	if input.Source.APIToken == "" {
-		log.Fatalln("api_token must be provided")
+	sanitized := make(map[string]string)
+	logFile, err := ioutil.TempFile("", "pivnet-resource-check.log")
+	if err != nil {
+		log.Fatalln(err)
 	}
+	fmt.Fprintf(os.Stderr, "logging to %s\n", logFile.Name())
+	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
+	logger := logger.NewLogger(sanitizer)
 
-	if input.Source.ProductName == "" {
-		log.Fatalln("product_name must be provided")
-	}
+	mustBeNonEmpty(input.Source.APIToken, "api_token")
+	sanitized[input.Source.APIToken] = "***REDACTED-PIVNET_API_TOKEN***"
+	mustBeNonEmpty(input.Source.ProductName, "product_name")
 
-	client := pivnet.NewClient(pivnet.URL, input.Source.APIToken)
+	client := pivnet.NewClient(
+		pivnet.URL,
+		input.Source.APIToken,
+		logger,
+	)
 
 	allVersions, err := client.ProductVersions(input.Source.ProductName)
 	if err != nil {
@@ -55,5 +68,11 @@ func main() {
 	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {
 		log.Fatalln(err)
+	}
+}
+
+func mustBeNonEmpty(input string, key string) {
+	if input == "" {
+		log.Fatalf("%s must be provided\n", key)
 	}
 }

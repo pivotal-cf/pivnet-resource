@@ -2,9 +2,9 @@ package uploader
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"path/filepath"
+
+	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 )
 
 type Client interface {
@@ -16,8 +16,8 @@ type client struct {
 	filepathPrefix string
 	sourcesDir     string
 
-	transport   Transport
-	debugWriter io.Writer
+	transport Transport
+	logger    logger.Logger
 }
 
 type Config struct {
@@ -25,24 +25,19 @@ type Config struct {
 	FilepathPrefix string
 	SourcesDir     string
 
-	Transport   Transport
-	DebugWriter io.Writer
+	Transport Transport
+	Logger    logger.Logger
 }
 
 func NewClient(config Config) Client {
-	c := client{
+	return &client{
 		fileGlob:       config.FileGlob,
 		filepathPrefix: config.FilepathPrefix,
 		sourcesDir:     config.SourcesDir,
 
-		transport:   config.Transport,
-		debugWriter: config.DebugWriter,
+		transport: config.Transport,
+		logger:    config.Logger,
 	}
-
-	if c.debugWriter == nil {
-		c.debugWriter = os.Stderr
-	}
-	return c
 }
 
 func (c client) Upload() error {
@@ -59,10 +54,10 @@ func (c client) Upload() error {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Fprintf(c.debugWriter, "abs path to sourcesDir: %s\n", absPathSourcesDir)
+	c.logger.Debugf("abs path to sourcesDir: %s\n", absPathSourcesDir)
 
 	for _, match := range matches {
-		fmt.Fprintf(c.debugWriter, "matched file: %v\n", match)
+		c.logger.Debugf("matched file: %v\n", match)
 
 		absPath, err := filepath.Abs(match)
 		if err != nil {
@@ -73,7 +68,7 @@ func (c client) Upload() error {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Fprintf(c.debugWriter, "exact glob: %s\n", exactGlob)
+		c.logger.Debugf("exact glob: %s\n", exactGlob)
 
 		err = c.transport.Upload(
 			exactGlob,

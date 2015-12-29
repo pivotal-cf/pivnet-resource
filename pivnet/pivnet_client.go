@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 )
 
 const (
@@ -30,14 +32,16 @@ type Client interface {
 }
 
 type client struct {
-	url   string
-	token string
+	url    string
+	token  string
+	logger logger.Logger
 }
 
-func NewClient(url, token string) Client {
+func NewClient(url, token string, logger logger.Logger) Client {
 	return &client{
-		url:   url,
-		token: token,
+		url:    url,
+		token:  token,
+		logger: logger,
 	}
 }
 
@@ -168,6 +172,8 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 
 	if config.ReleaseDate == "" {
 		body.Release.ReleaseDate = time.Now().Format("2006-01-02")
+		c.logger.Debugf(
+			"no release date found - defaulting to %s\n", body.Release.ReleaseDate)
 	}
 
 	b, err := json.Marshal(body)

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io"
 	"os/exec"
+
+	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 )
 
 type Client interface {
@@ -16,6 +18,8 @@ type client struct {
 	regionName      string
 	bucket          string
 
+	logger logger.Logger
+
 	stdout io.Writer
 	stderr io.Writer
 
@@ -27,6 +31,8 @@ type NewClientConfig struct {
 	SecretAccessKey string
 	RegionName      string
 	Bucket          string
+
+	Logger logger.Logger
 
 	Stdout io.Writer
 	Stderr io.Writer
@@ -43,6 +49,7 @@ func NewClient(config NewClientConfig) Client {
 		stdout:          config.Stdout,
 		stderr:          config.Stderr,
 		outBinaryPath:   config.OutBinaryPath,
+		logger:          config.Logger,
 	}
 }
 
@@ -59,6 +66,8 @@ func (c client) Upload(fileGlob string, to string, sourcesDir string) error {
 			To:   to,
 		},
 	}
+
+	c.logger.Debugf("input to s3out: %+v, sourcesDir: %s\n", s3Input, sourcesDir)
 
 	cmd := exec.Command(c.outBinaryPath, sourcesDir)
 

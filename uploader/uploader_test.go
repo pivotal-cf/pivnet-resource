@@ -2,20 +2,21 @@ package uploader_test
 
 import (
 	"errors"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	logger_fakes "github.com/pivotal-cf-experimental/pivnet-resource/logger/fakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 	uploader_fakes "github.com/pivotal-cf-experimental/pivnet-resource/uploader/fakes"
 )
 
 var _ = Describe("Uploader", func() {
 	var (
-		debugWriter    io.Writer
+		logger         logger.Logger
 		fakeTransport  *uploader_fakes.FakeTransport
 		uploaderConfig uploader.Config
 		uploaderClient uploader.Client
@@ -25,7 +26,7 @@ var _ = Describe("Uploader", func() {
 	)
 
 	BeforeEach(func() {
-		debugWriter = GinkgoWriter
+		logger = &logger_fakes.FakeLogger{}
 		fakeTransport = &uploader_fakes.FakeTransport{}
 
 		var err error
@@ -40,10 +41,10 @@ var _ = Describe("Uploader", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		uploaderConfig = uploader.Config{
-			FileGlob:    "my_files/*",
-			Transport:   fakeTransport,
-			SourcesDir:  tempDir,
-			DebugWriter: debugWriter,
+			FileGlob:   "my_files/*",
+			Transport:  fakeTransport,
+			SourcesDir: tempDir,
+			Logger:     logger,
 		}
 
 		uploaderClient = uploader.NewClient(uploaderConfig)
