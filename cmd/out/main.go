@@ -22,7 +22,8 @@ const (
 
 func main() {
 	if len(os.Args) < 2 {
-		log.Fatalln(fmt.Sprintf("usage: %s <sources directory>", os.Args[0]))
+		log.Fatalln(fmt.Sprintf(
+			"not enough args - usage: %s <sources directory>", os.Args[0]))
 	}
 
 	sourcesDir := os.Args[1]
@@ -39,12 +40,14 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	sanitized := make(map[string]string)
 	logFile, err := ioutil.TempFile("", "pivnet-resource-out.log")
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	fmt.Fprintf(os.Stderr, "logging to %s\n", logFile.Name())
+
+	sanitized := make(map[string]string)
 	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
 	logger := logger.NewLogger(sanitizer)
 
@@ -55,9 +58,9 @@ func main() {
 	mustBeNonEmpty(input.Params.ReleaseTypeFile, "release_type_file")
 	mustBeNonEmpty(input.Params.EulaSlugFile, "eula_slug_file")
 
-	if input.Params.FileGlob == "" && input.Params.FilepathPrefix == "" {
-		logger.Debugf("file glob and s3_filepath_prefix not provided - skipping upload to s3")
-	} else {
+	skipUpload := input.Params.FileGlob == "" && input.Params.FilepathPrefix == ""
+
+	if !skipUpload {
 		mustBeNonEmpty(input.Source.AccessKeyID, "access_key_id")
 		sanitized[input.Source.AccessKeyID] = "***REDACTED-AWS_ACCESS_KEY_ID***"
 
@@ -66,7 +69,13 @@ func main() {
 
 		mustBeNonEmpty(input.Params.FileGlob, "file glob")
 		mustBeNonEmpty(input.Params.FilepathPrefix, "s3_filepath_prefix")
+	}
 
+	logger.Debugf("received input: %v\n", input)
+
+	if skipUpload {
+		logger.Debugf("file glob and s3_filepath_prefix not provided - skipping upload to s3")
+	} else {
 		s3Client := s3.NewClient(s3.NewClientConfig{
 			AccessKeyID:     input.Source.AccessKeyID,
 			SecretAccessKey: input.Source.SecretAccessKey,
@@ -80,6 +89,7 @@ func main() {
 
 			OutBinaryPath: filepath.Join(myDir, s3OutBinaryName),
 		})
+
 		uploaderClient := uploader.NewClient(uploader.Config{
 			FileGlob:       input.Params.FileGlob,
 			FilepathPrefix: input.Params.FilepathPrefix,
@@ -120,6 +130,8 @@ func main() {
 		},
 		Metadata: []string{},
 	}
+
+	logger.Debugf("returning output: %v\n", out)
 
 	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {

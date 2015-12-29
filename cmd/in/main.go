@@ -23,7 +23,8 @@ const (
 func main() {
 	var input concourse.CheckRequest
 	if len(os.Args) < 2 {
-		panic("Not enough args")
+		log.Fatalln(fmt.Sprintf(
+			"not enough args - usage: %s <sources directory>", os.Args[0]))
 	}
 
 	downloadDir := os.Args[1]
@@ -33,12 +34,14 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	sanitized := make(map[string]string)
 	logFile, err := ioutil.TempFile("", "pivnet-resource-in.log")
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	fmt.Fprintf(os.Stderr, "logging to %s\n", logFile.Name())
+
+	sanitized := make(map[string]string)
 	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
 	logger := logger.NewLogger(sanitizer)
 
@@ -51,27 +54,24 @@ func main() {
 		token,
 		logger,
 	)
-	if err != nil {
-		log.Fatalf("Failed to create client: %s", err)
-	}
 
 	productVersion := input.Version.ProductVersion
 
 	release, err := client.GetRelease(input.Source.ProductName, productVersion)
 	if err != nil {
-		log.Fatalf("Failed to get Release: %s", err)
+		log.Fatalf("Failed to get Release: %s\n", err.Error())
 	}
 
 	productFiles, err := client.GetProductFiles(release)
 	if err != nil {
-		log.Fatalf("Failed to get Product Files: %s", err)
+		log.Fatalf("Failed to get Product Files: %s\n", err.Error())
 	}
 
 	downloadLinks := filter.DownloadLinks(productFiles)
 
 	err = downloader.Download(downloadDir, downloadLinks, token)
 	if err != nil {
-		log.Fatalf("Failed to Download Files: %s", err)
+		log.Fatalf("Failed to Download Files: %s\n", err.Error())
 	}
 
 	versionFilepath := filepath.Join(downloadDir, "version")

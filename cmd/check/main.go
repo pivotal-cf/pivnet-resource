@@ -35,6 +35,8 @@ func main() {
 	sanitized[input.Source.APIToken] = "***REDACTED-PIVNET_API_TOKEN***"
 	mustBeNonEmpty(input.Source.ProductName, "product_name")
 
+	logger.Debugf("received input: %v\n", input)
+
 	client := pivnet.NewClient(
 		pivnet.URL,
 		input.Source.APIToken,
@@ -64,6 +66,8 @@ func main() {
 	if len(out) == 0 {
 		out = append(out, concourse.Version{ProductVersion: allVersions[0]})
 	}
+
+	logger.Debugf("returning output: %v\n", out)
 
 	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {
