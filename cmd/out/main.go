@@ -69,6 +69,23 @@ func main() {
 
 	logger.Debugf("received input: %+v\n", input)
 
+	pivnetClient := pivnet.NewClient(
+		pivnet.URL,
+		input.Source.APIToken,
+		logger,
+	)
+
+	config := pivnet.CreateReleaseConfig{
+		ProductName:    input.Source.ProductName,
+		ReleaseType:    readStringContents(sourcesDir, input.Params.ReleaseTypeFile),
+		EulaSlug:       readStringContents(sourcesDir, input.Params.EulaSlugFile),
+		ProductVersion: readStringContents(sourcesDir, input.Params.VersionFile),
+		Description:    readStringContents(sourcesDir, input.Params.DescriptionFile),
+		ReleaseDate:    readStringContents(sourcesDir, input.Params.ReleaseDateFile),
+	}
+
+	pivnetClient.CreateRelease(config)
+
 	if skipUpload {
 		logger.Debugf("file glob and s3_filepath_prefix not provided - skipping upload to s3")
 	} else {
@@ -96,29 +113,24 @@ func main() {
 			Transport: s3Client,
 		})
 
-		_, err := uploaderClient.Upload()
+		files, err := uploaderClient.Upload()
+		for filename, remotePath := range files {
+			_, err := pivnetClient.CreateProductFile(pivnet.CreateProductFileConfig{
+				ProductName:  config.ProductName,
+				Name:         filename,
+				AWSObjectKey: remotePath,
+				FileVersion:  config.ProductVersion,
+			})
+
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}
 
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-
-	pivnetClient := pivnet.NewClient(
-		pivnet.URL,
-		input.Source.APIToken,
-		logger,
-	)
-
-	config := pivnet.CreateReleaseConfig{
-		ProductName:    input.Source.ProductName,
-		ReleaseType:    readStringContents(sourcesDir, input.Params.ReleaseTypeFile),
-		EulaSlug:       readStringContents(sourcesDir, input.Params.EulaSlugFile),
-		ProductVersion: readStringContents(sourcesDir, input.Params.VersionFile),
-		Description:    readStringContents(sourcesDir, input.Params.DescriptionFile),
-		ReleaseDate:    readStringContents(sourcesDir, input.Params.ReleaseDateFile),
-	}
-
-	pivnetClient.CreateRelease(config)
 
 	out := concourse.OutResponse{
 		Version: concourse.Version{

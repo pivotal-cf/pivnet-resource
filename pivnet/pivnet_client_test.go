@@ -406,7 +406,6 @@ var _ = Describe("PivnetClient", func() {
 			createProductFileConfig = pivnet.CreateProductFileConfig{
 				ProductName:  productName,
 				Name:         "some-file-name",
-				FileType:     "some-file-type",
 				FileVersion:  "some-file-version",
 				AWSObjectKey: "some-aws-object-key",
 			}
@@ -418,7 +417,8 @@ var _ = Describe("PivnetClient", func() {
 			}
 
 			const (
-				expectedMD5 = "not-supported-yet"
+				expectedMD5      = "not-supported-yet"
+				expectedFileType = "Software"
 			)
 
 			var (
@@ -430,7 +430,7 @@ var _ = Describe("PivnetClient", func() {
 			BeforeEach(func() {
 				expectedRequestBody = requestBody{
 					ProductFile: pivnet.ProductFile{
-						FileType:     createProductFileConfig.FileType,
+						FileType:     "Software",
 						FileVersion:  createProductFileConfig.FileVersion,
 						Name:         createProductFileConfig.Name,
 						MD5:          "not-supported-yet",

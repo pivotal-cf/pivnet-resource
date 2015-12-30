@@ -416,6 +416,40 @@ var _ = Describe("Out", func() {
 
 				Expect(response.Version.ProductVersion).To(Equal(productVersion))
 			})
+
+			It("creates files on pivnet", func() {
+				By("Getting existing list of product files")
+				existingProductFiles := getProductFiles(productName)
+
+				By("Verifying existing product files does not yet contain new files")
+				var existingProductFileNames []string
+				for _, f := range existingProductFiles {
+					existingProductFileNames = append(existingProductFileNames, f.Name)
+				}
+				for i := 0; i < totalFiles; i++ {
+					Expect(existingProductFileNames).NotTo(ContainElement(sourceFileNames[i]))
+				}
+
+				By("Running the command")
+				session := run(command, stdinContents)
+				Eventually(session, s3UploadTimeout).Should(gexec.Exit(0))
+
+				By("Getting updated list of product files")
+				updatedProductFiles := getProductFiles(productName)
+
+				By("Verifying number of product files has increased by the expected amount")
+				newProductFileCount := len(updatedProductFiles) - len(existingProductFiles)
+				Expect(newProductFileCount).To(Equal(totalFiles))
+
+				By("Verifying updated product files contains new files")
+				var updatedProductFileNames []string
+				for _, f := range updatedProductFiles {
+					updatedProductFileNames = append(updatedProductFileNames, f.Name)
+				}
+				for i := 0; i < totalFiles; i++ {
+					Expect(updatedProductFileNames).To(ContainElement(sourceFileNames[i]))
+				}
+			})
 		})
 	})
 })

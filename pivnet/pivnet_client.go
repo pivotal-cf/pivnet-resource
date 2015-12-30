@@ -26,7 +26,6 @@ type CreateReleaseConfig struct {
 
 type CreateProductFileConfig struct {
 	ProductName  string
-	FileType     string
 	FileVersion  string
 	AWSObjectKey string
 	Name         string
@@ -215,7 +214,7 @@ func (c client) CreateProductFile(config CreateProductFileConfig) (ProductFile, 
 	body := createProductFileBody{
 		ProductFile: ProductFile{
 			MD5:          "not-supported-yet",
-			FileType:     config.FileType,
+			FileType:     "Software",
 			FileVersion:  config.FileVersion,
 			AWSObjectKey: config.AWSObjectKey,
 			Name:         config.Name,
