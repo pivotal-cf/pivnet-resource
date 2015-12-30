@@ -24,11 +24,20 @@ type CreateReleaseConfig struct {
 	Description    string
 }
 
+type CreateProductFileConfig struct {
+	ProductName  string
+	FileType     string
+	FileVersion  string
+	AWSObjectKey string
+	Name         string
+}
+
 type Client interface {
 	ProductVersions(string) ([]string, error)
 	CreateRelease(config CreateReleaseConfig) (Release, error)
 	GetRelease(string, string) (Release, error)
 	GetProductFiles(Release) (ProductFiles, error)
+	CreateProductFile(config CreateProductFileConfig) (ProductFile, error)
 }
 
 type client struct {
@@ -46,12 +55,12 @@ func NewClient(url, token string, logger logger.Logger) Client {
 }
 
 func (c client) ProductVersions(id string) ([]string, error) {
-	releasesURL := c.url + "/products/" + id + "/releases"
+	url := c.url + "/products/" + id + "/releases"
 
 	var response Response
 	err := c.makeRequest(
 		"GET",
-		releasesURL,
+		url,
 		http.StatusOK,
 		nil,
 		&response,
@@ -71,12 +80,12 @@ func (c client) ProductVersions(id string) ([]string, error) {
 func (c client) GetRelease(productName, version string) (Release, error) {
 	var matchingRelease Release
 
-	releasesURL := c.url + "/products/" + productName + "/releases"
+	url := c.url + "/products/" + productName + "/releases"
 
 	var response Response
 	err := c.makeRequest(
 		"GET",
-		releasesURL,
+		url,
 		http.StatusOK,
 		nil,
 		&response,
@@ -154,7 +163,7 @@ func (c client) makeRequest(
 }
 
 func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
-	releasesURL := c.url + "/products/" + config.ProductName + "/releases"
+	url := c.url + "/products/" + config.ProductName + "/releases"
 
 	body := createReleaseBody{
 		Release: Release{
@@ -184,7 +193,7 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 	var response CreateReleaseResponse
 	err = c.makeRequest(
 		"POST",
-		releasesURL,
+		url,
 		http.StatusCreated,
 		bytes.NewReader(b),
 		&response,
@@ -198,4 +207,41 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 
 type createReleaseBody struct {
 	Release Release `json:"release"`
+}
+
+func (c client) CreateProductFile(config CreateProductFileConfig) (ProductFile, error) {
+	url := c.url + "/products/" + config.ProductName + "/product_files"
+
+	body := createProductFileBody{
+		ProductFile: ProductFile{
+			MD5:          "not-supported-yet",
+			FileType:     config.FileType,
+			FileVersion:  config.FileVersion,
+			AWSObjectKey: config.AWSObjectKey,
+			Name:         config.Name,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		panic(err)
+	}
+
+	var response CreateProductFileResponse
+	err = c.makeRequest(
+		"POST",
+		url,
+		http.StatusCreated,
+		bytes.NewReader(b),
+		&response,
+	)
+	if err != nil {
+		return ProductFile{}, err
+	}
+
+	return response.ProductFile, nil
+}
+
+type createProductFileBody struct {
+	ProductFile ProductFile `json:"product_file"`
 }

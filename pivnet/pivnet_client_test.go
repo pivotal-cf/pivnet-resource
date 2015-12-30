@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	apiPrefix = "/api/v2"
+	apiPrefix   = "/api/v2"
+	productName = "some-product-name"
 )
 
 var _ = Describe("PivnetClient", func() {
@@ -251,7 +252,7 @@ var _ = Describe("PivnetClient", func() {
 				EulaSlug:       "some_eula",
 				ReleaseType:    "Not a real release",
 				ProductVersion: productVersion,
-				ProductName:    "some-product-name",
+				ProductName:    "" + productName + "",
 			}
 		})
 
@@ -289,7 +290,7 @@ var _ = Describe("PivnetClient", func() {
 			It("creates the release with the minimum required fields", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
+						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/releases"),
 						ghttp.VerifyJSONRepresenting(&expectedRequestBody),
 						ghttp.RespondWith(http.StatusCreated, validResponse),
 					),
@@ -315,7 +316,7 @@ var _ = Describe("PivnetClient", func() {
 				It("creates the release with the release date field", func() {
 					server.AppendHandlers(
 						ghttp.CombineHandlers(
-							ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
+							ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/releases"),
 							ghttp.VerifyJSONRepresenting(&expectedRequestBody),
 							ghttp.RespondWith(http.StatusCreated, validResponse),
 						),
@@ -343,7 +344,7 @@ var _ = Describe("PivnetClient", func() {
 					It("creates the release with the description field", func() {
 						server.AppendHandlers(
 							ghttp.CombineHandlers(
-								ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
+								ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/releases"),
 								ghttp.VerifyJSONRepresenting(&expectedRequestBody),
 								ghttp.RespondWith(http.StatusCreated, validResponse),
 							),
@@ -366,7 +367,7 @@ var _ = Describe("PivnetClient", func() {
 					It("creates the release with an empty description field", func() {
 						server.AppendHandlers(
 							ghttp.CombineHandlers(
-								ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
+								ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/releases"),
 								ghttp.VerifyJSONRepresenting(&expectedRequestBody),
 								ghttp.RespondWith(http.StatusCreated, validResponse),
 							),
@@ -384,12 +385,85 @@ var _ = Describe("PivnetClient", func() {
 			It("returns an error", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", apiPrefix+"/products/some-product-name/releases"),
+						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/releases"),
 						ghttp.RespondWith(http.StatusTeapot, nil),
 					),
 				)
 
 				_, err := client.CreateRelease(createReleaseConfig)
+				Expect(err).To(MatchError(errors.New(
+					"Pivnet returned status code: 418 for the request - expected 201")))
+			})
+		})
+	})
+
+	Describe("Create Product File", func() {
+		var (
+			createProductFileConfig pivnet.CreateProductFileConfig
+		)
+
+		BeforeEach(func() {
+			createProductFileConfig = pivnet.CreateProductFileConfig{
+				ProductName:  productName,
+				Name:         "some-file-name",
+				FileType:     "some-file-type",
+				FileVersion:  "some-file-version",
+				AWSObjectKey: "some-aws-object-key",
+			}
+		})
+
+		Context("when the config is valid", func() {
+			type requestBody struct {
+				ProductFile pivnet.ProductFile `json:"product_file"`
+			}
+
+			const (
+				expectedMD5 = "not-supported-yet"
+			)
+
+			var (
+				expectedRequestBody requestBody
+
+				validResponse = `{"product_file":{"id":1234}}`
+			)
+
+			BeforeEach(func() {
+				expectedRequestBody = requestBody{
+					ProductFile: pivnet.ProductFile{
+						FileType:     createProductFileConfig.FileType,
+						FileVersion:  createProductFileConfig.FileVersion,
+						Name:         createProductFileConfig.Name,
+						MD5:          "not-supported-yet",
+						AWSObjectKey: createProductFileConfig.AWSObjectKey,
+					},
+				}
+			})
+
+			It("creates the release with the minimum required fields", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/product_files"),
+						ghttp.VerifyJSONRepresenting(&expectedRequestBody),
+						ghttp.RespondWith(http.StatusCreated, validResponse),
+					),
+				)
+
+				release, err := client.CreateProductFile(createProductFileConfig)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(release.ID).To(Equal(1234))
+			})
+		})
+
+		Context("when the server responds with a non-201 status code", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/product_files"),
+						ghttp.RespondWith(http.StatusTeapot, nil),
+					),
+				)
+
+				_, err := client.CreateProductFile(createProductFileConfig)
 				Expect(err).To(MatchError(errors.New(
 					"Pivnet returned status code: 418 for the request - expected 201")))
 			})

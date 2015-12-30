@@ -8,6 +8,10 @@ type CreateReleaseResponse struct {
 	Release Release `json:"release,omitempty"`
 }
 
+type CreateProductFileResponse struct {
+	ProductFile ProductFile `json:"product_file,omitempty"`
+}
+
 type Release struct {
 	ID           int    `json:"id,omitempty"`
 	Availability string `json:"availability,omitempty"`
@@ -35,6 +39,10 @@ type ProductFile struct {
 	ID           int    `json:"id,omitempty"`
 	AWSObjectKey string `json:"aws_object_key,omitempty"`
 	Links        Links  `json:"_links,omitempty"`
+	FileType     string `json:"file_type,omitempty"`
+	FileVersion  string `json:"file_version,omitempty"`
+	Name         string `json:"name,omitempty"`
+	MD5          string `json:"md5,omitempty"`
 }
 
 type Links struct {
