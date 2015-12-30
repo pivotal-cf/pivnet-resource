@@ -96,7 +96,7 @@ func main() {
 			Transport: s3Client,
 		})
 
-		err := uploaderClient.Upload()
+		_, err := uploaderClient.Upload()
 
 		if err != nil {
 			log.Fatal(err)

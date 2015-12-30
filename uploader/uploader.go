@@ -8,7 +8,7 @@ import (
 )
 
 type Client interface {
-	Upload() error
+	Upload() (map[string]string, error)
 }
 
 type client struct {
@@ -40,14 +40,14 @@ func NewClient(config Config) Client {
 	}
 }
 
-func (c client) Upload() error {
+func (c client) Upload() (map[string]string, error) {
 	matches, err := filepath.Glob(filepath.Join(c.sourcesDir, c.fileGlob))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(matches) == 0 {
-		return fmt.Errorf("no matches found for pattern: %s", c.fileGlob)
+		return nil, fmt.Errorf("no matches found for pattern: %s", c.fileGlob)
 	}
 
 	absPathSourcesDir, err := filepath.Abs(c.sourcesDir)
@@ -56,6 +56,7 @@ func (c client) Upload() error {
 	}
 	c.logger.Debugf("abs path to sourcesDir: %s\n", absPathSourcesDir)
 
+	filenamePaths := make(map[string]string)
 	for _, match := range matches {
 		c.logger.Debugf("matched file: %v\n", match)
 
@@ -70,15 +71,20 @@ func (c client) Upload() error {
 		}
 		c.logger.Debugf("exact glob: %s\n", exactGlob)
 
+		filename := filepath.Base(match)
+		remoteDir := "product_files/" + c.filepathPrefix + "/"
+		remotePath := fmt.Sprintf("%s%s", remoteDir, filename)
+
 		err = c.transport.Upload(
 			exactGlob,
-			"product_files/"+c.filepathPrefix+"/",
+			remoteDir,
 			c.sourcesDir,
 		)
 		if err != nil {
-			return err
+			return nil, err
 		}
+		filenamePaths[filename] = remotePath
 	}
 
-	return nil
+	return filenamePaths, nil
 }

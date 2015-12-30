@@ -2,6 +2,7 @@ package uploader_test
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,24 +10,25 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
-	logger_fakes "github.com/pivotal-cf-experimental/pivnet-resource/logger/fakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 	uploader_fakes "github.com/pivotal-cf-experimental/pivnet-resource/uploader/fakes"
 )
 
 var _ = Describe("Uploader", func() {
 	var (
-		logger         logger.Logger
+		l              logger.Logger
 		fakeTransport  *uploader_fakes.FakeTransport
 		uploaderConfig uploader.Config
 		uploaderClient uploader.Client
 
 		tempDir    string
 		myFilesDir string
+
+		filepathPrefix = "Some-Filepath-Prefix"
 	)
 
 	BeforeEach(func() {
-		logger = &logger_fakes.FakeLogger{}
+		l = logger.NewLogger(GinkgoWriter)
 		fakeTransport = &uploader_fakes.FakeTransport{}
 
 		var err error
@@ -41,10 +43,11 @@ var _ = Describe("Uploader", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		uploaderConfig = uploader.Config{
-			FileGlob:   "my_files/*",
-			Transport:  fakeTransport,
-			SourcesDir: tempDir,
-			Logger:     logger,
+			FilepathPrefix: filepathPrefix,
+			FileGlob:       "my_files/*",
+			Transport:      fakeTransport,
+			SourcesDir:     tempDir,
+			Logger:         l,
 		}
 
 		uploaderClient = uploader.NewClient(uploaderConfig)
@@ -62,7 +65,7 @@ var _ = Describe("Uploader", func() {
 		})
 
 		It("returns an error", func() {
-			err := uploaderClient.Upload()
+			_, err := uploaderClient.Upload()
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(ContainSubstring("no matches"))
@@ -76,7 +79,7 @@ var _ = Describe("Uploader", func() {
 		})
 
 		It("invokes the transport once per file with a separate glob per file", func() {
-			err := uploaderClient.Upload()
+			_, err := uploaderClient.Upload()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeTransport.UploadCallCount()).To(Equal(2))
@@ -87,6 +90,19 @@ var _ = Describe("Uploader", func() {
 			glob1, _, _ := fakeTransport.UploadArgsForCall(1)
 			Expect(glob1).To(Equal("my_files/file-1"))
 		})
+
+		It("returns a map of filenames to remote paths", func() {
+			filenamePaths, err := uploaderClient.Upload()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(len(filenamePaths)).To(Equal(2))
+
+			Expect(filenamePaths["file-0"]).To(Equal(
+				fmt.Sprintf("product_files/%s/file-0", filepathPrefix)))
+
+			Expect(filenamePaths["file-1"]).To(Equal(
+				fmt.Sprintf("product_files/%s/file-1", filepathPrefix)))
+		})
 	})
 
 	Context("when the transport exits with error", func() {
@@ -95,7 +111,7 @@ var _ = Describe("Uploader", func() {
 		})
 
 		It("propagates errors", func() {
-			err := uploaderClient.Upload()
+			_, err := uploaderClient.Upload()
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(ContainSubstring("some error"))
