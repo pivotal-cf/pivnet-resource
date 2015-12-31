@@ -8,7 +8,7 @@ type CreateReleaseResponse struct {
 	Release Release `json:"release,omitempty"`
 }
 
-type CreateProductFileResponse struct {
+type ProductFileResponse struct {
 	ProductFile ProductFile `json:"product_file,omitempty"`
 }
 

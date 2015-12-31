@@ -7,6 +7,11 @@ import (
 	"testing"
 )
 
+const (
+	apiPrefix   = "/api/v2"
+	productName = "some-product-name"
+)
+
 func TestPivnetResource(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "PivnetResource Suite")

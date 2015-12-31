@@ -19,11 +19,11 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 )
 
 const (
-	s3UploadTimeout   = 5 * time.Second
-	executableTimeout = 5 * time.Second
+	executableTimeout = 60 * time.Second
 )
 
 type s3client struct {
@@ -397,27 +397,7 @@ var _ = Describe("Out", func() {
 				}
 			})
 
-			It("uploads multiple files to s3", func() {
-				By("Running the command")
-				session := run(command, stdinContents)
-				Eventually(session, s3UploadTimeout).Should(gexec.Exit(0))
-
-				By("Verifying uploaded files can be downloaded")
-				for i := 0; i < totalFiles; i++ {
-					localDownloadPath := fmt.Sprintf("%s-downloaded", sourceFilePaths[i])
-					err := client.DownloadFile(pivnetBucketName, remotePaths[i], localDownloadPath)
-					Expect(err).ShouldNot(HaveOccurred())
-				}
-
-				By("Outputting a valid json response")
-				response := concourse.OutResponse{}
-				err := json.Unmarshal(session.Out.Contents(), &response)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				Expect(response.Version.ProductVersion).To(Equal(productVersion))
-			})
-
-			It("creates files on pivnet", func() {
+			It("uploads files to s3 and creates files on pivnet", func() {
 				By("Getting existing list of product files")
 				existingProductFiles := getProductFiles(productName)
 
@@ -432,7 +412,21 @@ var _ = Describe("Out", func() {
 
 				By("Running the command")
 				session := run(command, stdinContents)
-				Eventually(session, s3UploadTimeout).Should(gexec.Exit(0))
+				Eventually(session, executableTimeout).Should(gexec.Exit(0))
+
+				By("Verifying uploaded files can be downloaded")
+				for i := 0; i < totalFiles; i++ {
+					localDownloadPath := fmt.Sprintf("%s-downloaded", sourceFilePaths[i])
+					err := client.DownloadFile(pivnetBucketName, remotePaths[i], localDownloadPath)
+					Expect(err).ShouldNot(HaveOccurred())
+				}
+
+				By("Outputting a valid json response")
+				response := concourse.OutResponse{}
+				err := json.Unmarshal(session.Out.Contents(), &response)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Expect(response.Version.ProductVersion).To(Equal(productVersion))
 
 				By("Getting updated list of product files")
 				updatedProductFiles := getProductFiles(productName)
@@ -442,12 +436,18 @@ var _ = Describe("Out", func() {
 				Expect(newProductFileCount).To(Equal(totalFiles))
 
 				By("Verifying updated product files contains new files")
-				var updatedProductFileNames []string
-				for _, f := range updatedProductFiles {
-					updatedProductFileNames = append(updatedProductFileNames, f.Name)
+				var newProductFiles []pivnet.ProductFile
+				for _, p := range updatedProductFiles {
+					if stringInSlice(p.Name, sourceFileNames) {
+						newProductFiles = append(newProductFiles, p)
+					}
 				}
-				for i := 0; i < totalFiles; i++ {
-					Expect(updatedProductFileNames).To(ContainElement(sourceFileNames[i]))
+				Expect(len(newProductFiles)).To(Equal(totalFiles))
+
+				By("Deleting created files on pivnet")
+				for _, p := range newProductFiles {
+					_, err := pivnetClient.DeleteProductFile(productName, p.ID)
+					Expect(err).ShouldNot(HaveOccurred())
 				}
 			})
 		})
@@ -510,4 +510,13 @@ func (client *s3client) DeleteFile(bucketName string, remotePath string) error {
 	})
 
 	return err
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }

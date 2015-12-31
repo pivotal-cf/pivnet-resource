@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 
 	"testing"
@@ -30,6 +31,8 @@ var (
 	pivnetRegion       string
 	pivnetBucketName   string
 	s3FilepathPrefix   string
+
+	pivnetClient pivnet.Client
 )
 
 func TestAcceptance(t *testing.T) {
@@ -85,6 +88,10 @@ var _ = BeforeSuite(func() {
 	By("Ensuring copy of s3-out is executable")
 	err = os.Chmod(s3OutPath, os.ModePerm)
 	Expect(err).NotTo(HaveOccurred())
+
+	By("Creating pivnet client (for out-of-band operations)")
+	testLogger := logger.NewLogger(GinkgoWriter)
+	pivnetClient = pivnet.NewClient(pivnet.URL, pivnetAPIToken, testLogger)
 })
 
 var _ = AfterSuite(func() {
