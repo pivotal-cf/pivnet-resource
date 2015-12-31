@@ -12,7 +12,10 @@ The docker image is `pivotalcf/pivnet-resource`; the images are available on
 [dockerhub](https://hub.docker.com/r/pivotalcf/pivnet-resource).
 
 Both the docker images and the BOSH releases are semantically versioned;
-they have the same version.
+they have the same version. These versions correspond to the tags in this
+repository and in the
+[BOSH release](https://github.com/pivotal-cf-experimental/pivnet-resource-boshrelease)
+repository.
 
 ## Source Configuration
 
@@ -99,9 +102,8 @@ None.
 Creates a new release on Pivotal Network with the provided version and metadata.
 
 Also optionally uploads one or more files to the Pivotal Network bucket under
-the provided filepath.
-Uploaded files are not currently added to Pivotal Network or to the
-newly-created release.
+the provided filepath, and adds them to the Pivotal Network. Uploaded files are
+not currently added to the newly-created release.
 
 #### Parameters
 
@@ -176,8 +178,8 @@ Refer to the
 [official docs](https://network.pivotal.io/docs/api#how-to-authenticate)
 for more details on obtaining a Pivotal Network API token.
 
-For the AWS S3 configuration, as the tests will actually upload a small test
-file to the specified S3 bucket, ensure the bucket is already created and
+For the AWS S3 configuration, as the tests will actually upload a few small test
+files to the specified S3 bucket, ensure the bucket is already created and
 permissions are set correctly such that the user associated with the provided
 credentials can upload, download and delete.
 
