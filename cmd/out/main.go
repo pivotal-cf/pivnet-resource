@@ -84,7 +84,10 @@ func main() {
 		ReleaseDate:    readStringContents(sourcesDir, input.Params.ReleaseDateFile),
 	}
 
-	pivnetClient.CreateRelease(config)
+	release, err := pivnetClient.CreateRelease(config)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	if skipUpload {
 		logger.Debugf("file glob and s3_filepath_prefix not provided - skipping upload to s3")
@@ -115,13 +118,23 @@ func main() {
 
 		files, err := uploaderClient.Upload()
 		for filename, remotePath := range files {
-			_, err := pivnetClient.CreateProductFile(pivnet.CreateProductFileConfig{
+			product, err := pivnetClient.FindProductForSlug(config.ProductName)
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			productFile, err := pivnetClient.CreateProductFile(pivnet.CreateProductFileConfig{
 				ProductName:  config.ProductName,
 				Name:         filename,
 				AWSObjectKey: remotePath,
 				FileVersion:  config.ProductVersion,
 			})
 
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			err = pivnetClient.AddProductFile(product.ID, release.ID, productFile.ID)
 			if err != nil {
 				log.Fatalln(err)
 			}

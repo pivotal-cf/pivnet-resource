@@ -444,6 +444,19 @@ var _ = Describe("Out", func() {
 				}
 				Expect(len(newProductFiles)).To(Equal(totalFiles))
 
+				By("Getting newly-created release")
+				release, err := pivnetClient.GetRelease(productName, productVersion)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				By("Verifying release contains new product files")
+				productFilesFromRelease, err := pivnetClient.GetProductFiles(release)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Expect(len(productFilesFromRelease.ProductFiles)).To(Equal(totalFiles))
+				for _, p := range productFilesFromRelease.ProductFiles {
+					Expect(sourceFileNames).To(ContainElement(p.Name))
+				}
+
 				By("Deleting created files on pivnet")
 				for _, p := range newProductFiles {
 					_, err := pivnetClient.DeleteProductFile(productName, p.ID)

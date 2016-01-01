@@ -90,3 +90,40 @@ func (c client) DeleteProductFile(productName string, id int) (ProductFile, erro
 
 	return response.ProductFile, nil
 }
+
+func (c client) AddProductFile(
+	productID int,
+	releaseID int,
+	productFileID int,
+) error {
+	url := fmt.Sprintf(
+		"%s/products/%d/releases/%d/add_product_file",
+		c.url,
+		productID,
+		releaseID,
+	)
+
+	body := createProductFileBody{
+		ProductFile: ProductFile{
+			ID: productFileID,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		panic(err)
+	}
+
+	err = c.makeRequest(
+		"PATCH",
+		url,
+		http.StatusNoContent,
+		bytes.NewReader(b),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

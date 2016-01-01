@@ -38,7 +38,7 @@ type ProductFiles struct {
 type ProductFile struct {
 	ID           int    `json:"id,omitempty"`
 	AWSObjectKey string `json:"aws_object_key,omitempty"`
-	Links        Links  `json:"_links,omitempty"`
+	Links        *Links `json:"_links,omitempty"`
 	FileType     string `json:"file_type,omitempty"`
 	FileVersion  string `json:"file_version,omitempty"`
 	Name         string `json:"name,omitempty"`
@@ -48,4 +48,9 @@ type ProductFile struct {
 type Links struct {
 	Download     map[string]string `json:"download,omitempty"`
 	ProductFiles map[string]string `json:"product_files,omitempty"`
+}
+
+type Product struct {
+	ID   int    `json:"id,omitempty"`
+	Slug string `json:"slug"`
 }

@@ -14,11 +14,11 @@ var _ = Describe("Filter", func() {
 			productFiles := pivnet.ProductFiles{[]pivnet.ProductFile{
 				{ID: 3,
 					AWSObjectKey: "product_files/banana/file-name-1.zip",
-					Links:        pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/6/download"}},
+					Links:        &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/6/download"}},
 				},
 				{ID: 4,
 					AWSObjectKey: "product_files/banana/file-name-2.zip",
-					Links:        pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}},
+					Links:        &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}},
 				},
 			}}
 

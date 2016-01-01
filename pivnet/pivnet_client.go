@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
@@ -20,6 +21,8 @@ type Client interface {
 	GetProductFiles(Release) (ProductFiles, error)
 	CreateProductFile(config CreateProductFileConfig) (ProductFile, error)
 	DeleteProductFile(productName string, id int) (ProductFile, error)
+	AddProductFile(productId int, releaseID int, productFileID int) error
+	FindProductForSlug(slug string) (Product, error)
 }
 
 type client struct {
@@ -78,6 +81,7 @@ func (c client) makeRequest(
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != expectedStatusCode {
 		return fmt.Errorf(
@@ -87,9 +91,16 @@ func (c client) makeRequest(
 		)
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(data)
+	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
+	}
+
+	if len(b) > 0 {
+		err = json.Unmarshal(b, data)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

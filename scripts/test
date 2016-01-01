@@ -10,6 +10,8 @@ PIVNET_S3_REGION="${PIVNET_S3_REGION:?"PIVNET_S3_REGION must be provided"}"
 PIVNET_BUCKET_NAME="${PIVNET_BUCKET_NAME:?"PIVNET_BUCKET_NAME must be provided"}"
 S3_FILEPATH_PREFIX="${S3_FILEPATH_PREFIX:?"S3_FILEPATH_PREFIX must be provided"}"
 
+SLOW_SPEC_THRESHOLD=20
+
 set -x
 
 my_dir="$( cd "$( dirname "${0}" )" && pwd )"
@@ -22,5 +24,6 @@ pushd "${base_dir}" > /dev/null
     -p \
     -randomizeAllSpecs \
     -randomizeSuites \
+    -slowSpecThreshold="${SLOW_SPEC_THRESHOLD}" \
     "$@"
 popd > /dev/null

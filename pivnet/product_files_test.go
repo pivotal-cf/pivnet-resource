@@ -40,8 +40,8 @@ var _ = Describe("PivnetClient - product files", func() {
 	Describe("Get Product Files", func() {
 		It("returns the product files for the given release", func() {
 			response, err := json.Marshal(pivnet.ProductFiles{[]pivnet.ProductFile{
-				{ID: 3, AWSObjectKey: "anything", Links: pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/6/download"}}},
-				{ID: 4, AWSObjectKey: "something", Links: pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}}},
+				{ID: 3, AWSObjectKey: "anything", Links: &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/6/download"}}},
+				{ID: 4, AWSObjectKey: "something", Links: &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}}},
 			},
 			})
 			Expect(err).NotTo(HaveOccurred())
@@ -201,6 +201,56 @@ var _ = Describe("PivnetClient - product files", func() {
 				_, err := client.DeleteProductFile(productName, id)
 				Expect(err).To(MatchError(errors.New(
 					"Pivnet returned status code: 418 for the request - expected 200")))
+			})
+		})
+	})
+
+	Describe("Add Product File", func() {
+		var (
+			productID     = 1234
+			releaseID     = 2345
+			productFileID = 3456
+
+			expectedRequestBody = `{"product_file":{"id":3456}}`
+		)
+
+		Context("when the server responds with a 204 status code", func() {
+			It("returns without error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("PATCH", fmt.Sprintf(
+							"%s/products/%d/releases/%d/add_product_file",
+							apiPrefix,
+							productID,
+							releaseID,
+						)),
+						ghttp.VerifyJSON(expectedRequestBody),
+						ghttp.RespondWith(http.StatusNoContent, nil),
+					),
+				)
+
+				err := client.AddProductFile(productID, releaseID, productFileID)
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
+		Context("when the server responds with a non-201 status code", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("PATCH", fmt.Sprintf(
+							"%s/products/%d/releases/%d/add_product_file",
+							apiPrefix,
+							productID,
+							releaseID,
+						)),
+						ghttp.RespondWith(http.StatusTeapot, nil),
+					),
+				)
+
+				err := client.AddProductFile(productID, releaseID, productFileID)
+				Expect(err).To(MatchError(errors.New(
+					"Pivnet returned status code: 418 for the request - expected 204")))
 			})
 		})
 	})
