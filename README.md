@@ -102,8 +102,8 @@ None.
 Creates a new release on Pivotal Network with the provided version and metadata.
 
 Also optionally uploads one or more files to the Pivotal Network bucket under
-the provided filepath, and adds them to the Pivotal Network. Uploaded files are
-not currently added to the newly-created release.
+the provided filepath, adding them both to the Pivotal Network as well as to
+the newly-created release.
 
 #### Parameters
 
