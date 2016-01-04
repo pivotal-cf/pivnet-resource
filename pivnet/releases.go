@@ -9,7 +9,7 @@ import (
 )
 
 type CreateReleaseConfig struct {
-	ProductName    string
+	ProductSlug    string
 	ProductVersion string
 	ReleaseType    string
 	ReleaseDate    string
@@ -17,10 +17,10 @@ type CreateReleaseConfig struct {
 	Description    string
 }
 
-func (c client) GetRelease(productName, version string) (Release, error) {
+func (c client) GetRelease(productSlug, version string) (Release, error) {
 	var matchingRelease Release
 
-	url := c.url + "/products/" + productName + "/releases"
+	url := c.url + "/products/" + productSlug + "/releases"
 
 	var response Response
 	err := c.makeRequest(
@@ -50,7 +50,7 @@ func (c client) GetRelease(productName, version string) (Release, error) {
 }
 
 func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
-	url := c.url + "/products/" + config.ProductName + "/releases"
+	url := c.url + "/products/" + config.ProductSlug + "/releases"
 
 	body := createReleaseBody{
 		Release: Release{

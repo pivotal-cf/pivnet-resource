@@ -2,7 +2,7 @@ package concourse
 
 type Source struct {
 	APIToken        string `json:"api_token"`
-	ProductName     string `json:"product_name"`
+	ProductSlug     string `json:"product_slug"`
 	AccessKeyID     string `json:"access_key_id"`
 	SecretAccessKey string `json:"secret_access_key"`
 }

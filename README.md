@@ -21,7 +21,7 @@ repository.
 
 * `api_token`: *Required.*  Token from your pivnet profile.
 
-* `product_name`: *Required.*  Name of product on Pivotal Network.
+* `product_slug`: *Required.*  Name of product on Pivotal Network.
 
 * `access_key_id`: *Optional.*  AWS access key id. Required for uploading products via `out`.
 
@@ -38,7 +38,7 @@ resources:
   type: pivnet
   source:
     api_token: my-api-token
-    product_name: p-gitlab
+    product_slug: p-gitlab
 ```
 
 #### Get
@@ -62,7 +62,7 @@ resources:
   type: pivnet
   source:
     api_token: my-api-token
-    product_name: p-gitlab
+    product_slug: p-gitlab
     access_key_id: my-aws-access-key-id
     secret_access_key: my-aws-secret-access-key
 
@@ -121,8 +121,8 @@ release creation will fail.
 
 * `s3_filepath_prefix`: *Optional.* Case-sensitive prefix of the
   path in the S3 bucket.
-  Generally similar to, but not the same as, `product_name`. For example,
-  a `product_name` might be `pivotal-diego-pcf` (lower-case) but the
+  Generally similar to, but not the same as, `product_slug`. For example,
+  a `product_slug` might be `pivotal-diego-pcf` (lower-case) but the
   `s3_filepath_prefix` could be `Pivotal-Diego-PCF`.
 
 * `version_file`: *Required.* File containing the version string.

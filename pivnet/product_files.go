@@ -8,7 +8,7 @@ import (
 )
 
 type CreateProductFileConfig struct {
-	ProductName  string
+	ProductSlug  string
 	FileVersion  string
 	AWSObjectKey string
 	Name         string
@@ -32,7 +32,7 @@ func (c client) GetProductFiles(release Release) (ProductFiles, error) {
 }
 
 func (c client) CreateProductFile(config CreateProductFileConfig) (ProductFile, error) {
-	url := c.url + "/products/" + config.ProductName + "/product_files"
+	url := c.url + "/products/" + config.ProductSlug + "/product_files"
 
 	body := createProductFileBody{
 		ProductFile: ProductFile{
@@ -68,11 +68,11 @@ type createProductFileBody struct {
 	ProductFile ProductFile `json:"product_file"`
 }
 
-func (c client) DeleteProductFile(productName string, id int) (ProductFile, error) {
+func (c client) DeleteProductFile(productSlug string, id int) (ProductFile, error) {
 	url := fmt.Sprintf(
 		"%s/products/%s/product_files/%d",
 		c.url,
-		productName,
+		productSlug,
 		id,
 	)
 

@@ -18,7 +18,7 @@ const (
 
 var _ = Describe("Check", func() {
 	var (
-		productName = "p-mysql"
+		productSlug = "p-mysql"
 
 		releases      []string
 		command       *exec.Cmd
@@ -28,7 +28,7 @@ var _ = Describe("Check", func() {
 
 	BeforeEach(func() {
 		By("Getting expected releases")
-		releases = getProductVersions(productName)
+		releases = getProductVersions(productSlug)
 
 		By("Creating command object")
 		command = exec.Command(checkPath)
@@ -37,7 +37,7 @@ var _ = Describe("Check", func() {
 		checkRequest = concourse.CheckRequest{
 			Source: concourse.Source{
 				APIToken:    pivnetAPIToken,
-				ProductName: productName,
+				ProductSlug: productSlug,
 			},
 			Version: concourse.Version{
 				ProductVersion: releases[3],
@@ -116,9 +116,9 @@ var _ = Describe("Check", func() {
 		})
 	})
 
-	Context("when no product_name is provided", func() {
+	Context("when no product_slug is provided", func() {
 		BeforeEach(func() {
-			checkRequest.Source.ProductName = ""
+			checkRequest.Source.ProductSlug = ""
 
 			var err error
 			stdinContents, err = json.Marshal(checkRequest)
@@ -131,7 +131,7 @@ var _ = Describe("Check", func() {
 
 			By("Validating command exited with error")
 			Eventually(session, checkTimeout).Should(gexec.Exit(1))
-			Expect(session.Err).Should(gbytes.Say("product_name must be provided"))
+			Expect(session.Err).Should(gbytes.Say("product_slug must be provided"))
 		})
 	})
 })

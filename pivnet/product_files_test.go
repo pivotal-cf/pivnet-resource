@@ -98,7 +98,7 @@ var _ = Describe("PivnetClient - product files", func() {
 
 		BeforeEach(func() {
 			createProductFileConfig = pivnet.CreateProductFileConfig{
-				ProductName:  productName,
+				ProductSlug:  productSlug,
 				Name:         "some-file-name",
 				FileVersion:  "some-file-version",
 				AWSObjectKey: "some-aws-object-key",
@@ -136,7 +136,7 @@ var _ = Describe("PivnetClient - product files", func() {
 			It("creates the release with the minimum required fields", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/product_files"),
+						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/product_files"),
 						ghttp.VerifyJSONRepresenting(&expectedRequestBody),
 						ghttp.RespondWith(http.StatusCreated, validResponse),
 					),
@@ -152,7 +152,7 @@ var _ = Describe("PivnetClient - product files", func() {
 			It("returns an error", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/product_files"),
+						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/product_files"),
 						ghttp.RespondWith(http.StatusTeapot, nil),
 					),
 				)
@@ -176,12 +176,12 @@ var _ = Describe("PivnetClient - product files", func() {
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest(
 						"DELETE",
-						fmt.Sprintf("%s/products/%s/product_files/%d", apiPrefix, productName, id)),
+						fmt.Sprintf("%s/products/%s/product_files/%d", apiPrefix, productSlug, id)),
 					ghttp.RespondWith(http.StatusOK, response),
 				),
 			)
 
-			productFile, err := client.DeleteProductFile(productName, id)
+			productFile, err := client.DeleteProductFile(productSlug, id)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(productFile.ID).To(Equal(id))
@@ -193,12 +193,12 @@ var _ = Describe("PivnetClient - product files", func() {
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest(
 							"DELETE",
-							fmt.Sprintf("%s/products/%s/product_files/%d", apiPrefix, productName, id)),
+							fmt.Sprintf("%s/products/%s/product_files/%d", apiPrefix, productSlug, id)),
 						ghttp.RespondWith(http.StatusTeapot, nil),
 					),
 				)
 
-				_, err := client.DeleteProductFile(productName, id)
+				_, err := client.DeleteProductFile(productSlug, id)
 				Expect(err).To(MatchError(errors.New(
 					"Pivnet returned status code: 418 for the request - expected 200")))
 			})

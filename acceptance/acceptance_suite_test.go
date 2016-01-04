@@ -75,7 +75,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Compiling out binary")
-	inPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/in", "-race")
+	inPath, err = gexec.Build(
+		"github.com/pivotal-cf-experimental/pivnet-resource/cmd/in", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Copying s3-out to compilation location")
@@ -98,10 +99,12 @@ var _ = AfterSuite(func() {
 	gexec.CleanupBuildArtifacts()
 })
 
-func getProductReleases(productName string) []pivnet.Release {
-	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases", productName)
+func getProductReleases(productSlug string) []pivnet.Release {
+	productURL := fmt.Sprintf(
+		"https://network.pivotal.io/api/v2/products/%s/releases",
+		productSlug)
 
-	req, err := http.NewRequest("GET", product_url, nil)
+	req, err := http.NewRequest("GET", productURL, nil)
 	Expect(err).NotTo(HaveOccurred())
 
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", pivnetAPIToken))
@@ -117,32 +120,32 @@ func getProductReleases(productName string) []pivnet.Release {
 	return response.Releases
 }
 
-func getProductVersions(productName string) []string {
+func getProductVersions(productSlug string) []string {
 	var versions []string
-	for _, release := range getProductReleases(productName) {
+	for _, release := range getProductReleases(productSlug) {
 		versions = append(versions, string(release.Version))
 	}
 
 	return versions
 }
 
-func getPivnetRelease(productName, productVersion string) pivnet.Release {
-	for _, release := range getProductReleases(productName) {
+func getPivnetRelease(productSlug, productVersion string) pivnet.Release {
+	for _, release := range getProductReleases(productSlug) {
 		if release.Version == productVersion {
 			return release
 		}
 	}
-	Fail(fmt.Sprintf("Could not find release for productName: %s and productVersion: %s", productName, productVersion))
+	Fail(fmt.Sprintf("Could not find release for productSlug: %s and productVersion: %s", productSlug, productVersion))
 	// We won't get here
 	return pivnet.Release{}
 }
 
-func deletePivnetRelease(productName, productVersion string) {
-	pivnetRelease := getPivnetRelease(productName, productVersion)
+func deletePivnetRelease(productSlug, productVersion string) {
+	pivnetRelease := getPivnetRelease(productSlug, productVersion)
 	releaseID := pivnetRelease.ID
 	Expect(releaseID).NotTo(Equal(0))
 
-	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases/%d", productName, releaseID)
+	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases/%d", productSlug, releaseID)
 
 	req, err := http.NewRequest("DELETE", product_url, nil)
 	Expect(err).NotTo(HaveOccurred())
@@ -154,8 +157,8 @@ func deletePivnetRelease(productName, productVersion string) {
 	Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
 }
 
-func getProductFiles(productName string) []pivnet.ProductFile {
-	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/product_files", productName)
+func getProductFiles(productSlug string) []pivnet.ProductFile {
+	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/product_files", productSlug)
 
 	req, err := http.NewRequest("GET", product_url, nil)
 	Expect(err).NotTo(HaveOccurred())

@@ -9,7 +9,7 @@ import (
 
 const (
 	apiPrefix   = "/api/v2"
-	productName = "some-product-name"
+	productSlug = "some-product-name"
 )
 
 func TestPivnetResource(t *testing.T) {

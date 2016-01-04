@@ -15,7 +15,7 @@ import (
 
 var _ = Describe("In", func() {
 	var (
-		productName    = "pivotal-diego-pcf"
+		productSlug    = "pivotal-diego-pcf"
 		productVersion = "pivnet-testing"
 		destDirectory  string
 
@@ -38,7 +38,7 @@ var _ = Describe("In", func() {
 		inRequest = concourse.InRequest{
 			Source: concourse.Source{
 				APIToken:    pivnetAPIToken,
-				ProductName: productName,
+				ProductSlug: productSlug,
 			},
 			Version: concourse.Version{
 				ProductVersion: productVersion,

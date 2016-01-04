@@ -53,7 +53,7 @@ func main() {
 	logger := logger.NewLogger(sanitizer)
 
 	mustBeNonEmpty(input.Source.APIToken, "api_token")
-	mustBeNonEmpty(input.Source.ProductName, "product_name")
+	mustBeNonEmpty(input.Source.ProductSlug, "product_slug")
 	mustBeNonEmpty(input.Params.VersionFile, "version_file")
 	mustBeNonEmpty(input.Params.ReleaseTypeFile, "release_type_file")
 	mustBeNonEmpty(input.Params.EulaSlugFile, "eula_slug_file")
@@ -76,7 +76,7 @@ func main() {
 	)
 
 	config := pivnet.CreateReleaseConfig{
-		ProductName:    input.Source.ProductName,
+		ProductSlug:    input.Source.ProductSlug,
 		ReleaseType:    readStringContents(sourcesDir, input.Params.ReleaseTypeFile),
 		EulaSlug:       readStringContents(sourcesDir, input.Params.EulaSlugFile),
 		ProductVersion: readStringContents(sourcesDir, input.Params.VersionFile),
@@ -118,13 +118,13 @@ func main() {
 
 		files, err := uploaderClient.Upload()
 		for filename, remotePath := range files {
-			product, err := pivnetClient.FindProductForSlug(config.ProductName)
+			product, err := pivnetClient.FindProductForSlug(config.ProductSlug)
 			if err != nil {
 				log.Fatalln(err)
 			}
 
 			productFile, err := pivnetClient.CreateProductFile(pivnet.CreateProductFileConfig{
-				ProductName:  config.ProductName,
+				ProductSlug:  config.ProductSlug,
 				Name:         filename,
 				AWSObjectKey: remotePath,
 				FileVersion:  config.ProductVersion,

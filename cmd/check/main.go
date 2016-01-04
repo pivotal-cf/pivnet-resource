@@ -52,7 +52,7 @@ func main() {
 	}
 
 	mustBeNonEmpty(input.Source.APIToken, "api_token")
-	mustBeNonEmpty(input.Source.ProductName, "product_name")
+	mustBeNonEmpty(input.Source.ProductSlug, "product_slug")
 
 	logger.Debugf("received input: %+v\n", input)
 
@@ -62,7 +62,7 @@ func main() {
 		logger,
 	)
 
-	allVersions, err := client.ProductVersions(input.Source.ProductName)
+	allVersions, err := client.ProductVersions(input.Source.ProductSlug)
 	if err != nil {
 		log.Fatalln(err)
 	}

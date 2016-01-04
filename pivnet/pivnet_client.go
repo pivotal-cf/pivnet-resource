@@ -20,7 +20,7 @@ type Client interface {
 	GetRelease(string, string) (Release, error)
 	GetProductFiles(Release) (ProductFiles, error)
 	CreateProductFile(config CreateProductFileConfig) (ProductFile, error)
-	DeleteProductFile(productName string, id int) (ProductFile, error)
+	DeleteProductFile(productSlug string, id int) (ProductFile, error)
 	AddProductFile(productId int, releaseID int, productFileID int) error
 	FindProductForSlug(slug string) (Product, error)
 }

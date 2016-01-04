@@ -59,7 +59,7 @@ func main() {
 
 	productVersion := input.Version.ProductVersion
 
-	release, err := client.GetRelease(input.Source.ProductName, productVersion)
+	release, err := client.GetRelease(input.Source.ProductSlug, productVersion)
 	if err != nil {
 		log.Fatalf("Failed to get Release: %s\n", err.Error())
 	}

@@ -97,7 +97,7 @@ var _ = Describe("PivnetClient - product files", func() {
 				EulaSlug:       "some_eula",
 				ReleaseType:    "Not a real release",
 				ProductVersion: productVersion,
-				ProductName:    "" + productName + "",
+				ProductSlug:    productSlug,
 			}
 		})
 
@@ -135,7 +135,7 @@ var _ = Describe("PivnetClient - product files", func() {
 			It("creates the release with the minimum required fields", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/releases"),
+						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/releases"),
 						ghttp.VerifyJSONRepresenting(&expectedRequestBody),
 						ghttp.RespondWith(http.StatusCreated, validResponse),
 					),
@@ -161,7 +161,7 @@ var _ = Describe("PivnetClient - product files", func() {
 				It("creates the release with the release date field", func() {
 					server.AppendHandlers(
 						ghttp.CombineHandlers(
-							ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/releases"),
+							ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/releases"),
 							ghttp.VerifyJSONRepresenting(&expectedRequestBody),
 							ghttp.RespondWith(http.StatusCreated, validResponse),
 						),
@@ -189,7 +189,7 @@ var _ = Describe("PivnetClient - product files", func() {
 					It("creates the release with the description field", func() {
 						server.AppendHandlers(
 							ghttp.CombineHandlers(
-								ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/releases"),
+								ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/releases"),
 								ghttp.VerifyJSONRepresenting(&expectedRequestBody),
 								ghttp.RespondWith(http.StatusCreated, validResponse),
 							),
@@ -212,7 +212,7 @@ var _ = Describe("PivnetClient - product files", func() {
 					It("creates the release with an empty description field", func() {
 						server.AppendHandlers(
 							ghttp.CombineHandlers(
-								ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/releases"),
+								ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/releases"),
 								ghttp.VerifyJSONRepresenting(&expectedRequestBody),
 								ghttp.RespondWith(http.StatusCreated, validResponse),
 							),
@@ -230,7 +230,7 @@ var _ = Describe("PivnetClient - product files", func() {
 			It("returns an error", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productName+"/releases"),
+						ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/releases"),
 						ghttp.RespondWith(http.StatusTeapot, nil),
 					),
 				)

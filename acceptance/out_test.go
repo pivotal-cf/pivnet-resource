@@ -48,7 +48,7 @@ var _ = Describe("Out", func() {
 		descriptionFile = "description"
 		description     = "this release is for automated-testing only."
 
-		productName = "pivotal-diego-pcf"
+		productSlug = "pivotal-diego-pcf"
 
 		command       *exec.Cmd
 		stdinContents []byte
@@ -110,7 +110,7 @@ var _ = Describe("Out", func() {
 				APIToken:        pivnetAPIToken,
 				AccessKeyID:     awsAccessKeyID,
 				SecretAccessKey: awsSecretAccessKey,
-				ProductName:     productName,
+				ProductSlug:     productSlug,
 			},
 			Params: concourse.OutParams{
 				FileGlob:        "*",
@@ -162,9 +162,9 @@ var _ = Describe("Out", func() {
 			})
 		})
 
-		Context("when no product_name is provided", func() {
+		Context("when no product_slug is provided", func() {
 			BeforeEach(func() {
-				outRequest.Source.ProductName = ""
+				outRequest.Source.ProductSlug = ""
 
 				var err error
 				stdinContents, err = json.Marshal(outRequest)
@@ -175,7 +175,7 @@ var _ = Describe("Out", func() {
 				session := run(command, stdinContents)
 
 				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).Should(gbytes.Say("product_name must be provided"))
+				Expect(session.Err).Should(gbytes.Say("product_slug must be provided"))
 			})
 		})
 
@@ -302,7 +302,7 @@ var _ = Describe("Out", func() {
 	Describe("Creating a new release", func() {
 		AfterEach(func() {
 			By("Deleting newly-created release")
-			deletePivnetRelease(productName, productVersion)
+			deletePivnetRelease(productSlug, productVersion)
 		})
 
 		It("Successfully creates a release", func() {
@@ -314,7 +314,7 @@ var _ = Describe("Out", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			By("Validating the new product version does not yet exist")
-			productVersions := getProductVersions(productName)
+			productVersions := getProductVersions(productSlug)
 			Expect(productVersions).NotTo(BeEmpty())
 			Expect(productVersions).NotTo(ContainElement(productVersion))
 
@@ -334,7 +334,7 @@ var _ = Describe("Out", func() {
 			Expect(response.Version.ProductVersion).To(Equal(productVersion))
 
 			By("Validating the release was created correctly")
-			release := getPivnetRelease(productName, productVersion)
+			release := getPivnetRelease(productSlug, productVersion)
 			Expect(release.Version).To(Equal(productVersion))
 			Expect(release.ReleaseType).To(Equal(releaseType))
 			Expect(release.ReleaseDate).To(Equal(releaseDate))
@@ -399,7 +399,7 @@ var _ = Describe("Out", func() {
 
 			It("uploads files to s3 and creates files on pivnet", func() {
 				By("Getting existing list of product files")
-				existingProductFiles := getProductFiles(productName)
+				existingProductFiles := getProductFiles(productSlug)
 
 				By("Verifying existing product files does not yet contain new files")
 				var existingProductFileNames []string
@@ -429,7 +429,7 @@ var _ = Describe("Out", func() {
 				Expect(response.Version.ProductVersion).To(Equal(productVersion))
 
 				By("Getting updated list of product files")
-				updatedProductFiles := getProductFiles(productName)
+				updatedProductFiles := getProductFiles(productSlug)
 
 				By("Verifying number of product files has increased by the expected amount")
 				newProductFileCount := len(updatedProductFiles) - len(existingProductFiles)
@@ -445,7 +445,7 @@ var _ = Describe("Out", func() {
 				Expect(len(newProductFiles)).To(Equal(totalFiles))
 
 				By("Getting newly-created release")
-				release, err := pivnetClient.GetRelease(productName, productVersion)
+				release, err := pivnetClient.GetRelease(productSlug, productVersion)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				By("Verifying release contains new product files")
@@ -459,7 +459,7 @@ var _ = Describe("Out", func() {
 
 				By("Deleting created files on pivnet")
 				for _, p := range newProductFiles {
-					_, err := pivnetClient.DeleteProductFile(productName, p.ID)
+					_, err := pivnetClient.DeleteProductFile(productSlug, p.ID)
 					Expect(err).ShouldNot(HaveOccurred())
 				}
 			})
