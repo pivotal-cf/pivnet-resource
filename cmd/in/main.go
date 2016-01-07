@@ -21,7 +21,7 @@ const (
 )
 
 func main() {
-	var input concourse.CheckRequest
+	var input concourse.InRequest
 	if len(os.Args) < 2 {
 		log.Fatalln(fmt.Sprintf(
 			"not enough args - usage: %s <sources directory>", os.Args[0]))
@@ -70,6 +70,14 @@ func main() {
 	}
 
 	downloadLinks := filter.DownloadLinks(productFiles)
+
+	if len(input.Params.Globs) > 0 {
+		var err error
+		downloadLinks, err = filter.DownloadLinksByGlob(downloadLinks, input.Params.Globs)
+		if err != nil {
+			log.Fatalf("Failed to filter Product Files: %s\n", err.Error())
+		}
+	}
 
 	err = downloader.Download(downloadDir, downloadLinks, token)
 	if err != nil {

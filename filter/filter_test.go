@@ -30,4 +30,48 @@ var _ = Describe("Filter", func() {
 			}))
 		})
 	})
+
+	Describe("Download Links by Glob", func() {
+		It("returns the download links that match the glob filters", func() {
+			downloadLinks := map[string]string{
+				"android-file.zip": "/products/banana/releases/666/product_files/6/download",
+				"ios-file.zip":     "/products/banana/releases/666/product_files/8/download",
+				"random-file.zip":  "/products/banana/releases/666/product_files/8/download",
+			}
+
+			filteredDownloadLinks, err := filter.DownloadLinksByGlob(
+				downloadLinks, []string{"*android*", "*ios*"})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(filteredDownloadLinks).To(HaveLen(2))
+			Expect(filteredDownloadLinks).To(Equal(map[string]string{
+				"android-file.zip": "/products/banana/releases/666/product_files/6/download",
+				"ios-file.zip":     "/products/banana/releases/666/product_files/8/download",
+			}))
+		})
+	})
+
+	Context("when a bad pattern is passed", func() {
+		It("returns an error", func() {
+			downloadLinks := map[string]string{
+				"android-file.zip": "/products/banana/releases/666/product_files/6/download",
+			}
+
+			_, err := filter.DownloadLinksByGlob(downloadLinks, []string{"["})
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("syntax error in pattern"))
+		})
+	})
+
+	Describe("Passed a glob that matches no files", func() {
+		It("returns an error", func() {
+			downloadLinks := map[string]string{
+				"android-file.zip": "/products/banana/releases/666/product_files/6/download",
+			}
+
+			_, err := filter.DownloadLinksByGlob(downloadLinks, []string{"*ios*"})
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("no files match glob"))
+
+		})
+	})
 })

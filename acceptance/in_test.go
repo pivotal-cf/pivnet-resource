@@ -105,4 +105,40 @@ var _ = Describe("In", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(string(contents)).To(Equal(productVersion))
 	})
+
+	Context("when globs are provided", func() {
+		It("downloads only the files that match the glob", func() {
+
+			By("setting the glob")
+			inRequest.Source.ProductName = "p-data-sync"
+			inRequest.Version.ProductVersion = "1.1.2.0"
+			inRequest.Params.Globs = []string{"*PCFData-1.1.0.a*"}
+
+			globStdInRequest, err := json.Marshal(inRequest)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			By("Running the command")
+			session := run(command, globStdInRequest)
+			Eventually(session, executableTimeout).Should(gexec.Exit(0))
+
+			By("Reading downloaded files")
+			dataDir, err := os.Open(destDirectory)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			By("Validating number of downloaded files")
+			files, err := dataDir.Readdir(6)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(files).To(HaveLen(2))
+
+			By("Validating files have non-zero-length content")
+			var fileNames []string
+			for _, f := range files {
+				fileNames = append(fileNames, f.Name())
+				Expect(f.Size()).ToNot(BeZero())
+			}
+
+			By("Validating filenames are correct")
+			Expect(fileNames).To(ContainElement("PCFData-1.1.0.aar"))
+		})
+	})
 })
