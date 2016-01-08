@@ -110,7 +110,7 @@ var _ = Describe("In", func() {
 		It("downloads only the files that match the glob", func() {
 
 			By("setting the glob")
-			inRequest.Source.ProductName = "p-data-sync"
+			inRequest.Source.ProductSlug = "p-data-sync"
 			inRequest.Version.ProductVersion = "1.1.2.0"
 			inRequest.Params.Globs = []string{"*PCFData-1.1.0.a*"}
 
