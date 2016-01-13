@@ -77,12 +77,15 @@ func (c client) makeRequest(
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", c.token))
 
+	c.logger.Debugf("Making request: %+v\n", req)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		c.logger.Debugf("Error making request: %+v\n", err)
 		return err
 	}
 	defer resp.Body.Close()
 
+	c.logger.Debugf("Response status code: %d\n", resp.StatusCode)
 	if resp.StatusCode != expectedStatusCode {
 		return fmt.Errorf(
 			"Pivnet returned status code: %d for the request - expected %d",
@@ -97,6 +100,7 @@ func (c client) makeRequest(
 	}
 
 	if len(b) > 0 {
+		c.logger.Debugf("Response body: %s\n", string(b))
 		err = json.Unmarshal(b, data)
 		if err != nil {
 			return err
