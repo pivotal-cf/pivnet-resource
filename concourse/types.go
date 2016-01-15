@@ -54,6 +54,6 @@ type OutParams struct {
 }
 
 type OutResponse struct {
-	Version  Version  `json:"version"`
-	Metadata []string `json:"metadata,omitempty"`
+	Version  Version    `json:"version"`
+	Metadata []Metadata `json:"metadata,omitempty"`
 }

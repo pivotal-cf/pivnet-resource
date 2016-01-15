@@ -340,6 +340,19 @@ var _ = Describe("Out", func() {
 			Expect(release.ReleaseDate).To(Equal(releaseDate))
 			Expect(release.Eula.Slug).To(Equal(eulaSlug))
 			Expect(release.Description).To(Equal(description))
+
+			By("Validing the returned metadata")
+			metadataReleaseType, err := metadataValueForKey(response.Metadata, "release_type")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(metadataReleaseType).To(Equal(releaseType))
+
+			metadataReleaseDate, err := metadataValueForKey(response.Metadata, "release_date")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(metadataReleaseDate).To(Equal(releaseDate))
+
+			metadataDescription, err := metadataValueForKey(response.Metadata, "description")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(metadataDescription).To(Equal(description))
 		})
 
 		Context("when S3 source and params are configured correctly", func() {
@@ -532,4 +545,14 @@ func stringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func metadataValueForKey(metadata []concourse.Metadata, name string) (string, error) {
+	for _, i := range metadata {
+		if i.Name == name {
+			return i.Value, nil
+		}
+	}
+	return "", fmt.Errorf("name not found: %s", name)
+
 }

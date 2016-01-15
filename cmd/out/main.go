@@ -75,8 +75,10 @@ func main() {
 		logger,
 	)
 
+	productSlug := input.Source.ProductSlug
+
 	config := pivnet.CreateReleaseConfig{
-		ProductSlug:    input.Source.ProductSlug,
+		ProductSlug:    productSlug,
 		ReleaseType:    readStringContents(sourcesDir, input.Params.ReleaseTypeFile),
 		EulaSlug:       readStringContents(sourcesDir, input.Params.EulaSlugFile),
 		ProductVersion: readStringContents(sourcesDir, input.Params.VersionFile),
@@ -118,16 +120,16 @@ func main() {
 
 		files, err := uploaderClient.Upload()
 		for filename, remotePath := range files {
-			product, err := pivnetClient.FindProductForSlug(config.ProductSlug)
+			product, err := pivnetClient.FindProductForSlug(productSlug)
 			if err != nil {
 				log.Fatalln(err)
 			}
 
 			productFile, err := pivnetClient.CreateProductFile(pivnet.CreateProductFileConfig{
-				ProductSlug:  config.ProductSlug,
+				ProductSlug:  productSlug,
 				Name:         filename,
 				AWSObjectKey: remotePath,
-				FileVersion:  config.ProductVersion,
+				FileVersion:  release.Version,
 			})
 
 			if err != nil {
@@ -147,9 +149,14 @@ func main() {
 
 	out := concourse.OutResponse{
 		Version: concourse.Version{
-			ProductVersion: config.ProductVersion,
+			ProductVersion: release.Version,
 		},
-		Metadata: []string{},
+		Metadata: []concourse.Metadata{
+			{Name: "release_type", Value: release.ReleaseType},
+			{Name: "release_date", Value: release.ReleaseDate},
+			{Name: "description", Value: release.Description},
+			{Name: "eula_slug", Value: release.Eula.Slug},
+		},
 	}
 
 	logger.Debugf("returning output: %+v\n", out)
