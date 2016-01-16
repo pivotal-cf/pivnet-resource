@@ -20,17 +20,25 @@ var _ = Describe("PivnetClient", func() {
 		client     pivnet.Client
 		token      string
 		apiAddress string
+		userAgent  string
 
-		fakeLogger logger.Logger
+		newClientConfig pivnet.NewClientConfig
+		fakeLogger      logger.Logger
 	)
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
 		apiAddress = server.URL() + apiPrefix
 		token = "my-auth-token"
+		userAgent = "pivnet-resource/0.1.0 (some-url)"
 
 		fakeLogger = &logger_fakes.FakeLogger{}
-		client = pivnet.NewClient(apiAddress, token, fakeLogger)
+		newClientConfig = pivnet.NewClientConfig{
+			URL:       apiAddress,
+			Token:     token,
+			UserAgent: userAgent,
+		}
+		client = pivnet.NewClient(newClientConfig, fakeLogger)
 	})
 
 	AfterEach(func() {
@@ -52,11 +60,28 @@ var _ = Describe("PivnetClient", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
+	It("sets custom user agent", func() {
+		response := fmt.Sprintf(`{"releases": [{"version": "1234"}]}`)
+
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest("GET", apiPrefix+"/products/my-product-id/releases"),
+				ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
+				ghttp.VerifyHeaderKV("User-Agent", userAgent),
+				ghttp.RespondWith(http.StatusOK, response),
+			),
+		)
+
+		_, err := client.ProductVersions("my-product-id")
+		Expect(err).NotTo(HaveOccurred())
+
+	})
+
 	Describe("Product Versions", func() {
 		Context("when parsing the url fails with error", func() {
 			It("forwards the error", func() {
-				badURL := "%%%"
-				client = pivnet.NewClient(badURL, token, fakeLogger)
+				newClientConfig.URL = "%%%"
+				client = pivnet.NewClient(newClientConfig, fakeLogger)
 
 				_, err := client.ProductVersions("some product")
 				Expect(err).To(HaveOccurred())
@@ -66,8 +91,8 @@ var _ = Describe("PivnetClient", func() {
 
 		Context("when making the request fails with error", func() {
 			It("forwards the error", func() {
-				badURL := "https://not-a-real-url.com"
-				client = pivnet.NewClient(badURL, token, fakeLogger)
+				newClientConfig.URL = "https://not-a-real-url.com"
+				client = pivnet.NewClient(newClientConfig, fakeLogger)
 
 				_, err := client.ProductVersions("some product")
 				Expect(err).To(HaveOccurred())

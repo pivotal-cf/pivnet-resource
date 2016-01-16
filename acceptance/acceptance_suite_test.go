@@ -92,7 +92,13 @@ var _ = BeforeSuite(func() {
 
 	By("Creating pivnet client (for out-of-band operations)")
 	testLogger := logger.NewLogger(GinkgoWriter)
-	pivnetClient = pivnet.NewClient(pivnet.URL, pivnetAPIToken, testLogger)
+
+	clientConfig := pivnet.NewClientConfig{
+		URL:       pivnet.URL,
+		Token:     pivnetAPIToken,
+		UserAgent: "pivnet-resource/integration-test",
+	}
+	pivnetClient = pivnet.NewClient(clientConfig, testLogger)
 })
 
 var _ = AfterSuite(func() {

@@ -19,17 +19,25 @@ var _ = Describe("PivnetClient - product", func() {
 		client     pivnet.Client
 		token      string
 		apiAddress string
+		userAgent  string
 
-		fakeLogger logger.Logger
+		newClientConfig pivnet.NewClientConfig
+		fakeLogger      logger.Logger
 	)
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
 		apiAddress = server.URL() + apiPrefix
 		token = "my-auth-token"
+		userAgent = "pivnet-resource/0.1.0 (some-url)"
 
 		fakeLogger = &logger_fakes.FakeLogger{}
-		client = pivnet.NewClient(apiAddress, token, fakeLogger)
+		newClientConfig = pivnet.NewClientConfig{
+			URL:       apiAddress,
+			Token:     token,
+			UserAgent: userAgent,
+		}
+		client = pivnet.NewClient(newClientConfig, fakeLogger)
 	})
 
 	AfterEach(func() {

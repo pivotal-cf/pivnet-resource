@@ -44,17 +44,21 @@ func main() {
 	sanitized := concourse.SanitizedSource(input.Source)
 	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
 
-	logger := logger.NewLogger(sanitizer)
+	l := logger.NewLogger(sanitizer)
 
 	token := input.Source.APIToken
 	mustBeNonEmpty(token, "api_token")
 
-	logger.Debugf("received input: %+v\n", input)
+	l.Debugf("received input: %+v\n", input)
 
+	clientConfig := pivnet.NewClientConfig{
+		URL:       pivnet.URL,
+		Token:     input.Source.APIToken,
+		UserAgent: "pivnet-resource/dev",
+	}
 	client := pivnet.NewClient(
-		url,
-		token,
-		logger,
+		clientConfig,
+		l,
 	)
 
 	productVersion := input.Version.ProductVersion

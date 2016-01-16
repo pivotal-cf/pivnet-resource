@@ -26,16 +26,24 @@ type Client interface {
 }
 
 type client struct {
-	url    string
-	token  string
-	logger logger.Logger
+	url       string
+	token     string
+	userAgent string
+	logger    logger.Logger
 }
 
-func NewClient(url, token string, logger logger.Logger) Client {
+type NewClientConfig struct {
+	URL       string
+	Token     string
+	UserAgent string
+}
+
+func NewClient(config NewClientConfig, logger logger.Logger) Client {
 	return &client{
-		url:    url,
-		token:  token,
-		logger: logger,
+		url:       config.URL,
+		token:     config.Token,
+		userAgent: config.UserAgent,
+		logger:    logger,
 	}
 }
 
@@ -76,6 +84,7 @@ func (c client) makeRequest(
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", c.token))
+	req.Header.Add("User-Agent", c.userAgent)
 
 	c.logger.Debugf("Making request: %+v\n", req)
 	resp, err := http.DefaultClient.Do(req)

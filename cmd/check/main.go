@@ -63,9 +63,13 @@ func main() {
 
 	l.Debugf("Received input: %+v\n", input)
 
+	clientConfig := pivnet.NewClientConfig{
+		URL:       pivnet.URL,
+		Token:     input.Source.APIToken,
+		UserAgent: "pivnet-resource/dev",
+	}
 	client := pivnet.NewClient(
-		pivnet.URL,
-		input.Source.APIToken,
+		clientConfig,
 		l,
 	)
 

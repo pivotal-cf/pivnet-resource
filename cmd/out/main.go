@@ -50,7 +50,7 @@ func main() {
 	sanitized := concourse.SanitizedSource(input.Source)
 	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
 
-	logger := logger.NewLogger(sanitizer)
+	l := logger.NewLogger(sanitizer)
 
 	mustBeNonEmpty(input.Source.APIToken, "api_token")
 	mustBeNonEmpty(input.Source.ProductSlug, "product_slug")
@@ -67,12 +67,16 @@ func main() {
 		mustBeNonEmpty(input.Params.FilepathPrefix, "s3_filepath_prefix")
 	}
 
-	logger.Debugf("received input: %+v\n", input)
+	l.Debugf("received input: %+v\n", input)
 
+	clientConfig := pivnet.NewClientConfig{
+		URL:       pivnet.URL,
+		Token:     input.Source.APIToken,
+		UserAgent: "pivnet-resource/dev",
+	}
 	pivnetClient := pivnet.NewClient(
-		pivnet.URL,
-		input.Source.APIToken,
-		logger,
+		clientConfig,
+		l,
 	)
 
 	productSlug := input.Source.ProductSlug
@@ -92,7 +96,7 @@ func main() {
 	}
 
 	if skipUpload {
-		logger.Debugf("file glob and s3_filepath_prefix not provided - skipping upload to s3")
+		l.Debugf("file glob and s3_filepath_prefix not provided - skipping upload to s3")
 	} else {
 		s3Client := s3.NewClient(s3.NewClientConfig{
 			AccessKeyID:     input.Source.AccessKeyID,
@@ -100,7 +104,7 @@ func main() {
 			RegionName:      "eu-west-1",
 			Bucket:          "pivotalnetwork",
 
-			Logger: logger,
+			Logger: l,
 
 			Stdout: os.Stdout,
 			Stderr: logFile,
@@ -113,7 +117,7 @@ func main() {
 			FilepathPrefix: input.Params.FilepathPrefix,
 			SourcesDir:     sourcesDir,
 
-			Logger: logger,
+			Logger: l,
 
 			Transport: s3Client,
 		})
@@ -159,7 +163,7 @@ func main() {
 		},
 	}
 
-	logger.Debugf("returning output: %+v\n", out)
+	l.Debugf("returning output: %+v\n", out)
 
 	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {
