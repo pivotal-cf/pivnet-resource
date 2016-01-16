@@ -20,7 +20,16 @@ const (
 	s3OutBinaryName = "s3-out"
 )
 
+var (
+	// version is deliberately left uninitialized so it can be set at compile-time
+	version string
+)
+
 func main() {
+	if version == "" {
+		version = "dev"
+	}
+
 	if len(os.Args) < 2 {
 		log.Fatalln(fmt.Sprintf(
 			"not enough args - usage: %s <sources directory>", os.Args[0]))
@@ -72,7 +81,7 @@ func main() {
 	clientConfig := pivnet.NewClientConfig{
 		URL:       pivnet.URL,
 		Token:     input.Source.APIToken,
-		UserAgent: "pivnet-resource/dev",
+		UserAgent: fmt.Sprintf("pivnet-resource/%s", version),
 	}
 	pivnetClient := pivnet.NewClient(
 		clientConfig,

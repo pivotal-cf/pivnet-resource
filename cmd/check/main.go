@@ -16,10 +16,17 @@ import (
 )
 
 var (
+	// version is deliberately left uninitialized so it can be set at compile-time
+	version string
+
 	l logger.Logger
 )
 
 func main() {
+	if version == "" {
+		version = "dev"
+	}
+
 	var input concourse.CheckRequest
 
 	logFile, err := ioutil.TempFile("", "pivnet-resource-check.log")
@@ -66,7 +73,7 @@ func main() {
 	clientConfig := pivnet.NewClientConfig{
 		URL:       pivnet.URL,
 		Token:     input.Source.APIToken,
-		UserAgent: "pivnet-resource/dev",
+		UserAgent: fmt.Sprintf("pivnet-resource/%s", version),
 	}
 	client := pivnet.NewClient(
 		clientConfig,

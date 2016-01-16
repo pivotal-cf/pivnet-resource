@@ -20,7 +20,16 @@ const (
 	url = "https://network.pivotal.io/api/v2"
 )
 
+var (
+	// version is deliberately left uninitialized so it can be set at compile-time
+	version string
+)
+
 func main() {
+	if version == "" {
+		version = "dev"
+	}
+
 	var input concourse.InRequest
 	if len(os.Args) < 2 {
 		log.Fatalln(fmt.Sprintf(
@@ -54,7 +63,7 @@ func main() {
 	clientConfig := pivnet.NewClientConfig{
 		URL:       pivnet.URL,
 		Token:     input.Source.APIToken,
-		UserAgent: "pivnet-resource/dev",
+		UserAgent: fmt.Sprintf("pivnet-resource/%s", version),
 	}
 	client := pivnet.NewClient(
 		clientConfig,
