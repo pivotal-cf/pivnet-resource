@@ -2,11 +2,23 @@
 
 set -eux
 
+VERSION="${VERSION:-dev}"
+GOOS="${GOOS:-linux}"
+
 my_dir="$( cd "$( dirname "${0}" )" && pwd )"
 base_dir="$( cd "${my_dir}/.." && pwd )"
 
 pushd "${base_dir}" > /dev/null
-  GOOS=linux go build -o check ./cmd/check
-  GOOS=linux go build -o in ./cmd/in
-  GOOS=linux go build -o out ./cmd/out
+  GOOS="${GOOS}" go build \
+      -o check \
+      -ldflags "-X main.version=${VERSION}" \
+      ./cmd/check
+  GOOS="${GOOS}" go build \
+      -o in \
+      -ldflags "-X main.version=${VERSION}" \
+      ./cmd/in
+  GOOS="${GOOS}" go build \
+      -o out \
+      -ldflags "-X main.version=${VERSION}" \
+      ./cmd/out
 popd > /dev/null

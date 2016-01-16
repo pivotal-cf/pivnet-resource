@@ -47,6 +47,7 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	fmt.Fprintf(logFile, "PivNet Resource version: %s\n", version)
 
 	fmt.Fprintf(os.Stderr, "logging to %s\n", logFile.Name())
 
