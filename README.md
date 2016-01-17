@@ -145,7 +145,12 @@ release creation will fail.
   e.g. `pivotal_software_eula`
 
 * `description_file`: *Optional.* File containing the free-form description text.
-  e.g. `The description for this release. May contain line breaks.`
+  e.g.
+  ```
+  The description for this release.
+
+  May contain line breaks.
+  ```
 
 ## Developing
 
