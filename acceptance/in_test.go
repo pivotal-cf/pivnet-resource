@@ -67,6 +67,16 @@ var _ = Describe("In", func() {
 
 		By("Validating output contains correct product version")
 		Expect(response.Version.ProductVersion).To(Equal(productVersion))
+
+		By("Validing the returned metadata is present")
+		_, err = metadataValueForKey(response.Metadata, "release_type")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = metadataValueForKey(response.Metadata, "release_date")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = metadataValueForKey(response.Metadata, "description")
+		Expect(err).ShouldNot(HaveOccurred())
 	})
 
 	It("successfully downloads all of the files in the specified release", func() {

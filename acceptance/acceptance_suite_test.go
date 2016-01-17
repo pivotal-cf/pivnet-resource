@@ -14,6 +14,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 
@@ -234,4 +235,13 @@ func run(command *exec.Cmd, stdinContents []byte) *gexec.Session {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return session
+}
+
+func metadataValueForKey(metadata []concourse.Metadata, name string) (string, error) {
+	for _, i := range metadata {
+		if i.Name == name {
+			return i.Value, nil
+		}
+	}
+	return "", fmt.Errorf("name not found: %s", name)
 }

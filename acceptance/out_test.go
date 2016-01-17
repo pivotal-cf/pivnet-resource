@@ -546,13 +546,3 @@ func stringInSlice(a string, list []string) bool {
 	}
 	return false
 }
-
-func metadataValueForKey(metadata []concourse.Metadata, name string) (string, error) {
-	for _, i := range metadata {
-		if i.Name == name {
-			return i.Value, nil
-		}
-	}
-	return "", fmt.Errorf("name not found: %s", name)
-
-}

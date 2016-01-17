@@ -109,7 +109,12 @@ func main() {
 		Version: concourse.Version{
 			ProductVersion: productVersion,
 		},
-		Metadata: []concourse.Metadata{},
+		Metadata: []concourse.Metadata{
+			{Name: "release_type", Value: release.ReleaseType},
+			{Name: "release_date", Value: release.ReleaseDate},
+			{Name: "description", Value: release.Description},
+			{Name: "eula_slug", Value: release.Eula.Slug},
+		},
 	}
 
 	err = json.NewEncoder(os.Stdout).Encode(out)
