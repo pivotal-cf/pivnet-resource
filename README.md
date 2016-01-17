@@ -87,11 +87,8 @@ Discovers all versions of the provided product.
 
 ### `in`: Download the product from Pivotal Network.
 
-Downloads the provided product from Pivotal Network. Any EULAs must have already
-been signed. Due to caching, it is advisable to sign the EULAs before the first
-execution of `in` (i.e. the first `get` in the pipeline) as the failed download
-of the resource will be cached and therefore retrospectively signing the EULA
-will have no effect.
+Downloads the provided product from Pivotal Network. **Any EULAs that have not
+already been accepted will be automatically accepted at this point.**
 
 #### Parameters
 
@@ -185,7 +182,7 @@ for more details on obtaining a Pivotal Network API token.
 
 The tests also require that you build the s3 resource out as a binary.
 Grab the source for that [here](https://github.com/concourse/s3-resource).
-You will point to this binary with S3_OUT_LOCATION
+You will point to this binary with `S3_OUT_LOCATION`
 
 For the AWS S3 configuration, as the tests will actually upload a few small test
 files to the specified S3 bucket, ensure the bucket is already created and
