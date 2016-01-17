@@ -72,10 +72,16 @@ func main() {
 	)
 
 	productVersion := input.Version.ProductVersion
+	productSlug := input.Source.ProductSlug
 
-	release, err := client.GetRelease(input.Source.ProductSlug, productVersion)
+	release, err := client.GetRelease(productSlug, productVersion)
 	if err != nil {
 		log.Fatalf("Failed to get Release: %s\n", err.Error())
+	}
+
+	err = client.AcceptEULA(productSlug, release.ID)
+	if err != nil {
+		log.Fatalf("EULA acceptance failed for the release: %s\n", err.Error())
 	}
 
 	productFiles, err := client.GetProductFiles(release)

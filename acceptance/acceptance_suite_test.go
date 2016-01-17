@@ -75,9 +75,8 @@ var _ = BeforeSuite(func() {
 	outPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/out", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
-	By("Compiling out binary")
-	inPath, err = gexec.Build(
-		"github.com/pivotal-cf-experimental/pivnet-resource/cmd/in", "-race")
+	By("Compiling in binary")
+	inPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/in", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Copying s3-out to compilation location")

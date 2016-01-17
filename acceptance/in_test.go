@@ -118,11 +118,10 @@ var _ = Describe("In", func() {
 
 	Context("when globs are provided", func() {
 		It("downloads only the files that match the glob", func() {
-
 			By("setting the glob")
-			inRequest.Source.ProductSlug = "p-data-sync"
-			inRequest.Version.ProductVersion = "1.1.2.0"
-			inRequest.Params.Globs = []string{"*PCFData-1.1.0.a*"}
+			inRequest.Source.ProductSlug = "pivnet-resource-test"
+			inRequest.Version.ProductVersion = "0.0.0"
+			inRequest.Params.Globs = []string{"*.jpg"}
 
 			globStdInRequest, err := json.Marshal(inRequest)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -136,19 +135,16 @@ var _ = Describe("In", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			By("Validating number of downloaded files")
-			files, err := dataDir.Readdir(6)
+			files, err := dataDir.Readdir(2)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(files).To(HaveLen(2))
 
 			By("Validating files have non-zero-length content")
-			var fileNames []string
 			for _, f := range files {
-				fileNames = append(fileNames, f.Name())
-				Expect(f.Size()).ToNot(BeZero())
+				if f.Name() == "5375828702_2832ae812c_b.jpg" {
+					Expect(f.Size()).To(Equal(int64(329795)))
+				}
 			}
-
-			By("Validating filenames are correct")
-			Expect(fileNames).To(ContainElement("PCFData-1.1.0.aar"))
 		})
 	})
 })

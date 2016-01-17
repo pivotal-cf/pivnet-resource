@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 )
@@ -20,6 +21,7 @@ type Client interface {
 	GetRelease(string, string) (Release, error)
 	UpdateRelease(string, Release) error
 	GetProductFiles(Release) (ProductFiles, error)
+	AcceptEULA(productSlug string, releaseID int) error
 	CreateProductFile(config CreateProductFileConfig) (ProductFile, error)
 	DeleteProductFile(productSlug string, id int) (ProductFile, error)
 	AddProductFile(productId int, releaseID int, productFileID int) error
@@ -71,6 +73,24 @@ func (c client) ProductVersions(id string) ([]string, error) {
 	return versions, nil
 }
 
+func (c client) AcceptEULA(productSlug string, releaseID int) error {
+	url := fmt.Sprintf("%s/products/%s/releases/%d/eula_acceptance", c.url,
+		productSlug, releaseID)
+
+	var response EulaResponse
+	err := c.makeRequest(
+		"POST",
+		url,
+		http.StatusOK,
+		strings.NewReader(`{}`),
+		&response,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (c client) makeRequest(requestType string, url string, expectedStatusCode int, body io.Reader, data interface{}) error {
 	req, err := http.NewRequest(requestType, url, body)

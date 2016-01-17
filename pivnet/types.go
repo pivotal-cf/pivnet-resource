@@ -31,6 +31,11 @@ type Eula struct {
 	Links   *Links `json:"_links,omitempty"`
 }
 
+type EulaResponse struct {
+	AcceptedAt string `json:"accepted_at,omitempty"`
+	Links      *Links `json:"_links,omitempty"`
+}
+
 type ProductFiles struct {
 	ProductFiles []ProductFile `json:"product_files,omitempty"`
 }
@@ -46,6 +51,7 @@ type ProductFile struct {
 }
 
 type Links struct {
+	Eula           map[string]string `json:"eula,omitempty"`
 	Download       map[string]string `json:"download,omitempty"`
 	ProductFiles   map[string]string `json:"product_files,omitempty"`
 	EULAAcceptance map[string]string `json:"eula_acceptance,omitempty"`

@@ -470,6 +470,28 @@ var _ = Describe("Out", func() {
 					Expect(sourceFileNames).To(ContainElement(p.Name))
 				}
 
+				By("Downloading the files via the In CMD")
+				inRequest := concourse.InRequest{
+					Source: concourse.Source{
+						APIToken:    pivnetAPIToken,
+						ProductSlug: productSlug,
+					},
+					Version: concourse.Version{
+						ProductVersion: productVersion,
+					},
+				}
+
+				destDirectory, err := ioutil.TempDir("", "pivnet-out-test")
+				Expect(err).NotTo(HaveOccurred())
+
+				stdinContents, err = json.Marshal(inRequest)
+				Expect(err).NotTo(HaveOccurred())
+
+				downloadCmd := exec.Command(inPath, destDirectory)
+
+				downloadSession := run(downloadCmd, stdinContents)
+				Eventually(downloadSession, executableTimeout).Should(gexec.Exit(0))
+
 				By("Deleting created files on pivnet")
 				for _, p := range newProductFiles {
 					_, err := pivnetClient.DeleteProductFile(productSlug, p.ID)
