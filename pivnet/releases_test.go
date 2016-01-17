@@ -2,6 +2,7 @@ package pivnet_test
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -44,7 +45,7 @@ var _ = Describe("PivnetClient - product files", func() {
 		server.Close()
 	})
 
-	Describe("Get Release", func() {
+	Describe("GetRelease", func() {
 		It("returns the release based on the name and version", func() {
 			response := `{"releases": [{"id": 3, "version": "3.2.1", "_links": {"product_files": {"href":"https://banana.org/cookies/download"}}}]}`
 
@@ -130,7 +131,7 @@ var _ = Describe("PivnetClient - product files", func() {
 						OSSCompliant: "confirm",
 						ReleaseDate:  expectedReleaseDate,
 						ReleaseType:  createReleaseConfig.ReleaseType,
-						Eula: pivnet.Eula{
+						Eula: &pivnet.Eula{
 							Slug: createReleaseConfig.EulaSlug,
 						},
 						Version: createReleaseConfig.ProductVersion,
@@ -246,6 +247,48 @@ var _ = Describe("PivnetClient - product files", func() {
 				_, err := client.CreateRelease(createReleaseConfig)
 				Expect(err).To(MatchError(errors.New(
 					"Pivnet returned status code: 418 for the request - expected 201")))
+			})
+		})
+	})
+
+	Describe("UpdateRelease", func() {
+		It("submits the updated values for a release", func() {
+			release := pivnet.Release{
+				ID: 42,
+				Eula: &pivnet.Eula{
+					Slug: "some-eula",
+					ID:   15,
+				},
+			}
+
+			patchURL := fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, "banana-slug", release.ID)
+
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("PATCH", patchURL),
+					ghttp.VerifyJSON(`{"release":{"id": 42, "eula":{"slug":"some-eula","id":15}}}`),
+					ghttp.RespondWith(http.StatusOK, nil),
+				),
+			)
+
+			Expect(client.UpdateRelease("banana-slug", release)).To(Succeed())
+		})
+
+		Context("when the server responds with a non-200 status code", func() {
+			It("returns the error", func() {
+				release := pivnet.Release{ID: 111}
+				patchURL := fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, "banana-slug", release.ID)
+
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("PATCH", patchURL),
+						ghttp.RespondWith(http.StatusTeapot, nil),
+					),
+				)
+
+				err := client.UpdateRelease("banana-slug", release)
+				Expect(err).To(MatchError(errors.New(
+					"Pivnet returned status code: 418 for the request - expected 200")))
 			})
 		})
 	})

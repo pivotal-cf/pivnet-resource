@@ -15,12 +15,12 @@ type ProductFileResponse struct {
 type Release struct {
 	ID           int    `json:"id,omitempty"`
 	Availability string `json:"availability,omitempty"`
-	Eula         Eula   `json:"eula,omitempty"`
+	Eula         *Eula  `json:"eula,omitempty"`
 	OSSCompliant string `json:"oss_compliant,omitempty"`
 	ReleaseDate  string `json:"release_date,omitempty"`
 	ReleaseType  string `json:"release_type,omitempty"`
 	Version      string `json:"version,omitempty"`
-	Links        Links  `json:"_links,omitempty"`
+	Links        *Links `json:"_links,omitempty"`
 	Description  string `json:"description,omitempty"`
 }
 
@@ -28,7 +28,7 @@ type Eula struct {
 	Slug    string `json:"slug,omitempty"`
 	ID      int    `json:"id,omitempty"`
 	Version string `json:"version,omitempty"`
-	Links   Links  `json:"_links,omitempty"`
+	Links   *Links `json:"_links,omitempty"`
 }
 
 type ProductFiles struct {
@@ -46,8 +46,9 @@ type ProductFile struct {
 }
 
 type Links struct {
-	Download     map[string]string `json:"download,omitempty"`
-	ProductFiles map[string]string `json:"product_files,omitempty"`
+	Download       map[string]string `json:"download,omitempty"`
+	ProductFiles   map[string]string `json:"product_files,omitempty"`
+	EULAAcceptance map[string]string `json:"eula_acceptance,omitempty"`
 }
 
 type Product struct {

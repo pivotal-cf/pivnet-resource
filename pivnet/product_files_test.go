@@ -62,7 +62,7 @@ var _ = Describe("PivnetClient - product files", func() {
 			)
 
 			release := pivnet.Release{
-				Links: pivnet.Links{
+				Links: &pivnet.Links{
 					ProductFiles: map[string]string{"href": apiAddress + "/products/banana/releases/666/product_files"},
 				},
 			}
@@ -87,7 +87,7 @@ var _ = Describe("PivnetClient - product files", func() {
 					),
 				)
 				release := pivnet.Release{
-					Links: pivnet.Links{
+					Links: &pivnet.Links{
 						ProductFiles: map[string]string{"href": apiAddress + "/products/banana/releases/666/product_files"},
 					},
 				}

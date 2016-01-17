@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+type createReleaseBody struct {
+	Release Release `json:"release"`
+}
+
 type CreateReleaseConfig struct {
 	ProductSlug    string
 	ProductVersion string
@@ -23,13 +27,7 @@ func (c client) GetRelease(productSlug, version string) (Release, error) {
 	url := c.url + "/products/" + productSlug + "/releases"
 
 	var response Response
-	err := c.makeRequest(
-		"GET",
-		url,
-		http.StatusOK,
-		nil,
-		&response,
-	)
+	err := c.makeRequest("GET", url, http.StatusOK, nil, &response)
 	if err != nil {
 		return Release{}, err
 	}
@@ -55,7 +53,7 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 	body := createReleaseBody{
 		Release: Release{
 			Availability: "Admins Only",
-			Eula: Eula{
+			Eula: &Eula{
 				Slug: config.EulaSlug,
 			},
 			OSSCompliant: "confirm",
@@ -78,13 +76,7 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 	}
 
 	var response CreateReleaseResponse
-	err = c.makeRequest(
-		"POST",
-		url,
-		http.StatusCreated,
-		bytes.NewReader(b),
-		&response,
-	)
+	err = c.makeRequest("POST", url, http.StatusCreated, bytes.NewReader(b), &response)
 	if err != nil {
 		return Release{}, err
 	}
@@ -92,6 +84,22 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 	return response.Release, nil
 }
 
-type createReleaseBody struct {
-	Release Release `json:"release"`
+func (c client) UpdateRelease(productSlug string, release Release) error {
+	url := fmt.Sprintf("%s/products/%s/releases/%d", c.url, productSlug, release.ID)
+
+	var updatedRelease = createReleaseBody{
+		Release: release,
+	}
+
+	body, err := json.Marshal(updatedRelease)
+	if err != nil {
+		panic(err)
+	}
+
+	err = c.makeRequest("PATCH", url, http.StatusOK, bytes.NewReader(body), nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -18,6 +18,7 @@ type Client interface {
 	ProductVersions(string) ([]string, error)
 	CreateRelease(config CreateReleaseConfig) (Release, error)
 	GetRelease(string, string) (Release, error)
+	UpdateRelease(string, Release) error
 	GetProductFiles(Release) (ProductFiles, error)
 	CreateProductFile(config CreateProductFileConfig) (ProductFile, error)
 	DeleteProductFile(productSlug string, id int) (ProductFile, error)
@@ -70,13 +71,8 @@ func (c client) ProductVersions(id string) ([]string, error) {
 	return versions, nil
 }
 
-func (c client) makeRequest(
-	requestType string,
-	url string,
-	expectedStatusCode int,
-	body io.Reader,
-	data interface{},
-) error {
+
+func (c client) makeRequest(requestType string, url string, expectedStatusCode int, body io.Reader, data interface{}) error {
 	req, err := http.NewRequest(requestType, url, body)
 	if err != nil {
 		return err
