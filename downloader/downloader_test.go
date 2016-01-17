@@ -109,6 +109,44 @@ var _ = Describe("Downloader", func() {
 			})
 		})
 
+		Context("when the user has not accepted the EULA", func() {
+			It("raises an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/the-first-post", ""),
+						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
+						ghttp.RespondWith(451, nil, nil),
+					),
+				)
+
+				fileNames := map[string]string{
+					"the-first-post": apiAddress + "/the-first-post",
+				}
+
+				err := downloader.Download(dir, fileNames, token)
+				Expect(err).To(MatchError("the EULA has not been accepted for the file: the-first-post"))
+			})
+		})
+
+		Context("when Pivnet returns any other non 302", func() {
+			It("raises an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/the-first-post", ""),
+						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
+						ghttp.RespondWith(http.StatusUnauthorized, nil, nil),
+					),
+				)
+
+				fileNames := map[string]string{
+					"the-first-post": apiAddress + "/the-first-post",
+				}
+
+				err := downloader.Download(dir, fileNames, token)
+				Expect(err).To(MatchError("pivnet returned an error code of 401 for the file: the-first-post"))
+			})
+		})
+
 		Context("when it fails to make a request", func() {
 			It("raises an error", func() {
 				Expect(downloader.Download(

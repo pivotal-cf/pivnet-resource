@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -20,6 +21,14 @@ func Download(downloadDir string, downloadLinks map[string]string, token string)
 		response, err := client.Do(req)
 		if err != nil {
 			return err
+		}
+
+		if response.StatusCode == 451 {
+			return errors.New(fmt.Sprintf("the EULA has not been accepted for the file: %s", fileName))
+		}
+
+		if response.StatusCode != http.StatusOK {
+			return errors.New(fmt.Sprintf("pivnet returned an error code of %d for the file: %s", response.StatusCode, fileName))
 		}
 
 		responseBody, err := ioutil.ReadAll(response.Body)
