@@ -92,14 +92,19 @@ already been accepted will be automatically accepted at this point.**
 
 #### Parameters
 
-None.
+* `globs`: *Optional.* Array of globs matching files to download.
+  If multiple files are matched, they are all downloaded. If no files are matched,
+  release download fails with error.
+  The globs match on the actual *file names*, not the display names in Pivotal
+  Network. This is to provide a more consistent experience between uploading and
+  downloading files.
 
 ### `out`: Upload a product to Pivotal Network.
 
 Creates a new release on Pivotal Network with the provided version and metadata.
 
 Also optionally uploads one or more files to the Pivotal Network bucket under
-the provided filepath, adding them both to the Pivotal Network as well as to
+the provided `s3_filepath_prefix`, adding them both to the Pivotal Network as well as to
 the newly-created release.
 
 #### Parameters
@@ -138,7 +143,7 @@ release creation will fail.
   `YYYY-MM-DD`.
   If it is not present, the release date will be set to the current date.
 
-* `eula_slug_file`: *Required.* File containing the eula slug
+* `eula_slug_file`: *Required.* File containing the EULA slug
   e.g. `pivotal_software_eula`
 
 * `description_file`: *Optional.* File containing the free-form description text.
@@ -181,8 +186,8 @@ Refer to the
 for more details on obtaining a Pivotal Network API token.
 
 The tests also require that you build the s3 resource out as a binary.
-Grab the source for that [here](https://github.com/concourse/s3-resource).
-You will point to this binary with `S3_OUT_LOCATION`
+The source for that can be found [here](https://github.com/concourse/s3-resource).
+`S3_OUT_LOCATION` should be set to the location of the compiled binary.
 
 For the AWS S3 configuration, as the tests will actually upload a few small test
 files to the specified S3 bucket, ensure the bucket is already created and
