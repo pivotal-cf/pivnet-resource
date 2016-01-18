@@ -207,8 +207,10 @@ S3_FILEPATH_PREFIX=Case-Sensitive-Path-eg-Pivotal-Diego-PCF \
 ./scripts/test
 ```
 
-### CI
+### Project management
 
 The CI for this project can be found at https://sunrise.ci.cf-app.com and the
 scripts can be found in the
 [sunrise-ci repo](https://github.com/pivotal-cf-experimental/sunrise-ci).
+
+The roadmap is captured in [Pivotal Tracker](https://www.pivotaltracker.com/projects/1474244).
