@@ -34,11 +34,11 @@ repository.
 ``` yaml
 ---
 resources:
-- name: p-gitlab-pivnet
+- name: stemcells
   type: pivnet
   source:
     api_token: my-api-token
-    product_slug: p-gitlab
+    product_slug: stemcells
 ```
 
 #### Get
@@ -48,9 +48,13 @@ Resource configuration as above for Check, with the following job configuration.
 ``` yaml
 ---
 jobs:
-- name: download-p-gitlab-pivnet
+- name: download-aws-and-vsphere-stemcells
   plan:
-  - get: p-gitlab-pivnet
+  - get: stemcells
+    params:
+      globs:
+      - "*aws*"
+      - "*vsphere*"
 ```
 
 #### Put
