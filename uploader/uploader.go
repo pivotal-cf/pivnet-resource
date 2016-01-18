@@ -54,11 +54,11 @@ func (c client) Upload() (map[string]string, error) {
 	if err != nil {
 		panic(err)
 	}
-	c.logger.Debugf("abs path to sourcesDir: %s\n", absPathSourcesDir)
+	c.logger.Debugf("Absolute path to sourcesDir: %s\n", absPathSourcesDir)
 
 	filenamePaths := make(map[string]string)
 	for _, match := range matches {
-		c.logger.Debugf("matched file: %v\n", match)
+		c.logger.Debugf("Matched file: %s\n", match)
 
 		absPath, err := filepath.Abs(match)
 		if err != nil {
@@ -69,7 +69,12 @@ func (c client) Upload() (map[string]string, error) {
 		if err != nil {
 			panic(err)
 		}
-		c.logger.Debugf("exact glob: %s\n", exactGlob)
+
+		c.logger.Debugf(
+			"Exact glob: %s for file %s\n",
+			exactGlob,
+			match,
+		)
 
 		filename := filepath.Base(match)
 		remoteDir := "product_files/" + c.filepathPrefix + "/"
@@ -83,6 +88,7 @@ func (c client) Upload() (map[string]string, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		filenamePaths[filename] = remotePath
 	}
 

@@ -59,7 +59,7 @@ func main() {
 	token := input.Source.APIToken
 	mustBeNonEmpty(token, "api_token")
 
-	l.Debugf("received input: %+v\n", input)
+	l.Debugf("Received input: %+v\n", input)
 
 	clientConfig := pivnet.NewClientConfig{
 		URL:       pivnet.URL,
@@ -74,24 +74,51 @@ func main() {
 	productVersion := input.Version.ProductVersion
 	productSlug := input.Source.ProductSlug
 
+	l.Debugf(
+		"Getting release: {product_slug: %s, product_version: %s}\n",
+		productSlug,
+		productVersion,
+	)
+
 	release, err := client.GetRelease(productSlug, productVersion)
 	if err != nil {
 		log.Fatalf("Failed to get Release: %s\n", err.Error())
 	}
+
+	l.Debugf(
+		"Accepting EULA: {product_slug: %s, release_id: %d}\n",
+		productSlug,
+		release.ID,
+	)
 
 	err = client.AcceptEULA(productSlug, release.ID)
 	if err != nil {
 		log.Fatalf("EULA acceptance failed for the release: %s\n", err.Error())
 	}
 
+	l.Debugf(
+		"Getting product files: {release_id: %d}\n",
+		release.ID,
+	)
+
 	productFiles, err := client.GetProductFiles(release)
 	if err != nil {
 		log.Fatalf("Failed to get Product Files: %s\n", err.Error())
 	}
 
+	l.Debugf(
+		"Getting download links: {product_files: %+v}\n",
+		productFiles,
+	)
+
 	downloadLinks := filter.DownloadLinks(productFiles)
 
 	if len(input.Params.Globs) > 0 {
+		l.Debugf(
+			"Filtering download links with globs: {globs: %+v}\n",
+			input.Params.Globs,
+		)
+
 		var err error
 		downloadLinks, err = filter.DownloadLinksByGlob(downloadLinks, input.Params.Globs)
 		if err != nil {
@@ -99,12 +126,24 @@ func main() {
 		}
 	}
 
+	l.Debugf(
+		"Downloading files: {download_links: %+v, download_dir: %s}\n",
+		downloadLinks,
+		downloadDir,
+	)
+
 	err = downloader.Download(downloadDir, downloadLinks, token)
 	if err != nil {
 		log.Fatalf("Failed to Download Files: %s\n", err.Error())
 	}
 
 	versionFilepath := filepath.Join(downloadDir, "version")
+
+	l.Debugf(
+		"Writing version to file: {version: %s, version_filepath: %s}\n",
+		version,
+		versionFilepath,
+	)
 
 	err = ioutil.WriteFile(versionFilepath, []byte(productVersion), os.ModePerm)
 	if err != nil {
@@ -122,6 +161,8 @@ func main() {
 			{Name: "eula_slug", Value: release.Eula.Slug},
 		},
 	}
+
+	l.Debugf("Returning output: %+v\n", out)
 
 	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {

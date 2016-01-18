@@ -67,7 +67,11 @@ func (c client) Upload(fileGlob string, to string, sourcesDir string) error {
 		},
 	}
 
-	c.logger.Debugf("input to s3out: %+v, sourcesDir: %s\n", s3Input, sourcesDir)
+	c.logger.Debugf(
+		"Input to s3out: %+v, sourcesDir: %s\n",
+		s3Input,
+		sourcesDir,
+	)
 
 	cmd := exec.Command(c.outBinaryPath, sourcesDir)
 

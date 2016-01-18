@@ -67,7 +67,9 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 	if config.ReleaseDate == "" {
 		body.Release.ReleaseDate = time.Now().Format("2006-01-02")
 		c.logger.Debugf(
-			"no release date found - defaulting to %s\n", body.Release.ReleaseDate)
+			"No release date found - defaulting to %s\n",
+			body.Release.ReleaseDate,
+		)
 	}
 
 	b, err := json.Marshal(body)

@@ -77,7 +77,7 @@ func main() {
 		mustBeNonEmpty(input.Params.FilepathPrefix, "s3_filepath_prefix")
 	}
 
-	l.Debugf("received input: %+v\n", input)
+	l.Debugf("Received input: %+v\n", input)
 
 	clientConfig := pivnet.NewClientConfig{
 		URL:       pivnet.URL,
@@ -106,7 +106,7 @@ func main() {
 	}
 
 	if skipUpload {
-		l.Debugf("file glob and s3_filepath_prefix not provided - skipping upload to s3")
+		l.Debugf("File glob and s3_filepath_prefix not provided - skipping upload to s3")
 	} else {
 		s3Client := s3.NewClient(s3.NewClientConfig{
 			AccessKeyID:     input.Source.AccessKeyID,
@@ -139,16 +139,31 @@ func main() {
 				log.Fatalln(err)
 			}
 
+			l.Debugf(
+				"Creating product file: {product_slug: %s, filename: %s, aws_object_key: %s, file_version: %s}\n",
+				productSlug,
+				filename,
+				remotePath,
+				release.Version,
+			)
+
 			productFile, err := pivnetClient.CreateProductFile(pivnet.CreateProductFileConfig{
 				ProductSlug:  productSlug,
 				Name:         filename,
 				AWSObjectKey: remotePath,
 				FileVersion:  release.Version,
 			})
-
 			if err != nil {
 				log.Fatalln(err)
 			}
+
+			l.Debugf(
+				"Adding product file: {product_slug: %s, product_id: %d, filename: %s, product_file_id: %d}\n",
+				productSlug,
+				product.ID,
+				filename,
+				productFile.ID,
+			)
 
 			err = pivnetClient.AddProductFile(product.ID, release.ID, productFile.ID)
 			if err != nil {
@@ -173,7 +188,7 @@ func main() {
 		},
 	}
 
-	l.Debugf("returning output: %+v\n", out)
+	l.Debugf("Returning output: %+v\n", out)
 
 	err = json.NewEncoder(os.Stdout).Encode(out)
 	if err != nil {
