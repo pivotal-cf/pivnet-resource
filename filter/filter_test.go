@@ -70,8 +70,20 @@ var _ = Describe("Filter", func() {
 
 			_, err := filter.DownloadLinksByGlob(downloadLinks, []string{"*ios*"})
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError("no files match glob"))
+			Expect(err).To(MatchError("no files match glob: *ios*"))
 
+		})
+	})
+
+	Describe("When a glob that matches a file and glob that does not match a file", func() {
+		It("returns an error", func() {
+			downloadLinks := map[string]string{
+				"android-file.zip": "/products/banana/releases/666/product_files/6/download",
+			}
+
+			_, err := filter.DownloadLinksByGlob(downloadLinks, []string{"android-file.zip", "does-not-exist.txt"})
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("no files match glob: does-not-exist.txt"))
 		})
 	})
 })

@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 )
@@ -145,6 +146,27 @@ var _ = Describe("In", func() {
 					Expect(f.Size()).To(Equal(int64(329795)))
 				}
 			}
+		})
+	})
+
+	Context("when two globs are provided", func() {
+		Context("when one glob matches and one does not", func() {
+			It("should see a job error", func() {
+				By("setting the glob")
+				inRequest.Source.ProductSlug = "pivnet-resource-test"
+				inRequest.Version.ProductVersion = "0.0.0"
+				inRequest.Params.Globs = []string{"*.jpg", "*.txt"}
+
+				globStdInRequest, err := json.Marshal(inRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				By("Running the command")
+				session := run(command, globStdInRequest)
+				Eventually(session, executableTimeout).Should(gexec.Exit(1))
+
+				By("Verifying stderr of command")
+				Eventually(session.Err).Should(gbytes.Say("Failed to filter Product Files: no files match glob: "))
+			})
 		})
 	})
 })

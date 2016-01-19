@@ -1,7 +1,7 @@
 package filter
 
 import (
-	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -12,6 +12,8 @@ func DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[st
 	filtered := make(map[string]string)
 
 	for _, pattern := range glob {
+		prevFilteredCount := len(filtered)
+
 		for file, downloadLink := range downloadLinks {
 			matched, err := filepath.Match(pattern, file)
 			if err != nil {
@@ -21,10 +23,10 @@ func DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[st
 				filtered[file] = downloadLink
 			}
 		}
-	}
 
-	if len(filtered) == 0 {
-		return nil, errors.New("no files match glob")
+		if len(filtered) == prevFilteredCount {
+			return nil, fmt.Errorf("no files match glob: %s", pattern)
+		}
 	}
 
 	return filtered, nil
