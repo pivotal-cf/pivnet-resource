@@ -80,7 +80,7 @@ var _ = Describe("In", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	It("successfully downloads all of the files in the specified release", func() {
+	It("does not download any of the files in the specified release", func() {
 		By("Running the command")
 		session := run(command, stdinContents)
 		Eventually(session, executableTimeout).Should(gexec.Exit(0))
@@ -89,19 +89,9 @@ var _ = Describe("In", func() {
 		dataDir, err := os.Open(destDirectory)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		By("Validating number of downloaded files")
-		files, err := dataDir.Readdir(2)
+		By("Validating number of downloaded files is zero")
+		_, err = dataDir.Readdir(0)
 		Expect(err).ShouldNot(HaveOccurred())
-
-		By("Validating files have non-zero-length content")
-		var fileNames []string
-		for _, f := range files {
-			fileNames = append(fileNames, f.Name())
-			Expect(f.Size()).ToNot(BeZero())
-		}
-
-		By("Validating filenames are correct")
-		Expect(fileNames).To(ContainElement("setup.ps1"))
 	})
 
 	It("creates a version file with the downloaded version", func() {

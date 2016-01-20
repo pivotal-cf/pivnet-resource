@@ -124,17 +124,17 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to filter Product Files: %s\n", err.Error())
 		}
-	}
 
-	l.Debugf(
-		"Downloading files: {download_links: %+v, download_dir: %s}\n",
-		downloadLinks,
-		downloadDir,
-	)
+		l.Debugf(
+			"Downloading files: {download_links: %+v, download_dir: %s}\n",
+			downloadLinks,
+			downloadDir,
+		)
 
-	err = downloader.Download(downloadDir, downloadLinks, token)
-	if err != nil {
-		log.Fatalf("Failed to Download Files: %s\n", err.Error())
+		err = downloader.Download(downloadDir, downloadLinks, token)
+		if err != nil {
+			log.Fatalf("Failed to Download Files: %s\n", err.Error())
+		}
 	}
 
 	versionFilepath := filepath.Join(downloadDir, "version")
