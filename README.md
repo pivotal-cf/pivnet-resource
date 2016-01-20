@@ -102,6 +102,7 @@ already been accepted will be automatically accepted at this point.**
   The globs match on the actual *file names*, not the display names in Pivotal
   Network. This is to provide a more consistent experience between uploading and
   downloading files.
+  If `globs` is not provided, no files will be downloaded.
 
 ### `out`: Upload a product to Pivotal Network.
 
