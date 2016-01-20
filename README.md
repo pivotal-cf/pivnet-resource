@@ -97,8 +97,8 @@ already been accepted will be automatically accepted at this point.**
 #### Parameters
 
 * `globs`: *Optional.* Array of globs matching files to download.
-  If multiple files are matched, they are all downloaded. If no files are matched,
-  release download fails with error.
+  If multiple files are matched, they are all downloaded. If one or more globs
+  fails to match any files the release download fails with error.
   The globs match on the actual *file names*, not the display names in Pivotal
   Network. This is to provide a more consistent experience between uploading and
   downloading files.
