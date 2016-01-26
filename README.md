@@ -73,7 +73,7 @@ resources:
     access_key_id: my-aws-access-key-id
     secret_access_key: my-aws-secret-access-key
 
----
+
 jobs:
 - name: create-p-gitlab-pivnet
   plan:
@@ -170,22 +170,22 @@ A valid install of golang >= 1.4 is required.
 
 ### Dependencies
 
-There are no external dependencies for the resource.
-The test dependencies are vendored using [godep](https://github.com/tools/godep).
-Install godep and the ginkgo executable with:
+Dependencies are vendored using [godep](https://github.com/tools/godep).
 
-```
-go get -u github.com/tools/godep
-go get -u github.com/onsi/ginkgo/ginkgo
-```
-
-Restore dependencies with:
+Restore the dependencies with:
 
 ```
 godep restore
 ```
 
 ### Running the tests
+
+Install godep and the ginkgo executable with:
+
+```
+go get -u github.com/tools/godep
+go get -u github.com/onsi/ginkgo/ginkgo
+```
 
 The tests require a valid Pivotal Network API token and valid AWS S3 configuration.
 
