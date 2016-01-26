@@ -17,6 +17,9 @@ repository and in the
 [BOSH release](https://github.com/pivotal-cf-experimental/pivnet-resource-boshrelease)
 repository.
 
+BOSH releases are available on
+[bosh.io](http://bosh.io/releases/github.com/pivotal-cf-experimental/pivnet-resource-boshrelease).
+
 ## Source Configuration
 
 * `api_token`: *Required.*  Token from your pivnet profile.
