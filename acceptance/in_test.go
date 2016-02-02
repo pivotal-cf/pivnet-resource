@@ -78,6 +78,9 @@ var _ = Describe("In", func() {
 
 		_, err = metadataValueForKey(response.Metadata, "description")
 		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = metadataValueForKey(response.Metadata, "release_notes_url")
+		Expect(err).ShouldNot(HaveOccurred())
 	})
 
 	It("does not download any of the files in the specified release", func() {

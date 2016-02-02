@@ -48,6 +48,9 @@ var _ = Describe("Out", func() {
 		descriptionFile = "description"
 		description     = "this release is for automated-testing only."
 
+		releaseNotesURLFile = "release_notes_url"
+		releaseNotesURL     = "http://zombo.com"
+
 		productSlug = "pivotal-diego-pcf"
 
 		command       *exec.Cmd
@@ -101,6 +104,13 @@ var _ = Describe("Out", func() {
 			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
+		By("Writing release notes URL to file")
+		err = ioutil.WriteFile(
+			filepath.Join(rootDir, releaseNotesURLFile),
+			[]byte(releaseNotesURL),
+			os.ModePerm)
+		Expect(err).ShouldNot(HaveOccurred())
+
 		By("Creating command object")
 		command = exec.Command(outPath, rootDir)
 
@@ -113,13 +123,14 @@ var _ = Describe("Out", func() {
 				ProductSlug:     productSlug,
 			},
 			Params: concourse.OutParams{
-				FileGlob:        "*",
-				FilepathPrefix:  s3FilepathPrefix,
-				VersionFile:     productVersionFile,
-				ReleaseTypeFile: releaseTypeFile,
-				ReleaseDateFile: releaseDateFile,
-				EulaSlugFile:    eulaSlugFile,
-				DescriptionFile: descriptionFile,
+				FileGlob:            "*",
+				FilepathPrefix:      s3FilepathPrefix,
+				VersionFile:         productVersionFile,
+				ReleaseTypeFile:     releaseTypeFile,
+				ReleaseDateFile:     releaseDateFile,
+				EulaSlugFile:        eulaSlugFile,
+				DescriptionFile:     descriptionFile,
+				ReleaseNotesURLFile: releaseNotesURLFile,
 			},
 		}
 
@@ -340,6 +351,7 @@ var _ = Describe("Out", func() {
 			Expect(release.ReleaseDate).To(Equal(releaseDate))
 			Expect(release.Eula.Slug).To(Equal(eulaSlug))
 			Expect(release.Description).To(Equal(description))
+			Expect(release.ReleaseNotesURL).To(Equal(releaseNotesURL))
 
 			By("Validing the returned metadata")
 			metadataReleaseType, err := metadataValueForKey(response.Metadata, "release_type")
@@ -353,6 +365,10 @@ var _ = Describe("Out", func() {
 			metadataDescription, err := metadataValueForKey(response.Metadata, "description")
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(metadataDescription).To(Equal(description))
+
+			metadataReleaseNotesURL, err := metadataValueForKey(response.Metadata, "release_notes_url")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(metadataReleaseNotesURL).To(Equal(releaseNotesURL))
 		})
 
 		Context("when S3 source and params are configured correctly", func() {

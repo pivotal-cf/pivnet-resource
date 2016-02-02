@@ -158,6 +158,7 @@ func main() {
 			{Name: "release_type", Value: release.ReleaseType},
 			{Name: "release_date", Value: release.ReleaseDate},
 			{Name: "description", Value: release.Description},
+			{Name: "release_notes_url", Value: release.ReleaseNotesURL},
 			{Name: "eula_slug", Value: release.Eula.Slug},
 		},
 	}
