@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
@@ -102,7 +103,13 @@ func (c client) makeRequest(requestType string, url string, expectedStatusCode i
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", c.token))
 	req.Header.Add("User-Agent", c.userAgent)
 
-	c.logger.Debugf("Making request: %+v\n", req)
+	reqBytes, err := httputil.DumpRequestOut(req, true)
+	if err != nil {
+		c.logger.Debugf("Error dumping request: %+v\n", err)
+		return err
+	}
+
+	c.logger.Debugf("Making request: %s\n", string(reqBytes))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		c.logger.Debugf("Error making request: %+v\n", err)
