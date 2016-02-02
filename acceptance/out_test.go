@@ -323,7 +323,7 @@ var _ = Describe("Out", func() {
 			Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
 			By("Validating new release exists on pivnet")
-			productVersions = getProductVersions("pivotal-diego-pcf")
+			productVersions = getProductVersions(productSlug)
 			Expect(productVersions).To(ContainElement(productVersion))
 
 			By("Outputting a valid json response")
