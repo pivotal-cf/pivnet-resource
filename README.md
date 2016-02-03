@@ -165,6 +165,12 @@ release creation will fail.
 * `release_notes_url_file`: *Optional.* File containing the release notes URL
   e.g. `http://url.to/release/notes`
 
+* `availability`: *Optional.* File containing the availability.
+  Will be read to determine the availability. Valid file contents are:
+  - Admins Only
+  - All Users
+  - Selected User Groups Only
+
 ## Developing
 
 ### Prerequisites

@@ -177,6 +177,18 @@ func main() {
 		}
 	}
 
+	availability := readStringContents(sourcesDir, input.Params.AvailabilityFile)
+	if availability != "Admins Only" {
+		releaseUpdate := pivnet.Release{
+			ID:           release.ID,
+			Availability: availability,
+		}
+		release, err = pivnetClient.UpdateRelease(productSlug, releaseUpdate)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
 	out := concourse.OutResponse{
 		Version: concourse.Version{
 			ProductVersion: release.Version,
@@ -187,6 +199,7 @@ func main() {
 			{Name: "description", Value: release.Description},
 			{Name: "release_notes_url", Value: release.ReleaseNotesURL},
 			{Name: "eula_slug", Value: release.Eula.Slug},
+			{Name: "availability", Value: release.Availability},
 		},
 	}
 

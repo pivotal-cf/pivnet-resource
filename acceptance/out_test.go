@@ -515,6 +515,62 @@ var _ = Describe("Out", func() {
 				}
 			})
 		})
+
+		Context("When the availability is not Admins Only", func() {
+			var (
+				availabilityFile = "availability"
+				availability     = "Selected User Groups Only"
+			)
+
+			BeforeEach(func() {
+				By("Writing availability to file")
+				err := ioutil.WriteFile(
+					filepath.Join(rootDir, availabilityFile),
+					[]byte(availability),
+					os.ModePerm)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				outRequest.Params.AvailabilityFile = availabilityFile
+			})
+
+			It("Creates a release and updates the availability", func() {
+				outRequest.Params.FileGlob = ""
+				outRequest.Params.FilepathPrefix = ""
+
+				var err error
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				By("Validating the new product version does not yet exist")
+				productVersions := getProductVersions(productSlug)
+				Expect(productVersions).NotTo(BeEmpty())
+				Expect(productVersions).NotTo(ContainElement(productVersion))
+
+				By("Running the command")
+				session := run(command, stdinContents)
+				Eventually(session, executableTimeout).Should(gexec.Exit(0))
+
+				By("Validating new release exists on pivnet")
+				productVersions = getProductVersions(productSlug)
+				Expect(productVersions).To(ContainElement(productVersion))
+
+				By("Outputting a valid json response")
+				response := concourse.OutResponse{}
+				err = json.Unmarshal(session.Out.Contents(), &response)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Expect(response.Version.ProductVersion).To(Equal(productVersion))
+
+				By("Validating the release was created correctly")
+				release := getPivnetRelease(productSlug, productVersion)
+				Expect(release.Availability).To(Equal(availability))
+
+				By("Validing the returned metadata")
+				metadataAvailability, err := metadataValueForKey(response.Metadata, "availability")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(metadataAvailability).To(Equal(availability))
+			})
+		})
 	})
 })
 
