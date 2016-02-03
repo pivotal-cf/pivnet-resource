@@ -88,8 +88,10 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 	return response.Release, nil
 }
 
-func (c client) UpdateRelease(productSlug string, release Release) error {
+func (c client) UpdateRelease(productSlug string, release Release) (Release, error) {
 	url := fmt.Sprintf("%s/products/%s/releases/%d", c.url, productSlug, release.ID)
+
+	release.OSSCompliant = "confirm"
 
 	var updatedRelease = createReleaseBody{
 		Release: release,
@@ -100,10 +102,11 @@ func (c client) UpdateRelease(productSlug string, release Release) error {
 		panic(err)
 	}
 
-	err = c.makeRequest("PATCH", url, http.StatusOK, bytes.NewReader(body), nil)
+	var response CreateReleaseResponse
+	err = c.makeRequest("PATCH", url, http.StatusOK, bytes.NewReader(body), &response)
 	if err != nil {
-		return err
+		return Release{}, err
 	}
 
-	return nil
+	return response.Release, nil
 }

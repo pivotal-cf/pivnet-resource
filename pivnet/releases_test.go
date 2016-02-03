@@ -304,9 +304,10 @@ var _ = Describe("PivnetClient - product files", func() {
 	})
 
 	Describe("UpdateRelease", func() {
-		It("submits the updated values for a release", func() {
+		It("submits the updated values for a release with OSS compliance", func() {
 			release := pivnet.Release{
-				ID: 42,
+				ID:      42,
+				Version: "1.2.3.4",
 				Eula: &pivnet.Eula{
 					Slug: "some-eula",
 					ID:   15,
@@ -315,15 +316,18 @@ var _ = Describe("PivnetClient - product files", func() {
 
 			patchURL := fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, "banana-slug", release.ID)
 
+			response := `{"release": {"id": 42, "version": "1.2.3.4"}}`
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("PATCH", patchURL),
-					ghttp.VerifyJSON(`{"release":{"id": 42, "eula":{"slug":"some-eula","id":15}}}`),
-					ghttp.RespondWith(http.StatusOK, nil),
+					ghttp.VerifyJSON(`{"release":{"id": 42, "version": "1.2.3.4", "eula":{"slug":"some-eula","id":15}, "oss_compliant":"confirm"}}`),
+					ghttp.RespondWith(http.StatusOK, response),
 				),
 			)
 
-			Expect(client.UpdateRelease("banana-slug", release)).To(Succeed())
+			release, err := client.UpdateRelease("banana-slug", release)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(release.Version).To(Equal("1.2.3.4"))
 		})
 
 		Context("when the server responds with a non-200 status code", func() {
@@ -338,7 +342,7 @@ var _ = Describe("PivnetClient - product files", func() {
 					),
 				)
 
-				err := client.UpdateRelease("banana-slug", release)
+				_, err := client.UpdateRelease("banana-slug", release)
 				Expect(err).To(MatchError(errors.New(
 					"Pivnet returned status code: 418 for the request - expected 200")))
 			})

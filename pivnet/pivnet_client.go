@@ -20,7 +20,7 @@ type Client interface {
 	ProductVersions(string) ([]string, error)
 	CreateRelease(config CreateReleaseConfig) (Release, error)
 	GetRelease(string, string) (Release, error)
-	UpdateRelease(string, Release) error
+	UpdateRelease(string, Release) (Release, error)
 	GetProductFiles(Release) (ProductFiles, error)
 	AcceptEULA(productSlug string, releaseID int) error
 	CreateProductFile(config CreateProductFileConfig) (ProductFile, error)
