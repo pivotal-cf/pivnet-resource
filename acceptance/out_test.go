@@ -49,7 +49,7 @@ var _ = Describe("Out", func() {
 		description     = "this release is for automated-testing only."
 
 		releaseNotesURLFile = "release_notes_url"
-		releaseNotesURL     = "http://zombo.com"
+		releaseNotesURL     = "https://example.com"
 
 		productSlug = "pivotal-diego-pcf"
 
