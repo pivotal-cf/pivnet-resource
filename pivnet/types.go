@@ -62,3 +62,13 @@ type Product struct {
 	ID   int    `json:"id,omitempty"`
 	Slug string `json:"slug"`
 }
+
+type UserGroups struct {
+	UserGroups []UserGroup `json:"user_groups,omitempty"`
+}
+
+type UserGroup struct {
+	ID          int    `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+}

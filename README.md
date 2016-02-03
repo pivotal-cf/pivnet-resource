@@ -171,6 +171,10 @@ release creation will fail.
   - All Users
   - Selected User Groups Only
 
+* `user_group_ids_file`: *Optional.* File containing a comma-separated list of user
+  group IDs. Each user group in the list will be added to the release.
+  Will be read only if the availability is set to Selected User Groups Only.
+
 ## Developing
 
 ### Prerequisites

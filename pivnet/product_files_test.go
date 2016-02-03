@@ -242,7 +242,7 @@ var _ = Describe("PivnetClient - product files", func() {
 			})
 		})
 
-		Context("when the server responds with a non-201 status code", func() {
+		Context("when the server responds with a non-204 status code", func() {
 			It("returns an error", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(

@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
@@ -186,6 +188,18 @@ func main() {
 		release, err = pivnetClient.UpdateRelease(productSlug, releaseUpdate)
 		if err != nil {
 			log.Fatalln(err)
+		}
+
+		if availability == "Selected User Groups Only" {
+			userGroupIDs := strings.Split(readStringContents(sourcesDir, input.Params.UserGroupIDsFile), ",")
+			for _, userGroupIDString := range userGroupIDs {
+				userGroupID, err := strconv.Atoi(userGroupIDString)
+				if err != nil {
+					log.Fatalln(err)
+				}
+
+				pivnetClient.AddUserGroup(productSlug, release.ID, userGroupID)
+			}
 		}
 	}
 

@@ -516,10 +516,13 @@ var _ = Describe("Out", func() {
 			})
 		})
 
-		Context("When the availability is not Admins Only", func() {
+		Context("When the availability is set to Selected User Groups Only", func() {
 			var (
 				availabilityFile = "availability"
 				availability     = "Selected User Groups Only"
+
+				userGroupIDsFile = "user_group_ids"
+				userGroupIDs     = "6,8,54"
 			)
 
 			BeforeEach(func() {
@@ -530,10 +533,18 @@ var _ = Describe("Out", func() {
 					os.ModePerm)
 				Expect(err).ShouldNot(HaveOccurred())
 
+				By("Writing user group IDs to file")
+				err = ioutil.WriteFile(
+					filepath.Join(rootDir, userGroupIDsFile),
+					[]byte(userGroupIDs),
+					os.ModePerm)
+				Expect(err).ShouldNot(HaveOccurred())
+
 				outRequest.Params.AvailabilityFile = availabilityFile
+				outRequest.Params.UserGroupIDsFile = userGroupIDsFile
 			})
 
-			It("Creates a release and updates the availability", func() {
+			It("Creates a release and updates the availability and user groups", func() {
 				outRequest.Params.FileGlob = ""
 				outRequest.Params.FilepathPrefix = ""
 
@@ -569,6 +580,14 @@ var _ = Describe("Out", func() {
 				metadataAvailability, err := metadataValueForKey(response.Metadata, "availability")
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(metadataAvailability).To(Equal(availability))
+
+				By("Validating the user groups were associated with the release")
+				userGroups := getUserGroups(productSlug, release.ID)
+				userGroupIDs := []int{}
+				for _, userGroup := range userGroups {
+					userGroupIDs = append(userGroupIDs, userGroup.ID)
+				}
+				Expect(userGroupIDs).Should(ConsistOf(6, 8, 54))
 			})
 		})
 	})

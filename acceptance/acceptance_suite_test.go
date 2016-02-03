@@ -182,6 +182,25 @@ func getProductFiles(productSlug string) []pivnet.ProductFile {
 	return response.ProductFiles
 }
 
+func getUserGroups(productSlug string, releaseID int) []pivnet.UserGroup {
+	user_groups_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases/%d/user_groups", productSlug, releaseID)
+
+	req, err := http.NewRequest("GET", user_groups_url, nil)
+	Expect(err).NotTo(HaveOccurred())
+
+	req.Header.Add("Authorization", fmt.Sprintf("Token %s", pivnetAPIToken))
+
+	resp, err := http.DefaultClient.Do(req)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+	response := pivnet.UserGroups{}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	Expect(err).NotTo(HaveOccurred())
+
+	return response.UserGroups
+}
+
 // copyFileContents copies the contents of the file named src to the file named
 // by dst. The file will be created if it does not already exist. If the
 // destination file exists, all it's contents will be replaced by the contents

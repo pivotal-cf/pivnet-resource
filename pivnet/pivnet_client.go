@@ -25,8 +25,9 @@ type Client interface {
 	AcceptEULA(productSlug string, releaseID int) error
 	CreateProductFile(config CreateProductFileConfig) (ProductFile, error)
 	DeleteProductFile(productSlug string, id int) (ProductFile, error)
-	AddProductFile(productId int, releaseID int, productFileID int) error
+	AddProductFile(productID int, releaseID int, productFileID int) error
 	FindProductForSlug(slug string) (Product, error)
+	AddUserGroup(productSlug string, releaseID int, userGroupID int) error
 }
 
 type client struct {
