@@ -162,6 +162,9 @@ release creation will fail.
   May contain line breaks.
   ```
 
+* `release_notes_url_file`: *Optional.* File containing the release notes URL
+  e.g. `http://url.to/release/notes`
+
 ## Developing
 
 ### Prerequisites

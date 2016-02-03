@@ -233,6 +233,58 @@ var _ = Describe("PivnetClient - product files", func() {
 					})
 				})
 			})
+
+			Describe("optional release notes URL field", func() {
+				var (
+					releaseNotesURL string
+				)
+
+				Context("when the optional release notes URL field is present", func() {
+					BeforeEach(func() {
+						releaseNotesURL = "some releaseNotesURL"
+
+						createReleaseConfig.ReleaseNotesURL = releaseNotesURL
+						expectedRequestBody.Release.ReleaseNotesURL = releaseNotesURL
+					})
+
+					It("creates the release with the release notes URL field", func() {
+						server.AppendHandlers(
+							ghttp.CombineHandlers(
+								ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/releases"),
+								ghttp.VerifyJSONRepresenting(&expectedRequestBody),
+								ghttp.RespondWith(http.StatusCreated, validResponse),
+							),
+						)
+
+						release, err := client.CreateRelease(createReleaseConfig)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(release.Version).To(Equal(productVersion))
+					})
+				})
+
+				Context("when the optional release notes URL field is not present", func() {
+					BeforeEach(func() {
+						releaseNotesURL = ""
+
+						createReleaseConfig.ReleaseNotesURL = releaseNotesURL
+						expectedRequestBody.Release.ReleaseNotesURL = releaseNotesURL
+					})
+
+					It("creates the release with an empty release notes URL field", func() {
+						server.AppendHandlers(
+							ghttp.CombineHandlers(
+								ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/releases"),
+								ghttp.VerifyJSONRepresenting(&expectedRequestBody),
+								ghttp.RespondWith(http.StatusCreated, validResponse),
+							),
+						)
+
+						release, err := client.CreateRelease(createReleaseConfig)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(release.Version).To(Equal(productVersion))
+					})
+				})
+			})
 		})
 
 		Context("when the server responds with a non-201 status code", func() {

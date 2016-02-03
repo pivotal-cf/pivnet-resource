@@ -92,12 +92,13 @@ func main() {
 	productSlug := input.Source.ProductSlug
 
 	config := pivnet.CreateReleaseConfig{
-		ProductSlug:    productSlug,
-		ReleaseType:    readStringContents(sourcesDir, input.Params.ReleaseTypeFile),
-		EulaSlug:       readStringContents(sourcesDir, input.Params.EulaSlugFile),
-		ProductVersion: readStringContents(sourcesDir, input.Params.VersionFile),
-		Description:    readStringContents(sourcesDir, input.Params.DescriptionFile),
-		ReleaseDate:    readStringContents(sourcesDir, input.Params.ReleaseDateFile),
+		ProductSlug:     productSlug,
+		ReleaseType:     readStringContents(sourcesDir, input.Params.ReleaseTypeFile),
+		EulaSlug:        readStringContents(sourcesDir, input.Params.EulaSlugFile),
+		ProductVersion:  readStringContents(sourcesDir, input.Params.VersionFile),
+		Description:     readStringContents(sourcesDir, input.Params.DescriptionFile),
+		ReleaseNotesURL: readStringContents(sourcesDir, input.Params.ReleaseNotesURLFile),
+		ReleaseDate:     readStringContents(sourcesDir, input.Params.ReleaseDateFile),
 	}
 
 	release, err := pivnetClient.CreateRelease(config)
@@ -184,6 +185,7 @@ func main() {
 			{Name: "release_type", Value: release.ReleaseType},
 			{Name: "release_date", Value: release.ReleaseDate},
 			{Name: "description", Value: release.Description},
+			{Name: "release_notes_url", Value: release.ReleaseNotesURL},
 			{Name: "eula_slug", Value: release.Eula.Slug},
 		},
 	}
