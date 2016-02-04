@@ -191,7 +191,11 @@ func main() {
 		}
 
 		if availability == "Selected User Groups Only" {
-			userGroupIDs := strings.Split(readStringContents(sourcesDir, input.Params.UserGroupIDsFile), ",")
+			userGroupIDs := strings.Split(
+				readStringContents(sourcesDir, input.Params.UserGroupIDsFile),
+				",",
+			)
+
 			for _, userGroupIDString := range userGroupIDs {
 				userGroupID, err := strconv.Atoi(userGroupIDString)
 				if err != nil {

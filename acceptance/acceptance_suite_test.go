@@ -108,7 +108,8 @@ var _ = AfterSuite(func() {
 func getProductReleases(productSlug string) []pivnet.Release {
 	productURL := fmt.Sprintf(
 		"https://network.pivotal.io/api/v2/products/%s/releases",
-		productSlug)
+		productSlug,
+	)
 
 	req, err := http.NewRequest("GET", productURL, nil)
 	Expect(err).NotTo(HaveOccurred())
@@ -141,7 +142,11 @@ func getPivnetRelease(productSlug, productVersion string) pivnet.Release {
 			return release
 		}
 	}
-	Fail(fmt.Sprintf("Could not find release for productSlug: %s and productVersion: %s", productSlug, productVersion))
+	Fail(fmt.Sprintf(
+		"Could not find release for productSlug: %s and productVersion: %s",
+		productSlug,
+		productVersion,
+	))
 	// We won't get here
 	return pivnet.Release{}
 }
@@ -151,9 +156,13 @@ func deletePivnetRelease(productSlug, productVersion string) {
 	releaseID := pivnetRelease.ID
 	Expect(releaseID).NotTo(Equal(0))
 
-	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases/%d", productSlug, releaseID)
+	productURL := fmt.Sprintf(
+		"https://network.pivotal.io/api/v2/products/%s/releases/%d",
+		productSlug,
+		releaseID,
+	)
 
-	req, err := http.NewRequest("DELETE", product_url, nil)
+	req, err := http.NewRequest("DELETE", productURL, nil)
 	Expect(err).NotTo(HaveOccurred())
 
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", pivnetAPIToken))
@@ -164,9 +173,12 @@ func deletePivnetRelease(productSlug, productVersion string) {
 }
 
 func getProductFiles(productSlug string) []pivnet.ProductFile {
-	product_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/product_files", productSlug)
+	productURL := fmt.Sprintf(
+		"https://network.pivotal.io/api/v2/products/%s/product_files",
+		productSlug,
+	)
 
-	req, err := http.NewRequest("GET", product_url, nil)
+	req, err := http.NewRequest("GET", productURL, nil)
 	Expect(err).NotTo(HaveOccurred())
 
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", pivnetAPIToken))
@@ -183,9 +195,13 @@ func getProductFiles(productSlug string) []pivnet.ProductFile {
 }
 
 func getUserGroups(productSlug string, releaseID int) []pivnet.UserGroup {
-	user_groups_url := fmt.Sprintf("https://network.pivotal.io/api/v2/products/%s/releases/%d/user_groups", productSlug, releaseID)
+	userGroupsURL := fmt.Sprintf(
+		"https://network.pivotal.io/api/v2/products/%s/releases/%d/user_groups",
+		productSlug,
+		releaseID,
+	)
 
-	req, err := http.NewRequest("GET", user_groups_url, nil)
+	req, err := http.NewRequest("GET", userGroupsURL, nil)
 	Expect(err).NotTo(HaveOccurred())
 
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", pivnetAPIToken))
