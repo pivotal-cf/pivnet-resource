@@ -28,13 +28,13 @@ var _ = Describe("PivnetClient - product files", func() {
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
-		apiAddress = server.URL() + apiPrefix
+		apiAddress = server.URL()
 		token = "my-auth-token"
 		userAgent = "pivnet-resource/0.1.0 (some-url)"
 
 		fakeLogger = &logger_fakes.FakeLogger{}
 		newClientConfig = pivnet.NewClientConfig{
-			URL:       apiAddress,
+			Endpoint:  apiAddress,
 			Token:     token,
 			UserAgent: userAgent,
 		}
@@ -63,7 +63,7 @@ var _ = Describe("PivnetClient - product files", func() {
 
 			release := pivnet.Release{
 				Links: &pivnet.Links{
-					ProductFiles: map[string]string{"href": apiAddress + "/products/banana/releases/666/product_files"},
+					ProductFiles: map[string]string{"href": apiAddress + apiPrefix + "/products/banana/releases/666/product_files"},
 				},
 			}
 
@@ -88,7 +88,7 @@ var _ = Describe("PivnetClient - product files", func() {
 				)
 				release := pivnet.Release{
 					Links: &pivnet.Links{
-						ProductFiles: map[string]string{"href": apiAddress + "/products/banana/releases/666/product_files"},
+						ProductFiles: map[string]string{"href": apiAddress + apiPrefix + "/products/banana/releases/666/product_files"},
 					},
 				}
 

@@ -72,7 +72,7 @@ func main() {
 	l.Debugf("Received input: %+v\n", input)
 
 	clientConfig := pivnet.NewClientConfig{
-		URL:       pivnet.URL,
+		Endpoint:  pivnet.Endpoint,
 		Token:     input.Source.APIToken,
 		UserAgent: fmt.Sprintf("pivnet-resource/%s", version),
 	}

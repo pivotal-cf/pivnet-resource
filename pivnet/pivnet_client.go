@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	URL = "https://network.pivotal.io/api/v2"
+	Endpoint = "https://network.pivotal.io"
+	path     = "/api/v2"
 )
 
 type Client interface {
@@ -38,14 +39,16 @@ type client struct {
 }
 
 type NewClientConfig struct {
-	URL       string
+	Endpoint  string
 	Token     string
 	UserAgent string
 }
 
 func NewClient(config NewClientConfig, logger logger.Logger) Client {
+	url := fmt.Sprintf("%s%s", config.Endpoint, path)
+
 	return &client{
-		url:       config.URL,
+		url:       url,
 		token:     config.Token,
 		userAgent: config.UserAgent,
 		logger:    logger,

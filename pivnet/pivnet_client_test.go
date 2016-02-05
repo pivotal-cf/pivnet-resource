@@ -28,13 +28,13 @@ var _ = Describe("PivnetClient", func() {
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
-		apiAddress = server.URL() + apiPrefix
+		apiAddress = server.URL()
 		token = "my-auth-token"
 		userAgent = "pivnet-resource/0.1.0 (some-url)"
 
 		fakeLogger = &logger_fakes.FakeLogger{}
 		newClientConfig = pivnet.NewClientConfig{
-			URL:       apiAddress,
+			Endpoint:  apiAddress,
 			Token:     token,
 			UserAgent: userAgent,
 		}
@@ -123,7 +123,7 @@ var _ = Describe("PivnetClient", func() {
 	Describe("Product Versions", func() {
 		Context("when parsing the url fails with error", func() {
 			It("forwards the error", func() {
-				newClientConfig.URL = "%%%"
+				newClientConfig.Endpoint = "%%%"
 				client = pivnet.NewClient(newClientConfig, fakeLogger)
 
 				_, err := client.ProductVersions("some product")
@@ -134,7 +134,7 @@ var _ = Describe("PivnetClient", func() {
 
 		Context("when making the request fails with error", func() {
 			It("forwards the error", func() {
-				newClientConfig.URL = "https://not-a-real-url.com"
+				newClientConfig.Endpoint = "https://not-a-real-url.com"
 				client = pivnet.NewClient(newClientConfig, fakeLogger)
 
 				_, err := client.ProductVersions("some-product")

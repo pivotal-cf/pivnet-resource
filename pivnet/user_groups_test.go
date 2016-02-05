@@ -27,13 +27,13 @@ var _ = Describe("PivnetClient - user groups", func() {
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
-		apiAddress = server.URL() + apiPrefix
+		apiAddress = server.URL()
 		token = "my-auth-token"
 		userAgent = "pivnet-resource/0.1.0 (some-url)"
 
 		fakeLogger = &logger_fakes.FakeLogger{}
 		newClientConfig = pivnet.NewClientConfig{
-			URL:       apiAddress,
+			Endpoint:  apiAddress,
 			Token:     token,
 			UserAgent: userAgent,
 		}
