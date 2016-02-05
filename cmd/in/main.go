@@ -16,10 +16,6 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 )
 
-const (
-	url = "https://network.pivotal.io/api/v2"
-)
-
 var (
 	// version is deliberately left uninitialized so it can be set at compile-time
 	version string
