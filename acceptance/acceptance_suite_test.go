@@ -75,8 +75,8 @@ var _ = BeforeSuite(func() {
 	Expect(s3FilepathPrefix).NotTo(BeEmpty(), "$S3_FILEPATH_PREFIX must be provided")
 
 	By("Getting endpoint from environment variables")
-	endpoint = os.Getenv("ENDPOINT")
-	Expect(endpoint).NotTo(BeEmpty(), "$ENDPOINT must be provided")
+	endpoint = os.Getenv("PIVNET_ENDPOINT")
+	Expect(endpoint).NotTo(BeEmpty(), "$PIVNET_ENDPOINT must be provided")
 
 	By("Compiling check binary")
 	checkPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/check", "-race")

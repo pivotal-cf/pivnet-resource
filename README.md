@@ -231,7 +231,7 @@ AWS_SECRET_ACCESS_KEY=my-aws-secret-access-key \
 S3_OUT_LOCATION=location-of-s3-out-binary \
 PIVNET_S3_REGION=region-of-pivnet-eg-us-east-1 \
 PIVNET_BUCKET_NAME=bucket-of-pivnet-eg-pivnet-bucket \
-ENDPOINT= some-pivnet-endpoint \
+PIVNET_ENDPOINT= some-pivnet-endpoint \
 S3_FILEPATH_PREFIX=Case-Sensitive-Path-eg-Pivotal-Diego-PCF \
 ./scripts/test
 ```
