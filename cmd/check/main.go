@@ -71,8 +71,15 @@ func main() {
 
 	l.Debugf("Received input: %+v\n", input)
 
+	var endpoint string
+	if input.Source.Endpoint != "" {
+		endpoint = input.Source.Endpoint
+	} else {
+		endpoint = pivnet.Endpoint
+	}
+
 	clientConfig := pivnet.NewClientConfig{
-		Endpoint:  pivnet.Endpoint,
+		Endpoint:  endpoint,
 		Token:     input.Source.APIToken,
 		UserAgent: fmt.Sprintf("pivnet-resource/%s", version),
 	}

@@ -26,6 +26,8 @@ var (
 	checkPath string
 	outPath   string
 
+	endpoint string
+
 	productSlug        string
 	pivnetAPIToken     string
 	awsAccessKeyID     string
@@ -46,7 +48,7 @@ var _ = BeforeSuite(func() {
 	var err error
 	By("Getting product slug from environment variables")
 	productSlug = os.Getenv("PRODUCT_SLUG")
-	Expect(productSlug).NotTo(BeEmpty(), "$API_TOKEN must be provided")
+	Expect(productSlug).NotTo(BeEmpty(), "$PRODUCT_SLUG must be provided")
 
 	By("Getting API token from environment variables")
 	pivnetAPIToken = os.Getenv("API_TOKEN")
@@ -71,6 +73,10 @@ var _ = BeforeSuite(func() {
 	By("Getting s3 filepath prefix from environment variables")
 	s3FilepathPrefix = os.Getenv("S3_FILEPATH_PREFIX")
 	Expect(s3FilepathPrefix).NotTo(BeEmpty(), "$S3_FILEPATH_PREFIX must be provided")
+
+	By("Getting endpoint from environment variables")
+	endpoint = os.Getenv("ENDPOINT")
+	Expect(endpoint).NotTo(BeEmpty(), "$ENDPOINT must be provided")
 
 	By("Compiling check binary")
 	checkPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/check", "-race")
@@ -112,7 +118,8 @@ var _ = AfterSuite(func() {
 
 func getProductReleases(productSlug string) []pivnet.Release {
 	productURL := fmt.Sprintf(
-		"https://network.pivotal.io/api/v2/products/%s/releases",
+		"%s/api/v2/products/%s/releases",
+		endpoint,
 		productSlug,
 	)
 
@@ -162,7 +169,8 @@ func deletePivnetRelease(productSlug, productVersion string) {
 	Expect(releaseID).NotTo(Equal(0))
 
 	productURL := fmt.Sprintf(
-		"https://network.pivotal.io/api/v2/products/%s/releases/%d",
+		"%s/api/v2/products/%s/releases/%d",
+		endpoint,
 		productSlug,
 		releaseID,
 	)
@@ -179,7 +187,8 @@ func deletePivnetRelease(productSlug, productVersion string) {
 
 func getProductFiles(productSlug string) []pivnet.ProductFile {
 	productURL := fmt.Sprintf(
-		"https://network.pivotal.io/api/v2/products/%s/product_files",
+		"%s/api/v2/products/%s/product_files",
+		endpoint,
 		productSlug,
 	)
 
@@ -201,7 +210,8 @@ func getProductFiles(productSlug string) []pivnet.ProductFile {
 
 func getUserGroups(productSlug string, releaseID int) []pivnet.UserGroup {
 	userGroupsURL := fmt.Sprintf(
-		"https://network.pivotal.io/api/v2/products/%s/releases/%d/user_groups",
+		"%s/api/v2/products/%s/releases/%d/user_groups",
+		endpoint,
 		productSlug,
 		releaseID,
 	)

@@ -30,6 +30,8 @@ BOSH releases are available on
 
 * `secret_access_key`: *Optional.*  AWS secret access key. Required for uploading products via `out`.
 
+* `endpoint`: *Optional.*  Endpoint of Pivotal Network. Defaults to `https://network.pivotal.io`.
+
 ### Example Pipeline Configuration
 
 #### Check
@@ -215,6 +217,10 @@ files to the specified S3 bucket, ensure the bucket is already created and
 permissions are set correctly such that the user associated with the provided
 credentials can upload, download and delete.
 
+It is advised to run the acceptance tests against the Pivotal Network staging
+environment endpoint `https://pivnet-acceptance.cfapps.io` and to use the
+corresponding S3 bucket `pivnet-acceptance`.
+
 Run the tests with the following command:
 
 ```
@@ -225,6 +231,7 @@ AWS_SECRET_ACCESS_KEY=my-aws-secret-access-key \
 S3_OUT_LOCATION=location-of-s3-out-binary \
 PIVNET_S3_REGION=region-of-pivnet-eg-us-east-1 \
 PIVNET_BUCKET_NAME=bucket-of-pivnet-eg-pivnet-bucket \
+ENDPOINT= some-pivnet-endpoint \
 S3_FILEPATH_PREFIX=Case-Sensitive-Path-eg-Pivotal-Diego-PCF \
 ./scripts/test
 ```
