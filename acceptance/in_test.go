@@ -16,7 +16,6 @@ import (
 
 var _ = Describe("In", func() {
 	var (
-		productSlug    = "pivotal-diego-pcf"
 		productVersion = "pivnet-testing"
 		destDirectory  string
 

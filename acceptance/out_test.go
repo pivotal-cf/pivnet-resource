@@ -51,8 +51,6 @@ var _ = Describe("Out", func() {
 		releaseNotesURLFile = "release_notes_url"
 		releaseNotesURL     = "https://example.com"
 
-		productSlug = "pivotal-diego-pcf"
-
 		command       *exec.Cmd
 		stdinContents []byte
 		outRequest    concourse.OutRequest

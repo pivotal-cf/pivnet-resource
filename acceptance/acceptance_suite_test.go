@@ -26,6 +26,7 @@ var (
 	checkPath string
 	outPath   string
 
+	productSlug        string
 	pivnetAPIToken     string
 	awsAccessKeyID     string
 	awsSecretAccessKey string
@@ -43,6 +44,10 @@ func TestAcceptance(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	var err error
+	By("Getting product slug from environment variables")
+	productSlug = os.Getenv("PRODUCT_SLUG")
+	Expect(productSlug).NotTo(BeEmpty(), "$API_TOKEN must be provided")
+
 	By("Getting API token from environment variables")
 	pivnetAPIToken = os.Getenv("API_TOKEN")
 	Expect(pivnetAPIToken).NotTo(BeEmpty(), "$API_TOKEN must be provided")

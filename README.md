@@ -218,6 +218,7 @@ credentials can upload, download and delete.
 Run the tests with the following command:
 
 ```
+PRODUCT_SLUG=my-product-slug-eg-pivotal-diego-pcf \
 API_TOKEN=my-token \
 AWS_ACCESS_KEY_ID=my-aws-access-key-id \
 AWS_SECRET_ACCESS_KEY=my-aws-secret-access-key \
