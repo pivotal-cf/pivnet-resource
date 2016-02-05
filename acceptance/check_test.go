@@ -38,6 +38,7 @@ var _ = Describe("Check", func() {
 			Source: concourse.Source{
 				APIToken:    pivnetAPIToken,
 				ProductSlug: productSlug,
+				Endpoint:    endpoint,
 			},
 			Version: concourse.Version{
 				ProductVersion: releases[3],

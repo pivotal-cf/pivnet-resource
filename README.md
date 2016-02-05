@@ -32,6 +32,10 @@ BOSH releases are available on
 
 * `endpoint`: *Optional.*  Endpoint of Pivotal Network. Defaults to `https://network.pivotal.io`.
 
+* `bucket`: *Optional.*  AWS S3 bucket name used by Pivotal Network. Defaults to `pivotalnetwork`.
+
+* `region`: *Optional.* AWS S3 region where the bucket is located. Defaults to `eu-west-1`.
+
 ### Example Pipeline Configuration
 
 #### Check

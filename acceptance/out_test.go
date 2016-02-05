@@ -119,6 +119,9 @@ var _ = Describe("Out", func() {
 				AccessKeyID:     awsAccessKeyID,
 				SecretAccessKey: awsSecretAccessKey,
 				ProductSlug:     productSlug,
+				Endpoint:        endpoint,
+				Bucket:          pivnetBucketName,
+				Region:          pivnetRegion,
 			},
 			Params: concourse.OutParams{
 				FileGlob:            "*",
@@ -402,12 +405,28 @@ var _ = Describe("Out", func() {
 				sourceFilePaths = make([]string, totalFiles)
 				remotePaths = make([]string, totalFiles)
 				for i := 0; i < totalFiles; i++ {
-					sourceFileNames[i] = fmt.Sprintf("pivnet-resource-test-file-%d", time.Now().Nanosecond())
-					sourceFilePaths[i] = filepath.Join(sourcesFullPath, sourceFileNames[i])
-					err = ioutil.WriteFile(sourceFilePaths[i], []byte("some content"), os.ModePerm)
+					sourceFileNames[i] = fmt.Sprintf(
+						"pivnet-resource-test-file-%d",
+						time.Now().Nanosecond(),
+					)
+
+					sourceFilePaths[i] = filepath.Join(
+						sourcesFullPath,
+						sourceFileNames[i],
+					)
+
+					err = ioutil.WriteFile(
+						sourceFilePaths[i],
+						[]byte("some content"),
+						os.ModePerm,
+					)
 					Expect(err).ShouldNot(HaveOccurred())
 
-					remotePaths[i] = fmt.Sprintf("product_files/%s/%s", s3FilepathPrefix, sourceFileNames[i])
+					remotePaths[i] = fmt.Sprintf(
+						"product_files/%s/%s",
+						s3FilepathPrefix,
+						sourceFileNames[i],
+					)
 				}
 
 				outRequest.Params.FileGlob = fmt.Sprintf("%s/*", sourcesDir)

@@ -20,6 +20,9 @@ import (
 
 const (
 	s3OutBinaryName = "s3-out"
+
+	defaultBucket = "pivotalnetwork"
+	defaultRegion = "eu-west-1"
 )
 
 var (
@@ -118,11 +121,21 @@ func main() {
 	if skipUpload {
 		l.Debugf("File glob and s3_filepath_prefix not provided - skipping upload to s3")
 	} else {
+		bucket := input.Source.Bucket
+		if bucket == "" {
+			bucket = defaultBucket
+		}
+
+		region := input.Source.Region
+		if region == "" {
+			region = defaultRegion
+		}
+
 		s3Client := s3.NewClient(s3.NewClientConfig{
 			AccessKeyID:     input.Source.AccessKeyID,
 			SecretAccessKey: input.Source.SecretAccessKey,
-			RegionName:      "eu-west-1",
-			Bucket:          "pivotalnetwork",
+			RegionName:      region,
+			Bucket:          bucket,
 
 			Logger: l,
 

@@ -5,7 +5,9 @@ type Source struct {
 	ProductSlug     string `json:"product_slug"`
 	AccessKeyID     string `json:"access_key_id"`
 	SecretAccessKey string `json:"secret_access_key"`
+	Bucket          string `json:"bucket"`
 	Endpoint        string `json:"endpoint"`
+	Region          string `json:"region"`
 }
 
 type CheckRequest struct {
