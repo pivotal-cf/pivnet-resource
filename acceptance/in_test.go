@@ -2,21 +2,27 @@ package acceptance
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 )
 
 var _ = Describe("In", func() {
 	var (
-		productVersion = "pivnet-testing"
+		eulaSlug    = "pivotal_beta_eula"
+		releaseType = "Minor Release"
+
+		release        pivnet.Release
+		productVersion string
 		destDirectory  string
 
 		command       *exec.Cmd
@@ -26,6 +32,18 @@ var _ = Describe("In", func() {
 
 	BeforeEach(func() {
 		var err error
+
+		By("Generating 'random' product version")
+		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
+
+		By("Creating new version")
+		release, err = pivnetClient.CreateRelease(pivnet.CreateReleaseConfig{
+			ProductSlug:    productSlug,
+			ProductVersion: productVersion,
+			EulaSlug:       eulaSlug,
+			ReleaseType:    releaseType,
+		})
+		Expect(err).NotTo(HaveOccurred())
 
 		By("Creating temp directory")
 		destDirectory, err = ioutil.TempDir("", "pivnet-resource")
@@ -54,6 +72,9 @@ var _ = Describe("In", func() {
 		By("Removing temporary destination directory")
 		err := os.RemoveAll(destDirectory)
 		Expect(err).NotTo(HaveOccurred())
+
+		By("Deleting newly-created release")
+		deletePivnetRelease(productSlug, productVersion)
 	})
 
 	It("returns valid json", func() {
@@ -88,13 +109,10 @@ var _ = Describe("In", func() {
 		session := run(command, stdinContents)
 		Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
-		By("Reading downloaded files")
-		dataDir, err := os.Open(destDirectory)
-		Expect(err).ShouldNot(HaveOccurred())
-
 		By("Validating number of downloaded files is zero")
-		_, err = dataDir.Readdir(0)
+		files, err := ioutil.ReadDir(destDirectory)
 		Expect(err).ShouldNot(HaveOccurred())
+		Expect(len(files)).To(Equal(1)) // the version file will always exist
 	})
 
 	It("creates a version file with the downloaded version", func() {
@@ -108,58 +126,5 @@ var _ = Describe("In", func() {
 		contents, err := ioutil.ReadFile(versionFilepath)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(string(contents)).To(Equal(productVersion))
-	})
-
-	Context("when globs are provided", func() {
-		It("downloads only the files that match the glob", func() {
-			By("setting the glob")
-			inRequest.Source.ProductSlug = "pivnet-resource-test"
-			inRequest.Version.ProductVersion = "0.0.0"
-			inRequest.Params.Globs = []string{"*.jpg"}
-
-			globStdInRequest, err := json.Marshal(inRequest)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			By("Running the command")
-			session := run(command, globStdInRequest)
-			Eventually(session, executableTimeout).Should(gexec.Exit(0))
-
-			By("Reading downloaded files")
-			dataDir, err := os.Open(destDirectory)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			By("Validating number of downloaded files")
-			files, err := dataDir.Readdir(2)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(files).To(HaveLen(2))
-
-			By("Validating files have non-zero-length content")
-			for _, f := range files {
-				if f.Name() == "5375828702_2832ae812c_b.jpg" {
-					Expect(f.Size()).To(Equal(int64(329795)))
-				}
-			}
-		})
-	})
-
-	Context("when two globs are provided", func() {
-		Context("when one glob matches and one does not", func() {
-			It("should see a job error", func() {
-				By("setting the glob")
-				inRequest.Source.ProductSlug = "pivnet-resource-test"
-				inRequest.Version.ProductVersion = "0.0.0"
-				inRequest.Params.Globs = []string{"*.jpg", "*.txt"}
-
-				globStdInRequest, err := json.Marshal(inRequest)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				By("Running the command")
-				session := run(command, globStdInRequest)
-				Eventually(session, executableTimeout).Should(gexec.Exit(1))
-
-				By("Verifying stderr of command")
-				Eventually(session.Err).Should(gbytes.Say("Failed to filter Product Files: no files match glob: "))
-			})
-		})
 	})
 })

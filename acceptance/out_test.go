@@ -19,7 +19,6 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 )
 
 const (
@@ -124,8 +123,8 @@ var _ = Describe("Out", func() {
 				Region:          pivnetRegion,
 			},
 			Params: concourse.OutParams{
-				FileGlob:            "*",
-				FilepathPrefix:      s3FilepathPrefix,
+				FileGlob:            "",
+				FilepathPrefix:      "",
 				VersionFile:         productVersionFile,
 				ReleaseTypeFile:     releaseTypeFile,
 				ReleaseDateFile:     releaseDateFile,
@@ -191,43 +190,54 @@ var _ = Describe("Out", func() {
 			})
 		})
 
-		Context("when no aws access key id is provided", func() {
+		Context("when S3 filepath prefix and glob are provided", func() {
 			BeforeEach(func() {
-				outRequest.Source.AccessKeyID = ""
+				outRequest.Params.FilepathPrefix = "foo"
+				outRequest.Params.FileGlob = "*"
 
 				var err error
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
 
-			It("exits with error", func() {
-				session := run(command, stdinContents)
+			Context("when no aws access key id is provided", func() {
+				BeforeEach(func() {
+					outRequest.Source.AccessKeyID = ""
 
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).Should(gbytes.Say("access_key_id must be provided"))
+					var err error
+					stdinContents, err = json.Marshal(outRequest)
+					Expect(err).ShouldNot(HaveOccurred())
+				})
+
+				It("exits with error", func() {
+					session := run(command, stdinContents)
+
+					Eventually(session).Should(gexec.Exit(1))
+					Expect(session.Err).Should(gbytes.Say("access_key_id must be provided"))
+				})
+			})
+
+			Context("when no aws secret access key is provided", func() {
+				BeforeEach(func() {
+					outRequest.Source.SecretAccessKey = ""
+
+					var err error
+					stdinContents, err = json.Marshal(outRequest)
+					Expect(err).ShouldNot(HaveOccurred())
+				})
+
+				It("exits with error", func() {
+					session := run(command, stdinContents)
+
+					Eventually(session).Should(gexec.Exit(1))
+					Expect(session.Err).Should(gbytes.Say("secret_access_key must be provided"))
+				})
 			})
 		})
 
-		Context("when no aws secret access key is provided", func() {
+		Context("when s3 filepath prefix is provided but not file glob", func() {
 			BeforeEach(func() {
-				outRequest.Source.SecretAccessKey = ""
-
-				var err error
-				stdinContents, err = json.Marshal(outRequest)
-				Expect(err).ShouldNot(HaveOccurred())
-			})
-
-			It("exits with error", func() {
-				session := run(command, stdinContents)
-
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).Should(gbytes.Say("secret_access_key must be provided"))
-			})
-		})
-
-		Context("when no file glob is provided", func() {
-			BeforeEach(func() {
-				outRequest.Params.FileGlob = ""
+				outRequest.Params.FilepathPrefix = "foo"
 
 				var err error
 				stdinContents, err = json.Marshal(outRequest)
@@ -242,9 +252,9 @@ var _ = Describe("Out", func() {
 			})
 		})
 
-		Context("when no s3 filepath prefix is provided", func() {
+		Context("when file glob is provided but not s3 filepath prefix", func() {
 			BeforeEach(func() {
-				outRequest.Params.FilepathPrefix = ""
+				outRequest.Params.FileGlob = "*"
 
 				var err error
 				stdinContents, err = json.Marshal(outRequest)
@@ -318,9 +328,6 @@ var _ = Describe("Out", func() {
 		})
 
 		It("Successfully creates a release", func() {
-			outRequest.Params.FileGlob = ""
-			outRequest.Params.FilepathPrefix = ""
-
 			var err error
 			stdinContents, err = json.Marshal(outRequest)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -372,168 +379,6 @@ var _ = Describe("Out", func() {
 			Expect(metadataReleaseNotesURL).To(Equal(releaseNotesURL))
 		})
 
-		Context("when S3 source and params are configured correctly", func() {
-			var (
-				client *s3client
-
-				sourcesDir      = "sources"
-				sourceFileNames []string
-				sourceFilePaths []string
-				remotePaths     []string
-
-				totalFiles = 3
-			)
-
-			BeforeEach(func() {
-				By("Creating aws client")
-				var err error
-				client, err = NewS3Client(
-					awsAccessKeyID,
-					awsSecretAccessKey,
-					pivnetRegion,
-					pivnetBucketName,
-				)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				By("Creating a temporary sources dir")
-				sourcesFullPath := filepath.Join(rootDir, sourcesDir)
-				err = os.Mkdir(sourcesFullPath, os.ModePerm)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				By("Creating local temp files")
-				sourceFileNames = make([]string, totalFiles)
-				sourceFilePaths = make([]string, totalFiles)
-				remotePaths = make([]string, totalFiles)
-				for i := 0; i < totalFiles; i++ {
-					sourceFileNames[i] = fmt.Sprintf(
-						"pivnet-resource-test-file-%d",
-						time.Now().Nanosecond(),
-					)
-
-					sourceFilePaths[i] = filepath.Join(
-						sourcesFullPath,
-						sourceFileNames[i],
-					)
-
-					err = ioutil.WriteFile(
-						sourceFilePaths[i],
-						[]byte("some content"),
-						os.ModePerm,
-					)
-					Expect(err).ShouldNot(HaveOccurred())
-
-					remotePaths[i] = fmt.Sprintf(
-						"product_files/%s/%s",
-						s3FilepathPrefix,
-						sourceFileNames[i],
-					)
-				}
-
-				outRequest.Params.FileGlob = fmt.Sprintf("%s/*", sourcesDir)
-				outRequest.Params.FilepathPrefix = s3FilepathPrefix
-
-				stdinContents, err = json.Marshal(outRequest)
-				Expect(err).ShouldNot(HaveOccurred())
-			})
-
-			AfterEach(func() {
-				By("Removing uploaded file")
-				for i := 0; i < totalFiles; i++ {
-					client.DeleteFile(pivnetBucketName, remotePaths[i])
-				}
-			})
-
-			It("uploads files to s3 and creates files on pivnet", func() {
-				By("Getting existing list of product files")
-				existingProductFiles := getProductFiles(productSlug)
-
-				By("Verifying existing product files does not yet contain new files")
-				var existingProductFileNames []string
-				for _, f := range existingProductFiles {
-					existingProductFileNames = append(existingProductFileNames, f.Name)
-				}
-				for i := 0; i < totalFiles; i++ {
-					Expect(existingProductFileNames).NotTo(ContainElement(sourceFileNames[i]))
-				}
-
-				By("Running the command")
-				session := run(command, stdinContents)
-				Eventually(session, executableTimeout).Should(gexec.Exit(0))
-
-				By("Verifying uploaded files can be downloaded")
-				for i := 0; i < totalFiles; i++ {
-					localDownloadPath := fmt.Sprintf("%s-downloaded", sourceFilePaths[i])
-					err := client.DownloadFile(pivnetBucketName, remotePaths[i], localDownloadPath)
-					Expect(err).ShouldNot(HaveOccurred())
-				}
-
-				By("Outputting a valid json response")
-				response := concourse.OutResponse{}
-				err := json.Unmarshal(session.Out.Contents(), &response)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				Expect(response.Version.ProductVersion).To(Equal(productVersion))
-
-				By("Getting updated list of product files")
-				updatedProductFiles := getProductFiles(productSlug)
-
-				By("Verifying number of product files has increased by the expected amount")
-				newProductFileCount := len(updatedProductFiles) - len(existingProductFiles)
-				Expect(newProductFileCount).To(Equal(totalFiles))
-
-				By("Verifying updated product files contains new files")
-				var newProductFiles []pivnet.ProductFile
-				for _, p := range updatedProductFiles {
-					if stringInSlice(p.Name, sourceFileNames) {
-						newProductFiles = append(newProductFiles, p)
-					}
-				}
-				Expect(len(newProductFiles)).To(Equal(totalFiles))
-
-				By("Getting newly-created release")
-				release, err := pivnetClient.GetRelease(productSlug, productVersion)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				By("Verifying release contains new product files")
-				productFilesFromRelease, err := pivnetClient.GetProductFiles(release)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				Expect(len(productFilesFromRelease.ProductFiles)).To(Equal(totalFiles))
-				for _, p := range productFilesFromRelease.ProductFiles {
-					Expect(sourceFileNames).To(ContainElement(p.Name))
-				}
-
-				By("Downloading the files via the In CMD")
-				inRequest := concourse.InRequest{
-					Source: concourse.Source{
-						APIToken:    pivnetAPIToken,
-						ProductSlug: productSlug,
-						Endpoint:    endpoint,
-					},
-					Version: concourse.Version{
-						ProductVersion: productVersion,
-					},
-				}
-
-				destDirectory, err := ioutil.TempDir("", "pivnet-out-test")
-				Expect(err).NotTo(HaveOccurred())
-
-				stdinContents, err = json.Marshal(inRequest)
-				Expect(err).NotTo(HaveOccurred())
-
-				downloadCmd := exec.Command(inPath, destDirectory)
-
-				downloadSession := run(downloadCmd, stdinContents)
-				Eventually(downloadSession, executableTimeout).Should(gexec.Exit(0))
-
-				By("Deleting created files on pivnet")
-				for _, p := range newProductFiles {
-					_, err := pivnetClient.DeleteProductFile(productSlug, p.ID)
-					Expect(err).ShouldNot(HaveOccurred())
-				}
-			})
-		})
-
 		Context("When the availability is set to Selected User Groups Only", func() {
 			var (
 				availabilityFile = "availability"
@@ -563,9 +408,6 @@ var _ = Describe("Out", func() {
 			})
 
 			It("Creates a release and updates the availability and user groups", func() {
-				outRequest.Params.FileGlob = ""
-				outRequest.Params.FilepathPrefix = ""
-
 				var err error
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())

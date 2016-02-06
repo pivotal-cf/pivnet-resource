@@ -116,7 +116,7 @@ var _ = AfterSuite(func() {
 	gexec.CleanupBuildArtifacts()
 })
 
-func getProductReleases(productSlug string) []pivnet.Release {
+func getReleases(productSlug string) []pivnet.Release {
 	productURL := fmt.Sprintf(
 		"%s/api/v2/products/%s/releases",
 		endpoint,
@@ -141,7 +141,7 @@ func getProductReleases(productSlug string) []pivnet.Release {
 
 func getProductVersions(productSlug string) []string {
 	var versions []string
-	for _, release := range getProductReleases(productSlug) {
+	for _, release := range getReleases(productSlug) {
 		versions = append(versions, string(release.Version))
 	}
 
@@ -149,7 +149,7 @@ func getProductVersions(productSlug string) []string {
 }
 
 func getPivnetRelease(productSlug, productVersion string) pivnet.Release {
-	for _, release := range getProductReleases(productSlug) {
+	for _, release := range getReleases(productSlug) {
 		if release.Version == productVersion {
 			return release
 		}
