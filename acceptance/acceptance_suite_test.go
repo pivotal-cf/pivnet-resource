@@ -105,7 +105,7 @@ var _ = BeforeSuite(func() {
 	testLogger := logger.NewLogger(GinkgoWriter)
 
 	clientConfig := pivnet.NewClientConfig{
-		Endpoint:  pivnet.Endpoint,
+		Endpoint:  endpoint,
 		Token:     pivnetAPIToken,
 		UserAgent: "pivnet-resource/integration-test",
 	}
