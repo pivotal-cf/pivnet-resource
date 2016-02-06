@@ -5,14 +5,15 @@ set -eu
 API_TOKEN="${API_TOKEN:?"API_TOKEN must be provided"}"
 AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:?"AWS_ACCESS_KEY_ID must be provided"}"
 AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:?"AWS_SECRET_ACCESS_KEY must be provided"}"
+
+set -x
+
 S3_OUT_LOCATION="${S3_OUT_LOCATION:?"S3_OUT_LOCATION must be provided"}"
 PIVNET_S3_REGION="${PIVNET_S3_REGION:?"PIVNET_S3_REGION must be provided"}"
 PIVNET_BUCKET_NAME="${PIVNET_BUCKET_NAME:?"PIVNET_BUCKET_NAME must be provided"}"
 S3_FILEPATH_PREFIX="${S3_FILEPATH_PREFIX:?"S3_FILEPATH_PREFIX must be provided"}"
 
 SLOW_SPEC_THRESHOLD=40
-
-set -x
 
 my_dir="$( cd "$( dirname "${0}" )" && pwd )"
 base_dir="$( cd "${my_dir}/.." && pwd )"
