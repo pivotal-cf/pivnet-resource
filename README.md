@@ -237,7 +237,7 @@ PIVNET_S3_REGION=region-of-pivnet-eg-us-east-1 \
 PIVNET_BUCKET_NAME=bucket-of-pivnet-eg-pivnet-bucket \
 PIVNET_ENDPOINT= some-pivnet-endpoint \
 S3_FILEPATH_PREFIX=Case-Sensitive-Path-eg-Pivotal-Diego-PCF \
-./scripts/test
+./bin/test
 ```
 
 ### Project management
