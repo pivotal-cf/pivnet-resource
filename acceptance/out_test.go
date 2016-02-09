@@ -334,7 +334,6 @@ var _ = Describe("Out", func() {
 
 			By("Validating the new product version does not yet exist")
 			productVersions := getProductVersions(productSlug)
-			Expect(productVersions).NotTo(BeEmpty())
 			Expect(productVersions).NotTo(ContainElement(productVersion))
 
 			By("Running the command")
@@ -414,7 +413,6 @@ var _ = Describe("Out", func() {
 
 				By("Validating the new product version does not yet exist")
 				productVersions := getProductVersions(productSlug)
-				Expect(productVersions).NotTo(BeEmpty())
 				Expect(productVersions).NotTo(ContainElement(productVersion))
 
 				By("Running the command")
