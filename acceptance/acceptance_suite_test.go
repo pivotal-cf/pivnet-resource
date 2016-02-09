@@ -93,6 +93,8 @@ var _ = BeforeSuite(func() {
 	By("Copying s3-out to compilation location")
 	originalS3OutPath := os.Getenv("S3_OUT_LOCATION")
 	Expect(originalS3OutPath).ToNot(BeEmpty(), "$S3_OUT_LOCATION must be provided")
+	_, err = os.Stat(originalS3OutPath)
+	Expect(err).NotTo(HaveOccurred())
 	s3OutPath := filepath.Join(path.Dir(outPath), "s3-out")
 	copyFileContents(originalS3OutPath, s3OutPath)
 	Expect(err).NotTo(HaveOccurred())
