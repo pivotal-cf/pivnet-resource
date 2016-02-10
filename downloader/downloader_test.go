@@ -44,69 +44,92 @@ var _ = Describe("Downloader", func() {
 			token = "1234-abcd"
 		})
 
-		Context("Success", func() {
-			It("follows redirects", func() {
-				header := http.Header{}
-				header.Add("Location", apiAddress+"/some-redirect-link")
+		It("follows redirects", func() {
+			header := http.Header{}
+			header.Add("Location", apiAddress+"/some-redirect-link")
 
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", "/the-first-post", ""),
-						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
-						ghttp.RespondWith(http.StatusFound, nil, header),
-					),
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("GET", "/some-redirect-link"),
-						ghttp.RespondWith(http.StatusOK, make([]byte, 10, 14)),
-					),
-				)
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", "/the-first-post", ""),
+					ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
+					ghttp.RespondWith(http.StatusFound, nil, header),
+				),
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/some-redirect-link"),
+					ghttp.RespondWith(http.StatusOK, make([]byte, 10, 14)),
+				),
+			)
 
-				fileNames := map[string]string{
-					"the-first-post": apiAddress + "/the-first-post",
-				}
+			fileNames := map[string]string{
+				"the-first-post": apiAddress + "/the-first-post",
+			}
 
-				err := downloader.Download(dir, fileNames, token)
-				Expect(err).NotTo(HaveOccurred())
-			})
+			_, err := downloader.Download(dir, fileNames, token)
+			Expect(err).NotTo(HaveOccurred())
+		})
 
-			It("Downloads the files into the directory provided", func() {
-				fileNames := map[string]string{
-					"file-0": apiAddress + "/post-0",
-					"file-1": apiAddress + "/post-1",
-					"file-2": apiAddress + "/post-2",
-				}
+		It("Downloads the files into the directory provided", func() {
+			fileNames := map[string]string{
+				"file-0": apiAddress + "/post-0",
+				"file-1": apiAddress + "/post-1",
+				"file-2": apiAddress + "/post-2",
+			}
 
-				for i := 0; i < len(fileNames); i++ {
-					url := fmt.Sprintf("/post-%d", i)
-					server.RouteToHandler("POST", url, ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", url, ""),
-						ghttp.RespondWith(http.StatusOK, fmt.Sprintf("contents-%d", i)),
-					))
-				}
+			for i := 0; i < len(fileNames); i++ {
+				url := fmt.Sprintf("/post-%d", i)
+				server.RouteToHandler("POST", url, ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", url, ""),
+					ghttp.RespondWith(http.StatusOK, fmt.Sprintf("contents-%d", i)),
+				))
+			}
 
-				err := downloader.Download(dir, fileNames, token)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(server.ReceivedRequests())).To(Equal(3))
+			_, err := downloader.Download(dir, fileNames, token)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(server.ReceivedRequests())).To(Equal(3))
 
-				dataDir, err := os.Open(dir)
+			dataDir, err := os.Open(dir)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			files, err := dataDir.Readdir(3)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(files).To(HaveLen(3))
+
+			for _, f := range files {
+				fullPath := filepath.Join(dir, f.Name())
+				contents, err := ioutil.ReadFile(fullPath)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				files, err := dataDir.Readdir(3)
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(files).To(HaveLen(3))
+				split := strings.Split(f.Name(), "-")
+				index := split[1]
 
-				for _, f := range files {
-					fullPath := filepath.Join(dir, f.Name())
-					contents, err := ioutil.ReadFile(fullPath)
-					Expect(err).ShouldNot(HaveOccurred())
+				expectedContents := []byte(fmt.Sprintf("contents-%s", index))
+				Expect(contents).To(Equal(expectedContents))
+			}
+		})
 
-					split := strings.Split(f.Name(), "-")
-					index := split[1]
+		It("returns a list of file names", func() {
+			fileNames := map[string]string{
+				"file-0": apiAddress + "/post-0",
+				"file-1": apiAddress + "/post-1",
+				"file-2": apiAddress + "/post-2",
+			}
 
-					expectedContents := []byte(fmt.Sprintf("contents-%s", index))
-					Expect(contents).To(Equal(expectedContents))
-				}
-			})
+			for i := 0; i < len(fileNames); i++ {
+				url := fmt.Sprintf("/post-%d", i)
+				server.RouteToHandler("POST", url, ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", url, ""),
+					ghttp.RespondWith(http.StatusOK, fmt.Sprintf("contents-%d", i)),
+				))
+			}
+
+			files, err := downloader.Download(dir, fileNames, token)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(len(files)).To(Equal(3))
+
+			Expect(files).Should(ContainElement("file-0"))
+			Expect(files).Should(ContainElement("file-1"))
+			Expect(files).Should(ContainElement("file-2"))
 		})
 
 		Context("when the user has not accepted the EULA", func() {
@@ -123,7 +146,7 @@ var _ = Describe("Downloader", func() {
 					"the-first-post": apiAddress + "/the-first-post",
 				}
 
-				err := downloader.Download(dir, fileNames, token)
+				_, err := downloader.Download(dir, fileNames, token)
 				Expect(err).To(MatchError("the EULA has not been accepted for the file: the-first-post"))
 			})
 		})
@@ -142,18 +165,20 @@ var _ = Describe("Downloader", func() {
 					"the-first-post": apiAddress + "/the-first-post",
 				}
 
-				err := downloader.Download(dir, fileNames, token)
+				_, err := downloader.Download(dir, fileNames, token)
 				Expect(err).To(MatchError("pivnet returned an error code of 401 for the file: the-first-post"))
 			})
 		})
 
 		Context("when it fails to make a request", func() {
 			It("raises an error", func() {
-				Expect(downloader.Download(
+				_, err := downloader.Download(
 					dir,
 					map[string]string{"^731drop": "&h%%%%"},
 					token,
-				)).NotTo(Succeed())
+				)
+
+				Expect(err).Should(HaveOccurred())
 			})
 		})
 	})

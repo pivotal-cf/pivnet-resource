@@ -7,11 +7,13 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 )
@@ -114,6 +116,19 @@ func main() {
 		productFiles,
 	)
 
+	downloadLinksMD5 := map[string]string{}
+	for _, p := range productFiles.ProductFiles {
+		productFile, err := client.GetProductFile(productSlug, p.ID)
+		if err != nil {
+			log.Fatalf("Failed to get Product File: %s\n", err.Error())
+		}
+
+		parts := strings.Split(productFile.AWSObjectKey, "/")
+		fileName := parts[len(parts)-1]
+
+		downloadLinksMD5[fileName] = productFile.MD5
+	}
+
 	downloadLinks := filter.DownloadLinks(productFiles)
 
 	if len(input.Params.Globs) > 0 {
@@ -134,9 +149,28 @@ func main() {
 			downloadDir,
 		)
 
-		err = downloader.Download(downloadDir, downloadLinks, token)
+		files, err := downloader.Download(downloadDir, downloadLinks, token)
 		if err != nil {
 			log.Fatalf("Failed to Download Files: %s\n", err.Error())
+		}
+
+		for _, f := range files {
+			downloadPath := filepath.Join(downloadDir, f)
+
+			md5, err := md5.NewFileContentsSummer(downloadPath).Sum()
+			if err != nil {
+				log.Fatalf("Failed to validate MD5: %s\n", err.Error())
+			}
+
+			expectedMD5 := downloadLinksMD5[f]
+			if md5 != expectedMD5 {
+				log.Fatalf(
+					"Failed MD5 comparison for file: %s. Expected %s, got %s\n",
+					f,
+					expectedMD5,
+					md5,
+				)
+			}
 		}
 	}
 
