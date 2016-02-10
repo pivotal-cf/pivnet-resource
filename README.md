@@ -119,7 +119,8 @@ Creates a new release on Pivotal Network with the provided version and metadata.
 
 Also optionally uploads one or more files to the Pivotal Network bucket under
 the provided `s3_filepath_prefix`, adding them both to the Pivotal Network as well as to
-the newly-created release.
+the newly-created release. The MD5 checksum of each file is taken locally, and
+added to the file metadata in Pivotal Network.
 
 #### Parameters
 

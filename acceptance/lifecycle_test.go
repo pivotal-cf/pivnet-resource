@@ -268,6 +268,11 @@ var _ = Describe("Lifecycle test", func() {
 				Expect(len(productFilesFromRelease.ProductFiles)).To(Equal(totalFiles))
 				for _, p := range productFilesFromRelease.ProductFiles {
 					Expect(sourceFileNames).To(ContainElement(p.Name))
+
+					productFile, err := pivnetClient.GetProductFile(productSlug, p.ID)
+					Expect(err).ShouldNot(HaveOccurred())
+					// Contents are fixed at 'some contents' so the MD5 is known.
+					Expect(productFile.MD5).To(Equal("9893532233caff98cd083a116b013c0b"))
 				}
 
 				By("Downloading all files via in command and glob")

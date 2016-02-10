@@ -8,7 +8,8 @@ import (
 )
 
 type Client interface {
-	Upload() (map[string]string, error)
+	ExactGlobs() ([]string, error)
+	UploadFile(string) (string, error)
 }
 
 type client struct {
@@ -40,7 +41,7 @@ func NewClient(config Config) Client {
 	}
 }
 
-func (c client) Upload() (map[string]string, error) {
+func (c client) ExactGlobs() ([]string, error) {
 	matches, err := filepath.Glob(filepath.Join(c.sourcesDir, c.fileGlob))
 	if err != nil {
 		return nil, err
@@ -56,7 +57,7 @@ func (c client) Upload() (map[string]string, error) {
 	}
 	c.logger.Debugf("Absolute path to sourcesDir: %s\n", absPathSourcesDir)
 
-	filenamePaths := make(map[string]string)
+	exactGlobs := []string{}
 	for _, match := range matches {
 		c.logger.Debugf("Matched file: %s\n", match)
 
@@ -76,21 +77,26 @@ func (c client) Upload() (map[string]string, error) {
 			match,
 		)
 
-		filename := filepath.Base(match)
-		remoteDir := "product_files/" + c.filepathPrefix + "/"
-		remotePath := fmt.Sprintf("%s%s", remoteDir, filename)
-
-		err = c.transport.Upload(
-			exactGlob,
-			remoteDir,
-			c.sourcesDir,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		filenamePaths[filename] = remotePath
+		exactGlobs = append(exactGlobs, exactGlob)
 	}
 
-	return filenamePaths, nil
+	return exactGlobs, nil
+}
+
+func (c client) UploadFile(exactGlob string) (string, error) {
+	filename := filepath.Base(exactGlob)
+
+	remoteDir := "product_files/" + c.filepathPrefix + "/"
+	remotePath := fmt.Sprintf("%s%s", remoteDir, filename)
+
+	err := c.transport.Upload(
+		exactGlob,
+		remoteDir,
+		c.sourcesDir,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return remotePath, nil
 }

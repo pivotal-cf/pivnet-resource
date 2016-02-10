@@ -15,106 +15,162 @@ import (
 )
 
 var _ = Describe("Uploader", func() {
-	var (
-		l              logger.Logger
-		fakeTransport  *uploader_fakes.FakeTransport
-		uploaderConfig uploader.Config
-		uploaderClient uploader.Client
+	Describe("ExactGlobs", func() {
+		var (
+			l              logger.Logger
+			fakeTransport  *uploader_fakes.FakeTransport
+			uploaderConfig uploader.Config
+			uploaderClient uploader.Client
 
-		tempDir    string
-		myFilesDir string
+			tempDir    string
+			myFilesDir string
 
-		filepathPrefix = "Some-Filepath-Prefix"
-	)
+			filepathPrefix = "Some-Filepath-Prefix"
+		)
 
-	BeforeEach(func() {
-		l = logger.NewLogger(GinkgoWriter)
-		fakeTransport = &uploader_fakes.FakeTransport{}
-
-		var err error
-		tempDir, err = ioutil.TempDir("", "pivnet-resource")
-		Expect(err).NotTo(HaveOccurred())
-
-		myFilesDir = filepath.Join(tempDir, "my_files")
-		err = os.Mkdir(myFilesDir, os.ModePerm)
-		Expect(err).NotTo(HaveOccurred())
-
-		_, err = os.Create(filepath.Join(myFilesDir, "file-0"))
-		Expect(err).NotTo(HaveOccurred())
-
-		uploaderConfig = uploader.Config{
-			FilepathPrefix: filepathPrefix,
-			FileGlob:       "my_files/*",
-			Transport:      fakeTransport,
-			SourcesDir:     tempDir,
-			Logger:         l,
-		}
-
-		uploaderClient = uploader.NewClient(uploaderConfig)
-	})
-
-	AfterEach(func() {
-		err := os.RemoveAll(tempDir)
-		Expect(err).NotTo(HaveOccurred())
-	})
-
-	Context("when no files match the fileglob", func() {
 		BeforeEach(func() {
-			uploaderConfig.FileGlob = "this-will-match-nothing"
+			l = logger.NewLogger(GinkgoWriter)
+			fakeTransport = &uploader_fakes.FakeTransport{}
+
+			var err error
+			tempDir, err = ioutil.TempDir("", "pivnet-resource")
+			Expect(err).NotTo(HaveOccurred())
+
+			myFilesDir = filepath.Join(tempDir, "my_files")
+			err = os.Mkdir(myFilesDir, os.ModePerm)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = os.Create(filepath.Join(myFilesDir, "file-0"))
+			Expect(err).NotTo(HaveOccurred())
+
+			uploaderConfig = uploader.Config{
+				FilepathPrefix: filepathPrefix,
+				FileGlob:       "my_files/*",
+				Transport:      fakeTransport,
+				SourcesDir:     tempDir,
+				Logger:         l,
+			}
+
 			uploaderClient = uploader.NewClient(uploaderConfig)
 		})
 
-		It("returns an error", func() {
-			_, err := uploaderClient.Upload()
-			Expect(err).To(HaveOccurred())
+		AfterEach(func() {
+			err := os.RemoveAll(tempDir)
+			Expect(err).NotTo(HaveOccurred())
+		})
 
-			Expect(err.Error()).To(ContainSubstring("no matches"))
+		Context("when no files match the fileglob", func() {
+			BeforeEach(func() {
+				uploaderConfig.FileGlob = "this-will-match-nothing"
+				uploaderClient = uploader.NewClient(uploaderConfig)
+			})
+
+			It("returns an error", func() {
+				_, err := uploaderClient.ExactGlobs()
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(ContainSubstring("no matches"))
+			})
+		})
+
+		Context("when multiple files match the fileglob", func() {
+			BeforeEach(func() {
+				_, err := os.Create(filepath.Join(myFilesDir, "file-1"))
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns a map of filenames to remote paths", func() {
+				filenamePaths, err := uploaderClient.ExactGlobs()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(len(filenamePaths)).To(Equal(2))
+
+				Expect(filenamePaths[0]).To(Equal("my_files/file-0"))
+				Expect(filenamePaths[1]).To(Equal("my_files/file-1"))
+			})
 		})
 	})
 
-	Context("when multiple files match the fileglob", func() {
+	Describe("UploadFile", func() {
+		var (
+			l              logger.Logger
+			fakeTransport  *uploader_fakes.FakeTransport
+			uploaderConfig uploader.Config
+			uploaderClient uploader.Client
+
+			tempDir    string
+			myFilesDir string
+
+			filepathPrefix = "Some-Filepath-Prefix"
+		)
+
 		BeforeEach(func() {
-			_, err := os.Create(filepath.Join(myFilesDir, "file-1"))
+			l = logger.NewLogger(GinkgoWriter)
+			fakeTransport = &uploader_fakes.FakeTransport{}
+
+			var err error
+			tempDir, err = ioutil.TempDir("", "pivnet-resource")
+			Expect(err).NotTo(HaveOccurred())
+
+			myFilesDir = filepath.Join(tempDir, "my_files")
+			err = os.Mkdir(myFilesDir, os.ModePerm)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = os.Create(filepath.Join(myFilesDir, "file-0"))
+			Expect(err).NotTo(HaveOccurred())
+
+			uploaderConfig = uploader.Config{
+				FilepathPrefix: filepathPrefix,
+				FileGlob:       "my_files/*",
+				Transport:      fakeTransport,
+				SourcesDir:     tempDir,
+				Logger:         l,
+			}
+
+			uploaderClient = uploader.NewClient(uploaderConfig)
+		})
+
+		AfterEach(func() {
+			err := os.RemoveAll(tempDir)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("invokes the transport once per file with a separate glob per file", func() {
-			_, err := uploaderClient.Upload()
-			Expect(err).NotTo(HaveOccurred())
+		Context("when the file exists", func() {
+			BeforeEach(func() {
+				_, err := os.Create(filepath.Join(myFilesDir, "file-0"))
+				Expect(err).NotTo(HaveOccurred())
+			})
 
-			Expect(fakeTransport.UploadCallCount()).To(Equal(2))
+			It("invokes the transport", func() {
+				_, err := uploaderClient.UploadFile("my_files/file-0")
+				Expect(err).NotTo(HaveOccurred())
 
-			glob0, _, _ := fakeTransport.UploadArgsForCall(0)
-			Expect(glob0).To(Equal("my_files/file-0"))
+				Expect(fakeTransport.UploadCallCount()).To(Equal(1))
 
-			glob1, _, _ := fakeTransport.UploadArgsForCall(1)
-			Expect(glob1).To(Equal("my_files/file-1"))
+				glob0, _, _ := fakeTransport.UploadArgsForCall(0)
+				Expect(glob0).To(Equal("my_files/file-0"))
+			})
+
+			It("returns a map of filenames to remote paths", func() {
+				remotePath, err := uploaderClient.UploadFile("my_files/file-0")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(remotePath).To(Equal(
+					fmt.Sprintf("product_files/%s/file-0", filepathPrefix)))
+			})
 		})
 
-		It("returns a map of filenames to remote paths", func() {
-			filenamePaths, err := uploaderClient.Upload()
-			Expect(err).NotTo(HaveOccurred())
+		Context("when the transport exits with error", func() {
+			BeforeEach(func() {
+				fakeTransport.UploadReturns(errors.New("some error"))
+			})
 
-			Expect(len(filenamePaths)).To(Equal(2))
+			It("propagates errors", func() {
+				_, err := uploaderClient.UploadFile("foo")
+				Expect(err).To(HaveOccurred())
 
-			Expect(filenamePaths["file-0"]).To(Equal(
-				fmt.Sprintf("product_files/%s/file-0", filepathPrefix)))
-
-			Expect(filenamePaths["file-1"]).To(Equal(
-				fmt.Sprintf("product_files/%s/file-1", filepathPrefix)))
-		})
-	})
-
-	Context("when the transport exits with error", func() {
-		BeforeEach(func() {
-			fakeTransport.UploadReturns(errors.New("some error"))
-		})
-
-		It("propagates errors", func() {
-			_, err := uploaderClient.Upload()
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(ContainSubstring("some error"))
+				Expect(err.Error()).To(ContainSubstring("some error"))
+			})
 		})
 	})
 })

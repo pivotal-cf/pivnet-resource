@@ -12,6 +12,7 @@ type CreateProductFileConfig struct {
 	FileVersion  string
 	AWSObjectKey string
 	Name         string
+	MD5          string
 }
 
 func (c client) GetProductFiles(release Release) (ProductFiles, error) {
@@ -31,12 +32,34 @@ func (c client) GetProductFiles(release Release) (ProductFiles, error) {
 	return productFiles, nil
 }
 
+func (c client) GetProductFile(productSlug string, id int) (ProductFile, error) {
+	url := fmt.Sprintf("%s/products/%s/product_files/%d",
+		c.url,
+		productSlug,
+		id,
+	)
+	response := ProductFileResponse{}
+
+	err := c.makeRequest(
+		"GET",
+		url,
+		http.StatusOK,
+		nil,
+		&response,
+	)
+	if err != nil {
+		return ProductFile{}, err
+	}
+
+	return response.ProductFile, nil
+}
+
 func (c client) CreateProductFile(config CreateProductFileConfig) (ProductFile, error) {
 	url := c.url + "/products/" + config.ProductSlug + "/product_files"
 
 	body := createProductFileBody{
 		ProductFile: ProductFile{
-			MD5:          "not-supported-yet",
+			MD5:          config.MD5,
 			FileType:     "Software",
 			FileVersion:  config.FileVersion,
 			AWSObjectKey: config.AWSObjectKey,

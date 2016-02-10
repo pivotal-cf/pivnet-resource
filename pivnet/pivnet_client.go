@@ -23,6 +23,7 @@ type Client interface {
 	GetRelease(string, string) (Release, error)
 	UpdateRelease(string, Release) (Release, error)
 	GetProductFiles(Release) (ProductFiles, error)
+	GetProductFile(productSlug string, id int) (ProductFile, error)
 	AcceptEULA(productSlug string, releaseID int) error
 	CreateProductFile(config CreateProductFileConfig) (ProductFile, error)
 	DeleteProductFile(productSlug string, id int) (ProductFile, error)
@@ -97,7 +98,13 @@ func (c client) AcceptEULA(productSlug string, releaseID int) error {
 	return nil
 }
 
-func (c client) makeRequest(requestType string, url string, expectedStatusCode int, body io.Reader, data interface{}) error {
+func (c client) makeRequest(
+	requestType string,
+	url string,
+	expectedStatusCode int,
+	body io.Reader,
+	data interface{},
+) error {
 	req, err := http.NewRequest(requestType, url, body)
 	if err != nil {
 		return err

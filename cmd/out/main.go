@@ -12,6 +12,7 @@ import (
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
@@ -155,13 +156,26 @@ func main() {
 			Transport: s3Client,
 		})
 
-		files, err := uploaderClient.Upload()
-		for filename, remotePath := range files {
+		exactGlobs, err := uploaderClient.ExactGlobs()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		for _, exactGlob := range exactGlobs {
+			fullFilepath := filepath.Join(sourcesDir, exactGlob)
+			fileContentsMD5, err := md5.NewFileContentsSummer(fullFilepath).Sum()
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			remotePath, err := uploaderClient.UploadFile(exactGlob)
+
 			product, err := pivnetClient.FindProductForSlug(productSlug)
 			if err != nil {
 				log.Fatalln(err)
 			}
 
+			filename := filepath.Base(exactGlob)
 			l.Debugf(
 				"Creating product file: {product_slug: %s, filename: %s, aws_object_key: %s, file_version: %s}\n",
 				productSlug,
@@ -175,6 +189,7 @@ func main() {
 				Name:         filename,
 				AWSObjectKey: remotePath,
 				FileVersion:  release.Version,
+				MD5:          fileContentsMD5,
 			})
 			if err != nil {
 				log.Fatalln(err)
