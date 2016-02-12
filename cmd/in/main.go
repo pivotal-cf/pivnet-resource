@@ -118,7 +118,11 @@ func main() {
 
 	downloadLinksMD5 := map[string]string{}
 	for _, p := range productFiles.ProductFiles {
-		productFile, err := client.GetProductFile(productSlug, p.ID)
+		productFile, err := client.GetProductFile(
+			productSlug,
+			release.ID,
+			p.ID,
+		)
 		if err != nil {
 			log.Fatalf("Failed to get Product File: %s\n", err.Error())
 		}

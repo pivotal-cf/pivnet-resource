@@ -32,11 +32,12 @@ func (c client) GetProductFiles(release Release) (ProductFiles, error) {
 	return productFiles, nil
 }
 
-func (c client) GetProductFile(productSlug string, id int) (ProductFile, error) {
-	url := fmt.Sprintf("%s/products/%s/product_files/%d",
+func (c client) GetProductFile(productSlug string, releaseID int, productID int) (ProductFile, error) {
+	url := fmt.Sprintf("%s/products/%s/releases/%d/product_files/%d",
 		c.url,
 		productSlug,
-		id,
+		releaseID,
+		productID,
 	)
 	response := ProductFileResponse{}
 

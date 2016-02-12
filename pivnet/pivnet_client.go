@@ -23,7 +23,7 @@ type Client interface {
 	GetRelease(string, string) (Release, error)
 	UpdateRelease(string, Release) (Release, error)
 	GetProductFiles(Release) (ProductFiles, error)
-	GetProductFile(productSlug string, id int) (ProductFile, error)
+	GetProductFile(productSlug string, releaseID int, productID int) (ProductFile, error)
 	AcceptEULA(productSlug string, releaseID int) error
 	CreateProductFile(config CreateProductFileConfig) (ProductFile, error)
 	DeleteProductFile(productSlug string, id int) (ProductFile, error)

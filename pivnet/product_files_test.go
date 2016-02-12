@@ -103,47 +103,66 @@ var _ = Describe("PivnetClient - product files", func() {
 		var (
 			productSlug string
 			productID   int
+			releaseID   int
 		)
 
 		BeforeEach(func() {
 			productSlug = "banana"
 			productID = 8
+			releaseID = 12
 		})
 
-		It("returns the product file for the given productSlug and file ID", func() {
+		It("returns the product file for the given productSlug, productID and release ID", func() {
 			response, err := json.Marshal(pivnet.ProductFileResponse{pivnet.ProductFile{
 				ID:           productID,
 				AWSObjectKey: "something",
-				Links:        &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}},
+				Links: &pivnet.Links{Download: map[string]string{
+					"href": "/products/banana/releases/666/product_files/8/download"},
+				},
 			}})
 			Expect(err).NotTo(HaveOccurred())
 
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/product_files/8"),
+					ghttp.VerifyRequest(
+						"GET",
+						apiPrefix+"/products/banana/releases/12/product_files/8",
+					),
 					ghttp.RespondWith(http.StatusOK, response),
 				),
 			)
 
-			product, err := client.GetProductFile(productSlug, productID)
+			product, err := client.GetProductFile(
+				productSlug,
+				releaseID,
+				productID,
+			)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(product.ID).To(Equal(productID))
 			Expect(product.AWSObjectKey).To(Equal("something"))
 
-			Expect(product.Links.Download["href"]).To(Equal("/products/banana/releases/666/product_files/8/download"))
+			Expect(product.Links.Download["href"]).
+				To(Equal("/products/banana/releases/666/product_files/8/download"))
 		})
 
 		Context("when the server responds with a non-2XX status code", func() {
 			It("returns an error", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/product_files/8"),
+						ghttp.VerifyRequest(
+							"GET",
+							apiPrefix+"/products/banana/releases/12/product_files/8",
+						),
 						ghttp.RespondWith(http.StatusTeapot, nil),
 					),
 				)
 
-				_, err := client.GetProductFile(productSlug, productID)
+				_, err := client.GetProductFile(
+					productSlug,
+					releaseID,
+					productID,
+				)
 				Expect(err).To(MatchError(errors.New(
 					"Pivnet returned status code: 418 for the request - expected 200")))
 			})
