@@ -161,9 +161,13 @@ func main() {
 		for _, f := range files {
 			downloadPath := filepath.Join(downloadDir, f)
 
+			l.Debugf(
+				"Calcuating MD5 for downloaded file: %s\n",
+				downloadPath,
+			)
 			md5, err := md5.NewFileContentsSummer(downloadPath).Sum()
 			if err != nil {
-				log.Fatalf("Failed to validate MD5: %s\n", err.Error())
+				log.Fatalf("Failed to calculate MD5: %s\n", err.Error())
 			}
 
 			expectedMD5 := downloadLinksMD5[f]
@@ -175,6 +179,12 @@ func main() {
 					md5,
 				)
 			}
+
+			l.Debugf(
+				"MD5 for downloaded file: %s matched expected: %s\n",
+				downloadPath,
+				md5,
+			)
 		}
 	}
 
