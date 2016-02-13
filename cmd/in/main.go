@@ -59,6 +59,12 @@ func main() {
 
 	l.Debugf("Received input: %+v\n", input)
 
+	l.Debugf("Creating download directory: %s\n", downloadDir)
+	err = os.MkdirAll(downloadDir, os.ModePerm)
+	if err != nil {
+		log.Fatalf("Failed to create download directory: %s\n", err.Error())
+	}
+
 	var endpoint string
 	if input.Source.Endpoint != "" {
 		endpoint = input.Source.Endpoint
