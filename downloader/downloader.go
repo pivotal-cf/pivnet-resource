@@ -3,8 +3,9 @@ package downloader
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -32,15 +33,15 @@ func Download(downloadDir string, downloadLinks map[string]string, token string)
 			return nil, errors.New(fmt.Sprintf("pivnet returned an error code of %d for the file: %s", response.StatusCode, fileName))
 		}
 
-		responseBody, err := ioutil.ReadAll(response.Body)
+		downloadPath := filepath.Join(downloadDir, fileName)
+		file, err := os.Create(downloadPath)
 		if err != nil {
-			return nil, err
+			return nil, err // not tested
 		}
 
-		downloadPath := filepath.Join(downloadDir, fileName)
-		err = ioutil.WriteFile(downloadPath, responseBody, 0666)
+		_, err = io.Copy(file, response.Body)
 		if err != nil {
-			return nil, err
+			return nil, err // not tested
 		}
 
 		fileNames = append(fileNames, fileName)
