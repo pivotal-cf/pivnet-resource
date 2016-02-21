@@ -10,15 +10,15 @@ base_dir="$( cd "${my_dir}/.." && pwd )"
 
 pushd "${base_dir}" > /dev/null
   GOOS="${GOOS}" go build \
-      -o check \
+      -o "${base_dir}/cmd/check/check" \
       -ldflags "-X main.version=${VERSION}" \
       ./cmd/check
   GOOS="${GOOS}" go build \
-      -o in \
+      -o "${base_dir}/cmd/in/in" \
       -ldflags "-X main.version=${VERSION}" \
       ./cmd/in
   GOOS="${GOOS}" go build \
-      -o out \
+      -o "${base_dir}/cmd/out/out" \
       -ldflags "-X main.version=${VERSION}" \
       ./cmd/out
 popd > /dev/null
