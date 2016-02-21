@@ -2,7 +2,6 @@ package check
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -13,38 +12,40 @@ import (
 )
 
 type CheckCommand struct {
-	logger  logger.Logger
-	logFile *os.File
-	version string
+	logger      logger.Logger
+	logFilePath string
+	version     string
 }
 
 func NewCheckCommand(
 	version string,
 	logger logger.Logger,
-	logFile *os.File,
+	logFilePath string,
 ) *CheckCommand {
 	return &CheckCommand{
-		logger:  logger,
-		logFile: logFile,
-		version: version,
+		logger:      logger,
+		logFilePath: logFilePath,
+		version:     version,
 	}
 }
 
 func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckResponse, error) {
-	logDir := filepath.Dir(c.logFile.Name())
+	logDir := filepath.Dir(c.logFilePath)
 	existingLogFiles, err := filepath.Glob(filepath.Join(logDir, "pivnet-resource-check.log*"))
 	if err != nil {
-		c.logger.Debugf("Exiting with error: %v\n", err)
-		log.Fatalln(err)
+		// This is untested because the only error returned by filepath.Glob is a
+		// malformed glob, and this glob is hard-coded to be correct.
+		return nil, err
 	}
 
 	for _, f := range existingLogFiles {
-		if filepath.Base(f) != filepath.Base(c.logFile.Name()) {
+		if filepath.Base(f) != filepath.Base(c.logFilePath) {
 			c.logger.Debugf("Removing existing log file: %s\n", f)
 			err := os.Remove(f)
 			if err != nil {
-				c.logger.Debugf("Exiting with error: %v\n", err)
-				log.Fatalln(err)
+				// This is untested because it is too hard to force os.Remove to return
+				// an error.
+				return nil, err
 			}
 		}
 	}
@@ -80,8 +81,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	allVersions, err := client.ProductVersions(input.Source.ProductSlug)
 	if err != nil {
-		c.logger.Debugf("Exiting with error: %v\n", err)
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	c.logger.Debugf("All known versions: %+v\n", allVersions)
@@ -92,16 +92,16 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	newVersions, err := versions.Since(allVersions, input.Version.ProductVersion)
 	if err != nil {
-		c.logger.Debugf("Exiting with error: %v\n", err)
-		log.Fatalln(err)
+		// Untested because versions.Since cannot be forced to return an error.
+		return nil, err
 	}
 
 	c.logger.Debugf("New versions: %+v\n", newVersions)
 
 	reversedVersions, err := versions.Reverse(newVersions)
 	if err != nil {
-		c.logger.Debugf("Exiting with error: %v\n", err)
-		log.Fatalln(err)
+		// Untested because versions.Since cannot be forced to return an error.
+		return nil, err
 	}
 
 	var out concourse.CheckResponse
@@ -116,11 +116,4 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	c.logger.Debugf("Returning output: %+v\n", out)
 
 	return out, nil
-}
-
-func (c *CheckCommand) mustBeNonEmpty(input string, key string) {
-	if input == "" {
-		c.logger.Debugf("Exiting with error: %s must be provided\n", key)
-		log.Fatalf("%s must be provided\n", key)
-	}
 }

@@ -21,8 +21,8 @@ var _ = Describe("Check", func() {
 		server         *ghttp.Server
 		pivnetResponse string
 
-		tempDir string
-		logFile *os.File
+		tempDir     string
+		logFilePath string
 
 		version      string
 		ginkgoLogger logger.Logger
@@ -34,7 +34,8 @@ var _ = Describe("Check", func() {
 	BeforeEach(func() {
 		server = ghttp.NewServer()
 
-		pivnetResponse = fmt.Sprintf(`{"releases": [{"version": "1234"}]}`)
+		pivnetResponse =
+			`{"releases": [{"version": "A"},{"version":"C"},{"version":"B"}]}`
 
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
@@ -49,11 +50,8 @@ var _ = Describe("Check", func() {
 		tempDir, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
 
-		logFilePath := filepath.Join(tempDir, "check.log")
+		logFilePath = filepath.Join(tempDir, "pivnet-resource-check.log1234")
 		err = ioutil.WriteFile(logFilePath, []byte("initial log content"), os.ModePerm)
-		Expect(err).NotTo(HaveOccurred())
-
-		logFile, err = os.Open(logFilePath)
 		Expect(err).NotTo(HaveOccurred())
 
 		version = "some-version"
@@ -71,7 +69,7 @@ var _ = Describe("Check", func() {
 
 		ginkgoLogger = logger.NewLogger(sanitizer)
 
-		checkCommand = check.NewCheckCommand(version, ginkgoLogger, logFile)
+		checkCommand = check.NewCheckCommand(version, ginkgoLogger, logFilePath)
 	})
 
 	AfterEach(func() {
@@ -81,9 +79,12 @@ var _ = Describe("Check", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("runs without error", func() {
-		_, err := checkCommand.Run(checkRequest)
+	It("returns the most recent version without error", func() {
+		response, err := checkCommand.Run(checkRequest)
 		Expect(err).NotTo(HaveOccurred())
+
+		Expect(response).To(HaveLen(1))
+		Expect(response[0].ProductVersion).To(Equal("A"))
 	})
 
 	Context("when no api token is provided", func() {
@@ -113,7 +114,6 @@ var _ = Describe("Check", func() {
 	})
 
 	Context("when no releases are returned", func() {
-
 		BeforeEach(func() {
 			pivnetResponse = fmt.Sprintf(`{"releases": []}`)
 
@@ -133,6 +133,74 @@ var _ = Describe("Check", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(response).To(BeEmpty())
+		})
+	})
+
+	Context("when log files already exist", func() {
+		var (
+			otherFilePath1 string
+			otherFilePath2 string
+		)
+
+		BeforeEach(func() {
+			otherFilePath1 = filepath.Join(tempDir, "pivnet-resource-check.log1")
+			err := ioutil.WriteFile(otherFilePath1, []byte("initial log content"), os.ModePerm)
+			Expect(err).NotTo(HaveOccurred())
+
+			otherFilePath2 = filepath.Join(tempDir, "pivnet-resource-check.log2")
+			err = ioutil.WriteFile(otherFilePath2, []byte("initial log content"), os.ModePerm)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("removes the other log files", func() {
+			_, err := checkCommand.Run(checkRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = os.Stat(otherFilePath1)
+			Expect(err).To(HaveOccurred())
+			Expect(os.IsNotExist(err)).To(BeTrue())
+
+			_, err = os.Stat(otherFilePath2)
+			Expect(err).To(HaveOccurred())
+			Expect(os.IsNotExist(err)).To(BeTrue())
+
+			_, err = os.Stat(logFilePath)
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Context("when there is an error getting product versions", func() {
+		BeforeEach(func() {
+			server.Reset()
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.RespondWith(http.StatusNotFound, ""),
+				),
+			)
+		})
+
+		It("returns an error", func() {
+			_, err := checkCommand.Run(checkRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(ContainSubstring("404"))
+		})
+	})
+
+	Context("when a version is provided", func() {
+		BeforeEach(func() {
+			checkRequest.Version = concourse.Version{
+				"B",
+			}
+		})
+
+		It("returns the most recent version", func() {
+			response, err := checkCommand.Run(checkRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(response).To(HaveLen(2))
+			Expect(response[0].ProductVersion).To(Equal("C"))
+			Expect(response[1].ProductVersion).To(Equal("A"))
 		})
 	})
 })

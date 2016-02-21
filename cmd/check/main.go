@@ -46,7 +46,7 @@ func main() {
 
 	l = logger.NewLogger(sanitizer)
 
-	response, err := check.NewCheckCommand(version, l, logFile).Run(input)
+	response, err := check.NewCheckCommand(version, l, logFile.Name()).Run(input)
 	if err != nil {
 		l.Debugf("Exiting with error: %v\n", err)
 		log.Fatalln(err)
