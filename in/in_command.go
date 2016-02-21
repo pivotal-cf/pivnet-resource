@@ -210,7 +210,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		Metadata: metadata,
 	}
 
-	c.logger.Debugf("Returning output: %+v\n", out)
 
 	return out, nil
 }

@@ -55,8 +55,11 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	l.Debugf("Returning output: %+v\n", response)
+
 	err = json.NewEncoder(os.Stdout).Encode(response)
 	if err != nil {
+		l.Debugf("Exiting with error: %v\n", err)
 		log.Fatalln(err)
 	}
 }
