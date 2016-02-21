@@ -16,11 +16,10 @@ import (
 
 var _ = Describe("PivnetClient", func() {
 	var (
-		server     *ghttp.Server
-		client     pivnet.Client
-		token      string
-		apiAddress string
-		userAgent  string
+		server    *ghttp.Server
+		client    pivnet.Client
+		token     string
+		userAgent string
 
 		newClientConfig pivnet.NewClientConfig
 		fakeLogger      logger.Logger
@@ -28,13 +27,12 @@ var _ = Describe("PivnetClient", func() {
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
-		apiAddress = server.URL()
 		token = "my-auth-token"
 		userAgent = "pivnet-resource/0.1.0 (some-url)"
 
 		fakeLogger = &logger_fakes.FakeLogger{}
 		newClientConfig = pivnet.NewClientConfig{
-			Endpoint:  apiAddress,
+			Endpoint:  server.URL(),
 			Token:     token,
 			UserAgent: userAgent,
 		}
