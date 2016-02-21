@@ -6,11 +6,11 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
@@ -104,27 +104,22 @@ var _ = Describe("In", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	It("does not download any of the files in the specified release", func() {
-		By("Running the command")
-		session := run(command, stdinContents)
-		Eventually(session, executableTimeout).Should(gexec.Exit(0))
+	Context("when validation fails", func() {
+		BeforeEach(func() {
+			inRequest.Source.APIToken = ""
 
-		By("Validating number of downloaded files is zero")
-		files, err := ioutil.ReadDir(destDirectory)
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(len(files)).To(Equal(1)) // the version file will always exist
-	})
+			var err error
+			stdinContents, err = json.Marshal(inRequest)
+			Expect(err).ShouldNot(HaveOccurred())
+		})
 
-	It("creates a version file with the downloaded version", func() {
-		versionFilepath := filepath.Join(destDirectory, "version")
+		It("exits with error", func() {
+			By("Running the command")
+			session := run(command, stdinContents)
 
-		By("Running the command")
-		session := run(command, stdinContents)
-		Eventually(session, executableTimeout).Should(gexec.Exit(0))
-
-		By("Validating version file has correct contents")
-		contents, err := ioutil.ReadFile(versionFilepath)
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(string(contents)).To(Equal(productVersion))
+			By("Validating command exited with error")
+			Eventually(session, executableTimeout).Should(gexec.Exit(1))
+			Expect(session.Err).Should(gbytes.Say("api_token must be provided"))
+		})
 	})
 })

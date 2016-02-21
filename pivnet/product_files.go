@@ -18,9 +18,12 @@ type CreateProductFileConfig struct {
 func (c client) GetProductFiles(release Release) (ProductFiles, error) {
 	productFiles := ProductFiles{}
 
+	link := release.Links.ProductFiles["href"]
+	c.logger.Debugf("link: %s\n", link)
+
 	err := c.makeRequest(
 		"GET",
-		release.Links.ProductFiles["href"],
+		link,
 		http.StatusOK,
 		nil,
 		&productFiles,

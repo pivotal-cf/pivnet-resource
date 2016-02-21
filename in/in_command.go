@@ -181,7 +181,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Debugf(
 		"Writing version to file: {version: %s, version_filepath: %s}\n",
-		c.version,
+		productVersion,
 		versionFilepath,
 	)
 
@@ -190,17 +190,24 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		log.Fatalln(err)
 	}
 
+	metadata := []concourse.Metadata{
+		{Name: "release_type", Value: release.ReleaseType},
+		{Name: "release_date", Value: release.ReleaseDate},
+		{Name: "description", Value: release.Description},
+		{Name: "release_notes_url", Value: release.ReleaseNotesURL},
+	}
+
+	if release.Eula != nil {
+		metadata = append(metadata,
+			concourse.Metadata{Name: "eula_slug", Value: release.Eula.Slug},
+		)
+	}
+
 	out := concourse.InResponse{
 		Version: concourse.Version{
 			ProductVersion: productVersion,
 		},
-		Metadata: []concourse.Metadata{
-			{Name: "release_type", Value: release.ReleaseType},
-			{Name: "release_date", Value: release.ReleaseDate},
-			{Name: "description", Value: release.Description},
-			{Name: "release_notes_url", Value: release.ReleaseNotesURL},
-			{Name: "eula_slug", Value: release.Eula.Slug},
-		},
+		Metadata: metadata,
 	}
 
 	c.logger.Debugf("Returning output: %+v\n", out)
