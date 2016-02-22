@@ -59,6 +59,10 @@ func (c client) GetProductFile(productSlug string, releaseID int, productID int)
 }
 
 func (c client) CreateProductFile(config CreateProductFileConfig) (ProductFile, error) {
+	if config.AWSObjectKey == "" {
+		return ProductFile{}, fmt.Errorf("AWS object key must not be empty")
+	}
+
 	url := c.url + "/products/" + config.ProductSlug + "/product_files"
 
 	body := createProductFileBody{

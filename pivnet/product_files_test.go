@@ -239,6 +239,24 @@ var _ = Describe("PivnetClient - product files", func() {
 					"Pivnet returned status code: 418 for the request - expected 201")))
 			})
 		})
+
+		Context("when the aws object key is empty", func() {
+			BeforeEach(func() {
+				createProductFileConfig = pivnet.CreateProductFileConfig{
+					ProductSlug:  productSlug,
+					Name:         "some-file-name",
+					FileVersion:  "some-file-version",
+					AWSObjectKey: "",
+				}
+			})
+
+			It("returns an error", func() {
+				_, err := client.CreateProductFile(createProductFileConfig)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(ContainSubstring("AWS object key"))
+			})
+		})
 	})
 
 	Describe("Delete Product File", func() {
