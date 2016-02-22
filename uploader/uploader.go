@@ -84,6 +84,10 @@ func (c client) ExactGlobs() ([]string, error) {
 }
 
 func (c client) UploadFile(exactGlob string) (string, error) {
+	if exactGlob == "" {
+		return "", fmt.Errorf("glob must not be empty")
+	}
+
 	filename := filepath.Base(exactGlob)
 
 	remoteDir := "product_files/" + c.filepathPrefix + "/"

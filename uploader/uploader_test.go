@@ -172,5 +172,14 @@ var _ = Describe("Uploader", func() {
 				Expect(err.Error()).To(ContainSubstring("some error"))
 			})
 		})
+
+		Context("when the glob is empty", func() {
+			It("returns an error", func() {
+				_, err := uploaderClient.UploadFile("")
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(ContainSubstring("glob"))
+			})
+		})
 	})
 })
