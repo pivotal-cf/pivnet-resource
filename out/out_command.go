@@ -184,8 +184,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 			remotePath, err := uploaderClient.UploadFile(exactGlob)
 			if err != nil {
-				c.logger.Debugf("error: %s\n", err.Error())
-				log.Fatalln(err)
+				return concourse.OutResponse{}, err
 			}
 
 			product, err := pivnetClient.FindProductForSlug(productSlug)

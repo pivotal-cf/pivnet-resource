@@ -141,11 +141,12 @@ var _ = Describe("Out", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		s3OutBinaryName = "s3-out"
+		s3OutScriptContents := `#!/bin/sh
+
+echo "$@"`
 
 		s3OutBinaryPath := filepath.Join(outDir, s3OutBinaryName)
-		err = ioutil.WriteFile(s3OutBinaryPath, []byte(`#!/bin/sh
-
-echo "$@"`), os.ModePerm)
+		err = ioutil.WriteFile(s3OutBinaryPath, []byte(s3OutScriptContents), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
 		apiToken = "some-api-token"
@@ -243,6 +244,25 @@ echo "$@"`), os.ModePerm)
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(MatchRegexp(".*api_token.*provided"))
+		})
+	})
+
+	Context("when the s3-out exits with error", func() {
+		BeforeEach(func() {
+			s3OutScriptContents := `#!/bin/sh
+
+exit 1`
+
+			s3OutBinaryPath := filepath.Join(outDir, s3OutBinaryName)
+			err := ioutil.WriteFile(s3OutBinaryPath, []byte(s3OutScriptContents), os.ModePerm)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("returns an error", func() {
+			_, err := outCommand.Run(outRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*running.*%s.*", s3OutBinaryName))
 		})
 	})
 })

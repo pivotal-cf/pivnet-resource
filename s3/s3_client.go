@@ -2,6 +2,7 @@ package s3
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os/exec"
 
@@ -85,7 +86,7 @@ func (c client) Upload(fileGlob string, to string, sourcesDir string) error {
 
 	err = cmd.Start()
 	if err != nil {
-		return err
+		return fmt.Errorf("Error starting %s: %s", c.outBinaryPath, err.Error())
 	}
 
 	err = json.NewEncoder(cmdIn).Encode(s3Input)
@@ -95,7 +96,7 @@ func (c client) Upload(fileGlob string, to string, sourcesDir string) error {
 
 	err = cmd.Wait()
 	if err != nil {
-		return err
+		return fmt.Errorf("Error running %s: %s", c.outBinaryPath, err.Error())
 	}
 
 	return nil
