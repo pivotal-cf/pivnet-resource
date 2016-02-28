@@ -2,17 +2,30 @@
 
 ## Installing
 
-The recommended way to add this resource to a Concourse instance is via the
+For Concourse versions 0.74.0 and higher, the recommended method to use this
+resource is with `resource_types` in the pipeline config, as follows:
+
+```
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: v0.6.3
+```
+
+The docker image is `pivotalcf/pivnet-resource`; the images are available on
+[dockerhub](https://hub.docker.com/r/pivotalcf/pivnet-resource).
+
+For Concourse versions 0.73.0 and earlier, the recommended way to add this
+resource to a Concourse instance is via the
 [BOSH release](https://github.com/pivotal-cf-experimental/pivnet-resource-boshrelease)
 
 The rootfs of the docker image is available with each release on the
 [releases page](https://github.com/pivotal-cf-experimental/pivnet-resource/releases).
 
-The docker image is `pivotalcf/pivnet-resource`; the images are available on
-[dockerhub](https://hub.docker.com/r/pivotalcf/pivnet-resource).
-
 Both the docker images and the BOSH releases are semantically versioned;
-they have the same version. These versions correspond to the tags in this
+they have the same version. These versions correspond to the git tags in this
 repository and in the
 [BOSH release](https://github.com/pivotal-cf-experimental/pivnet-resource-boshrelease)
 repository.
