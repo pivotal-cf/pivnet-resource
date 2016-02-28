@@ -29,6 +29,7 @@ var _ = Describe("Out", func() {
 
 		accessKeyID     string
 		secretAccessKey string
+		apiToken        string
 
 		outDir          string
 		sourcesDir      string
@@ -147,6 +148,7 @@ var _ = Describe("Out", func() {
 echo "$@"`), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
+		apiToken = "some-api-token"
 		accessKeyID = "some-access-key-id"
 		secretAccessKey = "some-secret-access-key"
 
@@ -177,10 +179,25 @@ echo "$@"`), os.ModePerm)
 		fileToUploadPath := filepath.Join(uploadFilesSourceDir, "file-to-upload")
 		err = ioutil.WriteFile(fileToUploadPath, []byte("some contents"), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
+	})
 
+	AfterEach(func() {
+		server.Close()
+
+		err := os.RemoveAll(tempDir)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = os.RemoveAll(outDir)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = os.RemoveAll(sourcesDir)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	JustBeforeEach(func() {
 		outRequest = concourse.OutRequest{
 			Source: concourse.Source{
-				APIToken:        "some-api-token",
+				APIToken:        apiToken,
 				ProductSlug:     productSlug,
 				Endpoint:        server.URL(),
 				AccessKeyID:     accessKeyID,
@@ -211,19 +228,6 @@ echo "$@"`), os.ModePerm)
 		})
 	})
 
-	AfterEach(func() {
-		server.Close()
-
-		err := os.RemoveAll(tempDir)
-		Expect(err).NotTo(HaveOccurred())
-
-		err = os.RemoveAll(outDir)
-		Expect(err).NotTo(HaveOccurred())
-
-		err = os.RemoveAll(sourcesDir)
-		Expect(err).NotTo(HaveOccurred())
-	})
-
 	It("runs without error", func() {
 		_, err := outCommand.Run(outRequest)
 		Expect(err).NotTo(HaveOccurred())
@@ -231,7 +235,7 @@ echo "$@"`), os.ModePerm)
 
 	Context("when no api token is provided", func() {
 		BeforeEach(func() {
-			outRequest.Source.APIToken = ""
+			apiToken = ""
 		})
 
 		It("returns an error", func() {
