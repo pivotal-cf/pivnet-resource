@@ -199,24 +199,26 @@ release creation will fail.
 
 ### Prerequisites
 
-A valid install of golang >= 1.4 is required.
+A valid install of golang >= 1.5 is required.
 
 ### Dependencies
 
-Dependencies are vendored using [godep](https://github.com/tools/godep).
+Dependencies are vendored in the `vendor` directory, according to the
+[golang 1.5 vendor experiment](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwi7puWg7ZrLAhUN1WMKHeT4A7oQFggdMAA&url=https%3A%2F%2Fgolang.org%2Fs%2Fgo15vendor&usg=AFQjCNEPCAjj1lnni5apHdA7rW0crWs7Zw).
 
-Restore the dependencies with:
+If using golang 1.6, no action is required.
+
+If using golang 1.5 run the following command:
 
 ```
-godep restore
+export GO15VENDOREXPERIMENT=1
 ```
 
 ### Running the tests
 
-Install godep and the ginkgo executable with:
+Install the ginkgo executable with:
 
 ```
-go get -u github.com/tools/godep
 go get -u github.com/onsi/ginkgo/ginkgo
 ```
 
