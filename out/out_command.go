@@ -214,11 +214,12 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 			}
 
 			c.logger.Debugf(
-				"Adding product file: {product_slug: %s, product_id: %d, filename: %s, product_file_id: %d}\n",
+				"Adding product file: {product_slug: %s, product_id: %d, filename: %s, product_file_id: %d, release_id: %d}\n",
 				productSlug,
 				product.ID,
 				filename,
 				productFile.ID,
+				release.ID,
 			)
 
 			err = pivnetClient.AddProductFile(product.ID, release.ID, productFile.ID)

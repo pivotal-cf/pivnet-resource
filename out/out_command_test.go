@@ -1,7 +1,9 @@
 package out_test
 
 import (
+	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -11,12 +13,15 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out"
+	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 )
 
 var _ = Describe("Out", func() {
 	var (
 		tempDir string
+
+		uploadFilesSourceDir string
 
 		server *ghttp.Server
 
@@ -43,6 +48,83 @@ var _ = Describe("Out", func() {
 	BeforeEach(func() {
 		server = ghttp.NewServer()
 
+		productID := 1
+		releaseID := 2
+
+		newReleaseResponse := pivnet.CreateReleaseResponse{
+			Release: pivnet.Release{
+				ID: releaseID,
+				Eula: &pivnet.Eula{
+					Slug: "some-eula",
+				},
+			},
+		}
+
+		productsResponse := pivnet.Product{
+			ID:   productID,
+			Slug: productSlug,
+		}
+
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest(
+					"POST",
+					fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug),
+				),
+				ghttp.RespondWithJSONEncoded(http.StatusCreated, newReleaseResponse),
+			),
+		)
+
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest(
+					"GET",
+					fmt.Sprintf("%s/products/%s", apiPrefix, productSlug),
+				),
+				ghttp.RespondWithJSONEncoded(http.StatusOK, productsResponse),
+			),
+		)
+
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest(
+					"POST",
+					fmt.Sprintf("%s/products/%s/product_files", apiPrefix, productSlug),
+				),
+				ghttp.RespondWith(http.StatusCreated, ""),
+			),
+		)
+
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest(
+					"PATCH",
+					fmt.Sprintf(
+						"%s/products/%d/releases/%d/add_product_file",
+						apiPrefix,
+						productID,
+						releaseID,
+					),
+				),
+				ghttp.RespondWith(http.StatusNoContent, ""),
+			),
+		)
+
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest(
+					"PATCH",
+					fmt.Sprintf(
+						"%s/products/%s/releases/%d",
+						apiPrefix,
+						productSlug,
+						releaseID,
+					),
+				),
+				ghttp.RespondWithJSONEncoded(http.StatusOK, newReleaseResponse),
+			),
+		)
+
 		var err error
 		outDir, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
@@ -60,13 +142,17 @@ var _ = Describe("Out", func() {
 		s3OutBinaryName = "s3-out"
 
 		s3OutBinaryPath := filepath.Join(outDir, s3OutBinaryName)
-		err = ioutil.WriteFile(s3OutBinaryPath, []byte(`echo "$@"`), os.ModePerm)
+		err = ioutil.WriteFile(s3OutBinaryPath, []byte(`#!/bin/sh
+
+echo "$@"`), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
 		accessKeyID = "some-access-key-id"
 		secretAccessKey = "some-secret-access-key"
 
-		fileGlob = "*"
+		filesToUploadDirName := "files_to_upload"
+
+		fileGlob = fmt.Sprintf("%s/*", filesToUploadDirName)
 		s3FilepathPrefix = "Some-Case-Sensitive-Path"
 
 		versionFile = "version"
@@ -82,6 +168,14 @@ var _ = Describe("Out", func() {
 		eulaSlugFile = "eula_slug"
 		eulaSlugFilePath := filepath.Join(sourcesDir, eulaSlugFile)
 		err = ioutil.WriteFile(eulaSlugFilePath, []byte("some_eula"), os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+
+		uploadFilesSourceDir = filepath.Join(sourcesDir, filesToUploadDirName)
+		err = os.Mkdir(uploadFilesSourceDir, os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+
+		fileToUploadPath := filepath.Join(uploadFilesSourceDir, "file-to-upload")
+		err = ioutil.WriteFile(fileToUploadPath, []byte("some contents"), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
 		outRequest = concourse.OutRequest{
