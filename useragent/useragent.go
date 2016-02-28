@@ -12,14 +12,14 @@ func UserAgent(version, containerType, productSlug string) string {
 	buildName := os.Getenv("BUILD_NAME")
 
 	userAgent := fmt.Sprintf(
-		"pivnet-resource/%s (%s/pipelines/%s/jobs/%s/builds/%s %s/%s)",
+		"pivnet-resource/%s (%s/pipelines/%s/jobs/%s/builds/%s -- %s/%s)",
 		version,
 		atcExternalURL,
 		buildPipelineName,
 		buildJobName,
 		buildName,
-		containerType,
 		productSlug,
+		containerType,
 	)
 	return userAgent
 }
