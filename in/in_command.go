@@ -56,10 +56,12 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		endpoint = pivnet.Endpoint
 	}
 
+	productSlug := input.Source.ProductSlug
+
 	clientConfig := pivnet.NewClientConfig{
 		Endpoint:  endpoint,
 		Token:     token,
-		UserAgent: useragent.UserAgent("get", c.version),
+		UserAgent: useragent.UserAgent(c.version, "get", productSlug),
 	}
 	client := pivnet.NewClient(
 		clientConfig,
@@ -67,7 +69,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	)
 
 	productVersion := input.Version.ProductVersion
-	productSlug := input.Source.ProductSlug
 
 	c.logger.Debugf(
 		"Getting release: {product_slug: %s, product_version: %s}\n",
