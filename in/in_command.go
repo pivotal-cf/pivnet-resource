@@ -18,9 +18,9 @@ import (
 )
 
 type InCommand struct {
-	logger      logger.Logger
-	downloadDir string
-	version     string
+	logger        logger.Logger
+	downloadDir   string
+	binaryVersion string
 }
 
 func NewInCommand(
@@ -29,9 +29,9 @@ func NewInCommand(
 	downloadDir string,
 ) *InCommand {
 	return &InCommand{
-		logger:      logger,
-		downloadDir: downloadDir,
-		version:     version,
+		logger:        logger,
+		downloadDir:   downloadDir,
+		binaryVersion: version,
 	}
 }
 
@@ -61,7 +61,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	clientConfig := pivnet.NewClientConfig{
 		Endpoint:  endpoint,
 		Token:     token,
-		UserAgent: useragent.UserAgent(c.version, "get", productSlug),
+		UserAgent: useragent.UserAgent(c.binaryVersion, "get", productSlug),
 	}
 	client := pivnet.NewClient(
 		clientConfig,

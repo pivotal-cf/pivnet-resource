@@ -15,6 +15,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
+	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 )
 
 const (
@@ -101,17 +102,17 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		endpoint = pivnet.Endpoint
 	}
 
+	productSlug := input.Source.ProductSlug
+
 	clientConfig := pivnet.NewClientConfig{
 		Endpoint:  endpoint,
 		Token:     input.Source.APIToken,
-		UserAgent: fmt.Sprintf("pivnet-resource/%s", c.binaryVersion),
+		UserAgent: useragent.UserAgent(c.binaryVersion, "put", productSlug),
 	}
 	pivnetClient := pivnet.NewClient(
 		clientConfig,
 		c.logger,
 	)
-
-	productSlug := input.Source.ProductSlug
 
 	config := pivnet.CreateReleaseConfig{
 		ProductSlug:     productSlug,
