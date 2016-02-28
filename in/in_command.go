@@ -14,6 +14,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 )
 
 type InCommand struct {
@@ -58,7 +59,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	clientConfig := pivnet.NewClientConfig{
 		Endpoint:  endpoint,
 		Token:     token,
-		UserAgent: fmt.Sprintf("pivnet-resource/%s", c.version),
+		UserAgent: useragent.UserAgent("get", c.version),
 	}
 	client := pivnet.NewClient(
 		clientConfig,
@@ -209,7 +210,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		},
 		Metadata: metadata,
 	}
-
 
 	return out, nil
 }
