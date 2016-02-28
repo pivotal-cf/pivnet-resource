@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,6 +16,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 
 	"testing"
 )
@@ -102,6 +102,15 @@ var _ = BeforeSuite(func() {
 	By("Ensuring copy of s3-out is executable")
 	err = os.Chmod(s3OutPath, os.ModePerm)
 	Expect(err).NotTo(HaveOccurred())
+
+	By("Sanitizing acceptance test output")
+	sanitized := map[string]string{
+		pivnetAPIToken:     "***sanitized-api-token***",
+		awsAccessKeyID:     "***sanitized-aws-access-key-id***",
+		awsSecretAccessKey: "***sanitized-aws-secret-access-key***",
+	}
+	sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
+	GinkgoWriter = sanitizer
 
 	By("Creating pivnet client (for out-of-band operations)")
 	testLogger := logger.NewLogger(GinkgoWriter)
@@ -262,16 +271,8 @@ func copyFileContents(src, dst string) (err error) {
 	return
 }
 
-func sanitize(contents string) string {
-	output := contents
-	output = strings.Replace(output, pivnetAPIToken, "***sanitized-api-token***", -1)
-	output = strings.Replace(output, awsAccessKeyID, "***sanitized-aws-access-key-id***", -1)
-	output = strings.Replace(output, awsSecretAccessKey, "***sanitized-aws-secret-access-key***", -1)
-	return output
-}
-
 func run(command *exec.Cmd, stdinContents []byte) *gexec.Session {
-	fmt.Fprintf(GinkgoWriter, "input: %s\n", sanitize(string(stdinContents)))
+	fmt.Fprintf(GinkgoWriter, "input: %s\n", stdinContents)
 
 	stdin, err := command.StdinPipe()
 	Expect(err).ShouldNot(HaveOccurred())
