@@ -27,6 +27,8 @@ var _ = Describe("Out", func() {
 
 		ginkgoLogger logger.Logger
 
+		productSlug string
+
 		accessKeyID     string
 		secretAccessKey string
 		apiToken        string
@@ -60,6 +62,8 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
+
+		productSlug = "some-product-name"
 
 		productsResponse := pivnet.Product{
 			ID:   productID,
@@ -234,16 +238,135 @@ echo "$@"`
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	Context("when no api token is provided", func() {
-		BeforeEach(func() {
-			apiToken = ""
+	Describe("input validation", func() {
+		Context("when outDir is empty", func() {
+			BeforeEach(func() {
+				outDir = ""
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*out dir.*provided"))
+			})
 		})
 
-		It("returns an error", func() {
-			_, err := outCommand.Run(outRequest)
-			Expect(err).To(HaveOccurred())
+		Context("when no api token is provided", func() {
+			BeforeEach(func() {
+				apiToken = ""
+			})
 
-			Expect(err.Error()).To(MatchRegexp(".*api_token.*provided"))
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*api_token.*provided"))
+			})
+		})
+
+		Context("when no product slug is provided", func() {
+			BeforeEach(func() {
+				productSlug = ""
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*product_slug.*provided"))
+			})
+		})
+
+		Context("when no aws access key id is provided", func() {
+			BeforeEach(func() {
+				accessKeyID = ""
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*access_key_id.*provided"))
+			})
+		})
+
+		Context("when no aws secret access key is provided", func() {
+			BeforeEach(func() {
+				secretAccessKey = ""
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*secret_access_key.*provided"))
+			})
+		})
+
+		Context("when file glob is not provided", func() {
+			BeforeEach(func() {
+				fileGlob = ""
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*file glob.*provided"))
+			})
+		})
+
+		Context("when s3 filepath prefix is not provided", func() {
+			BeforeEach(func() {
+				s3FilepathPrefix = ""
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*s3_filepath_prefix.*provided"))
+			})
+		})
+
+		Context("when version file is not provided", func() {
+			BeforeEach(func() {
+				versionFile = ""
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*version_file.*provided"))
+			})
+		})
+
+		Context("when release_type file is not provided", func() {
+			BeforeEach(func() {
+				releaseTypeFile = ""
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*release_type_file.*provided"))
+			})
+		})
+
+		Context("when eula_slug file is not provided", func() {
+			BeforeEach(func() {
+				eulaSlugFile = ""
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*eula_slug_file.*provided"))
+			})
 		})
 	})
 

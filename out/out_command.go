@@ -53,6 +53,10 @@ func NewOutCommand(config OutCommandConfig) *OutCommand {
 }
 
 func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, error) {
+	if c.outDir == "" {
+		return concourse.OutResponse{}, fmt.Errorf("%s must be provided", "out dir")
+	}
+
 	if input.Source.APIToken == "" {
 		return concourse.OutResponse{}, fmt.Errorf("%s must be provided", "api_token")
 	}
