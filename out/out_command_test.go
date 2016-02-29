@@ -44,6 +44,14 @@ var _ = Describe("Out", func() {
 		eulaSlugFile     string
 		s3FilepathPrefix string
 
+		version   string
+		productID int
+		releaseID int
+
+		existingReleasesResponse pivnet.Response
+		newReleaseResponse       pivnet.CreateReleaseResponse
+		productsResponse         pivnet.Product
+
 		outRequest concourse.OutRequest
 		outCommand *out.OutCommand
 	)
@@ -51,10 +59,21 @@ var _ = Describe("Out", func() {
 	BeforeEach(func() {
 		server = ghttp.NewServer()
 
-		productID := 1
-		releaseID := 2
+		version = "2.1.3"
 
-		newReleaseResponse := pivnet.CreateReleaseResponse{
+		productID = 1
+		releaseID = 2
+
+		existingReleasesResponse = pivnet.Response{
+			Releases: []pivnet.Release{
+				{
+					ID:      1234,
+					Version: "some-other-version",
+				},
+			},
+		}
+
+		newReleaseResponse = pivnet.CreateReleaseResponse{
 			Release: pivnet.Release{
 				ID: releaseID,
 				Eula: &pivnet.Eula{
@@ -65,10 +84,90 @@ var _ = Describe("Out", func() {
 
 		productSlug = "some-product-name"
 
-		productsResponse := pivnet.Product{
+		productsResponse = pivnet.Product{
 			ID:   productID,
 			Slug: productSlug,
 		}
+
+		var err error
+		outDir, err = ioutil.TempDir("", "")
+		Expect(err).NotTo(HaveOccurred())
+
+		sourcesDir, err = ioutil.TempDir("", "")
+		Expect(err).NotTo(HaveOccurred())
+
+		tempDir, err = ioutil.TempDir("", "")
+		Expect(err).NotTo(HaveOccurred())
+
+		logFilePath = filepath.Join(tempDir, "pivnet-resource-check.log1234")
+		err = ioutil.WriteFile(logFilePath, []byte("initial log content"), os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+
+		s3OutBinaryName = "s3-out"
+		s3OutScriptContents := `#!/bin/sh
+
+echo "$@"`
+
+		s3OutBinaryPath := filepath.Join(outDir, s3OutBinaryName)
+		err = ioutil.WriteFile(s3OutBinaryPath, []byte(s3OutScriptContents), os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+
+		apiToken = "some-api-token"
+		accessKeyID = "some-access-key-id"
+		secretAccessKey = "some-secret-access-key"
+
+		filesToUploadDirName := "files_to_upload"
+
+		fileGlob = fmt.Sprintf("%s/*", filesToUploadDirName)
+		s3FilepathPrefix = "Some-Case-Sensitive-Path"
+
+		versionFile = "version"
+		versionFilePath := filepath.Join(sourcesDir, versionFile)
+		err = ioutil.WriteFile(versionFilePath, []byte(version), os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+
+		releaseTypeFile = "release_type"
+		releaseTypeFilePath := filepath.Join(sourcesDir, releaseTypeFile)
+		err = ioutil.WriteFile(releaseTypeFilePath, []byte("some_release"), os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+
+		eulaSlugFile = "eula_slug"
+		eulaSlugFilePath := filepath.Join(sourcesDir, eulaSlugFile)
+		err = ioutil.WriteFile(eulaSlugFilePath, []byte("some_eula"), os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+
+		uploadFilesSourceDir = filepath.Join(sourcesDir, filesToUploadDirName)
+		err = os.Mkdir(uploadFilesSourceDir, os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+
+		fileToUploadPath := filepath.Join(uploadFilesSourceDir, "file-to-upload")
+		err = ioutil.WriteFile(fileToUploadPath, []byte("some contents"), os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	AfterEach(func() {
+		server.Close()
+
+		err := os.RemoveAll(tempDir)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = os.RemoveAll(outDir)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = os.RemoveAll(sourcesDir)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	JustBeforeEach(func() {
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest(
+					"GET",
+					fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug),
+				),
+				ghttp.RespondWithJSONEncoded(http.StatusOK, existingReleasesResponse),
+			),
+		)
 
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
@@ -130,76 +229,6 @@ var _ = Describe("Out", func() {
 			),
 		)
 
-		var err error
-		outDir, err = ioutil.TempDir("", "")
-		Expect(err).NotTo(HaveOccurred())
-
-		sourcesDir, err = ioutil.TempDir("", "")
-		Expect(err).NotTo(HaveOccurred())
-
-		tempDir, err = ioutil.TempDir("", "")
-		Expect(err).NotTo(HaveOccurred())
-
-		logFilePath = filepath.Join(tempDir, "pivnet-resource-check.log1234")
-		err = ioutil.WriteFile(logFilePath, []byte("initial log content"), os.ModePerm)
-		Expect(err).NotTo(HaveOccurred())
-
-		s3OutBinaryName = "s3-out"
-		s3OutScriptContents := `#!/bin/sh
-
-echo "$@"`
-
-		s3OutBinaryPath := filepath.Join(outDir, s3OutBinaryName)
-		err = ioutil.WriteFile(s3OutBinaryPath, []byte(s3OutScriptContents), os.ModePerm)
-		Expect(err).NotTo(HaveOccurred())
-
-		apiToken = "some-api-token"
-		accessKeyID = "some-access-key-id"
-		secretAccessKey = "some-secret-access-key"
-
-		filesToUploadDirName := "files_to_upload"
-
-		fileGlob = fmt.Sprintf("%s/*", filesToUploadDirName)
-		s3FilepathPrefix = "Some-Case-Sensitive-Path"
-
-		versionFile = "version"
-		versionFilePath := filepath.Join(sourcesDir, versionFile)
-		err = ioutil.WriteFile(versionFilePath, []byte("2.1.3"), os.ModePerm)
-		Expect(err).NotTo(HaveOccurred())
-
-		releaseTypeFile = "release_type"
-		releaseTypeFilePath := filepath.Join(sourcesDir, releaseTypeFile)
-		err = ioutil.WriteFile(releaseTypeFilePath, []byte("some_release"), os.ModePerm)
-		Expect(err).NotTo(HaveOccurred())
-
-		eulaSlugFile = "eula_slug"
-		eulaSlugFilePath := filepath.Join(sourcesDir, eulaSlugFile)
-		err = ioutil.WriteFile(eulaSlugFilePath, []byte("some_eula"), os.ModePerm)
-		Expect(err).NotTo(HaveOccurred())
-
-		uploadFilesSourceDir = filepath.Join(sourcesDir, filesToUploadDirName)
-		err = os.Mkdir(uploadFilesSourceDir, os.ModePerm)
-		Expect(err).NotTo(HaveOccurred())
-
-		fileToUploadPath := filepath.Join(uploadFilesSourceDir, "file-to-upload")
-		err = ioutil.WriteFile(fileToUploadPath, []byte("some contents"), os.ModePerm)
-		Expect(err).NotTo(HaveOccurred())
-	})
-
-	AfterEach(func() {
-		server.Close()
-
-		err := os.RemoveAll(tempDir)
-		Expect(err).NotTo(HaveOccurred())
-
-		err = os.RemoveAll(outDir)
-		Expect(err).NotTo(HaveOccurred())
-
-		err = os.RemoveAll(sourcesDir)
-		Expect(err).NotTo(HaveOccurred())
-	})
-
-	JustBeforeEach(func() {
 		outRequest = concourse.OutRequest{
 			Source: concourse.Source{
 				APIToken:        apiToken,
@@ -386,6 +415,27 @@ exit 1`
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(MatchRegexp(".*running.*%s.*", s3OutBinaryName))
+		})
+	})
+
+	Context("when a release already exists with the expected version", func() {
+		BeforeEach(func() {
+			existingReleasesResponse = pivnet.Response{
+				Releases: []pivnet.Release{
+					{
+						ID:      1234,
+						Version: version,
+					},
+				},
+			}
+
+		})
+
+		It("exits with error", func() {
+			_, err := outCommand.Run(outRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*release already exists.*%s.*", version))
 		})
 	})
 })

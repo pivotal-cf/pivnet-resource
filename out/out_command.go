@@ -118,11 +118,24 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		c.logger,
 	)
 
+	productVersion := readStringContents(c.sourcesDir, input.Params.VersionFile)
+
+	existingVersions, err := pivnetClient.ProductVersions(productSlug)
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+
+	for _, v := range existingVersions {
+		if v == productVersion {
+			return concourse.OutResponse{}, fmt.Errorf("release already exists with version: %s", productVersion)
+		}
+	}
+
 	config := pivnet.CreateReleaseConfig{
 		ProductSlug:     productSlug,
 		ReleaseType:     readStringContents(c.sourcesDir, input.Params.ReleaseTypeFile),
 		EulaSlug:        readStringContents(c.sourcesDir, input.Params.EulaSlugFile),
-		ProductVersion:  readStringContents(c.sourcesDir, input.Params.VersionFile),
+		ProductVersion:  productVersion,
 		Description:     readStringContents(c.sourcesDir, input.Params.DescriptionFile),
 		ReleaseNotesURL: readStringContents(c.sourcesDir, input.Params.ReleaseNotesURLFile),
 		ReleaseDate:     readStringContents(c.sourcesDir, input.Params.ReleaseDateFile),
