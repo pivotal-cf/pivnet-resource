@@ -5,7 +5,7 @@
 For Concourse versions 0.74.0 and higher, the recommended method to use this
 resource is with `resource_types` in the pipeline config, as follows:
 
-```
+```yaml
 resource_types:
 - name: pivnet
   type: docker-image
