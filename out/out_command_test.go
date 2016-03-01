@@ -60,6 +60,10 @@ var _ = Describe("Out", func() {
 	)
 
 	BeforeEach(func() {
+		metadataFile = ""
+		metadataFilePath = ""
+		metadataFileContents = ""
+
 		server = ghttp.NewServer()
 
 		version = "2.1.3"
@@ -119,8 +123,6 @@ echo "$@"`
 		accessKeyID = "some-access-key-id"
 		secretAccessKey = "some-secret-access-key"
 
-		metadataFileContents = ``
-
 		filesToUploadDirName := "files_to_upload"
 
 		fileGlob = fmt.Sprintf("%s/*", filesToUploadDirName)
@@ -148,9 +150,6 @@ echo "$@"`
 		fileToUploadPath := filepath.Join(uploadFilesSourceDir, "file-to-upload")
 		err = ioutil.WriteFile(fileToUploadPath, []byte("some contents"), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
-
-		metadataFile = "metadata"
-		metadataFilePath = filepath.Join(sourcesDir, metadataFile)
 	})
 
 	AfterEach(func() {
@@ -167,9 +166,6 @@ echo "$@"`
 	})
 
 	JustBeforeEach(func() {
-		err := ioutil.WriteFile(metadataFilePath, []byte(metadataFileContents), os.ModePerm)
-		Expect(err).NotTo(HaveOccurred())
-
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
 				ghttp.VerifyRequest(
@@ -410,29 +406,42 @@ echo "$@"`
 			})
 		})
 
-		Context("when metadata file contains invalid yaml", func() {
+		Context("when metadata file is provided", func() {
 			BeforeEach(func() {
-				metadataFileContents = "{{"
+				metadataFile = "metadata"
 			})
 
-			It("returns an error", func() {
-				_, err := outCommand.Run(outRequest)
-				Expect(err).To(HaveOccurred())
-
-				Expect(err.Error()).To(MatchRegexp(".*metadata_file.*invalid"))
-			})
-		})
-
-		Context("when metadata file does not exist", func() {
-			BeforeEach(func() {
-				metadataFilePath = filepath.Join(tempDir, "other-metadata-filepath")
-			})
-
-			It("returns an error", func() {
+			It("returns an error (metadata file does not exist)", func() {
 				_, err := outCommand.Run(outRequest)
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*metadata_file.*could not be read"))
+			})
+
+			Context("when metadata file exists", func() {
+				BeforeEach(func() {
+					metadataFileContents = ``
+					metadataFilePath = filepath.Join(sourcesDir, metadataFile)
+
+					err := ioutil.WriteFile(metadataFilePath, []byte(metadataFileContents), os.ModePerm)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				Context("when metadata file contains invalid yaml", func() {
+					BeforeEach(func() {
+						metadataFileContents = "{{"
+
+						err := ioutil.WriteFile(metadataFilePath, []byte(metadataFileContents), os.ModePerm)
+						Expect(err).NotTo(HaveOccurred())
+					})
+
+					It("returns an error", func() {
+						_, err := outCommand.Run(outRequest)
+						Expect(err).To(HaveOccurred())
+
+						Expect(err.Error()).To(MatchRegexp(".*metadata_file.*invalid"))
+					})
+				})
 			})
 		})
 	})
