@@ -13,6 +13,7 @@ type CreateProductFileConfig struct {
 	AWSObjectKey string
 	Name         string
 	MD5          string
+	Description  string
 }
 
 func (c client) GetProductFiles(release Release) (ProductFiles, error) {
@@ -72,6 +73,7 @@ func (c client) CreateProductFile(config CreateProductFileConfig) (ProductFile, 
 			FileVersion:  config.FileVersion,
 			AWSObjectKey: config.AWSObjectKey,
 			Name:         config.Name,
+			Description:  config.Description,
 		},
 	}
 

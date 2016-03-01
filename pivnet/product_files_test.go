@@ -219,9 +219,44 @@ var _ = Describe("PivnetClient - product files", func() {
 					),
 				)
 
-				release, err := client.CreateProductFile(createProductFileConfig)
+				productFile, err := client.CreateProductFile(createProductFileConfig)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(release.ID).To(Equal(1234))
+				Expect(productFile.ID).To(Equal(1234))
+			})
+
+			Context("when the optional description is present", func() {
+				var (
+					description string
+
+					productFileResponse pivnet.ProductFileResponse
+				)
+
+				BeforeEach(func() {
+					description = "some\nmulti-line\ndescription"
+
+					expectedRequestBody.ProductFile.Description = description
+
+					productFileResponse = pivnet.ProductFileResponse{pivnet.ProductFile{
+						ID:          1234,
+						Description: description,
+					}}
+				})
+
+				It("creates the product file with the description field", func() {
+					server.AppendHandlers(
+						ghttp.CombineHandlers(
+							ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/product_files"),
+							ghttp.VerifyJSONRepresenting(&expectedRequestBody),
+							ghttp.RespondWithJSONEncoded(http.StatusCreated, productFileResponse),
+						),
+					)
+
+					createProductFileConfig.Description = description
+
+					productFile, err := client.CreateProductFile(createProductFileConfig)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(productFile.Description).To(Equal(description))
+				})
 			})
 		})
 

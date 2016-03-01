@@ -49,6 +49,7 @@ type ProductFile struct {
 	FileVersion  string `json:"file_version,omitempty"`
 	Name         string `json:"name,omitempty"`
 	MD5          string `json:"md5,omitempty"`
+	Description  string `json:"description,omitempty"`
 }
 
 type Links struct {
