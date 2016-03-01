@@ -9,9 +9,12 @@ import (
 	"strconv"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
+	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
@@ -98,6 +101,20 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 	}
 
 	c.logger.Debugf("Received input: %+v\n", input)
+
+	var m metadata.Metadata
+	if input.Params.MetadataFile != "" {
+		metadataFilepath := filepath.Join(c.sourcesDir, input.Params.MetadataFile)
+		metadataBytes, err := ioutil.ReadFile(metadataFilepath)
+		if err != nil {
+			return concourse.OutResponse{}, fmt.Errorf("metadata_file could not be read: %s", err.Error())
+		}
+
+		err = yaml.Unmarshal(metadataBytes, &m)
+		if err != nil {
+			return concourse.OutResponse{}, fmt.Errorf("metadata_file is invalid: %s", err.Error())
+		}
+	}
 
 	var endpoint string
 	if input.Source.Endpoint != "" {

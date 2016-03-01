@@ -57,6 +57,7 @@ type OutParams struct {
 	ReleaseNotesURLFile string `json:"release_notes_url_file"`
 	AvailabilityFile    string `json:"availability_file"`
 	UserGroupIDsFile    string `json:"user_group_ids_file"`
+	MetadataFile        string `json:"metadata_file"`
 }
 
 type OutResponse struct {

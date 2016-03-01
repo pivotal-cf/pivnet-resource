@@ -43,10 +43,13 @@ var _ = Describe("Out", func() {
 		releaseTypeFile  string
 		eulaSlugFile     string
 		s3FilepathPrefix string
+		metadataFile     string
+		metadataFilePath string
 
-		version   string
-		productID int
-		releaseID int
+		metadataFileContents string
+		version              string
+		productID            int
+		releaseID            int
 
 		existingReleasesResponse pivnet.Response
 		newReleaseResponse       pivnet.CreateReleaseResponse
@@ -116,6 +119,8 @@ echo "$@"`
 		accessKeyID = "some-access-key-id"
 		secretAccessKey = "some-secret-access-key"
 
+		metadataFileContents = ``
+
 		filesToUploadDirName := "files_to_upload"
 
 		fileGlob = fmt.Sprintf("%s/*", filesToUploadDirName)
@@ -143,6 +148,9 @@ echo "$@"`
 		fileToUploadPath := filepath.Join(uploadFilesSourceDir, "file-to-upload")
 		err = ioutil.WriteFile(fileToUploadPath, []byte("some contents"), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
+
+		metadataFile = "metadata"
+		metadataFilePath = filepath.Join(sourcesDir, metadataFile)
 	})
 
 	AfterEach(func() {
@@ -159,6 +167,9 @@ echo "$@"`
 	})
 
 	JustBeforeEach(func() {
+		err := ioutil.WriteFile(metadataFilePath, []byte(metadataFileContents), os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
 				ghttp.VerifyRequest(
@@ -243,6 +254,7 @@ echo "$@"`
 				ReleaseTypeFile: releaseTypeFile,
 				EulaSlugFile:    eulaSlugFile,
 				FilepathPrefix:  s3FilepathPrefix,
+				MetadataFile:    metadataFile,
 			},
 		}
 
@@ -397,6 +409,32 @@ echo "$@"`
 				Expect(err.Error()).To(MatchRegexp(".*eula_slug_file.*provided"))
 			})
 		})
+
+		Context("when metadata file contains invalid yaml", func() {
+			BeforeEach(func() {
+				metadataFileContents = "{{"
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*metadata_file.*invalid"))
+			})
+		})
+
+		Context("when metadata file does not exist", func() {
+			BeforeEach(func() {
+				metadataFilePath = filepath.Join(tempDir, "other-metadata-filepath")
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*metadata_file.*could not be read"))
+			})
+		})
 	})
 
 	Context("when the s3-out exits with error", func() {
@@ -428,7 +466,6 @@ exit 1`
 					},
 				},
 			}
-
 		})
 
 		It("exits with error", func() {
