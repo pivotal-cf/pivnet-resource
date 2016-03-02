@@ -93,7 +93,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 	exactGlobs, err := globber.ExactGlobs()
 	if err != nil {
-		log.Fatalln(err)
+		return concourse.OutResponse{}, err
 	}
 
 	var missingFiles []string

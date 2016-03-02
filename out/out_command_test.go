@@ -483,6 +483,20 @@ exit 1`
 			})
 		})
 	})
+
+	Context("when globbing fails", func() {
+		BeforeEach(func() {
+			fileGlob = "}{"
+		})
+
+		It("returns an error", func() {
+			_, err := outCommand.Run(outRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*no matches.*}{"))
+			Expect(server.ReceivedRequests()).To(BeEmpty())
+		})
+	})
 })
 
 type createProductFileBody struct {
