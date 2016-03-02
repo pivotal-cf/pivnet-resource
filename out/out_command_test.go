@@ -482,7 +482,7 @@ echo "$@"`
 		BeforeEach(func() {
 			s3OutScriptContents := `#!/bin/sh
 
-sleep 1
+sleep 0.05
 exit 1`
 
 			s3OutBinaryPath := filepath.Join(outDir, s3OutBinaryName)
