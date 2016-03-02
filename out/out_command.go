@@ -81,6 +81,11 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		if err != nil {
 			return concourse.OutResponse{}, fmt.Errorf("metadata_file is invalid: %s", err.Error())
 		}
+
+		err = m.Validate()
+		if err != nil {
+			return concourse.OutResponse{}, fmt.Errorf("metadata_file is invalid: %s", err.Error())
+		}
 	}
 
 	c.logger.Debugf("metadata file parsed; contents: %+v\n", m)

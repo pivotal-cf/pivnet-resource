@@ -482,6 +482,23 @@ exit 1`
 				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
+
+		Context("when metadata file contains an empty value for file", func() {
+			BeforeEach(func() {
+				metadataFileContents =
+					`---
+           product_files:
+           - file: `
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*metadata.*empty.*file"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
+			})
+		})
 	})
 
 	Context("when globbing fails", func() {
