@@ -41,9 +41,7 @@ func (v validator) Validate() error {
 		return fmt.Errorf("%s must be provided", "eula_slug_file")
 	}
 
-	skipUpload := v.input.Params.FileGlob == "" && v.input.Params.FilepathPrefix == ""
-
-	if !skipUpload {
+	if v.input.Params.FileGlob != "" || v.input.Params.FilepathPrefix != "" {
 		if v.input.Source.AccessKeyID == "" {
 			return fmt.Errorf("%s must be provided", "access_key_id")
 		}
