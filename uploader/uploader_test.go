@@ -15,82 +15,6 @@ import (
 )
 
 var _ = Describe("Uploader", func() {
-	Describe("ExactGlobs", func() {
-		var (
-			l              logger.Logger
-			fakeTransport  *uploader_fakes.FakeTransport
-			uploaderConfig uploader.Config
-			uploaderClient uploader.Client
-
-			tempDir    string
-			myFilesDir string
-
-			filepathPrefix = "Some-Filepath-Prefix"
-		)
-
-		BeforeEach(func() {
-			l = logger.NewLogger(GinkgoWriter)
-			fakeTransport = &uploader_fakes.FakeTransport{}
-
-			var err error
-			tempDir, err = ioutil.TempDir("", "pivnet-resource")
-			Expect(err).NotTo(HaveOccurred())
-
-			myFilesDir = filepath.Join(tempDir, "my_files")
-			err = os.Mkdir(myFilesDir, os.ModePerm)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = os.Create(filepath.Join(myFilesDir, "file-0"))
-			Expect(err).NotTo(HaveOccurred())
-
-			uploaderConfig = uploader.Config{
-				FilepathPrefix: filepathPrefix,
-				FileGlob:       "my_files/*",
-				Transport:      fakeTransport,
-				SourcesDir:     tempDir,
-				Logger:         l,
-			}
-
-			uploaderClient = uploader.NewClient(uploaderConfig)
-		})
-
-		AfterEach(func() {
-			err := os.RemoveAll(tempDir)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		Context("when no files match the fileglob", func() {
-			BeforeEach(func() {
-				uploaderConfig.FileGlob = "this-will-match-nothing"
-				uploaderClient = uploader.NewClient(uploaderConfig)
-			})
-
-			It("returns an error", func() {
-				_, err := uploaderClient.ExactGlobs()
-				Expect(err).To(HaveOccurred())
-
-				Expect(err.Error()).To(ContainSubstring("no matches"))
-			})
-		})
-
-		Context("when multiple files match the fileglob", func() {
-			BeforeEach(func() {
-				_, err := os.Create(filepath.Join(myFilesDir, "file-1"))
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("returns a map of filenames to remote paths", func() {
-				filenamePaths, err := uploaderClient.ExactGlobs()
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(len(filenamePaths)).To(Equal(2))
-
-				Expect(filenamePaths[0]).To(Equal("my_files/file-0"))
-				Expect(filenamePaths[1]).To(Equal("my_files/file-1"))
-			})
-		})
-	})
-
 	Describe("UploadFile", func() {
 		var (
 			l              logger.Logger
@@ -121,7 +45,6 @@ var _ = Describe("Uploader", func() {
 
 			uploaderConfig = uploader.Config{
 				FilepathPrefix: filepathPrefix,
-				FileGlob:       "my_files/*",
 				Transport:      fakeTransport,
 				SourcesDir:     tempDir,
 				Logger:         l,

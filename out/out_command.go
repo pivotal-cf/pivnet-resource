@@ -12,6 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/globs"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
@@ -80,6 +81,18 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		if err != nil {
 			return concourse.OutResponse{}, fmt.Errorf("metadata_file is invalid: %s", err.Error())
 		}
+	}
+
+	globber := globs.NewGlobber(globs.GlobberConfig{
+		FileGlob:   input.Params.FileGlob,
+		SourcesDir: c.sourcesDir,
+
+		Logger: c.logger,
+	})
+
+	exactGlobs, err := globber.ExactGlobs()
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	var endpoint string
@@ -163,7 +176,6 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		})
 
 		uploaderClient := uploader.NewClient(uploader.Config{
-			FileGlob:       input.Params.FileGlob,
 			FilepathPrefix: input.Params.FilepathPrefix,
 			SourcesDir:     c.sourcesDir,
 
@@ -171,11 +183,6 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 			Transport: s3Client,
 		})
-
-		exactGlobs, err := uploaderClient.ExactGlobs()
-		if err != nil {
-			log.Fatalln(err)
-		}
 
 		for _, exactGlob := range exactGlobs {
 			fullFilepath := filepath.Join(c.sourcesDir, exactGlob)
