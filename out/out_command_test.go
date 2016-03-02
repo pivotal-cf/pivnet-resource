@@ -21,7 +21,12 @@ var _ = Describe("Out", func() {
 	var (
 		tempDir string
 
-		uploadFilesSourceDir string
+		filesToUploadDirName string
+
+		uploadFilesSourceDir     string
+		productFileName0         string
+		productFileFullPath0     string
+		productFileRelativePath0 string
 
 		server *ghttp.Server
 
@@ -54,6 +59,10 @@ var _ = Describe("Out", func() {
 		existingReleasesResponse pivnet.Response
 		newReleaseResponse       pivnet.CreateReleaseResponse
 		productsResponse         pivnet.Product
+
+		newProductFileRequest            createProductFileBody
+		newProductFileResponseStatusCode int
+		newProductFileResponse           pivnet.ProductFile
 
 		outRequest concourse.OutRequest
 		outCommand *out.OutCommand
@@ -90,6 +99,15 @@ var _ = Describe("Out", func() {
 		}
 
 		productSlug = "some-product-name"
+		productFileName0 = "some-file"
+
+		newProductFileResponseStatusCode = http.StatusCreated
+		newProductFileRequest = createProductFileBody{pivnet.ProductFile{
+			FileType:     "Software",
+			Name:         productFileName0,
+			MD5:          "220c7810f41695d9a87d70b68ccf2aeb", // hard-coded for now
+			AWSObjectKey: fmt.Sprintf("product_files/Some-Case-Sensitive-Path/%s", productFileName0),
+		}}
 
 		productsResponse = pivnet.Product{
 			ID:   productID,
@@ -123,7 +141,7 @@ echo "$@"`
 		accessKeyID = "some-access-key-id"
 		secretAccessKey = "some-secret-access-key"
 
-		filesToUploadDirName := "files_to_upload"
+		filesToUploadDirName = "files_to_upload"
 
 		fileGlob = fmt.Sprintf("%s/*", filesToUploadDirName)
 		s3FilepathPrefix = "Some-Case-Sensitive-Path"
@@ -147,8 +165,9 @@ echo "$@"`
 		err = os.Mkdir(uploadFilesSourceDir, os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
-		fileToUploadPath := filepath.Join(uploadFilesSourceDir, "file-to-upload")
-		err = ioutil.WriteFile(fileToUploadPath, []byte("some contents"), os.ModePerm)
+		productFileFullPath0 = filepath.Join(uploadFilesSourceDir, productFileName0)
+		productFileRelativePath0 = filepath.Join(filesToUploadDirName, productFileName0)
+		err = ioutil.WriteFile(productFileFullPath0, []byte("some contents"), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -202,7 +221,8 @@ echo "$@"`
 					"POST",
 					fmt.Sprintf("%s/products/%s/product_files", apiPrefix, productSlug),
 				),
-				ghttp.RespondWith(http.StatusCreated, ""),
+				ghttp.VerifyJSONRepresenting(newProductFileRequest),
+				ghttp.RespondWithJSONEncoded(newProductFileResponseStatusCode, newProductFileResponse),
 			),
 		)
 
@@ -484,4 +504,55 @@ exit 1`
 			Expect(err.Error()).To(MatchRegexp(".*release already exists.*%s.*", version))
 		})
 	})
+
+	Context("when creating a new product file fails", func() {
+		BeforeEach(func() {
+			newProductFileResponseStatusCode = http.StatusForbidden
+		})
+
+		It("exits with error", func() {
+			_, err := outCommand.Run(outRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*returned.*403.*"))
+		})
+	})
+
+	Context("when metadata file is provided", func() {
+		BeforeEach(func() {
+			metadataFile = "metadata"
+			metadataFilePath = filepath.Join(sourcesDir, metadataFile)
+		})
+
+		JustBeforeEach(func() {
+			err := ioutil.WriteFile(metadataFilePath, []byte(metadataFileContents), os.ModePerm)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when metadata file contains matching product file descriptions", func() {
+			BeforeEach(func() {
+				metadataFileContents = fmt.Sprintf(
+					`---
+           product_files:
+           - file: %s
+             description: |
+               some
+               multi-line
+               description`,
+					productFileRelativePath0,
+				)
+
+				newProductFileRequest.ProductFile.Description = "some\nmulti-line\ndescription"
+			})
+
+			It("creates product files with the matching description", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+	})
 })
+
+type createProductFileBody struct {
+	ProductFile pivnet.ProductFile `json:"product_file"`
+}

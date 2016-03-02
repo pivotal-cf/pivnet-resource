@@ -227,13 +227,24 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 				log.Fatalln(err)
 			}
 
+			var description string
+			for _, f := range m.ProductFiles {
+				if f.File == exactGlob {
+					c.logger.Debugf("exact glob %s matches metadata file: %s\n", exactGlob, f.File)
+					description = f.Description
+				} else {
+					c.logger.Debugf("exact glob %s does not match metadata file: %s\n", exactGlob, f.File)
+				}
+			}
+
 			filename := filepath.Base(exactGlob)
 			c.logger.Debugf(
-				"Creating product file: {product_slug: %s, filename: %s, aws_object_key: %s, file_version: %s}\n",
+				"Creating product file: {product_slug: %s, filename: %s, aws_object_key: %s, file_version: %s, description: %s}\n",
 				productSlug,
 				filename,
 				remotePath,
 				release.Version,
+				description,
 			)
 
 			productFile, err := pivnetClient.CreateProductFile(pivnet.CreateProductFileConfig{
@@ -242,9 +253,10 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 				AWSObjectKey: remotePath,
 				FileVersion:  release.Version,
 				MD5:          fileContentsMD5,
+				Description:  description,
 			})
 			if err != nil {
-				log.Fatalln(err)
+				return concourse.OutResponse{}, err
 			}
 
 			c.logger.Debugf(
