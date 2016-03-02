@@ -83,6 +83,8 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		}
 	}
 
+	c.logger.Debugf("metadata file parsed; contents: %+v\n", m)
+
 	globber := globs.NewGlobber(globs.GlobberConfig{
 		FileGlob:   input.Params.FileGlob,
 		SourcesDir: c.sourcesDir,
