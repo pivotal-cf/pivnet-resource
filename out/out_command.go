@@ -86,8 +86,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 	globber := globs.NewGlobber(globs.GlobberConfig{
 		FileGlob:   input.Params.FileGlob,
 		SourcesDir: c.sourcesDir,
-
-		Logger: c.logger,
+		Logger:     c.logger,
 	})
 
 	exactGlobs, err := globber.ExactGlobs()

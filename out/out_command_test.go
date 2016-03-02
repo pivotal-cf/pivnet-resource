@@ -56,7 +56,7 @@ var _ = Describe("Out", func() {
 		productID            int
 		releaseID            int
 
-		existingReleasesResponse pivnet.Response
+		existingReleasesResponse pivnet.ReleasesResponse
 		newReleaseResponse       pivnet.CreateReleaseResponse
 		productsResponse         pivnet.Product
 
@@ -80,7 +80,7 @@ var _ = Describe("Out", func() {
 		productID = 1
 		releaseID = 2
 
-		existingReleasesResponse = pivnet.Response{
+		existingReleasesResponse = pivnet.ReleasesResponse{
 			Releases: []pivnet.Release{
 				{
 					ID:      1234,
@@ -500,7 +500,7 @@ exit 1`
 
 	Context("when a release already exists with the expected version", func() {
 		BeforeEach(func() {
-			existingReleasesResponse = pivnet.Response{
+			existingReleasesResponse = pivnet.ReleasesResponse{
 				Releases: []pivnet.Release{
 					{
 						ID:      1234,

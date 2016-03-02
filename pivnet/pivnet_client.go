@@ -59,7 +59,7 @@ func NewClient(config NewClientConfig, logger logger.Logger) Client {
 func (c client) ProductVersions(id string) ([]string, error) {
 	url := c.url + "/products/" + id + "/releases"
 
-	var response Response
+	var response ReleasesResponse
 	err := c.makeRequest(
 		"GET",
 		url,

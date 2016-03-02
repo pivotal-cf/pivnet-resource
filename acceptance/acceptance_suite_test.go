@@ -143,7 +143,7 @@ func getReleases(productSlug string) []pivnet.Release {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-	response := pivnet.Response{}
+	response := pivnet.ReleasesResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	Expect(err).NotTo(HaveOccurred())
 

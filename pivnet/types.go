@@ -1,6 +1,6 @@
 package pivnet
 
-type Response struct {
+type ReleasesResponse struct {
 	Releases []Release `json:"releases,omitempty"`
 }
 

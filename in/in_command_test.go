@@ -41,7 +41,7 @@ var _ = Describe("In", func() {
 		file1URL := fmt.Sprintf("%s%s", server.URL(), file1URLPath)
 		file1Contents = ""
 
-		pivnetReleasesResponse := pivnet.Response{
+		pivnetReleasesResponse := pivnet.ReleasesResponse{
 			Releases: []pivnet.Release{
 				{Version: "A"},
 				{

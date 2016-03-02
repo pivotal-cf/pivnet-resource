@@ -21,7 +21,6 @@ var _ = Describe("In", func() {
 		eulaSlug    = "pivotal_beta_eula"
 		releaseType = "Minor Release"
 
-		release        pivnet.Release
 		productVersion string
 		destDirectory  string
 
@@ -37,7 +36,7 @@ var _ = Describe("In", func() {
 		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
 
 		By("Creating new version")
-		release, err = pivnetClient.CreateRelease(pivnet.CreateReleaseConfig{
+		_, err = pivnetClient.CreateRelease(pivnet.CreateReleaseConfig{
 			ProductSlug:    productSlug,
 			ProductVersion: productVersion,
 			EulaSlug:       eulaSlug,

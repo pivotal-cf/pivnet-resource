@@ -27,7 +27,7 @@ func (c client) GetRelease(productSlug, version string) (Release, error) {
 
 	url := c.url + "/products/" + productSlug + "/releases"
 
-	var response Response
+	var response ReleasesResponse
 	err := c.makeRequest("GET", url, http.StatusOK, nil, &response)
 	if err != nil {
 		return Release{}, err
