@@ -564,6 +564,22 @@ exit 1`
 			})
 		})
 
+		Context("when metadata file contains matching product file without descriptions", func() {
+			BeforeEach(func() {
+				metadataFileContents = fmt.Sprintf(
+					`---
+          product_files:
+          - file: %s`,
+					productFileRelativePath0,
+				)
+			})
+
+			It("creates product files with the matching description", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
 		Context("when metadata file contains a file that does not correspond to any glob-matched file", func() {
 			BeforeEach(func() {
 				metadataFileContents =
