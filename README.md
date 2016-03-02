@@ -135,6 +135,8 @@ the provided `s3_filepath_prefix`, adding them both to the Pivotal Network as we
 the newly-created release. The MD5 checksum of each file is taken locally, and
 added to the file metadata in Pivotal Network.
 
+If a product release already exists on Pivotal Network with the desired version, the resource will exit with error without attempting to create the release or upload any files.
+
 #### Parameters
 
 It is valid to provide both `file_glob` and `s3_filepath_prefix` or to provide
@@ -153,7 +155,7 @@ release creation will fail.
   path in the S3 bucket.
   Generally similar to, but not the same as, `product_slug`. For example,
   a `product_slug` might be `pivotal-diego-pcf` (lower-case) but the
-  `s3_filepath_prefix` could be `Pivotal-Diego-PCF`.
+  `s3_filepath_prefix` could be `Pivotal-Diego-PCF` (mixed-case).
 
 * `version_file`: *Required.* File containing the version string.
   Will be read to determine the new release version.
@@ -194,6 +196,30 @@ release creation will fail.
 * `user_group_ids_file`: *Optional.* File containing a comma-separated list of user
   group IDs. Each user group in the list will be added to the release.
   Will be read only if the availability is set to Selected User Groups Only.
+
+* `metadata_file`: *Optional.* File containing metadata for releases and product files. See [Metadata file](#metadata-file) for more details.
+
+### Metadata file
+
+A metadata file can be provided in YAML (or JSON) format. The contents of this file are as follows:
+
+```yaml
+---
+product_files:
+- file: /path/to/some/product/file
+  description: |
+    some
+    multi-line
+    description
+```
+
+The top-level `product_files` key is optional. If provided, it is permitted to be an empty array.
+
+Each element in `product_files` must have a non-empty value for the `file` key. All other keys are optional. The purpose of the keys is as follows:
+
+* `file` *Required.* Relative path to file. Must match exactly one file located via the out param `file_glob`, or the resource will exit with error.
+
+* `description` *Optional.* The file description (also known as _File Notes_ in Pivotal Network).
 
 ## Developing
 
