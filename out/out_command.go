@@ -95,6 +95,18 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		log.Fatalln(err)
 	}
 
+	var missingFiles []string
+	for _, f := range m.ProductFiles {
+		if !contains(exactGlobs, f.File) {
+			missingFiles = append(missingFiles, f.File)
+		}
+	}
+
+	if len(missingFiles) > 0 {
+		return concourse.OutResponse{},
+			fmt.Errorf("product_files were provided in metadata that match no globs: %v", missingFiles)
+	}
+
 	var endpoint string
 	if input.Source.Endpoint != "" {
 		endpoint = input.Source.Endpoint
@@ -308,4 +320,13 @@ func readStringContents(sourcesDir, file string) string {
 		log.Fatal(err)
 	}
 	return string(contents)
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }

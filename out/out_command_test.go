@@ -306,6 +306,7 @@ echo "$@"`
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*out dir.*provided"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
 
@@ -319,6 +320,7 @@ echo "$@"`
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*api_token.*provided"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
 
@@ -332,6 +334,7 @@ echo "$@"`
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*product_slug.*provided"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
 
@@ -345,6 +348,7 @@ echo "$@"`
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*access_key_id.*provided"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
 
@@ -358,6 +362,7 @@ echo "$@"`
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*secret_access_key.*provided"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
 
@@ -371,6 +376,7 @@ echo "$@"`
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*file glob.*provided"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
 
@@ -384,6 +390,7 @@ echo "$@"`
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*s3_filepath_prefix.*provided"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
 
@@ -397,6 +404,7 @@ echo "$@"`
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*version_file.*provided"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
 
@@ -410,6 +418,7 @@ echo "$@"`
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*release_type_file.*provided"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
 
@@ -423,6 +432,7 @@ echo "$@"`
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*eula_slug_file.*provided"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
 
@@ -436,6 +446,7 @@ echo "$@"`
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*metadata_file.*could not be read"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 
 			Context("when metadata file exists", func() {
@@ -460,6 +471,7 @@ echo "$@"`
 						Expect(err).To(HaveOccurred())
 
 						Expect(err.Error()).To(MatchRegexp(".*metadata_file.*invalid"))
+						Expect(server.ReceivedRequests()).To(BeEmpty())
 					})
 				})
 			})
@@ -549,6 +561,32 @@ exit 1`
 			It("creates product files with the matching description", func() {
 				_, err := outCommand.Run(outRequest)
 				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
+		Context("when metadata file contains a file that does not correspond to any glob-matched file", func() {
+			BeforeEach(func() {
+				metadataFileContents =
+					`---
+           product_files:
+           - file: not-a-real-file
+             description: |
+               some
+               multi-line
+               description
+           - file: also-not-a-real-file
+             description: |
+               some
+               other
+               description`
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*metadata.*not-a-real-file.*also-not-a-real-file"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
 	})
