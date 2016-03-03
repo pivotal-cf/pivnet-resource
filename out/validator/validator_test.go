@@ -33,6 +33,9 @@ var _ = Describe("Validator", func() {
 		versionFile = "some-version-file"
 		releaseTypeFile = "some-release-type-file"
 		eulaSlugFile = "some-eula-slug-file"
+
+		fileGlob = ""
+		s3FilepathPrefix = ""
 	})
 
 	JustBeforeEach(func() {
