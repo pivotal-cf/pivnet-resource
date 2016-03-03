@@ -8,24 +8,25 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 type CheckCommand struct {
-	logger      logger.Logger
-	logFilePath string
-	version     string
+	logger        logger.Logger
+	logFilePath   string
+	binaryVersion string
 }
 
 func NewCheckCommand(
-	version string,
+	binaryVersion string,
 	logger logger.Logger,
 	logFilePath string,
 ) *CheckCommand {
 	return &CheckCommand{
-		logger:      logger,
-		logFilePath: logFilePath,
-		version:     version,
+		logger:        logger,
+		logFilePath:   logFilePath,
+		binaryVersion: binaryVersion,
 	}
 }
 
@@ -67,10 +68,12 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		endpoint = pivnet.Endpoint
 	}
 
+	productSlug := input.Source.ProductSlug
+
 	clientConfig := pivnet.NewClientConfig{
 		Endpoint:  endpoint,
 		Token:     input.Source.APIToken,
-		UserAgent: fmt.Sprintf("pivnet-resource/%s", c.version),
+		UserAgent: useragent.UserAgent(c.binaryVersion, "check", productSlug),
 	}
 	client := pivnet.NewClient(
 		clientConfig,
@@ -79,7 +82,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	c.logger.Debugf("Getting all product versions\n")
 
-	allVersions, err := client.ProductVersions(input.Source.ProductSlug)
+	allVersions, err := client.ProductVersions(productSlug)
 	if err != nil {
 		return nil, err
 	}

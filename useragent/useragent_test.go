@@ -9,31 +9,100 @@ import (
 )
 
 var _ = Describe("UserAgent", func() {
-	It("creates user agent string from environment variables", func() {
-		version := "0.2.1"
-		containerType := "get"
-		productSlug := "my-product"
+	var (
+		atcExternalURL string
+		version        string
+		productSlug    string
 
-		atcExternalURL := "https://some-external-url"
-		buildPipelineName := "some-pipeline"
-		buildJobName := "build-job-name"
-		buildName := "build-name"
+		containerType string
+	)
+
+	BeforeEach(func() {
+		version = "0.2.1"
+		atcExternalURL = "https://some-external-url"
+		productSlug = "my-product"
 
 		err := os.Setenv("ATC_EXTERNAL_URL", atcExternalURL)
 		Expect(err).NotTo(HaveOccurred())
+	})
 
-		err = os.Setenv("BUILD_PIPELINE_NAME", buildPipelineName)
-		Expect(err).NotTo(HaveOccurred())
+	Context("when check container environment variables are present", func() {
+		var (
+			resourceName string
+			pipelineName string
+		)
 
-		err = os.Setenv("BUILD_JOB_NAME", buildJobName)
-		Expect(err).NotTo(HaveOccurred())
+		BeforeEach(func() {
+			containerType = "check"
 
-		err = os.Setenv("BUILD_NAME", buildName)
-		Expect(err).NotTo(HaveOccurred())
+			resourceName = "some-resource"
+			pipelineName = "some-pipeline"
 
-		userAgentString := useragent.UserAgent(version, containerType, productSlug)
-		Expect(userAgentString).To(Equal(
-			"pivnet-resource/0.2.1 (https://some-external-url/pipelines/some-pipeline/jobs/build-job-name/builds/build-name -- my-product/get)",
-		))
+			err := os.Setenv("PIPELINE_NAME", pipelineName)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = os.Setenv("RESOURCE_NAME", resourceName)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := os.Unsetenv("PIPELINE_NAME")
+			Expect(err).NotTo(HaveOccurred())
+
+			err = os.Unsetenv("RESOURCE_NAME")
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("creates user agent string from environment variables", func() {
+			userAgentString := useragent.UserAgent(version, containerType, productSlug)
+
+			Expect(userAgentString).To(Equal(
+				"pivnet-resource/0.2.1 (https://some-external-url/pipelines/some-pipeline/resources/some-resource -- check)",
+			))
+		})
+	})
+
+	Context("when in/out container environment variables are present", func() {
+		var (
+			buildPipelineName string
+			buildJobName      string
+			buildName         string
+		)
+
+		BeforeEach(func() {
+			containerType = "get"
+
+			buildPipelineName = "some-pipeline"
+			buildJobName = "build-job-name"
+			buildName = "build-name"
+
+			err := os.Setenv("BUILD_PIPELINE_NAME", buildPipelineName)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = os.Setenv("BUILD_JOB_NAME", buildJobName)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = os.Setenv("BUILD_NAME", buildName)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := os.Unsetenv("BUILD_PIPELINE_NAME")
+			Expect(err).NotTo(HaveOccurred())
+
+			err = os.Unsetenv("BUILD_JOB_NAME")
+			Expect(err).NotTo(HaveOccurred())
+
+			err = os.Unsetenv("BUILD_NAME")
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("creates user agent string from environment variables", func() {
+			userAgentString := useragent.UserAgent(version, containerType, productSlug)
+
+			Expect(userAgentString).To(Equal(
+				"pivnet-resource/0.2.1 (https://some-external-url/pipelines/some-pipeline/jobs/build-job-name/builds/build-name -- my-product/get)",
+			))
+		})
 	})
 })

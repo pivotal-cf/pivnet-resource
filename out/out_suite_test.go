@@ -9,7 +9,6 @@ import (
 
 const (
 	apiPrefix   = "/api/v2"
-	productSlug = "some-product-name"
 )
 
 func TestOut(t *testing.T) {
