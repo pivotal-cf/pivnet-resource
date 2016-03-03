@@ -14,10 +14,11 @@ func UserAgent(version, containerType, productSlug string) string {
 	// check container
 	if resourceName != "" {
 		return fmt.Sprintf(
-			"pivnet-resource/%s (%s/pipelines/%s/resources/%s -- %s)",
+			"pivnet-resource/%s (%s/pipelines/%s/resources/%s -- %s/%s)",
 			version,
 			externalURL,
 			pipelineName,
+			resourceName,
 			resourceName,
 			containerType,
 		)

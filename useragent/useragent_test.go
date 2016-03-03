@@ -59,7 +59,7 @@ var _ = Describe("UserAgent", func() {
 			userAgentString := useragent.UserAgent(version, containerType, productSlug)
 
 			Expect(userAgentString).To(Equal(
-				"pivnet-resource/0.2.1 (https://some-external-url/pipelines/some-pipeline/resources/some-resource -- check)",
+				"pivnet-resource/0.2.1 (https://some-external-url/pipelines/some-pipeline/resources/some-resource -- some-resource/check)",
 			))
 		})
 	})
