@@ -131,6 +131,7 @@ var _ = Describe("Out", func() {
 		s3OutBinaryName = "s3-out"
 		s3OutScriptContents := `#!/bin/sh
 
+sleep 0.1
 echo "$@"`
 
 		s3OutBinaryPath := filepath.Join(outDir, s3OutBinaryName)
@@ -279,7 +280,7 @@ echo "$@"`
 
 		ginkgoLogger = logger.NewLogger(sanitizer)
 
-		binaryVersion := "v0.1.2"
+		binaryVersion := "v0.1.2-unit-tests"
 		outCommand = out.NewOutCommand(out.OutCommandConfig{
 			BinaryVersion:   binaryVersion,
 			Logger:          ginkgoLogger,

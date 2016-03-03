@@ -24,7 +24,6 @@ var _ = Describe("Check", func() {
 		tempDir     string
 		logFilePath string
 
-		version      string
 		ginkgoLogger logger.Logger
 
 		checkRequest concourse.CheckRequest
@@ -54,7 +53,7 @@ var _ = Describe("Check", func() {
 		err = ioutil.WriteFile(logFilePath, []byte("initial log content"), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
-		version = "some-version"
+		binaryVersion := "v0.1.2-unit-tests"
 
 		checkRequest = concourse.CheckRequest{
 			Source: concourse.Source{
@@ -69,7 +68,7 @@ var _ = Describe("Check", func() {
 
 		ginkgoLogger = logger.NewLogger(sanitizer)
 
-		checkCommand = check.NewCheckCommand(version, ginkgoLogger, logFilePath)
+		checkCommand = check.NewCheckCommand(binaryVersion, ginkgoLogger, logFilePath)
 	})
 
 	AfterEach(func() {
