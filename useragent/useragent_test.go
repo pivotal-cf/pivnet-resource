@@ -10,24 +10,21 @@ import (
 
 var _ = Describe("UserAgent", func() {
 	var (
-		atcExternalURL string
-		version        string
-		productSlug    string
+		version     string
+		productSlug string
 
 		containerType string
 	)
 
 	BeforeEach(func() {
 		version = "0.2.1"
-		atcExternalURL = "https://some-external-url"
 		productSlug = "my-product"
-
-		err := os.Setenv("ATC_EXTERNAL_URL", atcExternalURL)
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Context("when check container environment variables are present", func() {
 		var (
+			externalURL = "https://some-external-url"
+
 			resourceName string
 			pipelineName string
 		)
@@ -35,10 +32,15 @@ var _ = Describe("UserAgent", func() {
 		BeforeEach(func() {
 			containerType = "check"
 
+			externalURL = "https://some-external-url"
+
 			resourceName = "some-resource"
 			pipelineName = "some-pipeline"
 
-			err := os.Setenv("PIPELINE_NAME", pipelineName)
+			err := os.Setenv("EXTERNAL_URL", externalURL)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = os.Setenv("PIPELINE_NAME", pipelineName)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = os.Setenv("RESOURCE_NAME", resourceName)
@@ -64,6 +66,8 @@ var _ = Describe("UserAgent", func() {
 
 	Context("when in/out container environment variables are present", func() {
 		var (
+			atcExternalURL string
+
 			buildPipelineName string
 			buildJobName      string
 			buildName         string
@@ -72,11 +76,16 @@ var _ = Describe("UserAgent", func() {
 		BeforeEach(func() {
 			containerType = "get"
 
+			atcExternalURL = "https://some-external-url"
+
 			buildPipelineName = "some-pipeline"
 			buildJobName = "build-job-name"
 			buildName = "build-name"
 
-			err := os.Setenv("BUILD_PIPELINE_NAME", buildPipelineName)
+			err := os.Setenv("ATC_EXTERNAL_URL", atcExternalURL)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = os.Setenv("BUILD_PIPELINE_NAME", buildPipelineName)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = os.Setenv("BUILD_JOB_NAME", buildJobName)

@@ -6,9 +6,8 @@ import (
 )
 
 func UserAgent(version, containerType, productSlug string) string {
-	atcExternalURL := os.Getenv("ATC_EXTERNAL_URL")
-
 	// check containers
+	externalURL := os.Getenv("EXTERNAL_URL")
 	resourceName := os.Getenv("RESOURCE_NAME")
 	pipelineName := os.Getenv("PIPELINE_NAME")
 
@@ -17,7 +16,7 @@ func UserAgent(version, containerType, productSlug string) string {
 		return fmt.Sprintf(
 			"pivnet-resource/%s (%s/pipelines/%s/resources/%s -- %s)",
 			version,
-			atcExternalURL,
+			externalURL,
 			pipelineName,
 			resourceName,
 			containerType,
@@ -25,6 +24,8 @@ func UserAgent(version, containerType, productSlug string) string {
 	}
 
 	// in/out containers
+	atcExternalURL := os.Getenv("ATC_EXTERNAL_URL")
+
 	buildPipelineName := os.Getenv("BUILD_PIPELINE_NAME")
 	buildJobName := os.Getenv("BUILD_JOB_NAME")
 	buildName := os.Getenv("BUILD_NAME")
