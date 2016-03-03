@@ -9,6 +9,7 @@ type Metadata struct {
 type ProductFile struct {
 	File        string `yaml:"file"`
 	Description string `yaml:"description"`
+	UploadAs    string `yaml:"upload_as"`
 }
 
 func (m Metadata) Validate() error {

@@ -500,6 +500,26 @@ exit 1`
 				Expect(server.ReceivedRequests()).To(BeEmpty())
 			})
 		})
+
+		Context("when metadata file contains upload_as for valid file", func() {
+			BeforeEach(func() {
+				metadataFileContents = fmt.Sprintf(
+					`---
+          product_files:
+          - file: %s
+            upload_as: some_remote_file`,
+					productFileRelativePath0,
+				)
+
+				newProductFileRequest.ProductFile.Name = "some_remote_file"
+			})
+
+			FIt("creates product files with the provided name", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
 	})
 
 	Context("when globbing fails", func() {
