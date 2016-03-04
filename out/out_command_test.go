@@ -514,7 +514,7 @@ exit 1`
 				newProductFileRequest.ProductFile.Name = "some_remote_file"
 			})
 
-			FIt("creates product files with the provided name", func() {
+			It("creates product files with the provided name", func() {
 				_, err := outCommand.Run(outRequest)
 				Expect(err).NotTo(HaveOccurred())
 			})
