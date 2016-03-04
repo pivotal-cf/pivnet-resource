@@ -207,6 +207,7 @@ A metadata file can be provided in YAML (or JSON) format. The contents of this f
 ---
 product_files:
 - file: /path/to/some/product/file
+  upload_as: some human-readable name
   description: |
     some
     multi-line
@@ -220,6 +221,8 @@ Each element in `product_files` must have a non-empty value for the `file` key. 
 * `file` *Required.* Relative path to file. Must match exactly one file located via the out param `file_glob`, or the resource will exit with error.
 
 * `description` *Optional.* The file description (also known as _File Notes_ in Pivotal Network).
+
+* `upload_as` *Optional.* The display name for the file in Pivotal Network. This affects only the display name; the filename of the uploaded file remains the same as that of the local file.
 
 ## Developing
 
