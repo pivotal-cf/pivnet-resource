@@ -30,6 +30,7 @@ type Client interface {
 	AddProductFile(productID int, releaseID int, productFileID int) error
 	FindProductForSlug(slug string) (Product, error)
 	AddUserGroup(productSlug string, releaseID int, userGroupID int) error
+	ReleaseETag(string, Release) (string, error)
 }
 
 type client struct {
@@ -56,8 +57,8 @@ func NewClient(config NewClientConfig, logger logger.Logger) Client {
 	}
 }
 
-func (c client) ProductVersions(id string) ([]string, error) {
-	url := c.url + "/products/" + id + "/releases"
+func (c client) ProductVersions(productSlug string) ([]string, error) {
+	url := fmt.Sprintf("%s/products/%s/releases", c.url, productSlug)
 
 	var response ReleasesResponse
 	err := c.makeRequest(
@@ -73,7 +74,12 @@ func (c client) ProductVersions(id string) ([]string, error) {
 
 	var versions []string
 	for _, r := range response.Releases {
-		versions = append(versions, r.Version)
+		etag, err := c.ReleaseETag(productSlug, r)
+		if err != nil {
+			panic(err)
+		}
+		version := fmt.Sprintf("%s#%s", r.Version, etag)
+		versions = append(versions, version)
 	}
 
 	return versions, nil
@@ -98,16 +104,16 @@ func (c client) AcceptEULA(productSlug string, releaseID int) error {
 	return nil
 }
 
-func (c client) makeRequest(
+func (c client) makeRequestWithHTTPResponse(
 	requestType string,
 	url string,
 	expectedStatusCode int,
 	body io.Reader,
 	data interface{},
-) error {
+) (*http.Response, error) {
 	req, err := http.NewRequest(requestType, url, body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req.Header.Add("Content-Type", "application/json")
@@ -117,20 +123,20 @@ func (c client) makeRequest(
 	reqBytes, err := httputil.DumpRequestOut(req, true)
 	if err != nil {
 		c.logger.Debugf("Error dumping request: %+v\n", err)
-		return err
+		return nil, err
 	}
 
 	c.logger.Debugf("Making request: %s\n", string(reqBytes))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		c.logger.Debugf("Error making request: %+v\n", err)
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	c.logger.Debugf("Response status code: %d\n", resp.StatusCode)
 	if resp.StatusCode != expectedStatusCode {
-		return fmt.Errorf(
+		return nil, fmt.Errorf(
 			"Pivnet returned status code: %d for the request - expected %d",
 			resp.StatusCode,
 			expectedStatusCode,
@@ -139,16 +145,33 @@ func (c client) makeRequest(
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(b) > 0 {
 		c.logger.Debugf("Response body: %s\n", string(b))
 		err = json.Unmarshal(b, data)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return resp, nil
+}
+
+func (c client) makeRequest(
+	requestType string,
+	url string,
+	expectedStatusCode int,
+	body io.Reader,
+	data interface{},
+) error {
+	_, err := c.makeRequestWithHTTPResponse(
+		requestType,
+		url,
+		expectedStatusCode,
+		body,
+		data,
+	)
+	return err
 }

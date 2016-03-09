@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -109,4 +110,26 @@ func (c client) UpdateRelease(productSlug string, release Release) (Release, err
 	}
 
 	return response.Release, nil
+}
+
+func (c client) ReleaseETag(productSlug string, release Release) (string, error) {
+	url := fmt.Sprintf("%s/products/%s/releases/%d", c.url, productSlug, release.ID)
+
+	var response Release
+	resp, err := c.makeRequestWithHTTPResponse("GET", url, http.StatusOK, nil, &response)
+	if err != nil {
+		panic(err)
+	}
+
+	rawEtag := resp.Header.Get("ETag")
+
+	// Weak ETag looks like: W/"my-etag"; strong ETag looks like: "my-etag"
+	splitRawEtag := strings.SplitN(rawEtag, `"`, -1)
+
+	if len(splitRawEtag) < 2 {
+		return "", nil
+	}
+
+	etag := splitRawEtag[1]
+	return etag, nil
 }
