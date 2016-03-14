@@ -9,11 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -24,11 +19,6 @@ import (
 const (
 	executableTimeout = 60 * time.Second
 )
-
-type s3client struct {
-	client  *s3.S3
-	session *session.Session
-}
 
 var _ = Describe("Out", func() {
 	var (
@@ -286,70 +276,3 @@ var _ = Describe("Out", func() {
 		})
 	})
 })
-
-func NewS3Client(
-	accessKey string,
-	secretKey string,
-	regionName string,
-	endpoint string,
-) (*s3client, error) {
-	creds := credentials.NewStaticCredentials(accessKey, secretKey, "")
-
-	awsConfig := &aws.Config{
-		Region:           aws.String(regionName),
-		Credentials:      creds,
-		S3ForcePathStyle: aws.Bool(true),
-	}
-
-	sess := session.New(awsConfig)
-	client := s3.New(sess, awsConfig)
-
-	return &s3client{
-		client:  client,
-		session: sess,
-	}, nil
-}
-
-func (client *s3client) DownloadFile(
-	bucketName string,
-	remotePath string,
-	localPath string,
-) error {
-	downloader := s3manager.NewDownloader(client.session)
-
-	localFile, err := os.Create(localPath)
-	if err != nil {
-		return err
-	}
-	defer localFile.Close()
-
-	getObject := &s3.GetObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(remotePath),
-	}
-
-	_, err = downloader.Download(localFile, getObject)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (client *s3client) DeleteFile(bucketName string, remotePath string) error {
-	_, err := client.client.DeleteObject(&s3.DeleteObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(remotePath),
-	})
-
-	return err
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
