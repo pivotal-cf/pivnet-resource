@@ -16,11 +16,11 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
-	"github.com/pivotal-cf-experimental/pivnet-resource/out/validator"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
+	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
 )
 
 const (

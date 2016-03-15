@@ -1,45 +1,241 @@
 package validator_test
 
 import (
-	"errors"
-
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
-	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Validator", func() {
-	var vldtr validator.OutChecker
+	var (
+		accessKeyID     string
+		secretAccessKey string
 
-	BeforeEach(func() {
-		vldtr = validator.OutChecker{}
-	})
+		versionFile      string
+		apiToken         string
+		productSlug      string
+		fileGlob         string
+		s3FilepathPrefix string
+		releaseTypeFile  string
+		eulaSlugFile     string
 
-	DescribeTable("validating arguments",
-		func(checker validator.OutChecker, input concourse.OutRequest, err error) {
-			Expect(checker.Validate(input)).To(MatchError(err))
-		},
-
-		Entry("api_token missing", vldtr, concourse.OutRequest{}, errors.New("api_token must be provided")),
-		Entry("product_slug", vldtr, concourse.OutRequest{Source: concourse.Source{APIToken: "token"}}, errors.New("product_slug must be provided")),
-		Entry("version_file", vldtr, concourse.OutRequest{Source: concourse.Source{APIToken: "token", ProductSlug: "slug"}}, errors.New("version_file must be provided")),
-		Entry("release_type_file", vldtr, concourse.OutRequest{Source: concourse.Source{APIToken: "token", ProductSlug: "slug"}, Params: concourse.OutParams{VersionFile: "file"}}, errors.New("release_type_file must be provided")),
-		Entry("eula_slug_file", vldtr, concourse.OutRequest{Source: concourse.Source{APIToken: "token", ProductSlug: "slug"}, Params: concourse.OutParams{VersionFile: "file", ReleaseTypeFile: "file"}}, errors.New("eula_slug_file must be provided")),
+		outRequest concourse.OutRequest
+		v          validator.Validator
 	)
 
-	Context("when file glob and file path prefix are both provided", func() {
-		DescribeTable("validating arguments",
-			func(checker validator.OutChecker, input concourse.OutRequest, err error) {
-				Expect(checker.Validate(input)).To(MatchError(err))
-			},
+	BeforeEach(func() {
+		accessKeyID = "some-access-key"
+		secretAccessKey = "some-secret-access-key"
+		apiToken = "some-api-token"
+		productSlug = "some-product"
 
-			Entry("access_key_id missing", vldtr, concourse.OutRequest{Source: concourse.Source{APIToken: "token", ProductSlug: "slug"}, Params: concourse.OutParams{VersionFile: "file", ReleaseTypeFile: "file", EulaSlugFile: "file", FileGlob: "glob glob", FilepathPrefix: "prefix"}}, errors.New("access_key_id must be provided")),
-			Entry("secret_access_key missing", vldtr, concourse.OutRequest{Source: concourse.Source{APIToken: "token", ProductSlug: "slug", AccessKeyID: "key"}, Params: concourse.OutParams{VersionFile: "file", ReleaseTypeFile: "file", EulaSlugFile: "file", FileGlob: "glob glob", FilepathPrefix: "prefix"}}, errors.New("secret_access_key must be provided")),
-			Entry("file_glob missing", vldtr, concourse.OutRequest{Source: concourse.Source{APIToken: "token", ProductSlug: "slug", AccessKeyID: "key", SecretAccessKey: "super-secret"}, Params: concourse.OutParams{VersionFile: "file", ReleaseTypeFile: "file", EulaSlugFile: "file", FilepathPrefix: "prefix"}}, errors.New("file_glob must be provided")),
-			Entry("s3_filepath_prefix missing", vldtr, concourse.OutRequest{Source: concourse.Source{APIToken: "token", ProductSlug: "slug", AccessKeyID: "key", SecretAccessKey: "super-secret"}, Params: concourse.OutParams{VersionFile: "file", ReleaseTypeFile: "file", EulaSlugFile: "file", FileGlob: "glob glob"}}, errors.New("s3_filepath_prefix must be provided")),
-		)
+		versionFile = "some-version-file"
+		releaseTypeFile = "some-release-type-file"
+		eulaSlugFile = "some-eula-slug-file"
+
+		fileGlob = ""
+		s3FilepathPrefix = ""
+	})
+
+	JustBeforeEach(func() {
+		outRequest = concourse.OutRequest{
+			Source: concourse.Source{
+				APIToken:        apiToken,
+				ProductSlug:     productSlug,
+				AccessKeyID:     accessKeyID,
+				SecretAccessKey: secretAccessKey,
+			},
+			Params: concourse.OutParams{
+				VersionFile:     versionFile,
+				FileGlob:        fileGlob,
+				FilepathPrefix:  s3FilepathPrefix,
+				ReleaseTypeFile: releaseTypeFile,
+				EulaSlugFile:    eulaSlugFile,
+			},
+		}
+
+		v = validator.NewValidator(outRequest)
+	})
+
+	Context("when no api token is provided", func() {
+		BeforeEach(func() {
+			apiToken = ""
+		})
+
+		It("returns an error", func() {
+			err := v.Validate()
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*api_token.*provided"))
+		})
+	})
+
+	Context("when no product slug is provided", func() {
+		BeforeEach(func() {
+			productSlug = ""
+		})
+
+		It("returns an error", func() {
+			err := v.Validate()
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*product_slug.*provided"))
+
+		})
+	})
+
+	Context("when version file is not provided", func() {
+		BeforeEach(func() {
+			versionFile = ""
+		})
+
+		It("returns an error", func() {
+			err := v.Validate()
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*version_file.*provided"))
+
+		})
+	})
+
+	Context("when release_type file is not provided", func() {
+		BeforeEach(func() {
+			releaseTypeFile = ""
+		})
+
+		It("returns an error", func() {
+			err := v.Validate()
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*release_type_file.*provided"))
+
+		})
+	})
+
+	Context("when eula_slug file is not provided", func() {
+		BeforeEach(func() {
+			eulaSlugFile = ""
+		})
+
+		It("returns an error", func() {
+			err := v.Validate()
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*eula_slug_file.*provided"))
+
+		})
+	})
+
+	Context("when file glob is not provided", func() {
+		BeforeEach(func() {
+			fileGlob = ""
+		})
+
+		It("returns without error", func() {
+			err := v.Validate()
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Context("when s3 filepath prefix is not provided", func() {
+		BeforeEach(func() {
+			s3FilepathPrefix = ""
+		})
+
+		It("returns without error", func() {
+			err := v.Validate()
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Context("when file glob is present", func() {
+		BeforeEach(func() {
+			fileGlob = "some-file-glob"
+		})
+
+		Context("when s3 filepath prefix is not provided", func() {
+			BeforeEach(func() {
+				s3FilepathPrefix = ""
+			})
+
+			It("returns an error", func() {
+				err := v.Validate()
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*s3_filepath_prefix.*provided"))
+			})
+		})
+
+		Context("when no aws access key id is provided", func() {
+			BeforeEach(func() {
+				accessKeyID = ""
+			})
+
+			It("returns an error", func() {
+				err := v.Validate()
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*access_key_id.*provided"))
+			})
+		})
+
+		Context("when no aws secret access key is provided", func() {
+			BeforeEach(func() {
+				secretAccessKey = ""
+			})
+
+			It("returns an error", func() {
+				err := v.Validate()
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*secret_access_key.*provided"))
+			})
+		})
+	})
+
+	Context("when filepath prefix is present", func() {
+		BeforeEach(func() {
+			s3FilepathPrefix = "some-filepath-prefix"
+		})
+
+		Context("when file glob is not provided", func() {
+			BeforeEach(func() {
+				fileGlob = ""
+			})
+
+			It("returns an error", func() {
+				err := v.Validate()
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*file glob.*provided"))
+			})
+		})
+
+		Context("when no aws access key id is provided", func() {
+			BeforeEach(func() {
+				accessKeyID = ""
+			})
+
+			It("returns an error", func() {
+				err := v.Validate()
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*access_key_id.*provided"))
+			})
+		})
+
+		Context("when no aws secret access key is provided", func() {
+			BeforeEach(func() {
+				secretAccessKey = ""
+			})
+
+			It("returns an error", func() {
+				err := v.Validate()
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*secret_access_key.*provided"))
+			})
+		})
 	})
 })
