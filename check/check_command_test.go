@@ -34,7 +34,7 @@ var _ = Describe("Check", func() {
 		server = ghttp.NewServer()
 
 		pivnetResponse =
-			`{"releases": [{"version": "A"},{"version":"C"},{"version":"B"}]}`
+			`{"releases": [{"id":1,"version": "A"},{"id":2,"version":"C"},{"id":3,"version":"B"}]}`
 
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
@@ -44,6 +44,19 @@ var _ = Describe("Check", func() {
 				ghttp.RespondWith(http.StatusOK, pivnetResponse),
 			),
 		)
+
+		for i := 0; i < 3; i++ {
+			etag := fmt.Sprintf(`"etag-%d"`, i)
+			etagHeader := http.Header{"ETag": []string{etag}}
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest(
+						"HEAD",
+						fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, productSlug, i+1)),
+					ghttp.RespondWith(http.StatusOK, pivnetResponse, etagHeader),
+				),
+			)
+		}
 
 		var err error
 		tempDir, err = ioutil.TempDir("", "")
@@ -83,7 +96,7 @@ var _ = Describe("Check", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(response).To(HaveLen(1))
-		Expect(response[0].ProductVersion).To(Equal("A"))
+		Expect(response[0].ProductVersion).To(Equal("A#etag-0"))
 	})
 
 	Context("when no api token is provided", func() {
@@ -189,7 +202,7 @@ var _ = Describe("Check", func() {
 	Context("when a version is provided", func() {
 		BeforeEach(func() {
 			checkRequest.Version = concourse.Version{
-				"B",
+				"B#etag-2",
 			}
 		})
 
@@ -198,8 +211,8 @@ var _ = Describe("Check", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(response).To(HaveLen(2))
-			Expect(response[0].ProductVersion).To(Equal("C"))
-			Expect(response[1].ProductVersion).To(Equal("A"))
+			Expect(response[0].ProductVersion).To(Equal("C#etag-1"))
+			Expect(response[1].ProductVersion).To(Equal("A#etag-0"))
 		})
 	})
 })

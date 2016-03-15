@@ -116,7 +116,7 @@ func (c client) ReleaseETag(productSlug string, release Release) (string, error)
 	url := fmt.Sprintf("%s/products/%s/releases/%d", c.url, productSlug, release.ID)
 
 	var response Release
-	resp, err := c.makeRequestWithHTTPResponse("GET", url, http.StatusOK, nil, &response)
+	resp, err := c.makeRequestWithHTTPResponse("HEAD", url, http.StatusOK, nil, &response)
 	if err != nil {
 		panic(err)
 	}

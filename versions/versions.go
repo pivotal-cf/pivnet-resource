@@ -7,7 +7,7 @@ func Since(versions []string, since string) ([]string, error) {
 		}
 	}
 
-	return versions[:0], nil
+	return versions[:1], nil
 }
 
 func Reverse(versions []string) ([]string, error) {

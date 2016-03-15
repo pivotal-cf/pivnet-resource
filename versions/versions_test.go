@@ -8,24 +8,57 @@ import (
 
 var _ = Describe("Versions", func() {
 	Describe("Since", func() {
-		It("returns new versions", func() {
-			allVersions := []string{"newest version", "newish version", "oldest version"}
-			versions, _ := versions.Since(allVersions, "newish version")
+		var (
+			allVersions []string
+			version     string
+		)
 
-			Expect(versions).To(Equal([]string{"newest version"}))
+		BeforeEach(func() {
+			allVersions = []string{}
+			version = ""
 		})
 
-		Context("when the versions are not ordered", func() {
-			var allVersions []string
+		Context("when the provided version is the newest", func() {
+			var (
+				allVersions []string
+				version     string
+			)
 
 			BeforeEach(func() {
-				allVersions = []string{"aaa", "ddd", "eee", "bbb", "fff", "ccc"}
+				allVersions = []string{"1.2.3#abc", "1.3.2#def"}
+				version = "1.2.3#abc"
+			})
+
+			It("returns empty array", func() {
+				versions, _ := versions.Since(allVersions, version)
+
+				Expect(versions).To(HaveLen(0))
+			})
+		})
+
+		Context("when provided version is present but not the newest", func() {
+			BeforeEach(func() {
+				allVersions = []string{"newest version", "middle version", "older version", "last version"}
+				version = "older version"
 			})
 
 			It("returns new versions", func() {
-				versions, _ := versions.Since(allVersions, "eee")
+				versions, _ := versions.Since(allVersions, version)
 
-				Expect(versions).To(Equal([]string{"aaa", "ddd"}))
+				Expect(versions).To(Equal([]string{"newest version", "middle version"}))
+			})
+		})
+
+		Context("When the version is not present", func() {
+			BeforeEach(func() {
+				allVersions = []string{"1.2.3#abc", "1.3.2#def"}
+				version = "1.3.2"
+			})
+
+			It("returns the newest version", func() {
+				versions, _ := versions.Since(allVersions, version)
+
+				Expect(versions).To(Equal([]string{"1.2.3#abc"}))
 			})
 		})
 	})

@@ -86,8 +86,12 @@ func (c client) ProductVersions(productSlug string) ([]string, error) {
 }
 
 func (c client) AcceptEULA(productSlug string, releaseID int) error {
-	url := fmt.Sprintf("%s/products/%s/releases/%d/eula_acceptance", c.url,
-		productSlug, releaseID)
+	url := fmt.Sprintf(
+		"%s/products/%s/releases/%d/eula_acceptance",
+		c.url,
+		productSlug,
+		releaseID,
+	)
 
 	var response EulaResponse
 	err := c.makeRequest(
