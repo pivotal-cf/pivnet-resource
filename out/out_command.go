@@ -62,7 +62,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		return concourse.OutResponse{}, fmt.Errorf("%s must be provided", "out dir")
 	}
 
-	err := validator.NewValidator(input).Validate()
+	err := validator.NewOutValidator(input).Validate()
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}

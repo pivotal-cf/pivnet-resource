@@ -7,7 +7,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
 )
 
-var _ = Describe("Validator", func() {
+var _ = Describe("Out Validator", func() {
 	var (
 		accessKeyID     string
 		secretAccessKey string
@@ -55,7 +55,7 @@ var _ = Describe("Validator", func() {
 			},
 		}
 
-		v = validator.NewValidator(outRequest)
+		v = validator.NewOutValidator(outRequest)
 	})
 
 	Context("when no api token is provided", func() {
