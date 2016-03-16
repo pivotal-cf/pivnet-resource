@@ -11,6 +11,32 @@ type addUserGroupBody struct {
 	UserGroup UserGroup `json:"user_group"`
 }
 
+func (c client) UserGroups(
+	productSlug string,
+	releaseID int,
+) ([]UserGroup, error) {
+	url := fmt.Sprintf(
+		"%s/products/%s/releases/%d/user_groups",
+		c.url,
+		productSlug,
+		releaseID,
+	)
+
+	var response UserGroups
+	err := c.makeRequest(
+		"GET",
+		url,
+		http.StatusOK,
+		nil,
+		&response,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.UserGroups, nil
+}
+
 func (c client) AddUserGroup(
 	productSlug string,
 	releaseID int,

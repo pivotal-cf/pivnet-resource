@@ -29,7 +29,9 @@ var _ = Describe("Check", func() {
 
 	BeforeEach(func() {
 		By("Getting expected releases")
-		allReleases := getReleases(productSlug)
+		allReleases, err := pivnetClient.ReleasesForProductSlug(productSlug)
+		Expect(err).NotTo(HaveOccurred())
+
 		releases := allReleases[:4]
 
 		By("Getting release ETags")
@@ -56,7 +58,6 @@ var _ = Describe("Check", func() {
 			},
 		}
 
-		var err error
 		stdinContents, err = json.Marshal(checkRequest)
 		Expect(err).ShouldNot(HaveOccurred())
 	})

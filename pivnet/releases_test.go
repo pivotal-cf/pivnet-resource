@@ -45,6 +45,40 @@ var _ = Describe("PivnetClient - product files", func() {
 		server.Close()
 	})
 
+	Describe("ReleasesForProductSlug", func() {
+		It("returns the releases for the product slug", func() {
+			response := `{"releases": [{"id":2,"version":"1.2.3"},{"id": 3, "version": "3.2.1", "_links": {"product_files": {"href":"https://banana.org/cookies/download"}}}]}`
+
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
+					ghttp.RespondWith(http.StatusOK, response),
+				),
+			)
+
+			releases, err := client.ReleasesForProductSlug("banana")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(releases).To(HaveLen(2))
+			Expect(releases[0].ID).To(Equal(2))
+			Expect(releases[1].ID).To(Equal(3))
+		})
+
+		Context("when the server responds with a non-2XX status code", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
+						ghttp.RespondWith(http.StatusTeapot, nil),
+					),
+				)
+
+				_, err := client.ReleasesForProductSlug("banana")
+				Expect(err).To(MatchError(errors.New(
+					"Pivnet returned status code: 418 for the request - expected 200")))
+			})
+		})
+	})
+
 	Describe("GetRelease", func() {
 		It("returns the release based on the name and version", func() {
 			response := `{"releases": [{"id": 3, "version": "3.2.1", "_links": {"product_files": {"href":"https://banana.org/cookies/download"}}}]}`
@@ -345,6 +379,45 @@ var _ = Describe("PivnetClient - product files", func() {
 				_, err := client.UpdateRelease("banana-slug", release)
 				Expect(err).To(MatchError(errors.New(
 					"Pivnet returned status code: 418 for the request - expected 200")))
+			})
+		})
+	})
+
+	Describe("DeleteRelease", func() {
+		var (
+			release pivnet.Release
+		)
+
+		BeforeEach(func() {
+			release = pivnet.Release{
+				ID: 1234,
+			}
+		})
+
+		It("deletes the release", func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("DELETE", fmt.Sprintf("%s/products/banana/releases/%d", apiPrefix, release.ID)),
+					ghttp.RespondWith(http.StatusNoContent, nil),
+				),
+			)
+
+			err := client.DeleteRelease(release, "banana")
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when the server responds with a non-204 status code", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("DELETE", fmt.Sprintf("%s/products/banana/releases/%d", apiPrefix, release.ID)),
+						ghttp.RespondWith(http.StatusTeapot, nil),
+					),
+				)
+
+				err := client.DeleteRelease(release, "banana")
+				Expect(err).To(MatchError(errors.New(
+					"Pivnet returned status code: 418 for the request - expected 204")))
 			})
 		})
 	})

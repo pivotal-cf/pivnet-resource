@@ -150,7 +150,11 @@ var _ = Describe("Out", func() {
 	Describe("Creating a new release", func() {
 		AfterEach(func() {
 			By("Deleting newly-created release")
-			deletePivnetRelease(productSlug, productVersion)
+			release, err := pivnetClient.GetRelease(productSlug, productVersion)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = pivnetClient.DeleteRelease(release, productSlug)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("Successfully creates a release", func() {
@@ -159,7 +163,9 @@ var _ = Describe("Out", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			By("Validating the new product version does not yet exist")
-			productVersions := getProductVersions(productSlug)
+			productVersions, err := pivnetClient.ProductVersions(productSlug)
+			Expect(err).NotTo(HaveOccurred())
+
 			Expect(productVersions).NotTo(ContainElement(productVersion))
 
 			By("Running the command")
@@ -167,7 +173,9 @@ var _ = Describe("Out", func() {
 			Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
 			By("Validating new release exists on pivnet")
-			productVersions = getProductVersions(productSlug)
+			productVersions, err = pivnetClient.ProductVersions(productSlug)
+			Expect(err).NotTo(HaveOccurred())
+
 			Expect(productVersions).To(ContainElement(productVersion))
 
 			By("Outputting a valid json response")
@@ -178,7 +186,9 @@ var _ = Describe("Out", func() {
 			Expect(response.Version.ProductVersion).To(Equal(productVersion))
 
 			By("Validating the release was created correctly")
-			release := getPivnetRelease(productSlug, productVersion)
+			release, err := pivnetClient.GetRelease(productSlug, productVersion)
+			Expect(err).NotTo(HaveOccurred())
+
 			Expect(release.Version).To(Equal(productVersion))
 			Expect(release.ReleaseType).To(Equal(releaseType))
 			Expect(release.ReleaseDate).To(Equal(releaseDate))
@@ -238,7 +248,9 @@ var _ = Describe("Out", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 
 				By("Validating the new product version does not yet exist")
-				productVersions := getProductVersions(productSlug)
+				productVersions, err := pivnetClient.ProductVersions(productSlug)
+				Expect(err).NotTo(HaveOccurred())
+
 				Expect(productVersions).NotTo(ContainElement(productVersion))
 
 				By("Running the command")
@@ -246,7 +258,9 @@ var _ = Describe("Out", func() {
 				Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
 				By("Validating new release exists on pivnet")
-				productVersions = getProductVersions(productSlug)
+				productVersions, err = pivnetClient.ProductVersions(productSlug)
+				Expect(err).NotTo(HaveOccurred())
+
 				Expect(productVersions).To(ContainElement(productVersion))
 
 				By("Outputting a valid json response")
@@ -257,7 +271,9 @@ var _ = Describe("Out", func() {
 				Expect(response.Version.ProductVersion).To(Equal(productVersion))
 
 				By("Validating the release was created correctly")
-				release := getPivnetRelease(productSlug, productVersion)
+				release, err := pivnetClient.GetRelease(productSlug, productVersion)
+				Expect(err).NotTo(HaveOccurred())
+
 				Expect(release.Availability).To(Equal(availability))
 
 				By("Validing the returned metadata")
@@ -266,7 +282,9 @@ var _ = Describe("Out", func() {
 				Expect(metadataAvailability).To(Equal(availability))
 
 				By("Validating the user groups were associated with the release")
-				userGroups := getUserGroups(productSlug, release.ID)
+				userGroups, err := pivnetClient.UserGroups(productSlug, release.ID)
+				Expect(err).NotTo(HaveOccurred())
+
 				userGroupIDs := []int{}
 				for _, userGroup := range userGroups {
 					userGroupIDs = append(userGroupIDs, userGroup.ID)

@@ -44,6 +44,49 @@ var _ = Describe("PivnetClient - user groups", func() {
 		server.Close()
 	})
 
+	Describe("UserGroups", func() {
+		var (
+			releaseID int
+		)
+
+		BeforeEach(func() {
+			releaseID = 1234
+		})
+
+		It("returns the user groups for the product slug", func() {
+			response := `{"user_groups": [{"id":2,"name":"group 1"},{"id": 3, "name": "group 2"}]}`
+
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", fmt.Sprintf("%s/products/banana/releases/%d/user_groups", apiPrefix, releaseID)),
+					ghttp.RespondWith(http.StatusOK, response),
+				),
+			)
+
+			userGroups, err := client.UserGroups("banana", releaseID)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(userGroups).To(HaveLen(2))
+			Expect(userGroups[0].ID).To(Equal(2))
+			Expect(userGroups[1].ID).To(Equal(3))
+		})
+
+		Context("when the server responds with a non-2XX status code", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", fmt.Sprintf("%s/products/banana/releases/%d/user_groups", apiPrefix, releaseID)),
+						ghttp.RespondWith(http.StatusTeapot, nil),
+					),
+				)
+
+				_, err := client.UserGroups("banana", releaseID)
+				Expect(err).To(MatchError(errors.New(
+					"Pivnet returned status code: 418 for the request - expected 200")))
+			})
+		})
+	})
+
 	Describe("Add User Group", func() {
 		var (
 			productSlug = "banana-slug"

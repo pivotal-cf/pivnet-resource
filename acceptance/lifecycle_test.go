@@ -135,7 +135,11 @@ var _ = Describe("Lifecycle test", func() {
 	Describe("Creating a new release", func() {
 		AfterEach(func() {
 			By("Deleting newly-created release")
-			deletePivnetRelease(productSlug, productVersion)
+			release, err := pivnetClient.GetRelease(productSlug, productVersion)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = pivnetClient.DeleteRelease(release, productSlug)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Context("when S3 source and params are configured correctly", func() {

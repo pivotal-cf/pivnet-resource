@@ -23,10 +23,23 @@ type CreateReleaseConfig struct {
 	ReleaseNotesURL string
 }
 
-func (c client) GetRelease(productSlug, version string) (Release, error) {
-	var matchingRelease Release
+func (c client) ReleasesForProductSlug(productSlug string) ([]Release, error) {
+	url := fmt.Sprintf(
+		"%s/products/%s/releases",
+		c.url,
+		productSlug,
+	)
 
-	url := c.url + "/products/" + productSlug + "/releases"
+	var response ReleasesResponse
+	err := c.makeRequest("GET", url, http.StatusOK, nil, &response)
+	if err != nil {
+		return nil, err
+	}
+	return response.Releases, nil
+}
+
+func (c client) GetRelease(productSlug, version string) (Release, error) {
+	url := fmt.Sprintf("%s/products/%s/releases", c.url, productSlug)
 
 	var response ReleasesResponse
 	err := c.makeRequest("GET", url, http.StatusOK, nil, &response)
@@ -34,6 +47,7 @@ func (c client) GetRelease(productSlug, version string) (Release, error) {
 		return Release{}, err
 	}
 
+	var matchingRelease Release
 	for i, r := range response.Releases {
 		if r.Version == version {
 			matchingRelease = r
@@ -134,4 +148,26 @@ func (c client) ReleaseETag(productSlug string, release Release) (string, error)
 
 	etag := splitRawEtag[1]
 	return etag, nil
+}
+
+func (c client) DeleteRelease(release Release, productSlug string) error {
+	url := fmt.Sprintf(
+		"%s/products/%s/releases/%d",
+		c.url,
+		productSlug,
+		release.ID,
+	)
+
+	err := c.makeRequest(
+		"DELETE",
+		url,
+		http.StatusNoContent,
+		nil,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -73,7 +73,11 @@ var _ = Describe("In", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Deleting newly-created release")
-		deletePivnetRelease(productSlug, productVersion)
+		release, err := pivnetClient.GetRelease(productSlug, productVersion)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = pivnetClient.DeleteRelease(release, productSlug)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("returns valid json", func() {

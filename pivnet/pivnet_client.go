@@ -19,16 +19,19 @@ const (
 
 type Client interface {
 	ProductVersions(string) ([]string, error)
-	CreateRelease(config CreateReleaseConfig) (Release, error)
+	CreateRelease(CreateReleaseConfig) (Release, error)
+	ReleasesForProductSlug(string) ([]Release, error)
 	GetRelease(string, string) (Release, error)
 	UpdateRelease(string, Release) (Release, error)
+	DeleteRelease(Release, string) error
 	GetProductFiles(Release) (ProductFiles, error)
 	GetProductFile(productSlug string, releaseID int, productID int) (ProductFile, error)
 	AcceptEULA(productSlug string, releaseID int) error
-	CreateProductFile(config CreateProductFileConfig) (ProductFile, error)
+	CreateProductFile(CreateProductFileConfig) (ProductFile, error)
 	DeleteProductFile(productSlug string, id int) (ProductFile, error)
 	AddProductFile(productID int, releaseID int, productFileID int) error
 	FindProductForSlug(slug string) (Product, error)
+	UserGroups(productSlug string, releaseID int) ([]UserGroup, error)
 	AddUserGroup(productSlug string, releaseID int, userGroupID int) error
 	ReleaseETag(string, Release) (string, error)
 }

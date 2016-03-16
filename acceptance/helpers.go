@@ -20,75 +20,6 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 )
 
-func getReleases(productSlug string) []pivnet.Release {
-	productURL := fmt.Sprintf(
-		"%s/api/v2/products/%s/releases",
-		endpoint,
-		productSlug,
-	)
-
-	req, err := http.NewRequest("GET", productURL, nil)
-	Expect(err).NotTo(HaveOccurred())
-
-	req.Header.Add("Authorization", fmt.Sprintf("Token %s", pivnetAPIToken))
-
-	resp, err := http.DefaultClient.Do(req)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-	response := pivnet.ReleasesResponse{}
-	err = json.NewDecoder(resp.Body).Decode(&response)
-	Expect(err).NotTo(HaveOccurred())
-
-	return response.Releases
-}
-
-func getProductVersions(productSlug string) []string {
-	var versions []string
-	for _, release := range getReleases(productSlug) {
-		versions = append(versions, string(release.Version))
-	}
-
-	return versions
-}
-
-func getPivnetRelease(productSlug, productVersion string) pivnet.Release {
-	for _, release := range getReleases(productSlug) {
-		if release.Version == productVersion {
-			return release
-		}
-	}
-	Fail(fmt.Sprintf(
-		"Could not find release for productSlug: %s and productVersion: %s",
-		productSlug,
-		productVersion,
-	))
-	// We won't get here
-	return pivnet.Release{}
-}
-
-func deletePivnetRelease(productSlug, productVersion string) {
-	pivnetRelease := getPivnetRelease(productSlug, productVersion)
-	releaseID := pivnetRelease.ID
-	Expect(releaseID).NotTo(Equal(0))
-
-	productURL := fmt.Sprintf(
-		"%s/api/v2/products/%s/releases/%d",
-		endpoint,
-		productSlug,
-		releaseID,
-	)
-
-	req, err := http.NewRequest("DELETE", productURL, nil)
-	Expect(err).NotTo(HaveOccurred())
-
-	req.Header.Add("Authorization", fmt.Sprintf("Token %s", pivnetAPIToken))
-
-	resp, err := http.DefaultClient.Do(req)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(resp.StatusCode).To(Equal(http.StatusNoContent))
-}
-
 func getProductFiles(productSlug string) []pivnet.ProductFile {
 	productURL := fmt.Sprintf(
 		"%s/api/v2/products/%s/product_files",
@@ -110,30 +41,6 @@ func getProductFiles(productSlug string) []pivnet.ProductFile {
 	Expect(err).NotTo(HaveOccurred())
 
 	return response.ProductFiles
-}
-
-func getUserGroups(productSlug string, releaseID int) []pivnet.UserGroup {
-	userGroupsURL := fmt.Sprintf(
-		"%s/api/v2/products/%s/releases/%d/user_groups",
-		endpoint,
-		productSlug,
-		releaseID,
-	)
-
-	req, err := http.NewRequest("GET", userGroupsURL, nil)
-	Expect(err).NotTo(HaveOccurred())
-
-	req.Header.Add("Authorization", fmt.Sprintf("Token %s", pivnetAPIToken))
-
-	resp, err := http.DefaultClient.Do(req)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-	response := pivnet.UserGroups{}
-	err = json.NewDecoder(resp.Body).Decode(&response)
-	Expect(err).NotTo(HaveOccurred())
-
-	return response.UserGroups
 }
 
 // copyFileContents copies the contents of the file named src to the file named
