@@ -72,12 +72,7 @@ var _ = Describe("In", func() {
 		err := os.RemoveAll(destDirectory)
 		Expect(err).NotTo(HaveOccurred())
 
-		By("Deleting newly-created release")
-		release, err := pivnetClient.GetRelease(productSlug, productVersion)
-		Expect(err).NotTo(HaveOccurred())
-
-		err = pivnetClient.DeleteRelease(release, productSlug)
-		Expect(err).NotTo(HaveOccurred())
+		// We do not delete the release as it causes race conditions with other tests
 	})
 
 	It("returns valid json", func() {

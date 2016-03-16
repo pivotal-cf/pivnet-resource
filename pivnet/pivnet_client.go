@@ -79,7 +79,7 @@ func (c client) ProductVersions(productSlug string) ([]string, error) {
 	for _, r := range response.Releases {
 		etag, err := c.ReleaseETag(productSlug, r)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		version := fmt.Sprintf("%s#%s", r.Version, etag)
 		versions = append(versions, version)

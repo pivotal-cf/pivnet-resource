@@ -1,6 +1,7 @@
 package pivnet_test
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -214,6 +215,29 @@ var _ = Describe("PivnetClient", func() {
 				_, err := client.ProductVersions("my-product-id")
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("invalid character"))
+			})
+		})
+
+		Context("when getting the ETag responds with a non-2XX status code", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
+						ghttp.RespondWithJSONEncoded(http.StatusOK, releases),
+					),
+				)
+
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", fmt.Sprintf("%s/products/banana/releases/%d", apiPrefix, releases.Releases[0].ID)),
+						ghttp.RespondWith(http.StatusTeapot, nil),
+					),
+				)
+
+				_, err := client.ProductVersions("banana")
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError(errors.New(
+					"Pivnet returned status code: 418 for the request - expected 200")))
 			})
 		})
 

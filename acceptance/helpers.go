@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -168,4 +169,13 @@ func stringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func productVersionsWithoutETags(versionsWithETags []string) []string {
+	versionsWithoutETags := make([]string, len(versionsWithETags))
+	for i, v := range versionsWithETags {
+		split := strings.Split(v, "#")
+		versionsWithoutETags[i] = split[0]
+	}
+	return versionsWithoutETags
 }

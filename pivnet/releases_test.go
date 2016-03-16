@@ -421,4 +421,78 @@ var _ = Describe("PivnetClient - product files", func() {
 			})
 		})
 	})
+
+	Describe("ReleaseETag", func() {
+		var (
+			release pivnet.Release
+		)
+
+		BeforeEach(func() {
+			release = pivnet.Release{
+				ID: 1234,
+			}
+		})
+
+		It("returns the ETag for the specified release", func() {
+			etagHeader := http.Header{"ETag": []string{`"etag-0"`}}
+
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", fmt.Sprintf("%s/products/banana/releases/%d", apiPrefix, release.ID)),
+					ghttp.RespondWith(http.StatusOK, nil, etagHeader),
+				),
+			)
+
+			etag, err := client.ReleaseETag("banana", release)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(etag).To(Equal("etag-0"))
+		})
+
+		Context("when the server responds with a non-2XX status code", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", fmt.Sprintf("%s/products/banana/releases/%d", apiPrefix, release.ID)),
+						ghttp.RespondWith(http.StatusTeapot, nil),
+					),
+				)
+
+				_, err := client.ReleaseETag("banana", release)
+				Expect(err).To(MatchError(errors.New(
+					"Pivnet returned status code: 418 for the request - expected 200")))
+			})
+		})
+
+		Context("when the etag is missing", func() {
+			It("returns an error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", fmt.Sprintf("%s/products/banana/releases/%d", apiPrefix, release.ID)),
+						ghttp.RespondWith(http.StatusOK, nil),
+					),
+				)
+
+				_, err := client.ReleaseETag("banana", release)
+				Expect(err).To(MatchError(errors.New(
+					"ETag header not present")))
+			})
+		})
+
+		Context("when the etag is malformed", func() {
+			It("returns an error", func() {
+				malformedETag := "malformed-etag-without-double-quotes"
+				etagHeader := http.Header{"ETag": []string{malformedETag}}
+
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("GET", fmt.Sprintf("%s/products/banana/releases/%d", apiPrefix, release.ID)),
+						ghttp.RespondWith(http.StatusOK, nil, etagHeader),
+					),
+				)
+
+				_, err := client.ReleaseETag("banana", release)
+				Expect(err).To(MatchError(fmt.Errorf("ETag header malformed: %s", malformedETag)))
+			})
+		})
+	})
 })

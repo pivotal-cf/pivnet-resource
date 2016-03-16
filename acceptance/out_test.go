@@ -148,14 +148,7 @@ var _ = Describe("Out", func() {
 	})
 
 	Describe("Creating a new release", func() {
-		AfterEach(func() {
-			By("Deleting newly-created release")
-			release, err := pivnetClient.GetRelease(productSlug, productVersion)
-			Expect(err).NotTo(HaveOccurred())
-
-			err = pivnetClient.DeleteRelease(release, productSlug)
-			Expect(err).NotTo(HaveOccurred())
-		})
+		// We do not delete the release as it causes race conditions with other tests
 
 		It("Successfully creates a release", func() {
 			var err error
@@ -166,7 +159,7 @@ var _ = Describe("Out", func() {
 			productVersions, err := pivnetClient.ProductVersions(productSlug)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(productVersions).NotTo(ContainElement(productVersion))
+			Expect(productVersionsWithoutETags(productVersions)).NotTo(ContainElement(productVersion))
 
 			By("Running the command")
 			session := run(command, stdinContents)
@@ -176,14 +169,14 @@ var _ = Describe("Out", func() {
 			productVersions, err = pivnetClient.ProductVersions(productSlug)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(productVersions).To(ContainElement(productVersion))
+			Expect(productVersionsWithoutETags(productVersions)).To(ContainElement(productVersion))
 
 			By("Outputting a valid json response")
 			response := concourse.OutResponse{}
 			err = json.Unmarshal(session.Out.Contents(), &response)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			Expect(response.Version.ProductVersion).To(Equal(productVersion))
+			Expect(response.Version.ProductVersion).To(ContainSubstring(productVersion))
 
 			By("Validating the release was created correctly")
 			release, err := pivnetClient.GetRelease(productSlug, productVersion)
@@ -251,7 +244,7 @@ var _ = Describe("Out", func() {
 				productVersions, err := pivnetClient.ProductVersions(productSlug)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(productVersions).NotTo(ContainElement(productVersion))
+				Expect(productVersionsWithoutETags(productVersions)).NotTo(ContainElement(productVersion))
 
 				By("Running the command")
 				session := run(command, stdinContents)
@@ -261,14 +254,14 @@ var _ = Describe("Out", func() {
 				productVersions, err = pivnetClient.ProductVersions(productSlug)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(productVersions).To(ContainElement(productVersion))
+				Expect(productVersionsWithoutETags(productVersions)).To(ContainElement(productVersion))
 
 				By("Outputting a valid json response")
 				response := concourse.OutResponse{}
 				err = json.Unmarshal(session.Out.Contents(), &response)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				Expect(response.Version.ProductVersion).To(Equal(productVersion))
+				Expect(response.Version.ProductVersion).To(ContainSubstring(productVersion))
 
 				By("Validating the release was created correctly")
 				release, err := pivnetClient.GetRelease(productSlug, productVersion)
