@@ -51,9 +51,10 @@ var _ = Describe("Check", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest(
-						"HEAD",
-						fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, productSlug, i+1)),
-					ghttp.RespondWith(http.StatusOK, pivnetResponse, etagHeader),
+						"GET",
+						fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, productSlug, i+1),
+					),
+					ghttp.RespondWith(http.StatusOK, nil, etagHeader),
 				),
 			)
 		}

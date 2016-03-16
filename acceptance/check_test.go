@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"encoding/json"
+	"fmt"
 	"os/exec"
 	"time"
 
@@ -13,14 +14,14 @@ import (
 )
 
 const (
-	checkTimeout = 5 * time.Second
+	checkTimeout = 20 * time.Second
 )
 
 var _ = Describe("Check", func() {
 	var (
 		productSlug = "p-mysql"
 
-		releases      []string
+		versions      []string
 		command       *exec.Cmd
 		checkRequest  concourse.CheckRequest
 		stdinContents []byte
@@ -28,7 +29,17 @@ var _ = Describe("Check", func() {
 
 	BeforeEach(func() {
 		By("Getting expected releases")
-		releases = getProductVersions(productSlug)
+		allReleases := getReleases(productSlug)
+		releases := allReleases[:4]
+
+		By("Getting release ETags")
+		versions = make([]string, len(releases))
+		for i, r := range releases {
+			releaseETag, err := pivnetClient.ReleaseETag(productSlug, r)
+			Expect(err).NotTo(HaveOccurred())
+
+			versions[i] = fmt.Sprintf("%s#%s", r.Version, releaseETag)
+		}
 
 		By("Creating command object")
 		command = exec.Command(checkPath)
@@ -41,7 +52,7 @@ var _ = Describe("Check", func() {
 				Endpoint:    endpoint,
 			},
 			Version: concourse.Version{
-				ProductVersion: releases[3],
+				ProductVersion: versions[3],
 			},
 		}
 
@@ -64,9 +75,9 @@ var _ = Describe("Check", func() {
 		Expect(response).To(HaveLen(3))
 
 		By("Validating the returned elements have the expected product versions")
-		Expect(response[0].ProductVersion).To(Equal(releases[2]))
-		Expect(response[1].ProductVersion).To(Equal(releases[1]))
-		Expect(response[2].ProductVersion).To(Equal(releases[0]))
+		Expect(response[0].ProductVersion).To(Equal(versions[2]))
+		Expect(response[1].ProductVersion).To(Equal(versions[1]))
+		Expect(response[2].ProductVersion).To(Equal(versions[0]))
 	})
 
 	Context("when validation fails", func() {

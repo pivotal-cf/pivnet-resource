@@ -2,15 +2,12 @@ package pivnet_test
 
 import (
 	"fmt"
-	"math/rand"
 	"net/http"
-	"strconv"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
-	logger_fakes "github.com/pivotal-cf-experimental/pivnet-resource/logger/fakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 )
 
@@ -21,16 +18,36 @@ var _ = Describe("PivnetClient", func() {
 		token     string
 		userAgent string
 
+		releases   pivnet.ReleasesResponse
+		etagHeader []http.Header
+
 		newClientConfig pivnet.NewClientConfig
 		fakeLogger      logger.Logger
 	)
 
 	BeforeEach(func() {
+		releases = pivnet.ReleasesResponse{Releases: []pivnet.Release{
+			{
+				ID:      1,
+				Version: "1234",
+			},
+			{
+				ID:      99,
+				Version: "some-other-version",
+			},
+		}}
+
+		etagHeader = []http.Header{
+			{"ETag": []string{`"etag-0"`}},
+			{"ETag": []string{`"etag-1"`}},
+		}
+
 		server = ghttp.NewServer()
 		token = "my-auth-token"
 		userAgent = "pivnet-resource/0.1.0 (some-url)"
 
-		fakeLogger = &logger_fakes.FakeLogger{}
+		fakeLogger = logger.NewLogger(GinkgoWriter)
+		// fakeLogger = &logger_fakes.FakeLogger{}
 		newClientConfig = pivnet.NewClientConfig{
 			Endpoint:  server.URL(),
 			Token:     token,
@@ -44,33 +61,62 @@ var _ = Describe("PivnetClient", func() {
 	})
 
 	It("has authenticated headers for each request", func() {
-		response := fmt.Sprintf(`{"releases": [{"version": "1234"}]}`)
-
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
-				ghttp.VerifyRequest("GET", apiPrefix+"/products/my-product-id/releases"),
+				ghttp.VerifyRequest(
+					"GET",
+					fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug),
+				),
 				ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
-				ghttp.RespondWith(http.StatusOK, response),
+				ghttp.RespondWithJSONEncoded(http.StatusOK, releases),
 			),
 		)
 
-		_, err := client.ProductVersions("my-product-id")
+		for i, r := range releases.Releases {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest(
+						"GET",
+						fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, productSlug, r.ID),
+					),
+					ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
+					ghttp.RespondWith(http.StatusOK, nil, etagHeader[i]),
+				),
+			)
+		}
+
+		_, err := client.ProductVersions(productSlug)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("sets custom user agent", func() {
-		response := fmt.Sprintf(`{"releases": [{"version": "1234"}]}`)
-
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
-				ghttp.VerifyRequest("GET", apiPrefix+"/products/my-product-id/releases"),
+				ghttp.VerifyRequest(
+					"GET",
+					fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug),
+				),
 				ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
 				ghttp.VerifyHeaderKV("User-Agent", userAgent),
-				ghttp.RespondWith(http.StatusOK, response),
+				ghttp.RespondWithJSONEncoded(http.StatusOK, releases),
 			),
 		)
 
-		_, err := client.ProductVersions("my-product-id")
+		for i, r := range releases.Releases {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest(
+						"GET",
+						fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, productSlug, r.ID),
+					),
+					ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
+					ghttp.VerifyHeaderKV("User-Agent", userAgent),
+					ghttp.RespondWith(http.StatusOK, nil, etagHeader[i]),
+				),
+			)
+		}
+
+		_, err := client.ProductVersions(productSlug)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -172,25 +218,37 @@ var _ = Describe("PivnetClient", func() {
 		})
 
 		It("gets versions", func() {
-			productVersion := "v" + strconv.Itoa(rand.Int())
-			response := fmt.Sprintf(
-				`{"releases": [{"version": %q}, {"version": %q}]}`,
-				productVersion, productVersion,
-			)
-
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("GET", apiPrefix+"/products/my-product-id/releases"),
-					ghttp.RespondWith(http.StatusOK, response),
+					ghttp.VerifyRequest(
+						"GET",
+						fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug),
+					),
+					ghttp.RespondWithJSONEncoded(http.StatusOK, releases),
 				),
 			)
 
-			versions, err := client.ProductVersions("my-product-id")
+			for i, r := range releases.Releases {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest(
+							"GET",
+							fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, productSlug, r.ID),
+						),
+						ghttp.RespondWith(http.StatusOK, nil, etagHeader[i]),
+					),
+				)
+			}
+
+			// one for all the releases and one for each releases
+			expectedRequestCount := 1 + 2
+
+			versions, err := client.ProductVersions(productSlug)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(server.ReceivedRequests()).Should(HaveLen(1))
-			Expect(versions).To(HaveLen(2))
-			Expect(versions[0]).Should(Equal(productVersion))
-			Expect(versions[1]).Should(Equal(productVersion))
+			Expect(server.ReceivedRequests()).Should(HaveLen(expectedRequestCount))
+			Expect(versions).To(HaveLen(len(releases.Releases)))
+			Expect(versions[0]).Should(Equal(releases.Releases[0].Version + "#etag-0"))
+			Expect(versions[1]).Should(Equal(releases.Releases[1].Version + "#etag-1"))
 		})
 	})
 })

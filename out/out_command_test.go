@@ -53,9 +53,11 @@ var _ = Describe("Out", func() {
 
 		metadataFileContents string
 		version              string
+		etag                 string
 		productID            int
 		releaseID            int
 
+		existingETags            []http.Header
 		existingReleasesResponse pivnet.ReleasesResponse
 		newReleaseResponse       pivnet.CreateReleaseResponse
 		productsResponse         pivnet.Product
@@ -76,6 +78,7 @@ var _ = Describe("Out", func() {
 		server = ghttp.NewServer()
 
 		version = "2.1.3"
+		etag = "etag-0"
 
 		productID = 1
 		releaseID = 2
@@ -87,6 +90,9 @@ var _ = Describe("Out", func() {
 					Version: "some-other-version",
 				},
 			},
+		}
+		existingETags = []http.Header{
+			{"ETag": []string{`"etag-0"`}},
 		}
 
 		newReleaseResponse = pivnet.CreateReleaseResponse{
@@ -147,9 +153,10 @@ echo "$@"`
 		fileGlob = fmt.Sprintf("%s/*", filesToUploadDirName)
 		s3FilepathPrefix = "Some-Case-Sensitive-Path"
 
+		versionWithETag := fmt.Sprintf("%s#%s", version, etag)
 		versionFile = "version"
 		versionFilePath := filepath.Join(sourcesDir, versionFile)
-		err = ioutil.WriteFile(versionFilePath, []byte(version), os.ModePerm)
+		err = ioutil.WriteFile(versionFilePath, []byte(versionWithETag), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
 		releaseTypeFile = "release_type"
@@ -195,6 +202,18 @@ echo "$@"`
 				ghttp.RespondWithJSONEncoded(http.StatusOK, existingReleasesResponse),
 			),
 		)
+
+		for i, r := range existingReleasesResponse.Releases {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest(
+						"GET",
+						fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, productSlug, r.ID),
+					),
+					ghttp.RespondWith(http.StatusOK, nil, existingETags[i]),
+				),
+			)
+		}
 
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
