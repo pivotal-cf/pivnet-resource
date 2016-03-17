@@ -54,6 +54,7 @@ var _ = Describe("Out", func() {
 		metadataFileContents string
 		version              string
 		etag                 string
+		versionWithETag      string
 		productID            int
 		releaseID            int
 
@@ -79,6 +80,7 @@ var _ = Describe("Out", func() {
 
 		version = "2.1.3"
 		etag = "etag-0"
+		versionWithETag = fmt.Sprintf("%s#%s", version, etag)
 
 		productID = 1
 		releaseID = 2
@@ -97,7 +99,8 @@ var _ = Describe("Out", func() {
 
 		newReleaseResponse = pivnet.CreateReleaseResponse{
 			Release: pivnet.Release{
-				ID: releaseID,
+				ID:      releaseID,
+				Version: version,
 				Eula: &pivnet.Eula{
 					Slug: "some-eula",
 				},
@@ -111,6 +114,7 @@ var _ = Describe("Out", func() {
 		newProductFileRequest = createProductFileBody{pivnet.ProductFile{
 			FileType:     "Software",
 			Name:         productFileName0,
+			FileVersion:  version,
 			MD5:          "220c7810f41695d9a87d70b68ccf2aeb", // hard-coded for now
 			AWSObjectKey: fmt.Sprintf("product_files/Some-Case-Sensitive-Path/%s", productFileName0),
 		}}
@@ -153,7 +157,6 @@ echo "$@"`
 		fileGlob = fmt.Sprintf("%s/*", filesToUploadDirName)
 		s3FilepathPrefix = "Some-Case-Sensitive-Path"
 
-		versionWithETag := fmt.Sprintf("%s#%s", version, etag)
 		versionFile = "version"
 		versionFilePath := filepath.Join(sourcesDir, versionFile)
 		err = ioutil.WriteFile(versionFilePath, []byte(versionWithETag), os.ModePerm)
@@ -276,6 +279,18 @@ echo "$@"`
 			),
 		)
 
+		etag := `"etag-0"`
+		etagHeader := http.Header{"ETag": []string{etag}}
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest(
+					"GET",
+					fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, productSlug, releaseID),
+				),
+				ghttp.RespondWith(http.StatusOK, nil, etagHeader),
+			),
+		)
+
 		outRequest = concourse.OutRequest{
 			Source: concourse.Source{
 				APIToken:        apiToken,
@@ -311,8 +326,10 @@ echo "$@"`
 	})
 
 	It("runs without error", func() {
-		_, err := outCommand.Run(outRequest)
+		response, err := outCommand.Run(outRequest)
 		Expect(err).NotTo(HaveOccurred())
+
+		Expect(response.Version.ProductVersion).To(Equal(versionWithETag))
 	})
 
 	Context("when outDir is empty", func() {

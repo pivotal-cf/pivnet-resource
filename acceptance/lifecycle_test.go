@@ -243,7 +243,15 @@ var _ = Describe("Lifecycle test", func() {
 				err := json.Unmarshal(session.Out.Contents(), &response)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				Expect(response.Version.ProductVersion).To(Equal(productVersion))
+				By("Validating the release was created correctly")
+				release, err := pivnetClient.GetRelease(productSlug, productVersion)
+				Expect(err).NotTo(HaveOccurred())
+
+				releaseETag, err := pivnetClient.ReleaseETag(productSlug, release)
+				Expect(err).NotTo(HaveOccurred())
+
+				expectedVersion := fmt.Sprintf("%s#%s", productVersion, releaseETag)
+				Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
 
 				By("Getting updated list of product files")
 				updatedProductFiles := getProductFiles(productSlug)
@@ -262,7 +270,7 @@ var _ = Describe("Lifecycle test", func() {
 				Expect(len(newProductFiles)).To(Equal(totalFiles))
 
 				By("Getting newly-created release")
-				release, err := pivnetClient.GetRelease(productSlug, productVersion)
+				release, err = pivnetClient.GetRelease(productSlug, productVersion)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				By("Verifying release contains new product files")

@@ -176,13 +176,16 @@ var _ = Describe("Out", func() {
 			err = json.Unmarshal(session.Out.Contents(), &response)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			Expect(response.Version.ProductVersion).To(ContainSubstring(productVersion))
-
 			By("Validating the release was created correctly")
 			release, err := pivnetClient.GetRelease(productSlug, productVersion)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(release.Version).To(Equal(productVersion))
+			releaseETag, err := pivnetClient.ReleaseETag(productSlug, release)
+			Expect(err).NotTo(HaveOccurred())
+
+			expectedVersion := fmt.Sprintf("%s#%s", productVersion, releaseETag)
+			Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
+
 			Expect(release.ReleaseType).To(Equal(releaseType))
 			Expect(release.ReleaseDate).To(Equal(releaseDate))
 			Expect(release.Eula.Slug).To(Equal(eulaSlug))

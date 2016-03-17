@@ -305,9 +305,16 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		}
 	}
 
+	releaseETag, err := pivnetClient.ReleaseETag(productSlug, release)
+	if err != nil {
+		panic(err)
+	}
+
+	outputVersion := fmt.Sprintf("%s#%s", release.Version, releaseETag)
+
 	out := concourse.OutResponse{
 		Version: concourse.Version{
-			ProductVersion: release.Version,
+			ProductVersion: outputVersion,
 		},
 		Metadata: []concourse.Metadata{
 			{Name: "release_type", Value: release.ReleaseType},
