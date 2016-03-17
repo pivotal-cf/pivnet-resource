@@ -15,6 +15,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
+	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 var _ = Describe("In", func() {
@@ -26,7 +27,9 @@ var _ = Describe("In", func() {
 
 		ginkgoLogger logger.Logger
 
-		productVersion string
+		productVersion  string
+		etag            string
+		versionWithETag string
 
 		inRequest concourse.InRequest
 		inCommand *in.InCommand
@@ -36,6 +39,12 @@ var _ = Describe("In", func() {
 		server = ghttp.NewServer()
 
 		productVersion = "C"
+		etag = "etag-0"
+
+		var err error
+		versionWithETag, err = versions.CombineVersionAndETag(productVersion, etag)
+		Expect(err).NotTo(HaveOccurred())
+
 		releaseID := 1234
 		file1URLPath := "/file1"
 		file1URL := fmt.Sprintf("%s%s", server.URL(), file1URLPath)
@@ -43,7 +52,9 @@ var _ = Describe("In", func() {
 
 		pivnetReleasesResponse := pivnet.ReleasesResponse{
 			Releases: []pivnet.Release{
-				{Version: "A"},
+				{
+					Version: "A",
+				},
 				{
 					Version: productVersion,
 					ID:      releaseID,
@@ -53,7 +64,9 @@ var _ = Describe("In", func() {
 						},
 					},
 				},
-				{Version: "B"},
+				{
+					Version: "B",
+				},
 			},
 		}
 
@@ -92,7 +105,6 @@ var _ = Describe("In", func() {
 			),
 		)
 
-		var err error
 		downloadDir, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -103,7 +115,7 @@ var _ = Describe("In", func() {
 				Endpoint:    server.URL(),
 			},
 			Version: concourse.Version{
-				productVersion,
+				versionWithETag,
 			},
 		}
 
@@ -123,14 +135,14 @@ var _ = Describe("In", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("creates a version file with the downloaded version", func() {
+	It("creates a version file with the downloaded version and etag", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
 		versionFilepath := filepath.Join(downloadDir, "version")
 		versionContents, err := ioutil.ReadFile(versionFilepath)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(string(versionContents)).To(Equal(productVersion))
+		Expect(string(versionContents)).To(Equal(versionWithETag))
 	})
 
 	It("does not download any of the files in the specified release", func() {
@@ -155,6 +167,19 @@ var _ = Describe("In", func() {
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(MatchRegexp(".*api_token.*provided"))
+		})
+	})
+
+	Context("when version is provided without etag", func() {
+		BeforeEach(func() {
+			inRequest.Version = concourse.Version{
+				ProductVersion: productVersion,
+			}
+		})
+
+		It("returns without error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 })

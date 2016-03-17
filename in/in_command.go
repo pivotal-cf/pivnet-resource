@@ -15,6 +15,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
+	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 type InCommand struct {
@@ -68,12 +69,17 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		c.logger,
 	)
 
-	productVersion := input.Version.ProductVersion
+	productVersion, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
+	if err != nil {
+		c.logger.Debugf("version provided without ETag - continuing\n")
+		productVersion = input.Version.ProductVersion
+	}
 
 	c.logger.Debugf(
-		"Getting release: {product_slug: %s, product_version: %s}\n",
+		"Getting release: {product_slug: %s, product_version: %s, etag: %s}\n",
 		productSlug,
 		productVersion,
+		etag,
 	)
 
 	release, err := client.GetRelease(productSlug, productVersion)
@@ -187,7 +193,12 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		versionFilepath,
 	)
 
-	err = ioutil.WriteFile(versionFilepath, []byte(productVersion), os.ModePerm)
+	versionWithETag, err := versions.CombineVersionAndETag(productVersion, etag)
+	if err != nil {
+		panic(err)
+	}
+
+	err = ioutil.WriteFile(versionFilepath, []byte(versionWithETag), os.ModePerm)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -207,7 +218,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	out := concourse.InResponse{
 		Version: concourse.Version{
-			ProductVersion: productVersion,
+			ProductVersion: versionWithETag,
 		},
 		Metadata: metadata,
 	}

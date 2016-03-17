@@ -15,6 +15,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/out"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
+	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 var _ = Describe("Out", func() {
@@ -80,7 +81,10 @@ var _ = Describe("Out", func() {
 
 		version = "2.1.3"
 		etag = "etag-0"
-		versionWithETag = fmt.Sprintf("%s#%s", version, etag)
+
+		var err error
+		versionWithETag, err = versions.CombineVersionAndETag(version, etag)
+		Expect(err).NotTo(HaveOccurred())
 
 		productID = 1
 		releaseID = 2
@@ -124,7 +128,6 @@ var _ = Describe("Out", func() {
 			Slug: productSlug,
 		}
 
-		var err error
 		outDir, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
 

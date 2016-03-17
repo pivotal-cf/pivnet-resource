@@ -14,6 +14,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 var _ = Describe("In", func() {
@@ -21,8 +22,10 @@ var _ = Describe("In", func() {
 		eulaSlug    = "pivotal_beta_eula"
 		releaseType = "Minor Release"
 
-		productVersion string
-		destDirectory  string
+		productVersion  string
+		etag            string
+		versionWithETag string
+		destDirectory   string
 
 		command       *exec.Cmd
 		inRequest     concourse.InRequest
@@ -30,18 +33,22 @@ var _ = Describe("In", func() {
 	)
 
 	BeforeEach(func() {
-		var err error
-
 		By("Generating 'random' product version")
 		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
 
-		By("Creating new version")
-		_, err = pivnetClient.CreateRelease(pivnet.CreateReleaseConfig{
+		By("Creating new release")
+		release, err := pivnetClient.CreateRelease(pivnet.CreateReleaseConfig{
 			ProductSlug:    productSlug,
 			ProductVersion: productVersion,
 			EulaSlug:       eulaSlug,
 			ReleaseType:    releaseType,
 		})
+		Expect(err).NotTo(HaveOccurred())
+
+		etag, err = pivnetClient.ReleaseETag(productSlug, release)
+		Expect(err).NotTo(HaveOccurred())
+
+		versionWithETag, err = versions.CombineVersionAndETag(productVersion, etag)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Creating temp directory")
@@ -59,7 +66,7 @@ var _ = Describe("In", func() {
 				Endpoint:    endpoint,
 			},
 			Version: concourse.Version{
-				ProductVersion: productVersion,
+				ProductVersion: versionWithETag,
 			},
 		}
 
@@ -86,7 +93,7 @@ var _ = Describe("In", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Validating output contains correct product version")
-		Expect(response.Version.ProductVersion).To(Equal(productVersion))
+		Expect(response.Version.ProductVersion).To(Equal(versionWithETag))
 
 		By("Validing the returned metadata is present")
 		_, err = metadataValueForKey(response.Metadata, "release_type")

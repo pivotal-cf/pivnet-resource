@@ -1,5 +1,14 @@
 package versions
 
+import (
+	"fmt"
+	"strings"
+)
+
+const (
+	etagDelimiter = "#"
+)
+
 func Since(versions []string, since string) ([]string, error) {
 	for i, v := range versions {
 		if v == since {
@@ -17,4 +26,16 @@ func Reverse(versions []string) ([]string, error) {
 	}
 
 	return reversed, nil
+}
+
+func SplitIntoVersionAndETag(versionWithETag string) (string, string, error) {
+	split := strings.Split(versionWithETag, etagDelimiter)
+	if len(split) != 2 {
+		return "", "", fmt.Errorf("Invalid version and Etag: %s", versionWithETag)
+	}
+	return split[0], split[1], nil
+}
+
+func CombineVersionAndETag(version string, etag string) (string, error) {
+	return fmt.Sprintf("%s%s%s", version, etagDelimiter, etag), nil
 }

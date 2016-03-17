@@ -65,9 +65,70 @@ var _ = Describe("Versions", func() {
 
 	Describe("Reverse", func() {
 		It("returns reversed ordered versions because concourse expects them that way", func() {
-			versions, _ := versions.Reverse([]string{"v201", "v178", "v120", "v200"})
+			versions, err := versions.Reverse([]string{"v201", "v178", "v120", "v200"})
 
+			Expect(err).NotTo(HaveOccurred())
 			Expect(versions).To(Equal([]string{"v200", "v120", "v178", "v201"}))
 		})
 	})
+
+	Describe("SplitIntoVersionAndETag", func() {
+		var (
+			input string
+		)
+
+		BeforeEach(func() {
+			input = "some.version#my-etag"
+		})
+
+		It("splits without error", func() {
+			version, etag, err := versions.SplitIntoVersionAndETag(input)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(version).To(Equal("some.version"))
+			Expect(etag).To(Equal("my-etag"))
+		})
+
+		Context("when the input does not contain enough delimiters", func() {
+			BeforeEach(func() {
+				input = "some.version"
+			})
+
+			It("returns error", func() {
+				_, _, err := versions.SplitIntoVersionAndETag(input)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when the input contains too many delimiters", func() {
+			BeforeEach(func() {
+				input = "some.version#etag-1#-etag-2"
+			})
+
+			It("returns error", func() {
+				_, _, err := versions.SplitIntoVersionAndETag(input)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
+	Describe("CombineVersionAndETag", func() {
+		var (
+			version string
+			etag    string
+		)
+
+		BeforeEach(func() {
+			version = "some.version"
+			etag = "my-etag"
+		})
+
+		It("combines without error", func() {
+			versionWithETag, err := versions.CombineVersionAndETag(version, etag)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(versionWithETag).To(Equal("some.version#my-etag"))
+		})
+	})
+
 })

@@ -21,6 +21,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
+	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 const (
@@ -310,7 +311,10 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		panic(err)
 	}
 
-	outputVersion := fmt.Sprintf("%s#%s", release.Version, releaseETag)
+	outputVersion, err := versions.CombineVersionAndETag(release.Version, releaseETag)
+	if err != nil {
+		panic(err)
+	}
 
 	out := concourse.OutResponse{
 		Version: concourse.Version{

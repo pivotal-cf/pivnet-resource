@@ -14,6 +14,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
+	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 var _ = Describe("Check", func() {
@@ -96,8 +97,11 @@ var _ = Describe("Check", func() {
 		response, err := checkCommand.Run(checkRequest)
 		Expect(err).NotTo(HaveOccurred())
 
+		expectedVersionWithEtag, err := versions.CombineVersionAndETag("A", "etag-0")
+		Expect(err).NotTo(HaveOccurred())
+
 		Expect(response).To(HaveLen(1))
-		Expect(response[0].ProductVersion).To(Equal("A#etag-0"))
+		Expect(response[0].ProductVersion).To(Equal(expectedVersionWithEtag))
 	})
 
 	Context("when no api token is provided", func() {
@@ -202,8 +206,11 @@ var _ = Describe("Check", func() {
 
 	Context("when a version is provided", func() {
 		BeforeEach(func() {
+			versionWithETag, err := versions.CombineVersionAndETag("B", "etag-2")
+			Expect(err).NotTo(HaveOccurred())
+
 			checkRequest.Version = concourse.Version{
-				"B#etag-2",
+				versionWithETag,
 			}
 		})
 
@@ -211,9 +218,15 @@ var _ = Describe("Check", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
+			versionWithETagC, err := versions.CombineVersionAndETag("C", "etag-1")
+			Expect(err).NotTo(HaveOccurred())
+
+			versionWithETagA, err := versions.CombineVersionAndETag("A", "etag-0")
+			Expect(err).NotTo(HaveOccurred())
+
 			Expect(response).To(HaveLen(2))
-			Expect(response[0].ProductVersion).To(Equal("C#etag-1"))
-			Expect(response[1].ProductVersion).To(Equal("A#etag-0"))
+			Expect(response[0].ProductVersion).To(Equal(versionWithETagC))
+			Expect(response[1].ProductVersion).To(Equal(versionWithETagA))
 		})
 	})
 })

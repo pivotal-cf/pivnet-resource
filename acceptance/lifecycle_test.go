@@ -14,6 +14,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 var _ = Describe("Lifecycle test", func() {
@@ -133,14 +134,7 @@ var _ = Describe("Lifecycle test", func() {
 	})
 
 	Describe("Creating a new release", func() {
-		AfterEach(func() {
-			By("Deleting newly-created release")
-			release, err := pivnetClient.GetRelease(productSlug, productVersion)
-			Expect(err).NotTo(HaveOccurred())
-
-			err = pivnetClient.DeleteRelease(release, productSlug)
-			Expect(err).NotTo(HaveOccurred())
-		})
+		// We do not delete the release as it causes race conditions with other tests
 
 		Context("when S3 source and params are configured correctly", func() {
 			var (
@@ -273,6 +267,12 @@ var _ = Describe("Lifecycle test", func() {
 				release, err = pivnetClient.GetRelease(productSlug, productVersion)
 				Expect(err).ShouldNot(HaveOccurred())
 
+				releaseETag, err = pivnetClient.ReleaseETag(productSlug, release)
+				Expect(err).NotTo(HaveOccurred())
+
+				versionWithETag, err := versions.CombineVersionAndETag(productVersion, releaseETag)
+				Expect(err).NotTo(HaveOccurred())
+
 				By("Verifying release contains new product files")
 				productFilesFromRelease, err := pivnetClient.GetProductFiles(release)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -302,7 +302,7 @@ var _ = Describe("Lifecycle test", func() {
 						Globs: []string{"*"},
 					},
 					Version: concourse.Version{
-						ProductVersion: productVersion,
+						ProductVersion: versionWithETag,
 					},
 				}
 
@@ -339,7 +339,7 @@ var _ = Describe("Lifecycle test", func() {
 						Endpoint:    endpoint,
 					},
 					Version: concourse.Version{
-						ProductVersion: productVersion,
+						ProductVersion: versionWithETag,
 					},
 				}
 
@@ -376,7 +376,7 @@ var _ = Describe("Lifecycle test", func() {
 						Globs: []string{filePrefix + "*", "badglob"},
 					},
 					Version: concourse.Version{
-						ProductVersion: productVersion,
+						ProductVersion: versionWithETag,
 					},
 				}
 
