@@ -37,5 +37,9 @@ func SplitIntoVersionAndETag(versionWithETag string) (string, string, error) {
 }
 
 func CombineVersionAndETag(version string, etag string) (string, error) {
+	if etag == "" {
+		return version, nil
+	}
+
 	return fmt.Sprintf("%s%s%s", version, etagDelimiter, etag), nil
 }

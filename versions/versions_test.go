@@ -129,6 +129,19 @@ var _ = Describe("Versions", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(versionWithETag).To(Equal("some.version#my-etag"))
 		})
+
+		Context("when the etag is empty", func() {
+			BeforeEach(func() {
+				etag = ""
+			})
+
+			It("does not include the #", func() {
+				versionWithETag, err := versions.CombineVersionAndETag(version, etag)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(versionWithETag).To(Equal("some.version"))
+			})
+		})
 	})
 
 })
