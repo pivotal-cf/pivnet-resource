@@ -69,10 +69,16 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		c.logger,
 	)
 
-	productVersion, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
-	if err != nil {
-		c.logger.Debugf("version provided without ETag - continuing\n")
-		productVersion = input.Version.ProductVersion
+	var productVersion, etag string
+	if input.Source.ProductVersion != "" {
+		c.logger.Debugf("User configured version %s is being used\n", input.Source.ProductVersion)
+		productVersion = input.Source.ProductVersion
+	} else {
+		productVersion, etag, err = versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
+		if err != nil {
+			c.logger.Debugf("Parsing of etag failed continuing without it\n")
+			productVersion = input.Version.ProductVersion
+		}
 	}
 
 	c.logger.Debugf(

@@ -31,8 +31,9 @@ var _ = Describe("In", func() {
 		etag            string
 		versionWithETag string
 
-		inRequest concourse.InRequest
-		inCommand *in.InCommand
+		inRequest              concourse.InRequest
+		inCommand              *in.InCommand
+		pivnetReleasesResponse *pivnet.ReleasesResponse
 	)
 
 	BeforeEach(func() {
@@ -49,8 +50,9 @@ var _ = Describe("In", func() {
 		file1URLPath := "/file1"
 		file1URL := fmt.Sprintf("%s%s", server.URL(), file1URLPath)
 		file1Contents = ""
+		statusCode := http.StatusOK
 
-		pivnetReleasesResponse := pivnet.ReleasesResponse{
+		pivnetReleasesResponse = &pivnet.ReleasesResponse{
 			Releases: []pivnet.Release{
 				{
 					Version: "A",
@@ -76,7 +78,7 @@ var _ = Describe("In", func() {
 					"GET",
 					fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug),
 				),
-				ghttp.RespondWithJSONEncoded(http.StatusOK, pivnetReleasesResponse),
+				ghttp.RespondWithJSONEncodedPtr(&statusCode, pivnetReleasesResponse),
 			),
 		)
 
@@ -135,26 +137,45 @@ var _ = Describe("In", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("creates a version file with the downloaded version and etag", func() {
-		_, err := inCommand.Run(inRequest)
-		Expect(err).NotTo(HaveOccurred())
+	Context("when the version comes from concourse", func() {
+		It("creates a version file with the downloaded version and etag", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).NotTo(HaveOccurred())
 
-		versionFilepath := filepath.Join(downloadDir, "version")
-		versionContents, err := ioutil.ReadFile(versionFilepath)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(string(versionContents)).To(Equal(versionWithETag))
+			versionFilepath := filepath.Join(downloadDir, "version")
+			versionContents, err := ioutil.ReadFile(versionFilepath)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(versionContents)).To(Equal(versionWithETag))
+		})
+
+		It("does not download any of the files in the specified release", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			files, err := ioutil.ReadDir(downloadDir)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// the version file will always exist
+			Expect(len(files)).To(Equal(1))
+			Expect(files[0].Name()).To(Equal("version"))
+		})
 	})
 
-	It("does not download any of the files in the specified release", func() {
-		_, err := inCommand.Run(inRequest)
-		Expect(err).NotTo(HaveOccurred())
+	Context("when the version is specified by the user", func() {
+		BeforeEach(func() {
+			inRequest.Source.ProductVersion = "1.2.5"
+			pivnetReleasesResponse.Releases[1].Version = "1.2.5"
+		})
 
-		files, err := ioutil.ReadDir(downloadDir)
-		Expect(err).ShouldNot(HaveOccurred())
+		It("requests the configured release", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).NotTo(HaveOccurred())
 
-		// the version file will always exist
-		Expect(len(files)).To(Equal(1))
-		Expect(files[0].Name()).To(Equal("version"))
+			versionFilepath := filepath.Join(downloadDir, "version")
+			versionContents, err := ioutil.ReadFile(versionFilepath)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(versionContents)).To(Equal("1.2.5"))
+		})
 	})
 
 	Context("when no api token is provided", func() {
