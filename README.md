@@ -39,6 +39,8 @@ BOSH releases are available on
 
 * `product_slug`: *Required.*  Name of product on Pivotal Network.
 
+* `product_version`: *Optional.*  Fix source to specific Product Version. Used only during `in`.
+
 * `access_key_id`: *Optional.*  AWS access key id. Required for uploading products via `out`.
 
 * `secret_access_key`: *Optional.*  AWS secret access key. Required for uploading products via `out`.
