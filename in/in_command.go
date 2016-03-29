@@ -44,7 +44,8 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, fmt.Errorf("%s must be provided", "api_token")
 	}
 
-	if input.Source.ProductSlug == "" {
+	productSlug := input.Source.ProductSlug
+	if productSlug == "" {
 		return concourse.InResponse{}, fmt.Errorf("%s must be provided", "product_slug")
 	}
 
@@ -61,17 +62,10 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		endpoint = pivnet.Endpoint
 	}
 
-	productSlug := input.Source.ProductSlug
-
-	clientConfig := pivnet.NewClientConfig{
-		Endpoint:  endpoint,
-		Token:     token,
-		UserAgent: useragent.UserAgent(c.binaryVersion, "get", productSlug),
+	if input.Source.ProductVersion == "" && input.Version.ProductVersion == "" {
+		return concourse.InResponse{},
+			fmt.Errorf("%s must be provided from either source or input version", "product_version")
 	}
-	client := pivnet.NewClient(
-		clientConfig,
-		c.logger,
-	)
 
 	var productVersion, etag string
 	if input.Source.ProductVersion != "" {
@@ -84,6 +78,16 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 			productVersion = input.Version.ProductVersion
 		}
 	}
+
+	clientConfig := pivnet.NewClientConfig{
+		Endpoint:  endpoint,
+		Token:     token,
+		UserAgent: useragent.UserAgent(c.binaryVersion, "get", productSlug),
+	}
+	client := pivnet.NewClient(
+		clientConfig,
+		c.logger,
+	)
 
 	c.logger.Debugf(
 		"Getting release: {product_slug: %s, product_version: %s, etag: %s}\n",
