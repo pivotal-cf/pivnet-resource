@@ -191,6 +191,19 @@ var _ = Describe("In", func() {
 		})
 	})
 
+	Context("when no product slug is provided", func() {
+		BeforeEach(func() {
+			inRequest.Source.ProductSlug = ""
+		})
+
+		It("returns an error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*product_slug.*provided"))
+		})
+	})
+
 	Context("when version is provided without etag", func() {
 		BeforeEach(func() {
 			inRequest.Version = concourse.Version{

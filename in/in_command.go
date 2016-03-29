@@ -37,12 +37,16 @@ func NewInCommand(
 }
 
 func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error) {
+	c.logger.Debugf("Received input: %+v\n", input)
+
 	token := input.Source.APIToken
 	if token == "" {
 		return concourse.InResponse{}, fmt.Errorf("%s must be provided", "api_token")
 	}
 
-	c.logger.Debugf("Received input: %+v\n", input)
+	if input.Source.ProductSlug == "" {
+		return concourse.InResponse{}, fmt.Errorf("%s must be provided", "product_slug")
+	}
 
 	c.logger.Debugf("Creating download directory: %s\n", c.downloadDir)
 	err := os.MkdirAll(c.downloadDir, os.ModePerm)
