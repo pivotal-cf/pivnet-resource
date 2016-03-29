@@ -20,8 +20,13 @@ import (
 
 var _ = Describe("In", func() {
 	var (
-		server        *ghttp.Server
+		server *ghttp.Server
+
+		releaseID int
+
+		file1URLPath  string
 		file1Contents string
+		links         *pivnet.Links
 
 		downloadDir string
 
@@ -46,11 +51,15 @@ var _ = Describe("In", func() {
 		versionWithETag, err = versions.CombineVersionAndETag(productVersion, etag)
 		Expect(err).NotTo(HaveOccurred())
 
-		releaseID := 1234
-		file1URLPath := "/file1"
+		releaseID = 1234
+		file1URLPath = "/file1"
 		file1URL := fmt.Sprintf("%s%s", server.URL(), file1URLPath)
+		links = &pivnet.Links{
+			ProductFiles: map[string]string{
+				"href": file1URL,
+			},
+		}
 		file1Contents = ""
-		statusCode := http.StatusOK
 
 		pivnetReleasesResponse = &pivnet.ReleasesResponse{
 			Releases: []pivnet.Release{
@@ -60,11 +69,7 @@ var _ = Describe("In", func() {
 				{
 					Version: productVersion,
 					ID:      releaseID,
-					Links: &pivnet.Links{
-						ProductFiles: map[string]string{
-							"href": file1URL,
-						},
-					},
+					Links:   links,
 				},
 				{
 					Version: "B",
@@ -72,13 +77,30 @@ var _ = Describe("In", func() {
 			},
 		}
 
+		downloadDir, err = ioutil.TempDir("", "")
+		Expect(err).NotTo(HaveOccurred())
+
+		inRequest = concourse.InRequest{
+			Source: concourse.Source{
+				APIToken:    "some-api-token",
+				ProductSlug: productSlug,
+				Endpoint:    server.URL(),
+			},
+			Version: concourse.Version{
+				versionWithETag,
+			},
+		}
+
+	})
+
+	JustBeforeEach(func() {
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
 				ghttp.VerifyRequest(
 					"GET",
 					fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug),
 				),
-				ghttp.RespondWithJSONEncodedPtr(&statusCode, pivnetReleasesResponse),
+				ghttp.RespondWithJSONEncoded(http.StatusOK, pivnetReleasesResponse),
 			),
 		)
 
@@ -107,26 +129,12 @@ var _ = Describe("In", func() {
 			),
 		)
 
-		downloadDir, err = ioutil.TempDir("", "")
-		Expect(err).NotTo(HaveOccurred())
-
-		inRequest = concourse.InRequest{
-			Source: concourse.Source{
-				APIToken:    "some-api-token",
-				ProductSlug: productSlug,
-				Endpoint:    server.URL(),
-			},
-			Version: concourse.Version{
-				versionWithETag,
-			},
-		}
-
 		sanitized := concourse.SanitizedSource(inRequest.Source)
 		sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
 
 		ginkgoLogger = logger.NewLogger(sanitizer)
 
-		binaryVersion := "v0.1.2"
+		binaryVersion := "v0.1.2-unit-tests"
 		inCommand = in.NewInCommand(binaryVersion, ginkgoLogger, downloadDir)
 	})
 
