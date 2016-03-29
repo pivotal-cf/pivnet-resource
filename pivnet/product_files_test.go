@@ -1,7 +1,6 @@
 package pivnet_test
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -46,27 +45,50 @@ var _ = Describe("PivnetClient - product files", func() {
 	})
 
 	Describe("Get Product Files", func() {
-		It("returns the product files for the given release", func() {
-			response, err := json.Marshal(pivnet.ProductFiles{[]pivnet.ProductFile{
-				{ID: 3, AWSObjectKey: "anything", Links: &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/6/download"}}},
-				{ID: 4, AWSObjectKey: "something", Links: &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}}},
-			},
-			})
-			Expect(err).NotTo(HaveOccurred())
+		var (
+			release            pivnet.Release
+			response           pivnet.ProductFiles
+			responseStatusCode int
+		)
 
-			server.AppendHandlers(
-				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases/666/product_files"),
-					ghttp.RespondWith(http.StatusOK, response),
-				),
-			)
-
-			release := pivnet.Release{
+		BeforeEach(func() {
+			release = pivnet.Release{
 				Links: &pivnet.Links{
 					ProductFiles: map[string]string{"href": apiAddress + apiPrefix + "/products/banana/releases/666/product_files"},
 				},
 			}
 
+			response = pivnet.ProductFiles{[]pivnet.ProductFile{
+				{ID: 3, AWSObjectKey: "anything", Links: &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/6/download"}}},
+				{ID: 4, AWSObjectKey: "something", Links: &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}}},
+			}}
+
+			responseStatusCode = http.StatusOK
+		})
+
+		JustBeforeEach(func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases/666/product_files"),
+					ghttp.RespondWithJSONEncoded(responseStatusCode, response),
+				),
+			)
+		})
+
+		Context("when links are nil", func() {
+			BeforeEach(func() {
+				release.Links = nil
+			})
+
+			It("returns error", func() {
+				_, err := client.GetProductFiles(release)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(MatchError(errors.New("No links found")))
+			})
+		})
+
+		It("returns the product files for the given release", func() {
 			product, err := client.GetProductFiles(release)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(product.ProductFiles).To(HaveLen(2))
@@ -79,19 +101,11 @@ var _ = Describe("PivnetClient - product files", func() {
 		})
 
 		Context("when the server responds with a non-2XX status code", func() {
-			It("returns an error", func() {
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases/666/product_files"),
-						ghttp.RespondWith(http.StatusTeapot, nil),
-					),
-				)
-				release := pivnet.Release{
-					Links: &pivnet.Links{
-						ProductFiles: map[string]string{"href": apiAddress + apiPrefix + "/products/banana/releases/666/product_files"},
-					},
-				}
+			BeforeEach(func() {
+				responseStatusCode = http.StatusTeapot
+			})
 
+			It("returns an error", func() {
 				_, err := client.GetProductFiles(release)
 				Expect(err).To(MatchError(errors.New(
 					"Pivnet returned status code: 418 for the request - expected 200")))
@@ -104,34 +118,40 @@ var _ = Describe("PivnetClient - product files", func() {
 			productSlug string
 			productID   int
 			releaseID   int
+
+			response           pivnet.ProductFileResponse
+			responseStatusCode int
 		)
 
 		BeforeEach(func() {
 			productSlug = "banana"
 			productID = 8
 			releaseID = 12
-		})
 
-		It("returns the product file for the given productSlug, productID and release ID", func() {
-			response, err := json.Marshal(pivnet.ProductFileResponse{pivnet.ProductFile{
+			response = pivnet.ProductFileResponse{pivnet.ProductFile{
 				ID:           productID,
 				AWSObjectKey: "something",
 				Links: &pivnet.Links{Download: map[string]string{
 					"href": "/products/banana/releases/666/product_files/8/download"},
 				},
-			}})
-			Expect(err).NotTo(HaveOccurred())
+			}}
 
+			responseStatusCode = http.StatusOK
+		})
+
+		JustBeforeEach(func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest(
 						"GET",
 						apiPrefix+"/products/banana/releases/12/product_files/8",
 					),
-					ghttp.RespondWith(http.StatusOK, response),
+					ghttp.RespondWithJSONEncoded(responseStatusCode, response),
 				),
 			)
+		})
 
+		It("returns the product file without error", func() {
 			product, err := client.GetProductFile(
 				productSlug,
 				releaseID,
@@ -147,22 +167,18 @@ var _ = Describe("PivnetClient - product files", func() {
 		})
 
 		Context("when the server responds with a non-2XX status code", func() {
-			It("returns an error", func() {
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest(
-							"GET",
-							apiPrefix+"/products/banana/releases/12/product_files/8",
-						),
-						ghttp.RespondWith(http.StatusTeapot, nil),
-					),
-				)
+			BeforeEach(func() {
+				responseStatusCode = http.StatusTeapot
+			})
 
+			It("returns an error", func() {
 				_, err := client.GetProductFile(
 					productSlug,
 					releaseID,
 					productID,
 				)
+				Expect(err).To(HaveOccurred())
+
 				Expect(err).To(MatchError(errors.New(
 					"Pivnet returned status code: 418 for the request - expected 200")))
 			})

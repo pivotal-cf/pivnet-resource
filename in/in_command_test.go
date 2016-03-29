@@ -26,7 +26,6 @@ var _ = Describe("In", func() {
 
 		file1URLPath  string
 		file1Contents string
-		links         *pivnet.Links
 
 		downloadDir string
 
@@ -54,11 +53,6 @@ var _ = Describe("In", func() {
 		releaseID = 1234
 		file1URLPath = "/file1"
 		file1URL := fmt.Sprintf("%s%s", server.URL(), file1URLPath)
-		links = &pivnet.Links{
-			ProductFiles: map[string]string{
-				"href": file1URL,
-			},
-		}
 		file1Contents = ""
 
 		pivnetReleasesResponse = &pivnet.ReleasesResponse{
@@ -69,7 +63,11 @@ var _ = Describe("In", func() {
 				{
 					Version: productVersion,
 					ID:      releaseID,
-					Links:   links,
+					Links: &pivnet.Links{
+						ProductFiles: map[string]string{
+							"href": file1URL,
+						},
+					},
 				},
 				{
 					Version: "B",
@@ -236,6 +234,19 @@ var _ = Describe("In", func() {
 		It("returns without error", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Context("when release has no links", func() {
+		BeforeEach(func() {
+			pivnetReleasesResponse.Releases[1].Links = nil
+		})
+
+		It("returns an error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp("Failed to get Product File"))
 		})
 	})
 })

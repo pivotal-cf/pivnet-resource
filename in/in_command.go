@@ -119,7 +119,8 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	productFiles, err := client.GetProductFiles(release)
 	if err != nil {
-		log.Fatalf("Failed to get Product Files: %s\n", err.Error())
+		return concourse.InResponse{},
+			fmt.Errorf("Failed to get Product Files: %s\n", err.Error())
 	}
 
 	c.logger.Debugf(

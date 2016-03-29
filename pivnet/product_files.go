@@ -17,9 +17,14 @@ type CreateProductFileConfig struct {
 }
 
 func (c client) GetProductFiles(release Release) (ProductFiles, error) {
+	links := release.Links
+	if links == nil {
+		return ProductFiles{}, fmt.Errorf("No links found")
+	}
+
 	productFiles := ProductFiles{}
 
-	link := release.Links.ProductFiles["href"]
+	link := links.ProductFiles["href"]
 	c.logger.Debugf("link: %s\n", link)
 
 	err := c.makeRequest(
