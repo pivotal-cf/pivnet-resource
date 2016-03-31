@@ -51,6 +51,11 @@ BOSH releases are available on
 
 * `region`: *Optional.* AWS S3 region where the bucket is located. Defaults to `eu-west-1`.
 
+**Values for the `endpoint`, `bucket` and `region` must be consistent or downloads and uploads may fail.**
+
+For example, the default values of `endpoint: https://network.pivotal.io`, `bucket: pivotalnetwork` and `region: eu-west-1`
+are consistent with the production instance of Pivotal Network.`
+
 ### Example Pipeline Configuration
 
 #### Check
