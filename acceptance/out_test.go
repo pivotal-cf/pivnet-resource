@@ -40,6 +40,9 @@ var _ = Describe("Out", func() {
 		releaseNotesURLFile = "release_notes_url"
 		releaseNotesURL     = "https://example.com"
 
+		eccnFile = "eccn"
+		eccn     = "5D002"
+
 		command       *exec.Cmd
 		stdinContents []byte
 		outRequest    concourse.OutRequest
@@ -98,6 +101,13 @@ var _ = Describe("Out", func() {
 			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
+		By("Writing ECCN to file")
+		err = ioutil.WriteFile(
+			filepath.Join(rootDir, eccnFile),
+			[]byte(eccn),
+			os.ModePerm)
+		Expect(err).ShouldNot(HaveOccurred())
+
 		By("Creating command object")
 		command = exec.Command(outPath, rootDir)
 
@@ -121,6 +131,7 @@ var _ = Describe("Out", func() {
 				EulaSlugFile:        eulaSlugFile,
 				DescriptionFile:     descriptionFile,
 				ReleaseNotesURLFile: releaseNotesURLFile,
+				ECCNFile:            eccnFile,
 			},
 		}
 
@@ -191,6 +202,7 @@ var _ = Describe("Out", func() {
 			Expect(release.Eula.Slug).To(Equal(eulaSlug))
 			Expect(release.Description).To(Equal(description))
 			Expect(release.ReleaseNotesURL).To(Equal(releaseNotesURL))
+			Expect(release.ECCN).To(Equal(eccn))
 
 			By("Validing the returned metadata")
 			metadataReleaseType, err := metadataValueForKey(response.Metadata, "release_type")
@@ -208,6 +220,10 @@ var _ = Describe("Out", func() {
 			metadataReleaseNotesURL, err := metadataValueForKey(response.Metadata, "release_notes_url")
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(metadataReleaseNotesURL).To(Equal(releaseNotesURL))
+
+			metadataECCN, err := metadataValueForKey(response.Metadata, "eccn")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(metadataECCN).To(Equal(eccn))
 		})
 
 		Context("When the availability is set to Selected User Groups Only", func() {

@@ -107,6 +107,9 @@ var _ = Describe("In", func() {
 
 		_, err = metadataValueForKey(response.Metadata, "release_notes_url")
 		Expect(err).ShouldNot(HaveOccurred())
+
+		_, err = metadataValueForKey(response.Metadata, "eccn")
+		Expect(err).ShouldNot(HaveOccurred())
 	})
 
 	Context("when validation fails", func() {

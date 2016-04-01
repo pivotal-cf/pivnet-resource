@@ -214,6 +214,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		{Name: "release_date", Value: release.ReleaseDate},
 		{Name: "description", Value: release.Description},
 		{Name: "release_notes_url", Value: release.ReleaseNotesURL},
+		{Name: "eccn", Value: release.ECCN},
 	}
 
 	if release.Eula != nil {

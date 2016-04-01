@@ -153,6 +153,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		ProductVersion:  productVersion,
 		Description:     readStringContents(c.sourcesDir, input.Params.DescriptionFile),
 		ReleaseNotesURL: readStringContents(c.sourcesDir, input.Params.ReleaseNotesURLFile),
+		ECCN:            readStringContents(c.sourcesDir, input.Params.ECCNFile),
 		ReleaseDate:     readStringContents(c.sourcesDir, input.Params.ReleaseDateFile),
 	}
 
@@ -325,6 +326,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 			{Name: "release_date", Value: release.ReleaseDate},
 			{Name: "description", Value: release.Description},
 			{Name: "release_notes_url", Value: release.ReleaseNotesURL},
+			{Name: "eccn", Value: release.ECCN},
 			{Name: "eula_slug", Value: release.Eula.Slug},
 			{Name: "availability", Value: release.Availability},
 		},

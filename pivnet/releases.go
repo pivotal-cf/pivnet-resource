@@ -21,6 +21,7 @@ type CreateReleaseConfig struct {
 	EulaSlug        string
 	Description     string
 	ReleaseNotesURL string
+	ECCN            string
 }
 
 func (c client) ReleasesForProductSlug(productSlug string) ([]Release, error) {
@@ -78,6 +79,7 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 			Version:         config.ProductVersion,
 			Description:     config.Description,
 			ReleaseNotesURL: config.ReleaseNotesURL,
+			ECCN:            config.ECCN,
 		},
 	}
 

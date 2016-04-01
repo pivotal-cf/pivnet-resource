@@ -319,6 +319,58 @@ var _ = Describe("PivnetClient - product files", func() {
 					})
 				})
 			})
+
+			Describe("optional ECCN field", func() {
+				var (
+					eccn string
+				)
+
+				Context("when the optional ECCN field is present", func() {
+					BeforeEach(func() {
+						eccn = "some ECCN"
+
+						createReleaseConfig.ECCN = eccn
+						expectedRequestBody.Release.ECCN = eccn
+					})
+
+					It("creates the release with the ECCN field", func() {
+						server.AppendHandlers(
+							ghttp.CombineHandlers(
+								ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/releases"),
+								ghttp.VerifyJSONRepresenting(&expectedRequestBody),
+								ghttp.RespondWith(http.StatusCreated, validResponse),
+							),
+						)
+
+						release, err := client.CreateRelease(createReleaseConfig)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(release.Version).To(Equal(productVersion))
+					})
+				})
+
+				Context("when the optional ECCN field is not present", func() {
+					BeforeEach(func() {
+						eccn = ""
+
+						createReleaseConfig.ECCN = eccn
+						expectedRequestBody.Release.ECCN = eccn
+					})
+
+					It("creates the release with an empty ECCN field", func() {
+						server.AppendHandlers(
+							ghttp.CombineHandlers(
+								ghttp.VerifyRequest("POST", apiPrefix+"/products/"+productSlug+"/releases"),
+								ghttp.VerifyJSONRepresenting(&expectedRequestBody),
+								ghttp.RespondWith(http.StatusCreated, validResponse),
+							),
+						)
+
+						release, err := client.CreateRelease(createReleaseConfig)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(release.Version).To(Equal(productVersion))
+					})
+				})
+			})
 		})
 
 		Context("when the server responds with a non-201 status code", func() {
