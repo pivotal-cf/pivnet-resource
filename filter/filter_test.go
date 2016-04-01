@@ -121,5 +121,16 @@ var _ = Describe("Filter", func() {
 			Expect(filteredReleases).To(ContainElement(releases[0]))
 			Expect(filteredReleases).To(ContainElement(releases[2]))
 		})
+
+		Context("when the input releases are nil", func() {
+			It("returns empty slice without error", func() {
+				filteredReleases, err := filter.ReleasesByReleaseType(nil, releaseType)
+
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(filteredReleases).NotTo(BeNil())
+				Expect(filteredReleases).To(HaveLen(0))
+			})
+		})
 	})
 })

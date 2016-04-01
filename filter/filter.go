@@ -46,7 +46,7 @@ func DownloadLinks(p pivnet.ProductFiles) map[string]string {
 }
 
 func ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error) {
-	var filteredReleases []pivnet.Release
+	filteredReleases := make([]pivnet.Release, 0)
 
 	for _, release := range releases {
 		if release.ReleaseType == releaseType {
