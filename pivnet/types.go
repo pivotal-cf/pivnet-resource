@@ -23,6 +23,7 @@ type Release struct {
 	Links           *Links `json:"_links,omitempty"`
 	Description     string `json:"description,omitempty"`
 	ReleaseNotesURL string `json:"release_notes_url,omitempty"`
+	ECCN            string `json:"eccn,omitempty"`
 }
 
 type Eula struct {

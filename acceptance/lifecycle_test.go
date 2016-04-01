@@ -37,6 +37,9 @@ var _ = Describe("Lifecycle test", func() {
 		releaseNotesURLFile = "release_notes_url"
 		releaseNotesURL     = "https://example.com"
 
+		eccnFile = "eccn"
+		eccn     = "5D002"
+
 		filePrefix = "pivnet-resource-test-file"
 
 		command       *exec.Cmd
@@ -97,6 +100,13 @@ var _ = Describe("Lifecycle test", func() {
 			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
+		By("Writing ECCN to file")
+		err = ioutil.WriteFile(
+			filepath.Join(rootDir, eccnFile),
+			[]byte(eccn),
+			os.ModePerm)
+		Expect(err).ShouldNot(HaveOccurred())
+
 		By("Creating command object")
 		command = exec.Command(outPath, rootDir)
 
@@ -120,6 +130,7 @@ var _ = Describe("Lifecycle test", func() {
 				EulaSlugFile:        eulaSlugFile,
 				DescriptionFile:     descriptionFile,
 				ReleaseNotesURLFile: releaseNotesURLFile,
+				ECCNFile:            eccnFile,
 			},
 		}
 

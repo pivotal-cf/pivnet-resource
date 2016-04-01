@@ -56,6 +56,7 @@ type OutParams struct {
 	EulaSlugFile        string `json:"eula_slug_file"`
 	DescriptionFile     string `json:"description_file"`
 	ReleaseNotesURLFile string `json:"release_notes_url_file"`
+	ECCNFile            string `json:"eccn_file"`
 	AvailabilityFile    string `json:"availability_file"`
 	UserGroupIDsFile    string `json:"user_group_ids_file"`
 	MetadataFile        string `json:"metadata_file"`
