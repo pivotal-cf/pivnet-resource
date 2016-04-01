@@ -31,36 +31,51 @@ var _ = Describe("Check", func() {
 		checkRequest concourse.CheckRequest
 		checkCommand *check.CheckCommand
 
-		releaseType1 string
-		releaseType2 string
+		releaseTypes []string
+
+		releaseTypesResponse       pivnet.ReleaseTypesResponse
+		releaseTypesResponseStatus int
 
 		allReleases      []pivnet.Release
 		filteredReleases []pivnet.Release
+
+		releasesResponseStatus int
+		etagResponseStatus     int
 	)
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
 
-		releaseType1 = "foo"
-		releaseType2 = "bar"
+		releaseTypes = []string{
+			"foo release",
+			"bar",
+			"third release type",
+		}
+
+		releaseTypesResponse = pivnet.ReleaseTypesResponse{
+			ReleaseTypes: releaseTypes,
+		}
+		releaseTypesResponseStatus = http.StatusOK
 
 		allReleases = []pivnet.Release{
 			{
 				ID:          1,
 				Version:     "A",
-				ReleaseType: releaseType1,
+				ReleaseType: releaseTypes[0],
 			},
 			{
 				ID:          2,
 				Version:     "C",
-				ReleaseType: releaseType2,
+				ReleaseType: releaseTypes[1],
 			},
 			{
 				ID:          3,
 				Version:     "B",
-				ReleaseType: releaseType1,
+				ReleaseType: releaseTypes[2],
 			},
 		}
+		releasesResponseStatus = http.StatusOK
+		etagResponseStatus = http.StatusOK
 
 		pivnetResponse = pivnet.ReleasesResponse{
 			Releases: allReleases,
@@ -90,8 +105,17 @@ var _ = Describe("Check", func() {
 			ghttp.CombineHandlers(
 				ghttp.VerifyRequest(
 					"GET",
+					fmt.Sprintf("%s/releases/release_types", apiPrefix)),
+				ghttp.RespondWithJSONEncoded(releaseTypesResponseStatus, releaseTypesResponse),
+			),
+		)
+
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest(
+					"GET",
 					fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug)),
-				ghttp.RespondWithJSONEncoded(http.StatusOK, pivnetResponse),
+				ghttp.RespondWithJSONEncoded(releasesResponseStatus, pivnetResponse),
 			),
 		)
 
@@ -104,7 +128,7 @@ var _ = Describe("Check", func() {
 						"GET",
 						fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, productSlug, release.ID),
 					),
-					ghttp.RespondWith(http.StatusOK, nil, etagHeader),
+					ghttp.RespondWith(etagResponseStatus, nil, etagHeader),
 				),
 			)
 		}
@@ -211,17 +235,35 @@ var _ = Describe("Check", func() {
 		})
 	})
 
+	Context("when there is an error getting release types", func() {
+		BeforeEach(func() {
+			releaseTypesResponseStatus = http.StatusNotFound
+		})
+
+		It("returns an error", func() {
+			_, err := checkCommand.Run(checkRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(ContainSubstring("404"))
+		})
+	})
+
 	Context("when there is an error getting releases", func() {
 		BeforeEach(func() {
-			server.Reset()
-			server.AppendHandlers(
-				ghttp.CombineHandlers(
-					ghttp.VerifyRequest(
-						"GET",
-						fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug)),
-					ghttp.RespondWith(http.StatusNotFound, ""),
-				),
-			)
+			releasesResponseStatus = http.StatusNotFound
+		})
+
+		It("returns an error", func() {
+			_, err := checkCommand.Run(checkRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(ContainSubstring("404"))
+		})
+	})
+
+	Context("when there is an error getting etag", func() {
+		BeforeEach(func() {
+			etagResponseStatus = http.StatusNotFound
 		})
 
 		It("returns an error", func() {
@@ -266,7 +308,7 @@ var _ = Describe("Check", func() {
 
 	Context("when the release type is specified", func() {
 		BeforeEach(func() {
-			checkRequest.Source.ReleaseType = releaseType2
+			checkRequest.Source.ReleaseType = releaseTypes[1]
 
 			filteredReleases = []pivnet.Release{allReleases[1]}
 		})
@@ -282,6 +324,22 @@ var _ = Describe("Check", func() {
 
 			Expect(response).To(HaveLen(1))
 			Expect(response[0].ProductVersion).To(Equal(versionWithETagC))
+		})
+
+		Context("when the release type is invalid", func() {
+			BeforeEach(func() {
+				checkRequest.Source.ReleaseType = "not a valid release type"
+			})
+
+			It("returns an error", func() {
+				_, err := checkCommand.Run(checkRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*release_type.*one of"))
+				Expect(err.Error()).To(ContainSubstring(releaseTypes[0]))
+				Expect(err.Error()).To(ContainSubstring(releaseTypes[1]))
+				Expect(err.Error()).To(ContainSubstring(releaseTypes[2]))
+			})
 		})
 	})
 })

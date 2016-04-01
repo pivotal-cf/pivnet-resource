@@ -73,3 +73,7 @@ type UserGroup struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 }
+
+type ReleaseTypesResponse struct {
+	ReleaseTypes []string `json:"release_types"`
+}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
@@ -81,6 +82,25 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		c.logger,
 	)
 
+	c.logger.Debugf("Getting all valid release types\n")
+
+	releaseTypes, err := client.ReleaseTypes()
+	if err != nil {
+		return nil, err
+	}
+
+	releaseTypesPrintable := fmt.Sprintf(
+		"['%s']",
+		strings.Join(releaseTypes, "', '"),
+	)
+
+	c.logger.Debugf("All release types: %s\n", releaseTypesPrintable)
+
+	releaseType := input.Source.ReleaseType
+	if releaseType != "" && !containsString(releaseTypes, releaseType) {
+		return nil, fmt.Errorf("release_type must be one of: %s", releaseTypesPrintable)
+	}
+
 	c.logger.Debugf("Getting all product versions\n")
 
 	releases, err := client.ReleasesForProductSlug(productSlug)
@@ -88,7 +108,6 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return nil, err
 	}
 
-	releaseType := input.Source.ReleaseType
 	if releaseType != "" {
 		releases, err = filter.ReleasesByReleaseType(releases, releaseType)
 		if err != nil {
@@ -133,4 +152,13 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	c.logger.Debugf("Returning output: %+v\n", out)
 
 	return out, nil
+}
+
+func containsString(strings []string, str string) bool {
+	for _, s := range strings {
+		if str == s {
+			return true
+		}
+	}
+	return false
 }
