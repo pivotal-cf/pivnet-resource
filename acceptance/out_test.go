@@ -25,15 +25,25 @@ const (
 
 var _ = Describe("Out", func() {
 	var (
-		productVersion string
-
+		releaseTypeFile = "release_type"
 		releaseType     = "Minor Release"
+
+		releaseDateFile = "release_date"
 		releaseDate     = "2015-12-17"
-		eulaSlug        = "pivotal_beta_eula"
+
+		eulaSlugFile = "eula_slug"
+		eulaSlug     = "pivotal_beta_eula"
+
+		productVersionFile = "version"
+		productVersion     string
+
+		descriptionFile = "description"
 		description     = "this release is for automated-testing only."
-		releaseNotesURL = "https://example.com"
 
 		metadataFile = "metadata"
+
+		releaseNotesURLFile = "release_notes_url"
+		releaseNotesURL     = "https://example.com"
 
 		command       *exec.Cmd
 		stdinContents []byte
@@ -53,12 +63,9 @@ var _ = Describe("Out", func() {
 
 		By("Creating a metadata struct")
 		metadataBytes, err := yaml.Marshal(metadata.Metadata{
-			ReleaseType:     releaseType,
-			EulaSlug:        eulaSlug,
-			ReleaseDate:     releaseDate,
-			Description:     description,
-			ReleaseNotesURL: releaseNotesURL,
-			ProductVersion:  productVersion,
+			ReleaseType:    releaseType,
+			EulaSlug:       eulaSlug,
+			ProductVersion: productVersion,
 		})
 		Expect(err).ShouldNot(HaveOccurred())
 
@@ -68,6 +75,48 @@ var _ = Describe("Out", func() {
 			metadataBytes,
 			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
+
+		// By("Writing product version to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, productVersionFile),
+		// 	[]byte(productVersion),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
+
+		// By("Writing release type to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, releaseTypeFile),
+		// 	[]byte(releaseType),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
+
+		// By("Writing release date to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, releaseDateFile),
+		// 	[]byte(releaseDate),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
+
+		// By("Writing eula slug to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, eulaSlugFile),
+		// 	[]byte(eulaSlug),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
+
+		// By("Writing description to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, descriptionFile),
+		// 	[]byte(description),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
+
+		// By("Writing release notes URL to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, releaseNotesURLFile),
+		// 	[]byte(releaseNotesURL),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
 
 		By("Creating command object")
 		command = exec.Command(outPath, rootDir)
@@ -84,9 +133,14 @@ var _ = Describe("Out", func() {
 				Region:          pivnetRegion,
 			},
 			Params: concourse.OutParams{
-				FileGlob:       "",
-				FilepathPrefix: "",
-				MetadataFile:   metadataFile,
+				FileGlob:            "",
+				FilepathPrefix:      "",
+				VersionFile:         productVersionFile,
+				ReleaseTypeFile:     releaseTypeFile,
+				ReleaseDateFile:     releaseDateFile,
+				EulaSlugFile:        eulaSlugFile,
+				DescriptionFile:     descriptionFile,
+				ReleaseNotesURLFile: releaseNotesURLFile,
 			},
 		}
 
