@@ -9,6 +9,30 @@ import (
 )
 
 var _ = Describe("Filter", func() {
+	var (
+		releases []pivnet.Release
+	)
+
+	BeforeEach(func() {
+		releases = []pivnet.Release{
+			{
+				ID:          1,
+				Version:     "version1",
+				ReleaseType: "foo",
+			},
+			{
+				ID:          2,
+				Version:     "version2",
+				ReleaseType: "bar",
+			},
+			{
+				ID:          3,
+				Version:     "version3",
+				ReleaseType: "foo",
+			},
+		}
+	})
+
 	Describe("Download Links", func() {
 		It("returns the download links", func() {
 			productFiles := pivnet.ProductFiles{[]pivnet.ProductFile{
@@ -89,26 +113,10 @@ var _ = Describe("Filter", func() {
 
 	Describe("ReleasesByReleaseType", func() {
 		var (
-			releases    []pivnet.Release
 			releaseType string
 		)
 
 		BeforeEach(func() {
-			releases = []pivnet.Release{
-				{
-					ID:          1,
-					ReleaseType: "foo",
-				},
-				{
-					ID:          2,
-					ReleaseType: "bar",
-				},
-				{
-					ID:          3,
-					ReleaseType: "foo",
-				},
-			}
-
 			releaseType = "foo"
 		})
 
@@ -123,8 +131,46 @@ var _ = Describe("Filter", func() {
 		})
 
 		Context("when the input releases are nil", func() {
+			BeforeEach(func() {
+				releases = nil
+			})
+
 			It("returns empty slice without error", func() {
-				filteredReleases, err := filter.ReleasesByReleaseType(nil, releaseType)
+				filteredReleases, err := filter.ReleasesByReleaseType(releases, releaseType)
+
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(filteredReleases).NotTo(BeNil())
+				Expect(filteredReleases).To(HaveLen(0))
+			})
+		})
+	})
+
+	Describe("ReleasesByVersion", func() {
+		var (
+			version string
+		)
+
+		BeforeEach(func() {
+			version = "version2"
+		})
+
+		It("filters releases by release type without error", func() {
+			filteredReleases, err := filter.ReleasesByVersion(releases, version)
+
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(filteredReleases).To(HaveLen(1))
+			Expect(filteredReleases).To(ContainElement(releases[1]))
+		})
+
+		Context("when the input releases are nil", func() {
+			BeforeEach(func() {
+				releases = nil
+			})
+
+			It("returns empty slice without error", func() {
+				filteredReleases, err := filter.ReleasesByVersion(releases, version)
 
 				Expect(err).NotTo(HaveOccurred())
 

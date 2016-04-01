@@ -342,4 +342,29 @@ var _ = Describe("Check", func() {
 			})
 		})
 	})
+
+	Context("when the product version is specified", func() {
+		BeforeEach(func() {
+			checkRequest.Source.ReleaseType = releaseTypes[1]
+
+			filteredReleases = []pivnet.Release{allReleases[1]}
+		})
+
+		BeforeEach(func() {
+			checkRequest.Source.ProductVersion = "C"
+		})
+
+		It("returns the newest release with that version without error", func() {
+			response, err := checkCommand.Run(checkRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			versionWithETagC, err := versions.CombineVersionAndETag(
+				allReleases[1].Version, fmt.Sprintf("etag-%d", allReleases[1].ID),
+			)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(response).To(HaveLen(1))
+			Expect(response[0].ProductVersion).To(Equal(versionWithETagC))
+		})
+	})
 })

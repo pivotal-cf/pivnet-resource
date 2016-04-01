@@ -167,23 +167,6 @@ var _ = Describe("In", func() {
 		})
 	})
 
-	Context("when the version is specified by the user", func() {
-		BeforeEach(func() {
-			inRequest.Source.ProductVersion = "1.2.5"
-			pivnetReleasesResponse.Releases[1].Version = "1.2.5"
-		})
-
-		It("requests the configured release", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).NotTo(HaveOccurred())
-
-			versionFilepath := filepath.Join(downloadDir, "version")
-			versionContents, err := ioutil.ReadFile(versionFilepath)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(versionContents)).To(Equal("1.2.5"))
-		})
-	})
-
 	Context("when no api token is provided", func() {
 		BeforeEach(func() {
 			inRequest.Source.APIToken = ""

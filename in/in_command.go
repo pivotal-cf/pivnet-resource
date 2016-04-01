@@ -25,14 +25,14 @@ type InCommand struct {
 }
 
 func NewInCommand(
-	version string,
+	binaryVersion string,
 	logger logger.Logger,
 	downloadDir string,
 ) *InCommand {
 	return &InCommand{
 		logger:        logger,
 		downloadDir:   downloadDir,
-		binaryVersion: version,
+		binaryVersion: binaryVersion,
 	}
 }
 
@@ -62,21 +62,15 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		endpoint = pivnet.Endpoint
 	}
 
-	if input.Source.ProductVersion == "" && input.Version.ProductVersion == "" {
+	if input.Version.ProductVersion == "" {
 		return concourse.InResponse{},
-			fmt.Errorf("%s must be provided from either source or input version", "product_version")
+			fmt.Errorf("%s must be provided from input version", "product_version")
 	}
 
-	var productVersion, etag string
-	if input.Source.ProductVersion != "" {
-		c.logger.Debugf("User configured version %s is being used\n", input.Source.ProductVersion)
-		productVersion = input.Source.ProductVersion
-	} else {
-		productVersion, etag, err = versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
-		if err != nil {
-			c.logger.Debugf("Parsing of etag failed continuing without it\n")
-			productVersion = input.Version.ProductVersion
-		}
+	productVersion, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
+	if err != nil {
+		c.logger.Debugf("Parsing of etag failed; continuing without it\n")
+		productVersion = input.Version.ProductVersion
 	}
 
 	clientConfig := pivnet.NewClientConfig{

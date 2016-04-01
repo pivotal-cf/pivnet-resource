@@ -56,3 +56,15 @@ func ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]piv
 
 	return filteredReleases, nil
 }
+
+func ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error) {
+	filteredReleases := make([]pivnet.Release, 0)
+
+	for _, release := range releases {
+		if release.Version == version {
+			filteredReleases = append(filteredReleases, release)
+		}
+	}
+
+	return filteredReleases, nil
+}

@@ -113,7 +113,19 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	}
 
 	if releaseType != "" {
+		c.logger.Debugf("Filtering all releases by release_type: %s\n", releaseType)
+
 		releases, err = filter.ReleasesByReleaseType(releases, releaseType)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	productVersion := input.Source.ProductVersion
+	if productVersion != "" {
+		c.logger.Debugf("Filtering all releases by product_version: %s\n", productVersion)
+
+		releases, err = filter.ReleasesByVersion(releases, productVersion)
 		if err != nil {
 			return nil, err
 		}
