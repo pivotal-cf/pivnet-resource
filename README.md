@@ -41,7 +41,7 @@ BOSH releases are available on
 
 * `product_slug`: *Required.*  Name of product on Pivotal Network.
 
-* `product_version`: *Optional.*  Lock to a specific product version. Used only when download product releases during `in`.
+* `product_version`: *Optional.*  Lock to a specific product version. Must be a string (enclose in "quotes"). Used only when download product releases during `in`.
 
 * `release_type`: *Optional.*  Lock to a specific release type. Used only when downloading product releases during `in`.
 
