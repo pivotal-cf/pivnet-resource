@@ -98,7 +98,11 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	releaseType := input.Source.ReleaseType
 	if releaseType != "" && !containsString(releaseTypes, releaseType) {
-		return nil, fmt.Errorf("release_type must be one of: %s", releaseTypesPrintable)
+		return nil, fmt.Errorf(
+			"provided release_type: '%s' must be one of: %s",
+			releaseType,
+			releaseTypesPrintable,
+		)
 	}
 
 	c.logger.Debugf("Getting all product versions\n")
