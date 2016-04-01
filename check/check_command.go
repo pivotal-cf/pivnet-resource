@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
@@ -82,18 +83,31 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	c.logger.Debugf("Getting all product versions\n")
 
-	allVersions, err := client.ProductVersions(productSlug)
+	releases, err := client.ReleasesForProductSlug(productSlug)
 	if err != nil {
 		return nil, err
 	}
 
-	c.logger.Debugf("All known versions: %+v\n", allVersions)
+	releaseType := input.Source.ReleaseType
+	if releaseType != "" {
+		releases, err = filter.ReleasesByReleaseType(releases, releaseType)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	if len(allVersions) == 0 {
+	filteredVersions, err := client.ProductVersions(productSlug, releases)
+	if err != nil {
+		return nil, err
+	}
+
+	c.logger.Debugf("Filtered versions: %+v\n", filteredVersions)
+
+	if len(filteredVersions) == 0 {
 		return concourse.CheckResponse{}, nil
 	}
 
-	newVersions, err := versions.Since(allVersions, input.Version.ProductVersion)
+	newVersions, err := versions.Since(filteredVersions, input.Version.ProductVersion)
 	if err != nil {
 		// Untested because versions.Since cannot be forced to return an error.
 		return nil, err
@@ -113,7 +127,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	}
 
 	if len(out) == 0 {
-		out = append(out, concourse.Version{ProductVersion: allVersions[0]})
+		out = append(out, concourse.Version{ProductVersion: filteredVersions[0]})
 	}
 
 	c.logger.Debugf("Returning output: %+v\n", out)

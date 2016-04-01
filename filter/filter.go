@@ -44,3 +44,15 @@ func DownloadLinks(p pivnet.ProductFiles) map[string]string {
 
 	return links
 }
+
+func ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error) {
+	var filteredReleases []pivnet.Release
+
+	for _, release := range releases {
+		if release.ReleaseType == releaseType {
+			filteredReleases = append(filteredReleases, release)
+		}
+	}
+
+	return filteredReleases, nil
+}

@@ -18,7 +18,7 @@ const (
 )
 
 type Client interface {
-	ProductVersions(string) ([]string, error)
+	ProductVersions(productSlug string, releases []Release) ([]string, error)
 	CreateRelease(CreateReleaseConfig) (Release, error)
 	ReleasesForProductSlug(string) ([]Release, error)
 	GetRelease(string, string) (Release, error)
@@ -60,23 +60,23 @@ func NewClient(config NewClientConfig, logger logger.Logger) Client {
 	}
 }
 
-func (c client) ProductVersions(productSlug string) ([]string, error) {
-	url := fmt.Sprintf("%s/products/%s/releases", c.url, productSlug)
+func (c client) ProductVersions(productSlug string, releases []Release) ([]string, error) {
+	// url := fmt.Sprintf("%s/products/%s/releases", c.url, productSlug)
 
-	var response ReleasesResponse
-	err := c.makeRequest(
-		"GET",
-		url,
-		http.StatusOK,
-		nil,
-		&response,
-	)
-	if err != nil {
-		return nil, err
-	}
+	// var response ReleasesResponse
+	// err := c.makeRequest(
+	// 	"GET",
+	// 	url,
+	// 	http.StatusOK,
+	// 	nil,
+	// 	&response,
+	// )
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	var versions []string
-	for _, r := range response.Releases {
+	for _, r := range releases {
 		etag, err := c.ReleaseETag(productSlug, r)
 		if err != nil {
 			return nil, err

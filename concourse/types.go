@@ -9,6 +9,7 @@ type Source struct {
 	Bucket          string `json:"bucket"`
 	Endpoint        string `json:"endpoint"`
 	Region          string `json:"region"`
+	ReleaseType     string `json:"release_type"`
 }
 
 type CheckRequest struct {

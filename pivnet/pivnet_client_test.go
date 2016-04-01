@@ -86,7 +86,7 @@ var _ = Describe("PivnetClient", func() {
 			)
 		}
 
-		_, err := client.ProductVersions(productSlug)
+		_, err := client.ReleasesForProductSlug(productSlug)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -117,8 +117,60 @@ var _ = Describe("PivnetClient", func() {
 			)
 		}
 
-		_, err := client.ProductVersions(productSlug)
+		_, err := client.ReleasesForProductSlug(productSlug)
 		Expect(err).NotTo(HaveOccurred())
+	})
+
+	Context("when parsing the url fails with error", func() {
+		It("forwards the error", func() {
+			newClientConfig.Endpoint = "%%%"
+			client = pivnet.NewClient(newClientConfig, fakeLogger)
+
+			_, err := client.ReleasesForProductSlug("some product")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("%%%"))
+		})
+	})
+
+	Context("when making the request fails with error", func() {
+		It("forwards the error", func() {
+			newClientConfig.Endpoint = "https://not-a-real-url.com"
+			client = pivnet.NewClient(newClientConfig, fakeLogger)
+
+			_, err := client.ReleasesForProductSlug("some-product")
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("when a non-200 comes back from Pivnet", func() {
+		It("returns an error", func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", apiPrefix+"/products/my-product-id/releases"),
+					ghttp.RespondWith(http.StatusNotFound, nil),
+				),
+			)
+
+			_, err := client.ReleasesForProductSlug("my-product-id")
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(
+				"Pivnet returned status code: 404 for the request - expected 200"))
+		})
+	})
+
+	Context("when the json unmarshalling fails with error", func() {
+		It("forwards the error", func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", apiPrefix+"/products/my-product-id/releases"),
+					ghttp.RespondWith(http.StatusOK, "%%%"),
+				),
+			)
+
+			_, err := client.ReleasesForProductSlug("my-product-id")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("invalid character"))
+		})
 	})
 
 	Describe("Accepting a EULA", func() {
@@ -166,66 +218,14 @@ var _ = Describe("PivnetClient", func() {
 	})
 
 	Describe("Product Versions", func() {
-		Context("when parsing the url fails with error", func() {
-			It("forwards the error", func() {
-				newClientConfig.Endpoint = "%%%"
-				client = pivnet.NewClient(newClientConfig, fakeLogger)
-
-				_, err := client.ProductVersions("some product")
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("%%%"))
-			})
-		})
-
-		Context("when making the request fails with error", func() {
-			It("forwards the error", func() {
-				newClientConfig.Endpoint = "https://not-a-real-url.com"
-				client = pivnet.NewClient(newClientConfig, fakeLogger)
-
-				_, err := client.ProductVersions("some-product")
-				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		Context("when a non-200 comes back from Pivnet", func() {
-			It("returns an error", func() {
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("GET", apiPrefix+"/products/my-product-id/releases"),
-						ghttp.RespondWith(http.StatusNotFound, nil),
-					),
-				)
-
-				_, err := client.ProductVersions("my-product-id")
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(
-					"Pivnet returned status code: 404 for the request - expected 200"))
-			})
-		})
-
-		Context("when the json unmarshalling fails with error", func() {
-			It("forwards the error", func() {
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("GET", apiPrefix+"/products/my-product-id/releases"),
-						ghttp.RespondWith(http.StatusOK, "%%%"),
-					),
-				)
-
-				_, err := client.ProductVersions("my-product-id")
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("invalid character"))
-			})
-		})
-
 		Context("when getting the ETag responds with a non-2XX status code", func() {
 			It("returns an error", func() {
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
-						ghttp.RespondWithJSONEncoded(http.StatusOK, releases),
-					),
-				)
+				// server.AppendHandlers(
+				// 	ghttp.CombineHandlers(
+				// 		ghttp.VerifyRequest("GET", apiPrefix+"/products/banana/releases"),
+				// 		ghttp.RespondWithJSONEncoded(http.StatusOK, releases),
+				// 	),
+				// )
 
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
@@ -234,7 +234,7 @@ var _ = Describe("PivnetClient", func() {
 					),
 				)
 
-				_, err := client.ProductVersions("banana")
+				_, err := client.ProductVersions("banana", releases.Releases)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(errors.New(
 					"Pivnet returned status code: 418 for the request - expected 200")))
@@ -242,15 +242,15 @@ var _ = Describe("PivnetClient", func() {
 		})
 
 		It("gets versions", func() {
-			server.AppendHandlers(
-				ghttp.CombineHandlers(
-					ghttp.VerifyRequest(
-						"GET",
-						fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug),
-					),
-					ghttp.RespondWithJSONEncoded(http.StatusOK, releases),
-				),
-			)
+			// server.AppendHandlers(
+			// 	ghttp.CombineHandlers(
+			// 		ghttp.VerifyRequest(
+			// 			"GET",
+			// 			fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug),
+			// 		),
+			// 		ghttp.RespondWithJSONEncoded(http.StatusOK, releases),
+			// 	),
+			// )
 
 			for i, r := range releases.Releases {
 				server.AppendHandlers(
@@ -264,10 +264,9 @@ var _ = Describe("PivnetClient", func() {
 				)
 			}
 
-			// one for all the releases and one for each releases
-			expectedRequestCount := 1 + 2
+			expectedRequestCount := len(releases.Releases)
 
-			versions, err := client.ProductVersions(productSlug)
+			versions, err := client.ProductVersions(productSlug, releases.Releases)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(server.ReceivedRequests()).Should(HaveLen(expectedRequestCount))
 			Expect(versions).To(HaveLen(len(releases.Releases)))
