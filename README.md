@@ -1,5 +1,7 @@
 # Pivnet Resource
 
+Interact with [Pivotal Network](https://network.pivotal.io) from concourse.
+
 ## Installing
 
 For Concourse versions 0.74.0 and higher, the recommended method to use this
@@ -39,7 +41,9 @@ BOSH releases are available on
 
 * `product_slug`: *Required.*  Name of product on Pivotal Network.
 
-* `product_version`: *Optional.*  Fix source to specific Product Version. Used only during `in`.
+* `product_version`: *Optional.*  Lock to a specific product version. Used only when download product releases during `in`.
+
+* `release_type`: *Optional.*  Lock to a specific release type. Used only when downloading product releases during `in`.
 
 * `access_key_id`: *Optional.*  AWS access key id. Required for uploading products via `out`.
 
