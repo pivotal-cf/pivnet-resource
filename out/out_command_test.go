@@ -59,10 +59,13 @@ var _ = Describe("Out", func() {
 		productID            int
 		releaseID            int
 
-		existingETags            []http.Header
-		existingReleasesResponse pivnet.ReleasesResponse
-		newReleaseResponse       pivnet.CreateReleaseResponse
-		productsResponse         pivnet.Product
+		existingETags               []http.Header
+		existingETagsResponseStatus int
+
+		existingReleasesResponse       pivnet.ReleasesResponse
+		existingReleasesResponseStatus int
+		newReleaseResponse             pivnet.CreateReleaseResponse
+		productsResponse               pivnet.Product
 
 		newProductFileRequest            createProductFileBody
 		newProductFileResponseStatusCode int
@@ -97,9 +100,12 @@ var _ = Describe("Out", func() {
 				},
 			},
 		}
+		existingReleasesResponseStatus = http.StatusOK
+
 		existingETags = []http.Header{
 			{"ETag": []string{`"etag-0"`}},
 		}
+		existingETagsResponseStatus = http.StatusOK
 
 		newReleaseResponse = pivnet.CreateReleaseResponse{
 			Release: pivnet.Release{
@@ -205,7 +211,10 @@ echo "$@"`
 					"GET",
 					fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug),
 				),
-				ghttp.RespondWithJSONEncoded(http.StatusOK, existingReleasesResponse),
+				ghttp.RespondWithJSONEncoded(
+					existingReleasesResponseStatus,
+					existingReleasesResponse,
+				),
 			),
 		)
 
@@ -216,7 +225,7 @@ echo "$@"`
 						"GET",
 						fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, productSlug, r.ID),
 					),
-					ghttp.RespondWith(http.StatusOK, nil, existingETags[i]),
+					ghttp.RespondWith(existingETagsResponseStatus, nil, existingETags[i]),
 				),
 			)
 		}
@@ -346,6 +355,32 @@ echo "$@"`
 
 			Expect(err.Error()).To(MatchRegexp(".*out dir.*provided"))
 			Expect(server.ReceivedRequests()).To(BeEmpty())
+		})
+	})
+
+	Context("when getting existing releases returns error", func() {
+		BeforeEach(func() {
+			existingReleasesResponseStatus = http.StatusNotFound
+		})
+
+		It("returns an error", func() {
+			_, err := outCommand.Run(outRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(ContainSubstring("404"))
+		})
+	})
+
+	Context("when getting existing releases etag returns error", func() {
+		BeforeEach(func() {
+			existingETagsResponseStatus = http.StatusNotFound
+		})
+
+		It("returns an error", func() {
+			_, err := outCommand.Run(outRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(ContainSubstring("404"))
 		})
 	})
 

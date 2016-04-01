@@ -156,7 +156,10 @@ var _ = Describe("Out", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			By("Validating the new product version does not yet exist")
-			productVersions, err := pivnetClient.ProductVersions(productSlug)
+			releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
+			Expect(err).NotTo(HaveOccurred())
+
+			productVersions, err := pivnetClient.ProductVersions(productSlug, releases)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(productVersionsWithoutETags(productVersions)).NotTo(ContainElement(productVersion))
@@ -166,7 +169,10 @@ var _ = Describe("Out", func() {
 			Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
 			By("Validating new release exists on pivnet")
-			productVersions, err = pivnetClient.ProductVersions(productSlug)
+			releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
+			Expect(err).NotTo(HaveOccurred())
+
+			productVersions, err = pivnetClient.ProductVersions(productSlug, releases)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(productVersionsWithoutETags(productVersions)).To(ContainElement(productVersion))
@@ -244,7 +250,10 @@ var _ = Describe("Out", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 
 				By("Validating the new product version does not yet exist")
-				productVersions, err := pivnetClient.ProductVersions(productSlug)
+				releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
+				Expect(err).NotTo(HaveOccurred())
+
+				productVersions, err := pivnetClient.ProductVersions(productSlug, releases)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(productVersionsWithoutETags(productVersions)).NotTo(ContainElement(productVersion))
@@ -254,7 +263,10 @@ var _ = Describe("Out", func() {
 				Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
 				By("Validating new release exists on pivnet")
-				productVersions, err = pivnetClient.ProductVersions(productSlug)
+				releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
+				Expect(err).NotTo(HaveOccurred())
+
+				productVersions, err = pivnetClient.ProductVersions(productSlug, releases)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(productVersionsWithoutETags(productVersions)).To(ContainElement(productVersion))

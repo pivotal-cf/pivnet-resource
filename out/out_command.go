@@ -135,7 +135,12 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 	productVersion := readStringContents(c.sourcesDir, input.Params.VersionFile)
 
-	existingVersions, err := pivnetClient.ProductVersions(productSlug)
+	releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+
+	existingVersions, err := pivnetClient.ProductVersions(productSlug, releases)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
