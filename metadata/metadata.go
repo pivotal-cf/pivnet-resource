@@ -3,15 +3,19 @@ package metadata
 import "fmt"
 
 type Metadata struct {
-	ProductFiles    []ProductFile `yaml:"product_files"`
-	ReleaseType     string        `yaml:"release_type"`
-	EulaSlug        string        `yaml:"eula_slug"`
-	ProductVersion  string        `yaml:"product_version"`
-	ReleaseDate     string        `yaml:"release_date"`
-	Description     string        `yaml:"description"`
-	ReleaseNotesURL string        `yaml:"release_notes_url"`
-	Availability    string        `yaml:"availability"`
-	UserGroupIDs    []int         `yaml:"user_group_ids"`
+	ProductFiles []ProductFile `yaml:"product_files"`
+	Release      Release       `yaml:"release"`
+}
+
+type Release struct {
+	ReleaseType     string `yaml:"release_type"`
+	EulaSlug        string `yaml:"eula_slug"`
+	ProductVersion  string `yaml:"product_version"`
+	ReleaseDate     string `yaml:"release_date"`
+	Description     string `yaml:"description"`
+	ReleaseNotesURL string `yaml:"release_notes_url"`
+	Availability    string `yaml:"availability"`
+	UserGroupIDs    []int  `yaml:"user_group_ids"`
 }
 
 type ProductFile struct {

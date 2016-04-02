@@ -23,7 +23,7 @@ const (
 	executableTimeout = 60 * time.Second
 )
 
-var _ = Describe("Out", func() {
+var _ = FDescribe("Out", func() {
 	var (
 		productVersion string
 
@@ -54,12 +54,14 @@ var _ = Describe("Out", func() {
 
 		By("Creating a metadata struct")
 		productMetadata = metadata.Metadata{
-			ReleaseType:     releaseType,
-			EulaSlug:        eulaSlug,
-			ReleaseDate:     releaseDate,
-			Description:     description,
-			ReleaseNotesURL: releaseNotesURL,
-			ProductVersion:  productVersion,
+			Release: metadata.Release{
+				ReleaseType:     releaseType,
+				EulaSlug:        eulaSlug,
+				ReleaseDate:     releaseDate,
+				Description:     description,
+				ReleaseNotesURL: releaseNotesURL,
+				ProductVersion:  productVersion,
+			},
 		}
 
 		By("Marshaling the metadata to yaml")
@@ -194,8 +196,8 @@ var _ = Describe("Out", func() {
 
 			BeforeEach(func() {
 				By("Adding availability to the metadata")
-				productMetadata.Availability = availability
-				productMetadata.UserGroupIDs = userGroupIDs
+				productMetadata.Release.Availability = availability
+				productMetadata.Release.UserGroupIDs = userGroupIDs
 
 				By("Marshaling the metadata to yaml")
 				metadataBytes, err := yaml.Marshal(productMetadata)
