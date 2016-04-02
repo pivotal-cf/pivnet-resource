@@ -9,11 +9,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 )
 
 const (
@@ -37,6 +40,8 @@ var _ = Describe("Out", func() {
 		descriptionFile = "description"
 		description     = "this release is for automated-testing only."
 
+		metadataFile = "metadata"
+
 		releaseNotesURLFile = "release_notes_url"
 		releaseNotesURL     = "https://example.com"
 
@@ -56,47 +61,62 @@ var _ = Describe("Out", func() {
 		By("Generating 'random' product version")
 		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
 
-		By("Writing product version to file")
+		By("Creating a metadata struct")
+		metadataBytes, err := yaml.Marshal(metadata.Metadata{
+			ReleaseType:    releaseType,
+			EulaSlug:       eulaSlug,
+			ProductVersion: productVersion,
+		})
+		Expect(err).ShouldNot(HaveOccurred())
+
+		By("Writing the metadata to a file")
 		err = ioutil.WriteFile(
-			filepath.Join(rootDir, productVersionFile),
-			[]byte(productVersion),
+			filepath.Join(rootDir, metadataFile),
+			metadataBytes,
 			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		By("Writing release type to file")
-		err = ioutil.WriteFile(
-			filepath.Join(rootDir, releaseTypeFile),
-			[]byte(releaseType),
-			os.ModePerm)
-		Expect(err).ShouldNot(HaveOccurred())
+		// By("Writing product version to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, productVersionFile),
+		// 	[]byte(productVersion),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
 
-		By("Writing release date to file")
-		err = ioutil.WriteFile(
-			filepath.Join(rootDir, releaseDateFile),
-			[]byte(releaseDate),
-			os.ModePerm)
-		Expect(err).ShouldNot(HaveOccurred())
+		// By("Writing release type to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, releaseTypeFile),
+		// 	[]byte(releaseType),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
 
-		By("Writing eula slug to file")
-		err = ioutil.WriteFile(
-			filepath.Join(rootDir, eulaSlugFile),
-			[]byte(eulaSlug),
-			os.ModePerm)
-		Expect(err).ShouldNot(HaveOccurred())
+		// By("Writing release date to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, releaseDateFile),
+		// 	[]byte(releaseDate),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
 
-		By("Writing description to file")
-		err = ioutil.WriteFile(
-			filepath.Join(rootDir, descriptionFile),
-			[]byte(description),
-			os.ModePerm)
-		Expect(err).ShouldNot(HaveOccurred())
+		// By("Writing eula slug to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, eulaSlugFile),
+		// 	[]byte(eulaSlug),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
 
-		By("Writing release notes URL to file")
-		err = ioutil.WriteFile(
-			filepath.Join(rootDir, releaseNotesURLFile),
-			[]byte(releaseNotesURL),
-			os.ModePerm)
-		Expect(err).ShouldNot(HaveOccurred())
+		// By("Writing description to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, descriptionFile),
+		// 	[]byte(description),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
+
+		// By("Writing release notes URL to file")
+		// err = ioutil.WriteFile(
+		// 	filepath.Join(rootDir, releaseNotesURLFile),
+		// 	[]byte(releaseNotesURL),
+		// 	os.ModePerm)
+		// Expect(err).ShouldNot(HaveOccurred())
 
 		By("Creating command object")
 		command = exec.Command(outPath, rootDir)
