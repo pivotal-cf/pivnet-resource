@@ -35,10 +35,11 @@ var _ = Describe("Out", func() {
 
 		metadataFile = "metadata"
 
-		command       *exec.Cmd
-		stdinContents []byte
-		outRequest    concourse.OutRequest
-		rootDir       string
+		command         *exec.Cmd
+		stdinContents   []byte
+		outRequest      concourse.OutRequest
+		rootDir         string
+		productMetadata metadata.Metadata
 	)
 
 	BeforeEach(func() {
@@ -52,14 +53,17 @@ var _ = Describe("Out", func() {
 		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
 
 		By("Creating a metadata struct")
-		metadataBytes, err := yaml.Marshal(metadata.Metadata{
+		productMetadata = metadata.Metadata{
 			ReleaseType:     releaseType,
 			EulaSlug:        eulaSlug,
 			ReleaseDate:     releaseDate,
 			Description:     description,
 			ReleaseNotesURL: releaseNotesURL,
 			ProductVersion:  productVersion,
-		})
+		}
+
+		By("Marshaling the metadata to yaml")
+		metadataBytes, err := yaml.Marshal(productMetadata)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Writing the metadata to a file")
@@ -184,30 +188,25 @@ var _ = Describe("Out", func() {
 
 		Context("When the availability is set to Selected User Groups Only", func() {
 			var (
-				availabilityFile = "availability"
-				availability     = "Selected User Groups Only"
-
-				userGroupIDsFile = "user_group_ids"
-				userGroupIDs     = "6,8,54"
+				availability = "Selected User Groups Only"
+				userGroupIDs = []int{6, 8, 54}
 			)
 
 			BeforeEach(func() {
-				By("Writing availability to file")
-				err := ioutil.WriteFile(
-					filepath.Join(rootDir, availabilityFile),
-					[]byte(availability),
-					os.ModePerm)
+				By("Adding availability to the metadata")
+				productMetadata.Availability = availability
+				productMetadata.UserGroupIDs = userGroupIDs
+
+				By("Marshaling the metadata to yaml")
+				metadataBytes, err := yaml.Marshal(productMetadata)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				By("Writing user group IDs to file")
+				By("Writing the metadata to a file")
 				err = ioutil.WriteFile(
-					filepath.Join(rootDir, userGroupIDsFile),
-					[]byte(userGroupIDs),
+					filepath.Join(rootDir, metadataFile),
+					metadataBytes,
 					os.ModePerm)
 				Expect(err).ShouldNot(HaveOccurred())
-
-				outRequest.Params.AvailabilityFile = availabilityFile
-				outRequest.Params.UserGroupIDsFile = userGroupIDsFile
 			})
 
 			It("Creates a release and updates the availability and user groups", func() {

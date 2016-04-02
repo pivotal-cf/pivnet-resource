@@ -10,6 +10,8 @@ type Metadata struct {
 	ReleaseDate     string        `yaml:"release_date"`
 	Description     string        `yaml:"description"`
 	ReleaseNotesURL string        `yaml:"release_notes_url"`
+	Availability    string        `yaml:"availability"`
+	UserGroupIDs    []int         `yaml:"user_group_ids"`
 }
 
 type ProductFile struct {
