@@ -150,6 +150,10 @@ If a product release already exists on Pivotal Network with the desired version,
 
 #### Parameters
 
+#### Important Note
+** parameters previously contained in files, like availability, have been unified within the metadata file. Checking individual files for product metadata is still
+suppoted but will be removed in a future release **
+
 It is valid to provide both `file_glob` and `s3_filepath_prefix` or to provide
 neither. If only one is present, release creation will fail. If neither are
 present, file uploading is skipped.
@@ -168,47 +172,7 @@ release creation will fail.
   a `product_slug` might be `pivotal-diego-pcf` (lower-case) but the
   `s3_filepath_prefix` could be `Pivotal-Diego-PCF` (mixed-case).
 
-* `version_file`: *Required.* File containing the version string.
-  Will be read to determine the new release version.
-
-* `release_type_file`: *Required.* File containing the release type.
-  Will be read to determine the release type. Valid file contents are:
-  - All-In-One
-  - Major Release
-  - Minor Release
-  - Service Release
-  - Maintenance Release
-  - Security Release
-
-* `release_date_file`: *Optional.* File containing the release date in the form
-  `YYYY-MM-DD`.
-  If it is not present, the release date will be set to the current date.
-
-* `eula_slug_file`: *Required.* File containing the EULA slug
-  e.g. `pivotal_software_eula`
-
-* `description_file`: *Optional.* File containing the free-form description text.
-  e.g.
-  ```
-  The description for this release.
-
-  May contain line breaks.
-  ```
-
-* `release_notes_url_file`: *Optional.* File containing the release notes URL
-  e.g. `http://url.to/release/notes`
-
-* `availability`: *Optional.* File containing the availability.
-  Will be read to determine the availability. Valid file contents are:
-  - Admins Only
-  - All Users
-  - Selected User Groups Only
-
-* `user_group_ids_file`: *Optional.* File containing a comma-separated list of user
-  group IDs. Each user group in the list will be added to the release.
-  Will be read only if the availability is set to Selected User Groups Only.
-
-* `metadata_file`: *Optional.* File containing metadata for releases and product files. See [Metadata file](#metadata-file) for more details.
+* `metadata_file`: *Required.* File containing metadata for releases and product files. See [Metadata file](#metadata-file) for more details.
 
 ### Metadata file
 
@@ -216,6 +180,19 @@ A metadata file can be provided in YAML (or JSON) format. The contents of this f
 
 ```yaml
 ---
+release:
+  version: "v1.0.0"
+  release_type: All-In-One
+  release_date: 1997-12-31
+  eula_slug: "some-eula-slug"
+  description: |
+    "wow this is a long description for this product"
+  release_notes_url: http://example.com
+  availability: Selected User Groups Only
+  user_group_ids:
+    - 8
+    - 23
+    - 42
 product_files:
 - file: /path/to/some/product/file
   upload_as: some human-readable name
@@ -224,6 +201,44 @@ product_files:
     multi-line
     description
 ```
+
+The top-level release key is now required due to the fact that it contains important information about a product.
+
+* `version`: *Required.* specifices version of the new release
+
+* `release_type`: *Required.* Valid release types are:
+  - All-In-One
+  - Major Release
+  - Minor Release
+  - Service Release
+  - Maintenance Release
+  - Security Release
+
+* `release_date`: *Optional.* Release date in the form of: `YYYY-MM-DD`.
+  If it is not present, the release date will be set to the current date.
+
+* `eula_slug`: *Required.*
+  e.g. `pivotal_software_eula`
+
+* `description`: *Optional.* Free-form description text.
+  e.g.
+  ```
+  The description for this release.
+
+  May contain line breaks.
+  ```
+
+* `release_notes_url`: *Optional.* The release notes URL
+  e.g. `http://url.to/release/notes`
+
+* `availability`: *Optional.* Valid availibilites contents are:
+  - Admins Only
+  - All Users
+  - Selected User Groups Only
+
+* `user_group_ids`: *Optional.* Comma-separated list of user
+  group IDs. Each user group in the list will be added to the release.
+  Will be used only if the availability is set to Selected User Groups Only.
 
 The top-level `product_files` key is optional. If provided, it is permitted to be an empty array.
 
