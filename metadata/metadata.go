@@ -3,7 +3,10 @@ package metadata
 import "fmt"
 
 type Metadata struct {
-	ProductFiles []ProductFile `yaml:"product_files"`
+	ProductFiles   []ProductFile `yaml:"product_files"`
+	ReleaseType    string        `yaml:"release_type"`
+	EulaSlug       string        `yaml:"eula_slug"`
+	ProductVersion string        `yaml:"product_version"`
 }
 
 type ProductFile struct {
