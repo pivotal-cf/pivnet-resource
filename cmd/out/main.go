@@ -83,9 +83,3 @@ func main() {
 		log.Fatalln(err)
 	}
 }
-
-func mustBeNonEmpty(input string, key string) {
-	if input == "" {
-		log.Fatalf("%s must be provided\n", key)
-	}
-}
