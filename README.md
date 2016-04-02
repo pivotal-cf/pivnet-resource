@@ -151,8 +151,8 @@ If a product release already exists on Pivotal Network with the desired version,
 #### Parameters
 
 #### Important Note
-** parameters previously contained in files, like availability, have been unified within the metadata file. Checking individual files for product metadata is still
-suppoted but will be removed in a future release **
+**parameters previously contained in files, like availability, have been unified within the metadata file. Checking individual files for product metadata is still
+suppoted but will be removed in a future release**
 
 It is valid to provide both `file_glob` and `s3_filepath_prefix` or to provide
 neither. If only one is present, release creation will fail. If neither are
@@ -202,7 +202,7 @@ product_files:
     description
 ```
 
-The top-level release key is now required due to the fact that it contains important information about a product.
+The top-level `release` key is now required due to the fact that it contains important information about a product.
 
 * `version`: *Required.* specifices version of the new release
 
@@ -214,11 +214,11 @@ The top-level release key is now required due to the fact that it contains impor
   - Maintenance Release
   - Security Release
 
-* `release_date`: *Optional.* Release date in the form of: `YYYY-MM-DD`.
-  If it is not present, the release date will be set to the current date.
-
 * `eula_slug`: *Required.*
   e.g. `pivotal_software_eula`
+
+* `release_date`: *Optional.* Release date in the form of: `YYYY-MM-DD`.
+  If it is not present, the release date will be set to the current date.
 
 * `description`: *Optional.* Free-form description text.
   e.g.
