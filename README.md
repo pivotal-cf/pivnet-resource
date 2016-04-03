@@ -172,7 +172,7 @@ release creation will fail.
   a `product_slug` might be `pivotal-diego-pcf` (lower-case) but the
   `s3_filepath_prefix` could be `Pivotal-Diego-PCF` (mixed-case).
 
-* `metadata_file`: *Required.* File containing metadata for releases and product files. See [Metadata file](#metadata-file) for more details.
+* `metadata_file`: *Optional.* File containing metadata for releases and product files. See [Metadata file](#metadata-file) for more details.
 
 ### Metadata file
 
