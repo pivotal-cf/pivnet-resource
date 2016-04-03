@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -63,14 +64,8 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		return concourse.OutResponse{}, fmt.Errorf("%s must be provided", "out dir")
 	}
 
-	err := validator.NewOutValidator(input).Validate()
-	if err != nil {
-		return concourse.OutResponse{}, err
-	}
-
-	c.logger.Debugf("Received input: %+v\n", input)
-
 	var m metadata.Metadata
+	var skipFileCheck bool
 	if input.Params.MetadataFile != "" {
 		metadataFilepath := filepath.Join(c.sourcesDir, input.Params.MetadataFile)
 		metadataBytes, err := ioutil.ReadFile(metadataFilepath)
@@ -80,16 +75,25 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 		err = yaml.Unmarshal(metadataBytes, &m)
 		if err != nil {
-			return concourse.OutResponse{}, fmt.Errorf("metadata_file is invalid: %s", err.Error())
+			return concourse.OutResponse{}, fmt.Errorf("metadata_file could not be parsed: %s", err.Error())
 		}
 
 		err = m.Validate()
 		if err != nil {
 			return concourse.OutResponse{}, fmt.Errorf("metadata_file is invalid: %s", err.Error())
 		}
+
+		skipFileCheck = true
 	}
 
 	c.logger.Debugf("metadata file parsed; contents: %+v\n", m)
+
+	err := validator.NewOutValidator(input, skipFileCheck).Validate()
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+
+	c.logger.Debugf("Received input: %+v\n", input)
 
 	globber := globs.NewGlobber(globs.GlobberConfig{
 		FileGlob:   input.Params.FileGlob,
@@ -133,7 +137,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		c.logger,
 	)
 
-	productVersion := readStringContents(c.sourcesDir, input.Params.VersionFile)
+	productVersion := fetchFromMetadataOrFile("Version", m, skipFileCheck, c.sourcesDir, input.Params.VersionFile)
 
 	releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
 	if err != nil {
@@ -153,13 +157,15 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 	config := pivnet.CreateReleaseConfig{
 		ProductSlug:     productSlug,
-		ReleaseType:     readStringContents(c.sourcesDir, input.Params.ReleaseTypeFile),
-		EulaSlug:        readStringContents(c.sourcesDir, input.Params.EulaSlugFile),
+		ReleaseType:     fetchFromMetadataOrFile("ReleaseType", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseTypeFile),
+		EulaSlug:        fetchFromMetadataOrFile("EulaSlug", m, skipFileCheck, c.sourcesDir, input.Params.EulaSlugFile),
 		ProductVersion:  productVersion,
-		Description:     readStringContents(c.sourcesDir, input.Params.DescriptionFile),
-		ReleaseNotesURL: readStringContents(c.sourcesDir, input.Params.ReleaseNotesURLFile),
-		ReleaseDate:     readStringContents(c.sourcesDir, input.Params.ReleaseDateFile),
+		Description:     fetchFromMetadataOrFile("Description", m, skipFileCheck, c.sourcesDir, input.Params.DescriptionFile),
+		ReleaseNotesURL: fetchFromMetadataOrFile("ReleaseNotesURL", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseNotesURLFile),
+		ReleaseDate:     fetchFromMetadataOrFile("ReleaseDate", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseDateFile),
 	}
+
+	c.logger.Debugf("config used to create pivnet release: %+v\n", config)
 
 	release, err := pivnetClient.CreateRelease(config)
 	if err != nil {
@@ -283,7 +289,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		}
 	}
 
-	availability := readStringContents(c.sourcesDir, input.Params.AvailabilityFile)
+	availability := fetchFromMetadataOrFile("Availability", m, skipFileCheck, c.sourcesDir, input.Params.AvailabilityFile)
 	if availability != "Admins Only" {
 		releaseUpdate := pivnet.Release{
 			ID:           release.ID,
@@ -296,7 +302,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 		if availability == "Selected User Groups Only" {
 			userGroupIDs := strings.Split(
-				readStringContents(c.sourcesDir, input.Params.UserGroupIDsFile),
+				fetchFromMetadataOrFile("UserGroupIDs", m, skipFileCheck, c.sourcesDir, input.Params.UserGroupIDsFile),
 				",",
 			)
 
@@ -336,6 +342,26 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 	}
 
 	return out, nil
+}
+
+func fetchFromMetadataOrFile(yamlKey string, m metadata.Metadata, skipFileCheck bool, dir, file string) string {
+	if skipFileCheck {
+		metadataValue := reflect.ValueOf(m.Release)
+		fieldValue := metadataValue.FieldByName(yamlKey)
+
+		if yamlKey == "UserGroupIDs" {
+			var ids []string
+			for i := 0; i < fieldValue.Len(); i++ {
+				ids = append(ids, fieldValue.Index(i).String())
+			}
+
+			return strings.Join(ids, ",")
+		}
+
+		return fieldValue.String()
+	}
+
+	return readStringContents(dir, file)
 }
 
 func readStringContents(sourcesDir, file string) string {

@@ -384,52 +384,6 @@ echo "$@"`
 		})
 	})
 
-	Context("when metadata file is provided", func() {
-		BeforeEach(func() {
-			metadataFile = "metadata"
-		})
-
-		It("returns an error (metadata file does not exist)", func() {
-			_, err := outCommand.Run(outRequest)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(MatchRegexp(".*metadata_file.*could not be read"))
-			Expect(server.ReceivedRequests()).To(BeEmpty())
-		})
-
-		Context("when metadata file exists", func() {
-			BeforeEach(func() {
-				metadataFileContents = ``
-				metadataFilePath = filepath.Join(sourcesDir, metadataFile)
-
-				err := ioutil.WriteFile(metadataFilePath, []byte(metadataFileContents), os.ModePerm)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("runs without error", func() {
-				_, err := outCommand.Run(outRequest)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			Context("when metadata file contains invalid yaml", func() {
-				BeforeEach(func() {
-					metadataFileContents = "{{"
-
-					err := ioutil.WriteFile(metadataFilePath, []byte(metadataFileContents), os.ModePerm)
-					Expect(err).NotTo(HaveOccurred())
-				})
-
-				It("returns an error", func() {
-					_, err := outCommand.Run(outRequest)
-					Expect(err).To(HaveOccurred())
-
-					Expect(err.Error()).To(MatchRegexp(".*metadata_file.*invalid"))
-					Expect(server.ReceivedRequests()).To(BeEmpty())
-				})
-			})
-		})
-	})
-
 	Context("when the s3-out exits with error", func() {
 		BeforeEach(func() {
 			s3OutScriptContents := `#!/bin/sh
@@ -485,6 +439,11 @@ exit 1`
 
 	Context("when metadata file is provided", func() {
 		BeforeEach(func() {
+			eulaSlugFile = ""
+			releaseTypeFile = ""
+			versionFile = ""
+
+			version = "1.1.2"
 			metadataFile = "metadata"
 			metadataFilePath = filepath.Join(sourcesDir, metadataFile)
 		})
@@ -494,10 +453,67 @@ exit 1`
 			Expect(err).NotTo(HaveOccurred())
 		})
 
+		Context("when it has a release key", func() {
+			BeforeEach(func() {
+				metadataFileContents =
+					`---
+           release:
+             eula_slug: some-eula-metadata
+             version: "1.1.2#etag-0"
+             release_type: All In One`
+			})
+
+			It("overrides any other files specifying metadata", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Context("when a duplicate version exists", func() {
+				BeforeEach(func() {
+					existingReleasesResponse = pivnet.ReleasesResponse{
+						Releases: []pivnet.Release{
+							{
+								ID:      1234,
+								Version: "1.1.2",
+							},
+						},
+					}
+				})
+
+				It("exits with error", func() {
+					_, err := outCommand.Run(outRequest)
+					Expect(err).To(HaveOccurred())
+
+					Expect(err.Error()).To(MatchRegexp(".*release already exists.*%s.*", version))
+				})
+			})
+		})
+
+		Context("when metadata file contains invalid yaml", func() {
+			BeforeEach(func() {
+				metadataFileContents = "{{"
+
+				err := ioutil.WriteFile(metadataFilePath, []byte(metadataFileContents), os.ModePerm)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(MatchRegexp(".*metadata_file.*could not be parsed"))
+				Expect(server.ReceivedRequests()).To(BeEmpty())
+			})
+		})
+
 		Context("when metadata file contains matching product file descriptions", func() {
 			BeforeEach(func() {
 				metadataFileContents = fmt.Sprintf(
 					`---
+           release:
+            eula_slug: some-eula-metadata
+            version: "1.1.2#etag-0"
+            release_type: All In One
            product_files:
            - file: %s
              description: |
@@ -520,6 +536,10 @@ exit 1`
 			BeforeEach(func() {
 				metadataFileContents = fmt.Sprintf(
 					`---
+          release:
+           eula_slug: some-eula-metadata
+           version: "1.1.2#etag-0"
+           release_type: All In One
           product_files:
           - file: %s`,
 					productFileRelativePath0,
@@ -536,6 +556,10 @@ exit 1`
 			BeforeEach(func() {
 				metadataFileContents =
 					`---
+           release:
+            eula_slug: some-eula-metadata
+            version: "1.1.2#etag-0"
+            release_type: All In One
            product_files:
            - file: not-a-real-file
              description: |
@@ -579,6 +603,10 @@ exit 1`
 			BeforeEach(func() {
 				metadataFileContents = fmt.Sprintf(
 					`---
+          release:
+           eula_slug: some-eula-metadata
+           version: "1.1.2#etag-0"
+           release_type: All In One
           product_files:
           - file: %s
             upload_as: some_remote_file`,
@@ -593,7 +621,6 @@ exit 1`
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
-
 	})
 
 	Context("when globbing fails", func() {

@@ -23,7 +23,7 @@ const (
 	executableTimeout = 60 * time.Second
 )
 
-var _ = FDescribe("Out", func() {
+var _ = Describe("Out", func() {
 	var (
 		productVersion string
 
@@ -60,7 +60,7 @@ var _ = FDescribe("Out", func() {
 				ReleaseDate:     releaseDate,
 				Description:     description,
 				ReleaseNotesURL: releaseNotesURL,
-				ProductVersion:  productVersion,
+				Version:         productVersion,
 			},
 		}
 
@@ -191,7 +191,7 @@ var _ = FDescribe("Out", func() {
 		Context("When the availability is set to Selected User Groups Only", func() {
 			var (
 				availability = "Selected User Groups Only"
-				userGroupIDs = []int{6, 8, 54}
+				userGroupIDs = []string{"6", "8", "54"}
 			)
 
 			BeforeEach(func() {

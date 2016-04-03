@@ -9,33 +9,27 @@ import (
 	"path/filepath"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 var _ = Describe("Lifecycle test", func() {
 	var (
-		releaseTypeFile = "release_type"
 		releaseType     = "Minor Release"
-
-		releaseDateFile = "release_date"
 		releaseDate     = "2015-12-17"
-
-		eulaSlugFile = "eula_slug"
-		eulaSlug     = "pivotal_beta_eula"
-
-		productVersionFile = "version"
-		productVersion     string
-
-		descriptionFile = "description"
+		eulaSlug        = "pivotal_beta_eula"
 		description     = "this release is for automated-testing only."
+		releaseNotesURL = "https://example.com"
 
-		releaseNotesURLFile = "release_notes_url"
-		releaseNotesURL     = "https://example.com"
+		metadataFile   = "metadata"
+		productVersion string
 
 		filePrefix = "pivnet-resource-test-file"
 
@@ -55,45 +49,26 @@ var _ = Describe("Lifecycle test", func() {
 		By("Generating 'random' product version")
 		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
 
-		By("Writing product version to file")
-		err = ioutil.WriteFile(
-			filepath.Join(rootDir, productVersionFile),
-			[]byte(productVersion),
-			os.ModePerm)
+		By("Creating a metadata struct")
+		productMetadata := metadata.Metadata{
+			Release: metadata.Release{
+				ReleaseType:     releaseType,
+				EulaSlug:        eulaSlug,
+				ReleaseDate:     releaseDate,
+				Description:     description,
+				ReleaseNotesURL: releaseNotesURL,
+				Version:         productVersion,
+			},
+		}
+
+		By("Marshaling the metadata to yaml")
+		metadataBytes, err := yaml.Marshal(productMetadata)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		By("Writing release type to file")
+		By("Writing the metadata to a file")
 		err = ioutil.WriteFile(
-			filepath.Join(rootDir, releaseTypeFile),
-			[]byte(releaseType),
-			os.ModePerm)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		By("Writing release date to file")
-		err = ioutil.WriteFile(
-			filepath.Join(rootDir, releaseDateFile),
-			[]byte(releaseDate),
-			os.ModePerm)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		By("Writing eula slug to file")
-		err = ioutil.WriteFile(
-			filepath.Join(rootDir, eulaSlugFile),
-			[]byte(eulaSlug),
-			os.ModePerm)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		By("Writing description to file")
-		err = ioutil.WriteFile(
-			filepath.Join(rootDir, descriptionFile),
-			[]byte(description),
-			os.ModePerm)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		By("Writing release notes URL to file")
-		err = ioutil.WriteFile(
-			filepath.Join(rootDir, releaseNotesURLFile),
-			[]byte(releaseNotesURL),
+			filepath.Join(rootDir, metadataFile),
+			metadataBytes,
 			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
@@ -112,14 +87,9 @@ var _ = Describe("Lifecycle test", func() {
 				Region:          pivnetRegion,
 			},
 			Params: concourse.OutParams{
-				FileGlob:            "*",
-				FilepathPrefix:      s3FilepathPrefix,
-				VersionFile:         productVersionFile,
-				ReleaseTypeFile:     releaseTypeFile,
-				ReleaseDateFile:     releaseDateFile,
-				EulaSlugFile:        eulaSlugFile,
-				DescriptionFile:     descriptionFile,
-				ReleaseNotesURLFile: releaseNotesURLFile,
+				FileGlob:       "*",
+				FilepathPrefix: s3FilepathPrefix,
+				MetadataFile:   metadataFile,
 			},
 		}
 
