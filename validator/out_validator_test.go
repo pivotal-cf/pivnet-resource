@@ -55,7 +55,20 @@ var _ = Describe("Out Validator", func() {
 			},
 		}
 
-		v = validator.NewOutValidator(outRequest)
+		v = validator.NewOutValidator(outRequest, false)
+	})
+
+	Context("when skipping file checks", func() {
+		BeforeEach(func() {
+			versionFile = ""
+			eulaSlugFile = ""
+			releaseTypeFile = ""
+		})
+
+		It("ignores the fact that files are not provided", func() {
+			v = validator.NewOutValidator(outRequest, true)
+			Expect(v.Validate()).NotTo(HaveOccurred())
+		})
 	})
 
 	Context("when no api token is provided", func() {
@@ -81,7 +94,6 @@ var _ = Describe("Out Validator", func() {
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(MatchRegexp(".*product_slug.*provided"))
-
 		})
 	})
 
@@ -95,7 +107,6 @@ var _ = Describe("Out Validator", func() {
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(MatchRegexp(".*version_file.*provided"))
-
 		})
 	})
 
@@ -109,7 +120,6 @@ var _ = Describe("Out Validator", func() {
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(MatchRegexp(".*release_type_file.*provided"))
-
 		})
 	})
 
@@ -123,7 +133,6 @@ var _ = Describe("Out Validator", func() {
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(MatchRegexp(".*eula_slug_file.*provided"))
-
 		})
 	})
 

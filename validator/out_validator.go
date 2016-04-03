@@ -7,12 +7,14 @@ import (
 )
 
 type outValidator struct {
-	input concourse.OutRequest
+	input         concourse.OutRequest
+	skipFileCheck bool
 }
 
-func NewOutValidator(input concourse.OutRequest) Validator {
+func NewOutValidator(input concourse.OutRequest, skipFileCheck bool) Validator {
 	return &outValidator{
-		input: input,
+		input:         input,
+		skipFileCheck: skipFileCheck,
 	}
 }
 
@@ -25,16 +27,18 @@ func (v outValidator) Validate() error {
 		return fmt.Errorf("%s must be provided", "product_slug")
 	}
 
-	if v.input.Params.VersionFile == "" {
-		return fmt.Errorf("%s must be provided", "version_file")
-	}
+	if !v.skipFileCheck {
+		if v.input.Params.VersionFile == "" {
+			return fmt.Errorf("%s must be provided", "version_file")
+		}
 
-	if v.input.Params.ReleaseTypeFile == "" {
-		return fmt.Errorf("%s must be provided", "release_type_file")
-	}
+		if v.input.Params.ReleaseTypeFile == "" {
+			return fmt.Errorf("%s must be provided", "release_type_file")
+		}
 
-	if v.input.Params.EulaSlugFile == "" {
-		return fmt.Errorf("%s must be provided", "eula_slug_file")
+		if v.input.Params.EulaSlugFile == "" {
+			return fmt.Errorf("%s must be provided", "eula_slug_file")
+		}
 	}
 
 	if v.input.Params.FileGlob != "" || v.input.Params.FilepathPrefix != "" {
