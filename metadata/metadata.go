@@ -3,14 +3,14 @@ package metadata
 import "fmt"
 
 type Metadata struct {
-	ProductFiles []ProductFile `yaml:"product_files"`
 	Release      Release       `yaml:"release"`
+	ProductFiles []ProductFile `yaml:"product_files"`
 }
 
 type Release struct {
+	Version         string `yaml:"version"`
 	ReleaseType     string `yaml:"release_type"`
 	EulaSlug        string `yaml:"eula_slug"`
-	ProductVersion  string `yaml:"product_version"`
 	ReleaseDate     string `yaml:"release_date"`
 	Description     string `yaml:"description"`
 	ReleaseNotesURL string `yaml:"release_notes_url"`
@@ -30,5 +30,18 @@ func (m Metadata) Validate() error {
 			return fmt.Errorf("empty value for file")
 		}
 	}
+
+	if m.Release.Version == "" {
+		return fmt.Errorf("missing required value %q", "version")
+	}
+
+	if m.Release.ReleaseType == "" {
+		return fmt.Errorf("missing required value %q", "release_type")
+	}
+
+	if m.Release.EulaSlug == "" {
+		return fmt.Errorf("missing required value %q", "eula_slug")
+	}
+
 	return nil
 }
