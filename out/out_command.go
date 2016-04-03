@@ -88,6 +88,10 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 	c.logger.Debugf("metadata file parsed; contents: %+v\n", m)
 
+	if !skipFileCheck {
+		c.logger.Debugf("\x1b[31mDEPRECATION WARNING: files containing metadata, like %q, will be removed in a future release\x1b[0m", "versionFile")
+	}
+
 	err := validator.NewOutValidator(input, skipFileCheck).Validate()
 	if err != nil {
 		return concourse.OutResponse{}, err
@@ -318,11 +322,13 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 	}
 
 	releaseETag, err := pivnetClient.ReleaseETag(productSlug, release)
+	//TODO this should not panic
 	if err != nil {
 		panic(err)
 	}
 
 	outputVersion, err := versions.CombineVersionAndETag(release.Version, releaseETag)
+	//TODO this should not panic
 	if err != nil {
 		panic(err)
 	}
