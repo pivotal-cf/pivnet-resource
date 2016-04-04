@@ -93,7 +93,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		c.logger.Debugf("\x1b[31mDEPRECATION WARNING: files containing metadata, like %q, will be removed in a future release\x1b[0m", "versionFile")
 
 		screenWriter := log.New(os.Stdout, "", 0)
-		screeWriter.Printf("\x1b[31mDEPRECATION WARNING: files containing metadata, like %q, will be removed in a future release\x1b[0m", "versionFile")
+		screenWriter.Printf("\x1b[31mDEPRECATION WARNING: files containing metadata, like %q, will be removed in a future release\x1b[0m", "versionFile")
 	}
 
 	err := validator.NewOutValidator(input, skipFileCheck).Validate()
