@@ -86,10 +86,14 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		skipFileCheck = true
 	}
 
-	c.logger.Debugf("metadata file parsed; contents: %+v\n", m)
+	c.logger.Debugf("metadata product_files parsed; contents: %+v\n", m.ProductFiles)
+	c.logger.Debugf("metadata release parsed; contents: %+v\n", &m.Release)
 
 	if !skipFileCheck {
 		c.logger.Debugf("\x1b[31mDEPRECATION WARNING: files containing metadata, like %q, will be removed in a future release\x1b[0m", "versionFile")
+
+		screenWriter := log.New(os.Stdout, "", 0)
+		screeWriter.Printf("\x1b[31mDEPRECATION WARNING: files containing metadata, like %q, will be removed in a future release\x1b[0m", "versionFile")
 	}
 
 	err := validator.NewOutValidator(input, skipFileCheck).Validate()
