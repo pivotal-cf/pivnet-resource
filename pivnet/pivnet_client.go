@@ -62,20 +62,6 @@ func NewClient(config NewClientConfig, logger logger.Logger) Client {
 }
 
 func (c client) ProductVersions(productSlug string, releases []Release) ([]string, error) {
-	// url := fmt.Sprintf("%s/products/%s/releases", c.url, productSlug)
-
-	// var response ReleasesResponse
-	// err := c.makeRequest(
-	// 	"GET",
-	// 	url,
-	// 	http.StatusOK,
-	// 	nil,
-	// 	&response,
-	// )
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	var versions []string
 	for _, r := range releases {
 		etag, err := c.ReleaseETag(productSlug, r)

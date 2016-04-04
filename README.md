@@ -150,9 +150,12 @@ If a product release already exists on Pivotal Network with the desired version,
 
 #### Parameters
 
-#### Important Note
-**parameters previously contained in files, like availability, have been unified within the metadata file. Checking individual files for product metadata is still
-suppoted but will be removed in a future release**
+**Deprecation Warning**
+
+**Parameters previously contained in separate files, like availability,
+should now be provided via the metadata file.
+Checking individual files for product metadata is now deprecated and will be
+removed in a future release**
 
 It is valid to provide both `file_glob` and `s3_filepath_prefix` or to provide
 neither. If only one is present, release creation will fail. If neither are
@@ -202,20 +205,15 @@ product_files:
     description
 ```
 
-The top-level `release` key is optional at present but will be required in a later release.
+The top-level `release` key is optional at present but will be required in a
+later release, as it replaces the various files like `version_file`.
 
-* `version`: *Required.* specifices version of the new release
+* `version`: *Required.* Version of the new release.
 
-* `release_type`: *Required.* Valid release types are:
-  - All-In-One
-  - Major Release
-  - Minor Release
-  - Service Release
-  - Maintenance Release
-  - Security Release
+* `release_type`: *Required.* See the
+[official docs](https://network.pivotal.io/docs/api) for the supported types.
 
-* `eula_slug`: *Required.*
-  e.g. `pivotal_software_eula`
+* `eula_slug`: *Required.* The EULA slug e.g. `pivotal_software_eula`.
 
 * `release_date`: *Optional.* Release date in the form of: `YYYY-MM-DD`.
   If it is not present, the release date will be set to the current date.
@@ -229,26 +227,32 @@ The top-level `release` key is optional at present but will be required in a lat
   ```
 
 * `release_notes_url`: *Optional.* The release notes URL
-  e.g. `http://url.to/release/notes`
+  e.g. `http://url.to/release/notes`.
 
 * `availability`: *Optional.* Valid availibilites contents are:
-  - Admins Only
-  - All Users
-  - Selected User Groups Only
+  - `Admins Only`
+  - `All Users`
+  - `Selected User Groups Only`
 
 * `user_group_ids`: *Optional.* Comma-separated list of user
   group IDs. Each user group in the list will be added to the release.
-  Will be used only if the availability is set to Selected User Groups Only.
+  Will be used only if the availability is set to `Selected User Groups Only`.
 
-The top-level `product_files` key is optional. If provided, it is permitted to be an empty array.
+The top-level `product_files` key is optional.
+If provided, it is permitted to be an empty array.
 
-Each element in `product_files` must have a non-empty value for the `file` key. All other keys are optional. The purpose of the keys is as follows:
+Each element in `product_files` must have a non-empty value for the `file` key.
+All other keys are optional. The purpose of the keys is as follows:
 
-* `file` *Required.* Relative path to file. Must match exactly one file located via the out param `file_glob`, or the resource will exit with error.
+* `file` *Required.* Relative path to file. Must match exactly one file
+  located via the out param `file_glob`, or the resource will exit with error.
 
-* `description` *Optional.* The file description (also known as _File Notes_ in Pivotal Network).
+* `description` *Optional.* The file description
+  (also known as _File Notes_ in Pivotal Network).
 
-* `upload_as` *Optional.* The display name for the file in Pivotal Network. This affects only the display name; the filename of the uploaded file remains the same as that of the local file.
+* `upload_as` *Optional.* The display name for the file in Pivotal Network.
+  This affects only the display name; the filename of the uploaded file remains
+  the same as that of the local file.
 
 ## Developing
 
