@@ -3,7 +3,7 @@ package metadata
 import "fmt"
 
 type Metadata struct {
-	Release      Release       `yaml:"release"`
+	Release      *Release      `yaml:"release,omitempty"`
 	ProductFiles []ProductFile `yaml:"product_files"`
 }
 
@@ -31,16 +31,18 @@ func (m Metadata) Validate() error {
 		}
 	}
 
-	if m.Release.Version == "" {
-		return fmt.Errorf("missing required value %q", "version")
-	}
+	if m.Release != nil {
+		if m.Release.Version == "" {
+			return fmt.Errorf("missing required value %q", "version")
+		}
 
-	if m.Release.ReleaseType == "" {
-		return fmt.Errorf("missing required value %q", "release_type")
-	}
+		if m.Release.ReleaseType == "" {
+			return fmt.Errorf("missing required value %q", "release_type")
+		}
 
-	if m.Release.EulaSlug == "" {
-		return fmt.Errorf("missing required value %q", "eula_slug")
+		if m.Release.EulaSlug == "" {
+			return fmt.Errorf("missing required value %q", "eula_slug")
+		}
 	}
 
 	return nil

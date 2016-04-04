@@ -352,7 +352,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 func fetchFromMetadataOrFile(yamlKey string, m metadata.Metadata, skipFileCheck bool, dir, file string) string {
 	if skipFileCheck {
-		metadataValue := reflect.ValueOf(m.Release)
+		metadataValue := reflect.ValueOf(m.Release).Elem()
 		fieldValue := metadataValue.FieldByName(yamlKey)
 
 		if yamlKey == "UserGroupIDs" {

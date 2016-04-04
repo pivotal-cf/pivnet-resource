@@ -51,7 +51,7 @@ var _ = Describe("Lifecycle test", func() {
 
 		By("Creating a metadata struct")
 		productMetadata := metadata.Metadata{
-			Release: metadata.Release{
+			Release: &metadata.Release{
 				ReleaseType:     releaseType,
 				EulaSlug:        eulaSlug,
 				ReleaseDate:     releaseDate,

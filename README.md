@@ -202,7 +202,7 @@ product_files:
     description
 ```
 
-The top-level `release` key is now required due to the fact that it contains important information about a product.
+The top-level `release` key is optional at present but will be required in a later release.
 
 * `version`: *Required.* specifices version of the new release
 

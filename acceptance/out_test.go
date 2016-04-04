@@ -54,7 +54,7 @@ var _ = Describe("Out", func() {
 
 		By("Creating a metadata struct")
 		productMetadata = metadata.Metadata{
-			Release: metadata.Release{
+			Release: &metadata.Release{
 				ReleaseType:     releaseType,
 				EulaSlug:        eulaSlug,
 				ReleaseDate:     releaseDate,
