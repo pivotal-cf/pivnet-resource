@@ -23,12 +23,12 @@ type Release struct {
 	Links                 *Links `json:"_links,omitempty"`
 	Description           string `json:"description,omitempty"`
 	ReleaseNotesURL       string `json:"release_notes_url,omitempty"`
-	Controlled            bool   `json:"controlled"`
-	ECCN                  string `json:"eccn"`
-	LicenseException      string `json:"license_exception"`
-	EndOfSupportDate      string `json:"end_of_support_date"`
-	EndOfGuidanceDate     string `json:"end_of_guidance_date"`
-	EndOfAvailabilityDate string `json:"end_of_availability_date"`
+	Controlled            bool   `json:"controlled,omitempty"`
+	ECCN                  string `json:"eccn,omitempty"`
+	LicenseException      string `json:"license_exception,omitempty"`
+	EndOfSupportDate      string `json:"end_of_support_date,omitempty"`
+	EndOfGuidanceDate     string `json:"end_of_guidance_date,omitempty"`
+	EndOfAvailabilityDate string `json:"end_of_availability_date,omitempty"`
 }
 
 type Eula struct {
