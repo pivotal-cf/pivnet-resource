@@ -416,7 +416,7 @@ func warnIfDeprecatedFilesFound(
 			continue
 		}
 
-		logger.Debugf("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m", key)
+		logger.Debugf("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m\n", key)
 
 		if screenWriter != nil {
 			screenWriter.Printf("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m", key)
