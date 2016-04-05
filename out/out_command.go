@@ -346,25 +346,30 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		panic(err)
 	}
 
+	metadata := []concourse.Metadata{
+		{Name: "version", Value: release.Version},
+		{Name: "release_type", Value: release.ReleaseType},
+		{Name: "release_date", Value: release.ReleaseDate},
+		{Name: "description", Value: release.Description},
+		{Name: "release_notes_url", Value: release.ReleaseNotesURL},
+		{Name: "eula_slug", Value: release.Eula.Slug},
+		{Name: "availability", Value: release.Availability},
+		{Name: "controlled", Value: fmt.Sprintf("%t", release.Controlled)},
+		{Name: "eccn", Value: release.ECCN},
+		{Name: "license_exception", Value: release.LicenseException},
+		{Name: "end_of_support_date", Value: release.EndOfSupportDate},
+		{Name: "end_of_guidance_date", Value: release.EndOfGuidanceDate},
+		{Name: "end_of_availability_date", Value: release.EndOfAvailabilityDate},
+	}
+	if release.Eula != nil {
+		metadata = append(metadata, concourse.Metadata{Name: "eula_slug", Value: release.Eula.Slug})
+	}
+
 	out := concourse.OutResponse{
 		Version: concourse.Version{
 			ProductVersion: outputVersion,
 		},
-		Metadata: []concourse.Metadata{
-			{Name: "version", Value: release.Version},
-			{Name: "release_type", Value: release.ReleaseType},
-			{Name: "release_date", Value: release.ReleaseDate},
-			{Name: "description", Value: release.Description},
-			{Name: "release_notes_url", Value: release.ReleaseNotesURL},
-			{Name: "eula_slug", Value: release.Eula.Slug},
-			{Name: "availability", Value: release.Availability},
-			{Name: "controlled", Value: fmt.Sprintf("%t", release.Controlled)},
-			{Name: "eccn", Value: release.ECCN},
-			{Name: "license_exception", Value: release.LicenseException},
-			{Name: "end_of_support_date", Value: release.EndOfSupportDate},
-			{Name: "end_of_guidance_date", Value: release.EndOfGuidanceDate},
-			{Name: "end_of_availability_date", Value: release.EndOfAvailabilityDate},
-		},
+		Metadata: metadata,
 	}
 
 	return out, nil
