@@ -213,10 +213,19 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	}
 
 	metadata := []concourse.Metadata{
+		{Name: "version", Value: release.Version},
 		{Name: "release_type", Value: release.ReleaseType},
 		{Name: "release_date", Value: release.ReleaseDate},
 		{Name: "description", Value: release.Description},
 		{Name: "release_notes_url", Value: release.ReleaseNotesURL},
+		{Name: "eula_slug", Value: release.Eula.Slug},
+		{Name: "availability", Value: release.Availability},
+		{Name: "controlled", Value: fmt.Sprintf("%t", release.Controlled)},
+		{Name: "eccn", Value: release.ECCN},
+		{Name: "license_exception", Value: release.LicenseException},
+		{Name: "end_of_support_date", Value: release.EndOfSupportDate},
+		{Name: "end_of_guidance_date", Value: release.EndOfGuidanceDate},
+		{Name: "end_of_availability_date", Value: release.EndOfAvailabilityDate},
 	}
 
 	if release.Eula != nil {
