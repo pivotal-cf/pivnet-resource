@@ -187,7 +187,7 @@ release:
   version: "v1.0.0"
   release_type: All-In-One
   release_date: 1997-12-31
-  eula_slug: "some-eula-slug"
+  eula_slug: "pivotal_beta_eula"
   description: |
     "wow this is a long description for this product"
   release_notes_url: http://example.com
@@ -196,6 +196,12 @@ release:
     - 8
     - 23
     - 42
+  controlled: false
+  eccn: "5D002"
+  license_exception: "ENC Unrestricted"
+  end_of_support_date: "2015-05-10"
+  end_of_guidance_date: "2015-06-30"
+  end_of_availability_date: "2015-07-04"
 product_files:
 - file: /path/to/some/product/file
   upload_as: some human-readable name
@@ -213,7 +219,9 @@ later release, as it replaces the various files like `version_file`.
 * `release_type`: *Required.* See the
 [official docs](https://network.pivotal.io/docs/api) for the supported types.
 
-* `eula_slug`: *Required.* The EULA slug e.g. `pivotal_software_eula`.
+* `eula_slug`: *Required.* The EULA slug e.g. `pivotal_software_eula`. See the
+[official docs](https://network.pivotal.io/docs/api#public/docs/api/v2/eulas.md)
+for the supported values.
 
 * `release_date`: *Optional.* Release date in the form of: `YYYY-MM-DD`.
   If it is not present, the release date will be set to the current date.
@@ -229,7 +237,7 @@ later release, as it replaces the various files like `version_file`.
 * `release_notes_url`: *Optional.* The release notes URL
   e.g. `http://url.to/release/notes`.
 
-* `availability`: *Optional.* Valid availibilites contents are:
+* `availability`: *Optional.* Supported values are:
   - `Admins Only`
   - `All Users`
   - `Selected User Groups Only`
@@ -237,6 +245,18 @@ later release, as it replaces the various files like `version_file`.
 * `user_group_ids`: *Optional.* Comma-separated list of user
   group IDs. Each user group in the list will be added to the release.
   Will be used only if the availability is set to `Selected User Groups Only`.
+
+* `controlled`: *Optional.* Boolean, defaults to `false`.
+
+* `eccn`: *Optional.* String.
+
+* `license_exception:`: *Optional.* String.
+
+* `end_of_support_date`: *Optional.* Date in the form of: `YYYY-MM-DD`.
+
+* `end_of_guidance_date`: *Optional.* Date in the form of: `YYYY-MM-DD`.
+
+* `end_of_availability_date`: *Optional.* Date in the form of: `YYYY-MM-DD`.
 
 The top-level `product_files` key is optional.
 If provided, it is permitted to be an empty array.

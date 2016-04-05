@@ -8,14 +8,20 @@ type Metadata struct {
 }
 
 type Release struct {
-	Version         string   `yaml:"version"`
-	ReleaseType     string   `yaml:"release_type"`
-	EulaSlug        string   `yaml:"eula_slug"`
-	ReleaseDate     string   `yaml:"release_date"`
-	Description     string   `yaml:"description"`
-	ReleaseNotesURL string   `yaml:"release_notes_url"`
-	Availability    string   `yaml:"availability"`
-	UserGroupIDs    []string `yaml:"user_group_ids"`
+	Version               string   `yaml:"version"`
+	ReleaseType           string   `yaml:"release_type"`
+	EulaSlug              string   `yaml:"eula_slug"`
+	ReleaseDate           string   `yaml:"release_date"`
+	Description           string   `yaml:"description"`
+	ReleaseNotesURL       string   `yaml:"release_notes_url"`
+	Availability          string   `yaml:"availability"`
+	UserGroupIDs          []string `yaml:"user_group_ids"`
+	Controlled            bool     `yaml:"controlled"`
+	ECCN                  string   `yaml:"eccn"`
+	LicenseException      string   `yaml:"license_exception"`
+	EndOfSupportDate      string   `yaml:"end_of_support_date"`
+	EndOfGuidanceDate     string   `yaml:"end_of_guidance_date"`
+	EndOfAvailabilityDate string   `yaml:"end_of_availability_date"`
 }
 
 type ProductFile struct {
