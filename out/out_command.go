@@ -146,6 +146,29 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		c.logger,
 	)
 
+	c.logger.Debugf("Getting all valid release types\n")
+
+	releaseTypes, err := pivnetClient.ReleaseTypes()
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+
+	releaseTypesPrintable := fmt.Sprintf(
+		"['%s']",
+		strings.Join(releaseTypes, "', '"),
+	)
+
+	c.logger.Debugf("All release types: %s\n", releaseTypesPrintable)
+
+	releaseType := fetchFromMetadataOrFile("ReleaseType", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseTypeFile)
+	if !containsString(releaseTypes, releaseType) {
+		return concourse.OutResponse{}, fmt.Errorf(
+			"provided release_type: '%s' must be one of: %s",
+			releaseType,
+			releaseTypesPrintable,
+		)
+	}
+
 	productVersion := fetchFromMetadataOrFile("Version", m, skipFileCheck, c.sourcesDir, input.Params.VersionFile)
 
 	releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
@@ -166,7 +189,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 	config := pivnet.CreateReleaseConfig{
 		ProductSlug:     productSlug,
-		ReleaseType:     fetchFromMetadataOrFile("ReleaseType", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseTypeFile),
+		ReleaseType:     releaseType,
 		EulaSlug:        fetchFromMetadataOrFile("EulaSlug", m, skipFileCheck, c.sourcesDir, input.Params.EulaSlugFile),
 		ProductVersion:  productVersion,
 		Description:     fetchFromMetadataOrFile("Description", m, skipFileCheck, c.sourcesDir, input.Params.DescriptionFile),
@@ -442,4 +465,13 @@ func warnIfDeprecatedFilesFound(
 			screenWriter.Printf("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m", key)
 		}
 	}
+}
+
+func containsString(strings []string, str string) bool {
+	for _, s := range strings {
+		if str == s {
+			return true
+		}
+	}
+	return false
 }

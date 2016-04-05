@@ -59,6 +59,13 @@ var _ = Describe("Out", func() {
 		productID            int
 		releaseID            int
 
+		releaseType string
+
+		releaseTypes []string
+
+		releaseTypesResponse       pivnet.ReleaseTypesResponse
+		releaseTypesResponseStatus int
+
 		existingETags               []http.Header
 		existingETagsResponseStatus int
 
@@ -76,11 +83,22 @@ var _ = Describe("Out", func() {
 	)
 
 	BeforeEach(func() {
-		metadataFile = ""
+		metadataFile = "metadata"
 		metadataFilePath = ""
 		metadataFileContents = ""
 
 		server = ghttp.NewServer()
+
+		releaseTypes = []string{
+			"foo release",
+			"bar",
+			"third release type",
+		}
+
+		releaseTypesResponse = pivnet.ReleaseTypesResponse{
+			ReleaseTypes: releaseTypes,
+		}
+		releaseTypesResponseStatus = http.StatusOK
 
 		version = "2.1.3"
 		etag = "etag-0"
@@ -171,9 +189,10 @@ echo "$@"`
 		err = ioutil.WriteFile(versionFilePath, []byte(versionWithETag), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
+		releaseType = releaseTypes[0]
 		releaseTypeFile = "release_type"
 		releaseTypeFilePath := filepath.Join(sourcesDir, releaseTypeFile)
-		err = ioutil.WriteFile(releaseTypeFilePath, []byte("some_release"), os.ModePerm)
+		err = ioutil.WriteFile(releaseTypeFilePath, []byte(releaseType), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
 		eulaSlugFile = "eula_slug"
@@ -205,6 +224,19 @@ echo "$@"`
 	})
 
 	JustBeforeEach(func() {
+		metadataFilePath = filepath.Join(sourcesDir, metadataFile)
+		err := ioutil.WriteFile(metadataFilePath, []byte(metadataFileContents), os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest(
+					"GET",
+					fmt.Sprintf("%s/releases/release_types", apiPrefix)),
+				ghttp.RespondWithJSONEncoded(releaseTypesResponseStatus, releaseTypesResponse),
+			),
+		)
+
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
 				ghttp.VerifyRequest(
@@ -455,12 +487,14 @@ exit 1`
 
 		Context("when it has a release key", func() {
 			BeforeEach(func() {
-				metadataFileContents =
+				metadataFileContents = fmt.Sprintf(
 					`---
            release:
              eula_slug: some-eula-metadata
              version: "1.1.2#etag-0"
-             release_type: All In One`
+             release_type: %s`,
+					releaseTypes[0],
+				)
 			})
 
 			It("overrides any other files specifying metadata", func() {
@@ -513,13 +547,14 @@ exit 1`
            release:
             eula_slug: some-eula-metadata
             version: "1.1.2#etag-0"
-            release_type: All In One
+            release_type: %s
            product_files:
            - file: %s
              description: |
                some
                multi-line
                description`,
+					releaseTypes[0],
 					productFileRelativePath0,
 				)
 
@@ -539,9 +574,10 @@ exit 1`
           release:
            eula_slug: some-eula-metadata
            version: "1.1.2#etag-0"
-           release_type: All In One
+           release_type: %s
           product_files:
           - file: %s`,
+					releaseTypes[0],
 					productFileRelativePath0,
 				)
 			})
@@ -554,12 +590,12 @@ exit 1`
 
 		Context("when metadata file contains a file that does not correspond to any glob-matched file", func() {
 			BeforeEach(func() {
-				metadataFileContents =
+				metadataFileContents = fmt.Sprintf(
 					`---
            release:
             eula_slug: some-eula-metadata
             version: "1.1.2#etag-0"
-            release_type: All In One
+            release_type: %s
            product_files:
            - file: not-a-real-file
              description: |
@@ -570,7 +606,9 @@ exit 1`
              description: |
                some
                other
-               description`
+               description`,
+					releaseTypes[0],
+				)
 			})
 
 			It("returns an error", func() {
@@ -606,10 +644,11 @@ exit 1`
           release:
            eula_slug: some-eula-metadata
            version: "1.1.2#etag-0"
-           release_type: All In One
+           release_type: %s
           product_files:
           - file: %s
             upload_as: some_remote_file`,
+					releaseTypes[0],
 					productFileRelativePath0,
 				)
 
@@ -634,6 +673,37 @@ exit 1`
 
 			Expect(err.Error()).To(MatchRegexp(".*no matches.*}{"))
 			Expect(server.ReceivedRequests()).To(BeEmpty())
+		})
+	})
+
+	Context("when there is an error getting release types", func() {
+		BeforeEach(func() {
+			releaseTypesResponseStatus = http.StatusNotFound
+		})
+
+		It("returns an error", func() {
+			_, err := outCommand.Run(outRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(ContainSubstring("404"))
+		})
+	})
+
+	Context("when the release type is invalid", func() {
+		BeforeEach(func() {
+			// Use metadata rather than release type file
+			releaseTypeFile = ""
+			releaseType = "not a valid release type"
+		})
+
+		It("returns an error", func() {
+			_, err := outCommand.Run(outRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*release_type.*one of"))
+			Expect(err.Error()).To(ContainSubstring(releaseTypes[0]))
+			Expect(err.Error()).To(ContainSubstring(releaseTypes[1]))
+			Expect(err.Error()).To(ContainSubstring(releaseTypes[2]))
 		})
 	})
 })
