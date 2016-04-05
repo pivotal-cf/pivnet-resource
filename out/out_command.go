@@ -37,6 +37,7 @@ type OutCommand struct {
 	sourcesDir      string
 	logFilePath     string
 	s3OutBinaryName string
+	screenWriter    *log.Logger
 }
 
 type OutCommandConfig struct {
@@ -46,6 +47,7 @@ type OutCommandConfig struct {
 	SourcesDir      string
 	LogFilePath     string
 	S3OutBinaryName string
+	ScreenWriter    *log.Logger
 }
 
 func NewOutCommand(config OutCommandConfig) *OutCommand {
@@ -56,6 +58,7 @@ func NewOutCommand(config OutCommandConfig) *OutCommand {
 		sourcesDir:      config.SourcesDir,
 		logFilePath:     config.LogFilePath,
 		s3OutBinaryName: config.S3OutBinaryName,
+		screenWriter:    config.ScreenWriter,
 	}
 }
 
@@ -92,12 +95,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		c.logger.Debugf("metadata release parsed; contents: %+v\n", *m.Release)
 	}
 
-	if !skipFileCheck {
-		c.logger.Debugf("\x1b[31mDEPRECATION WARNING: files containing metadata, like %q, will be removed in a future release\x1b[0m", "versionFile")
-
-		screenWriter := log.New(os.Stderr, "", 0)
-		screenWriter.Printf("\x1b[31mDEPRECATION WARNING: files containing metadata, like %q, will be removed in a future release\x1b[0m", "versionFile")
-	}
+	warnIfDeprecatedFilesFound(input.Params, c.logger, c.screenWriter)
 
 	err := validator.NewOutValidator(input, skipFileCheck).Validate()
 	if err != nil {
@@ -396,4 +394,32 @@ func contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+func warnIfDeprecatedFilesFound(
+	params concourse.OutParams,
+	logger logger.Logger,
+	screenWriter *log.Logger,
+) {
+	files := map[string]string{
+		"version_file":        params.VersionFile,
+		"eula_slug_file":      params.EulaSlugFile,
+		"release_date_file":   params.ReleaseDateFile,
+		"description_file":    params.DescriptionFile,
+		"release_type_file":   params.ReleaseTypeFile,
+		"user_group_ids_file": params.UserGroupIDsFile,
+		"availability_file":   params.AvailabilityFile,
+		"release_notes_file":  params.ReleaseNotesURLFile,
+	}
+	for key, value := range files {
+		if value == "" {
+			continue
+		}
+
+		logger.Debugf("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m", key)
+
+		if screenWriter != nil {
+			screenWriter.Printf("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m", key)
+		}
+	}
 }

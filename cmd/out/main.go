@@ -67,6 +67,7 @@ func main() {
 		SourcesDir:      sourcesDir,
 		LogFilePath:     logFile.Name(),
 		S3OutBinaryName: s3OutBinaryName,
+		ScreenWriter:    log.New(os.Stderr, "", 0),
 	})
 
 	response, err := outCmd.Run(input)
