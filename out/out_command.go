@@ -165,19 +165,21 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 	}
 
 	config := pivnet.CreateReleaseConfig{
-		ProductSlug:           productSlug,
-		ReleaseType:           fetchFromMetadataOrFile("ReleaseType", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseTypeFile),
-		EulaSlug:              fetchFromMetadataOrFile("EulaSlug", m, skipFileCheck, c.sourcesDir, input.Params.EulaSlugFile),
-		ProductVersion:        productVersion,
-		Description:           fetchFromMetadataOrFile("Description", m, skipFileCheck, c.sourcesDir, input.Params.DescriptionFile),
-		ReleaseNotesURL:       fetchFromMetadataOrFile("ReleaseNotesURL", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseNotesURLFile),
-		ReleaseDate:           fetchFromMetadataOrFile("ReleaseDate", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseDateFile),
-		Controlled:            m.Release.Controlled,
-		ECCN:                  m.Release.ECCN,
-		LicenseException:      m.Release.LicenseException,
-		EndOfSupportDate:      m.Release.EndOfSupportDate,
-		EndOfGuidanceDate:     m.Release.EndOfGuidanceDate,
-		EndOfAvailabilityDate: m.Release.EndOfAvailabilityDate,
+		ProductSlug:     productSlug,
+		ReleaseType:     fetchFromMetadataOrFile("ReleaseType", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseTypeFile),
+		EulaSlug:        fetchFromMetadataOrFile("EulaSlug", m, skipFileCheck, c.sourcesDir, input.Params.EulaSlugFile),
+		ProductVersion:  productVersion,
+		Description:     fetchFromMetadataOrFile("Description", m, skipFileCheck, c.sourcesDir, input.Params.DescriptionFile),
+		ReleaseNotesURL: fetchFromMetadataOrFile("ReleaseNotesURL", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseNotesURLFile),
+		ReleaseDate:     fetchFromMetadataOrFile("ReleaseDate", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseDateFile),
+	}
+	if m.Release != nil {
+		config.Controlled = m.Release.Controlled
+		config.ECCN = m.Release.ECCN
+		config.LicenseException = m.Release.LicenseException
+		config.EndOfSupportDate = m.Release.EndOfSupportDate
+		config.EndOfGuidanceDate = m.Release.EndOfGuidanceDate
+		config.EndOfAvailabilityDate = m.Release.EndOfAvailabilityDate
 	}
 
 	c.logger.Debugf("config used to create pivnet release: %+v\n", config)
