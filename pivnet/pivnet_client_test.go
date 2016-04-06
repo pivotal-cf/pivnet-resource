@@ -48,7 +48,6 @@ var _ = Describe("PivnetClient", func() {
 		userAgent = "pivnet-resource/0.1.0 (some-url)"
 
 		fakeLogger = logger.NewLogger(GinkgoWriter)
-		// fakeLogger = &logger_fakes.FakeLogger{}
 		newClientConfig = pivnet.NewClientConfig{
 			Endpoint:  server.URL(),
 			Token:     token,
@@ -170,50 +169,6 @@ var _ = Describe("PivnetClient", func() {
 			_, err := client.ReleasesForProductSlug("my-product-id")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("invalid character"))
-		})
-	})
-
-	Describe("Accepting a EULA", func() {
-		var (
-			releaseID         int
-			productSlug       string
-			EULAAcceptanceURL string
-		)
-
-		BeforeEach(func() {
-			productSlug = "banana-slug"
-			releaseID = 42
-			EULAAcceptanceURL = fmt.Sprintf(apiPrefix+"/products/%s/releases/%d/eula_acceptance", productSlug, releaseID)
-		})
-
-		It("accepts the EULA for a given release and product ID", func() {
-			response := fmt.Sprintf(`{"accepted_at": "2016-01-11","_links":{}}`)
-
-			server.AppendHandlers(
-				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("POST", EULAAcceptanceURL),
-					ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
-					ghttp.VerifyJSON(`{}`),
-					ghttp.RespondWith(http.StatusOK, response),
-				),
-			)
-
-			Expect(client.AcceptEULA(productSlug, releaseID)).To(Succeed())
-		})
-
-		Context("when any other non-200 status code comes back", func() {
-			It("returns an error", func() {
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", EULAAcceptanceURL),
-						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
-						ghttp.VerifyJSON(`{}`),
-						ghttp.RespondWith(http.StatusTeapot, nil),
-					),
-				)
-
-				Expect(client.AcceptEULA(productSlug, releaseID)).To(MatchError("Pivnet returned status code: 418 for the request - expected 200"))
-			})
 		})
 	})
 

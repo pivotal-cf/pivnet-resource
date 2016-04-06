@@ -11,14 +11,14 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
-	uploader_fakes "github.com/pivotal-cf-experimental/pivnet-resource/uploader/fakes"
+	"github.com/pivotal-cf-experimental/pivnet-resource/uploader/uploaderfakes"
 )
 
 var _ = Describe("Uploader", func() {
 	Describe("UploadFile", func() {
 		var (
 			l              logger.Logger
-			fakeTransport  *uploader_fakes.FakeTransport
+			fakeTransport  *uploaderfakes.FakeTransport
 			uploaderConfig uploader.Config
 			uploaderClient uploader.Client
 
@@ -30,7 +30,7 @@ var _ = Describe("Uploader", func() {
 
 		BeforeEach(func() {
 			l = logger.NewLogger(GinkgoWriter)
-			fakeTransport = &uploader_fakes.FakeTransport{}
+			fakeTransport = &uploaderfakes.FakeTransport{}
 
 			var err error
 			tempDir, err = ioutil.TempDir("", "pivnet-resource")
