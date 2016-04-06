@@ -146,6 +146,34 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		c.logger,
 	)
 
+	c.logger.Debugf("Getting all valid eulas\n")
+
+	eulas, err := pivnetClient.EULAs()
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+
+	eulaSlugs := make([]string, len(eulas))
+	for i, e := range eulas {
+		eulaSlugs[i] = e.Slug
+	}
+
+	eulaSlugsPrintable := fmt.Sprintf(
+		"['%s']",
+		strings.Join(eulaSlugs, "', '"),
+	)
+
+	c.logger.Debugf("All valid eula slugs: %s\n", eulaSlugsPrintable)
+
+	eulaSlug := fetchFromMetadataOrFile("EULASlug", m, skipFileCheck, c.sourcesDir, input.Params.EULASlugFile)
+	if !containsString(eulaSlugs, eulaSlug) {
+		return concourse.OutResponse{}, fmt.Errorf(
+			"provided eula_slug: '%s' must be one of: %s",
+			eulaSlug,
+			eulaSlugsPrintable,
+		)
+	}
+
 	c.logger.Debugf("Getting all valid release types\n")
 
 	releaseTypes, err := pivnetClient.ReleaseTypes()

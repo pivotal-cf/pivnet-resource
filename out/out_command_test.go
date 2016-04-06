@@ -60,11 +60,16 @@ var _ = Describe("Out", func() {
 		releaseID            int
 
 		releaseType string
+		eulaSlug    string
 
 		releaseTypes []string
+		eulas        []pivnet.EULA
 
 		releaseTypesResponse       pivnet.ReleaseTypesResponse
 		releaseTypesResponseStatus int
+
+		eulasResponse       pivnet.EULAsResponse
+		eulasResponseStatus int
 
 		existingETags               []http.Header
 		existingETagsResponseStatus int
@@ -99,6 +104,22 @@ var _ = Describe("Out", func() {
 			ReleaseTypes: releaseTypes,
 		}
 		releaseTypesResponseStatus = http.StatusOK
+
+		eulas = []pivnet.EULA{
+			{
+				ID:   1,
+				Slug: "eulaSlug1",
+			},
+			{
+				ID:   2,
+				Slug: "eulaSlug2",
+			},
+		}
+
+		eulasResponse = pivnet.EULAsResponse{
+			EULAs: eulas,
+		}
+		eulasResponseStatus = http.StatusOK
 
 		version = "2.1.3"
 		etag = "etag-0"
@@ -195,9 +216,10 @@ echo "$@"`
 		err = ioutil.WriteFile(releaseTypeFilePath, []byte(releaseType), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
+		eulaSlug = eulas[0].Slug
 		eulaSlugFile = "eula_slug"
 		eulaSlugFilePath := filepath.Join(sourcesDir, eulaSlugFile)
-		err = ioutil.WriteFile(eulaSlugFilePath, []byte("some_eula"), os.ModePerm)
+		err = ioutil.WriteFile(eulaSlugFilePath, []byte(eulaSlug), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
 		uploadFilesSourceDir = filepath.Join(sourcesDir, filesToUploadDirName)
@@ -227,6 +249,15 @@ echo "$@"`
 		metadataFilePath = filepath.Join(sourcesDir, metadataFile)
 		err := ioutil.WriteFile(metadataFilePath, []byte(metadataFileContents), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
+
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest(
+					"GET",
+					fmt.Sprintf("%s/eulas", apiPrefix)),
+				ghttp.RespondWithJSONEncoded(eulasResponseStatus, eulasResponse),
+			),
+		)
 
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
@@ -490,9 +521,10 @@ exit 1`
 				metadataFileContents = fmt.Sprintf(
 					`---
            release:
-             eula_slug: some-eula-metadata
+             eula_slug: %s
              version: "1.1.2#etag-0"
              release_type: %s`,
+					eulas[0].Slug,
 					releaseTypes[0],
 				)
 			})
@@ -545,7 +577,7 @@ exit 1`
 				metadataFileContents = fmt.Sprintf(
 					`---
            release:
-            eula_slug: some-eula-metadata
+            eula_slug: %s
             version: "1.1.2#etag-0"
             release_type: %s
            product_files:
@@ -554,6 +586,7 @@ exit 1`
                some
                multi-line
                description`,
+					eulas[0].Slug,
 					releaseTypes[0],
 					productFileRelativePath0,
 				)
@@ -572,11 +605,12 @@ exit 1`
 				metadataFileContents = fmt.Sprintf(
 					`---
           release:
-           eula_slug: some-eula-metadata
+           eula_slug: %s
            version: "1.1.2#etag-0"
            release_type: %s
           product_files:
           - file: %s`,
+					eulas[0].Slug,
 					releaseTypes[0],
 					productFileRelativePath0,
 				)
@@ -593,7 +627,7 @@ exit 1`
 				metadataFileContents = fmt.Sprintf(
 					`---
            release:
-            eula_slug: some-eula-metadata
+            eula_slug: %s
             version: "1.1.2#etag-0"
             release_type: %s
            product_files:
@@ -607,6 +641,7 @@ exit 1`
                some
                other
                description`,
+					eulas[0].Slug,
 					releaseTypes[0],
 				)
 			})
@@ -642,12 +677,13 @@ exit 1`
 				metadataFileContents = fmt.Sprintf(
 					`---
           release:
-           eula_slug: some-eula-metadata
+           eula_slug: %s
            version: "1.1.2#etag-0"
            release_type: %s
           product_files:
           - file: %s
             upload_as: some_remote_file`,
+					eulas[0].Slug,
 					releaseTypes[0],
 					productFileRelativePath0,
 				)
@@ -704,6 +740,36 @@ exit 1`
 			Expect(err.Error()).To(ContainSubstring(releaseTypes[0]))
 			Expect(err.Error()).To(ContainSubstring(releaseTypes[1]))
 			Expect(err.Error()).To(ContainSubstring(releaseTypes[2]))
+		})
+	})
+
+	Context("when there is an error getting eulas", func() {
+		BeforeEach(func() {
+			eulasResponseStatus = http.StatusNotFound
+		})
+
+		It("returns an error", func() {
+			_, err := outCommand.Run(outRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(ContainSubstring("404"))
+		})
+	})
+
+	Context("when the release type is invalid", func() {
+		BeforeEach(func() {
+			// Use metadata rather than release type file
+			eulaSlugFile = ""
+			eulaSlug = "not a valid eula"
+		})
+
+		It("returns an error", func() {
+			_, err := outCommand.Run(outRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(".*eula.*one of"))
+			Expect(err.Error()).To(ContainSubstring(eulas[0].Slug))
+			Expect(err.Error()).To(ContainSubstring(eulas[1].Slug))
 		})
 	})
 })
