@@ -130,13 +130,14 @@ already been accepted will be automatically accepted at this point.**
 #### Parameters
 
 * `globs`: *Optional.* Array of globs matching files to download.
-  If multiple files are matched, they are all downloaded. If one or more globs
-  fails to match any files the release download fails with error.
-  The globs match on the actual *file names*, not the display names in Pivotal
+  If multiple files are matched, they are all downloaded.
+  - The globs match on the actual *file names*, not the display names in Pivotal
   Network. This is to provide a more consistent experience between uploading and
   downloading files.
-  If `globs` is not provided, no files will be downloaded.
-  Files are downloaded to the working directory (e.g. `/tmp/build/get`) and the
+  - If one or more globs fails to match any files the release download fails
+  with error.
+  - If `globs` is not provided, no files will be downloaded.
+  - Files are downloaded to the working directory (e.g. `/tmp/build/get`) and the
   file names will be the same as they are on Pivotal Network - e.g. a file with
   name `some-file.txt` will be downloaded to `/tmp/build/get/some-file.txt`.
 
