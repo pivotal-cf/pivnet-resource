@@ -10,7 +10,7 @@ type Metadata struct {
 type Release struct {
 	Version               string   `yaml:"version"`
 	ReleaseType           string   `yaml:"release_type"`
-	EulaSlug              string   `yaml:"eula_slug"`
+	EULASlug              string   `yaml:"eula_slug"`
 	ReleaseDate           string   `yaml:"release_date"`
 	Description           string   `yaml:"description"`
 	ReleaseNotesURL       string   `yaml:"release_notes_url"`
@@ -46,7 +46,7 @@ func (m Metadata) Validate() error {
 			return fmt.Errorf("missing required value %q", "release_type")
 		}
 
-		if m.Release.EulaSlug == "" {
+		if m.Release.EULASlug == "" {
 			return fmt.Errorf("missing required value %q", "eula_slug")
 		}
 	}

@@ -56,7 +56,7 @@ var _ = Describe("Out", func() {
 		productMetadata = metadata.Metadata{
 			Release: &metadata.Release{
 				ReleaseType:     releaseType,
-				EulaSlug:        eulaSlug,
+				EULASlug:        eulaSlug,
 				ReleaseDate:     releaseDate,
 				Description:     description,
 				ReleaseNotesURL: releaseNotesURL,
@@ -166,7 +166,7 @@ var _ = Describe("Out", func() {
 
 			Expect(release.ReleaseType).To(Equal(releaseType))
 			Expect(release.ReleaseDate).To(Equal(releaseDate))
-			Expect(release.Eula.Slug).To(Equal(eulaSlug))
+			Expect(release.EULA.Slug).To(Equal(eulaSlug))
 			Expect(release.Description).To(Equal(description))
 			Expect(release.ReleaseNotesURL).To(Equal(releaseNotesURL))
 

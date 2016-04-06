@@ -51,7 +51,7 @@ var _ = Describe("Out Validator", func() {
 				FileGlob:        fileGlob,
 				FilepathPrefix:  s3FilepathPrefix,
 				ReleaseTypeFile: releaseTypeFile,
-				EulaSlugFile:    eulaSlugFile,
+				EULASlugFile:    eulaSlugFile,
 			},
 		}
 

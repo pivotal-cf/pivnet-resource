@@ -18,7 +18,7 @@ type CreateReleaseConfig struct {
 	ProductVersion        string
 	ReleaseType           string
 	ReleaseDate           string
-	EulaSlug              string
+	EULASlug              string
 	Description           string
 	ReleaseNotesURL       string
 	Controlled            bool
@@ -75,8 +75,8 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 	body := createReleaseBody{
 		Release: Release{
 			Availability: "Admins Only",
-			Eula: &Eula{
-				Slug: config.EulaSlug,
+			EULA: &EULA{
+				Slug: config.EULASlug,
 			},
 			OSSCompliant:          "confirm",
 			ReleaseDate:           config.ReleaseDate,

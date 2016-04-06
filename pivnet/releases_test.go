@@ -137,7 +137,7 @@ var _ = Describe("PivnetClient - product files", func() {
 			productVersion = "1.2.3.4"
 
 			createReleaseConfig = pivnet.CreateReleaseConfig{
-				EulaSlug:       "some_eula",
+				EULASlug:       "some_eula",
 				ReleaseType:    "Not a real release",
 				ProductVersion: productVersion,
 				ProductSlug:    productSlug,
@@ -165,8 +165,8 @@ var _ = Describe("PivnetClient - product files", func() {
 						OSSCompliant: "confirm",
 						ReleaseDate:  expectedReleaseDate,
 						ReleaseType:  createReleaseConfig.ReleaseType,
-						Eula: &pivnet.Eula{
-							Slug: createReleaseConfig.EulaSlug,
+						EULA: &pivnet.EULA{
+							Slug: createReleaseConfig.EULASlug,
 						},
 						Version: createReleaseConfig.ProductVersion,
 					},
@@ -342,7 +342,7 @@ var _ = Describe("PivnetClient - product files", func() {
 			release := pivnet.Release{
 				ID:      42,
 				Version: "1.2.3.4",
-				Eula: &pivnet.Eula{
+				EULA: &pivnet.EULA{
 					Slug: "some-eula",
 					ID:   15,
 				},

@@ -53,7 +53,7 @@ var _ = Describe("Lifecycle test", func() {
 		productMetadata := metadata.Metadata{
 			Release: &metadata.Release{
 				ReleaseType:     releaseType,
-				EulaSlug:        eulaSlug,
+				EULASlug:        eulaSlug,
 				ReleaseDate:     releaseDate,
 				Description:     description,
 				ReleaseNotesURL: releaseNotesURL,

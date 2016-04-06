@@ -54,7 +54,7 @@ type OutParams struct {
 	VersionFile         string `json:"version_file"`
 	ReleaseTypeFile     string `json:"release_type_file"`
 	ReleaseDateFile     string `json:"release_date_file"`
-	EulaSlugFile        string `json:"eula_slug_file"`
+	EULASlugFile        string `json:"eula_slug_file"`
 	DescriptionFile     string `json:"description_file"`
 	ReleaseNotesURLFile string `json:"release_notes_url_file"`
 	AvailabilityFile    string `json:"availability_file"`

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	apiPrefix   = "/api/v2"
+	apiPrefix = "/api/v2"
 )
 
 func TestOut(t *testing.T) {

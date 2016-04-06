@@ -129,7 +129,7 @@ var _ = Describe("Out", func() {
 			Release: pivnet.Release{
 				ID:      releaseID,
 				Version: version,
-				Eula: &pivnet.Eula{
+				EULA: &pivnet.EULA{
 					Slug: "some-eula",
 				},
 			},
@@ -347,7 +347,7 @@ echo "$@"`
 				FileGlob:        fileGlob,
 				VersionFile:     versionFile,
 				ReleaseTypeFile: releaseTypeFile,
-				EulaSlugFile:    eulaSlugFile,
+				EULASlugFile:    eulaSlugFile,
 				FilepathPrefix:  s3FilepathPrefix,
 				MetadataFile:    metadataFile,
 			},

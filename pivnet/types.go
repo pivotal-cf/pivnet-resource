@@ -15,7 +15,7 @@ type ProductFileResponse struct {
 type Release struct {
 	ID                    int    `json:"id,omitempty"`
 	Availability          string `json:"availability,omitempty"`
-	Eula                  *Eula  `json:"eula,omitempty"`
+	EULA                  *EULA  `json:"eula,omitempty"`
 	OSSCompliant          string `json:"oss_compliant,omitempty"`
 	ReleaseDate           string `json:"release_date,omitempty"`
 	ReleaseType           string `json:"release_type,omitempty"`
@@ -31,14 +31,20 @@ type Release struct {
 	EndOfAvailabilityDate string `json:"end_of_availability_date,omitempty"`
 }
 
-type Eula struct {
+type EULA struct {
 	Slug    string `json:"slug,omitempty"`
 	ID      int    `json:"id,omitempty"`
-	Version string `json:"version,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Content string `json:"content,omitempty"`
 	Links   *Links `json:"_links,omitempty"`
 }
 
-type EulaResponse struct {
+type EULAsResponse struct {
+	EULAs []EULA `json:"eulas,omitempty"`
+	Links *Links `json:"_links,omitempty"`
+}
+
+type EULAAcceptanceResponse struct {
 	AcceptedAt string `json:"accepted_at,omitempty"`
 	Links      *Links `json:"_links,omitempty"`
 }
@@ -59,7 +65,7 @@ type ProductFile struct {
 }
 
 type Links struct {
-	Eula           map[string]string `json:"eula,omitempty"`
+	EULA           map[string]string `json:"eula,omitempty"`
 	Download       map[string]string `json:"download,omitempty"`
 	ProductFiles   map[string]string `json:"product_files,omitempty"`
 	EULAAcceptance map[string]string `json:"eula_acceptance,omitempty"`

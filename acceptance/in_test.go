@@ -40,7 +40,7 @@ var _ = Describe("In", func() {
 		release, err := pivnetClient.CreateRelease(pivnet.CreateReleaseConfig{
 			ProductSlug:    productSlug,
 			ProductVersion: productVersion,
-			EulaSlug:       eulaSlug,
+			EULASlug:       eulaSlug,
 			ReleaseType:    releaseType,
 		})
 		Expect(err).NotTo(HaveOccurred())

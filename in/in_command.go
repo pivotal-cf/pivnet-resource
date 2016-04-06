@@ -226,13 +226,13 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		{Name: "end_of_guidance_date", Value: release.EndOfGuidanceDate},
 		{Name: "end_of_availability_date", Value: release.EndOfAvailabilityDate},
 	}
-	if release.Eula != nil {
-		metadata = append(metadata, concourse.Metadata{Name: "eula_slug", Value: release.Eula.Slug})
+	if release.EULA != nil {
+		metadata = append(metadata, concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug})
 	}
 
-	if release.Eula != nil {
+	if release.EULA != nil {
 		metadata = append(metadata,
-			concourse.Metadata{Name: "eula_slug", Value: release.Eula.Slug},
+			concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug},
 		)
 	}
 

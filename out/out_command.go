@@ -190,7 +190,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 	config := pivnet.CreateReleaseConfig{
 		ProductSlug:     productSlug,
 		ReleaseType:     releaseType,
-		EulaSlug:        fetchFromMetadataOrFile("EulaSlug", m, skipFileCheck, c.sourcesDir, input.Params.EulaSlugFile),
+		EULASlug:        fetchFromMetadataOrFile("EULASlug", m, skipFileCheck, c.sourcesDir, input.Params.EULASlugFile),
 		ProductVersion:  productVersion,
 		Description:     fetchFromMetadataOrFile("Description", m, skipFileCheck, c.sourcesDir, input.Params.DescriptionFile),
 		ReleaseNotesURL: fetchFromMetadataOrFile("ReleaseNotesURL", m, skipFileCheck, c.sourcesDir, input.Params.ReleaseNotesURLFile),
@@ -375,7 +375,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		{Name: "release_date", Value: release.ReleaseDate},
 		{Name: "description", Value: release.Description},
 		{Name: "release_notes_url", Value: release.ReleaseNotesURL},
-		{Name: "eula_slug", Value: release.Eula.Slug},
+		{Name: "eula_slug", Value: release.EULA.Slug},
 		{Name: "availability", Value: release.Availability},
 		{Name: "controlled", Value: fmt.Sprintf("%t", release.Controlled)},
 		{Name: "eccn", Value: release.ECCN},
@@ -384,8 +384,8 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		{Name: "end_of_guidance_date", Value: release.EndOfGuidanceDate},
 		{Name: "end_of_availability_date", Value: release.EndOfAvailabilityDate},
 	}
-	if release.Eula != nil {
-		metadata = append(metadata, concourse.Metadata{Name: "eula_slug", Value: release.Eula.Slug})
+	if release.EULA != nil {
+		metadata = append(metadata, concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug})
 	}
 
 	out := concourse.OutResponse{
@@ -446,7 +446,7 @@ func warnIfDeprecatedFilesFound(
 ) {
 	files := map[string]string{
 		"version_file":        params.VersionFile,
-		"eula_slug_file":      params.EulaSlugFile,
+		"eula_slug_file":      params.EULASlugFile,
 		"release_date_file":   params.ReleaseDateFile,
 		"description_file":    params.DescriptionFile,
 		"release_type_file":   params.ReleaseTypeFile,

@@ -17,7 +17,7 @@ var _ = Describe("Metadata", func() {
 				Release: &metadata.Release{
 					Version:     "1.0.0",
 					ReleaseType: "All In One",
-					EulaSlug:    "some-other-eula",
+					EULASlug:    "some-other-eula",
 				},
 				ProductFiles: []metadata.ProductFile{
 					{File: "hello.txt", Description: "available"},
@@ -31,7 +31,7 @@ var _ = Describe("Metadata", func() {
 		})
 
 		It("returns an error when eula slug is missing", func() {
-			data.Release.EulaSlug = ""
+			data.Release.EULASlug = ""
 			Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "eula_slug")))
 		})
 

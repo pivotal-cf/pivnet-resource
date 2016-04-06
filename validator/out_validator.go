@@ -36,7 +36,7 @@ func (v outValidator) Validate() error {
 			return fmt.Errorf("%s must be provided", "release_type_file")
 		}
 
-		if v.input.Params.EulaSlugFile == "" {
+		if v.input.Params.EULASlugFile == "" {
 			return fmt.Errorf("%s must be provided", "eula_slug_file")
 		}
 	}
