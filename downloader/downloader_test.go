@@ -138,7 +138,7 @@ var _ = Describe("Downloader", func() {
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/the-first-post", ""),
 						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
-						ghttp.RespondWith(451, nil, nil),
+						ghttp.RespondWith(http.StatusUnavailableForLegalReasons, nil, nil),
 					),
 				)
 

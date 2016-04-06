@@ -25,7 +25,7 @@ func Download(downloadDir string, downloadLinks map[string]string, token string)
 			return nil, err
 		}
 
-		if response.StatusCode == 451 {
+		if response.StatusCode == http.StatusUnavailableForLegalReasons {
 			return nil, errors.New(fmt.Sprintf("the EULA has not been accepted for the file: %s", fileName))
 		}
 

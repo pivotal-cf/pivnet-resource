@@ -136,6 +136,9 @@ already been accepted will be automatically accepted at this point.**
   Network. This is to provide a more consistent experience between uploading and
   downloading files.
   If `globs` is not provided, no files will be downloaded.
+  Files are downloaded to the working directory (e.g. `/tmp/build/get`) and the
+  file names will be the same as they are on Pivotal Network - e.g. a file with
+  name `some-file.txt` will be downloaded to `/tmp/build/get/some-file.txt`.
 
 ### `out`: Upload a product to Pivotal Network.
 
