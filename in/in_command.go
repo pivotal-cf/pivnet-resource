@@ -8,11 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
+	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
@@ -204,15 +207,54 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	versionWithETag, err := versions.CombineVersionAndETag(productVersion, etag)
 	if err != nil {
-		panic(err)
+		// Untested as it is too hard to force versions.CombineVersionAndETag
+		// to return an error
+		return concourse.InResponse{}, err
 	}
 
 	err = ioutil.WriteFile(versionFilepath, []byte(versionWithETag), os.ModePerm)
 	if err != nil {
-		log.Fatalln(err)
+		// Untested as it is too hard to force io.WriteFile to return an error
+		return concourse.InResponse{}, err
 	}
 
-	metadata := []concourse.Metadata{
+	metadata := metadata.Metadata{
+		Release: &metadata.Release{
+			Version:               release.Version,
+			ReleaseType:           release.ReleaseType,
+			ReleaseDate:           release.ReleaseDate,
+			Description:           release.Description,
+			ReleaseNotesURL:       release.ReleaseNotesURL,
+			Availability:          release.Availability,
+			Controlled:            release.Controlled,
+			ECCN:                  release.ECCN,
+			LicenseException:      release.LicenseException,
+			EndOfSupportDate:      release.EndOfSupportDate,
+			EndOfGuidanceDate:     release.EndOfGuidanceDate,
+			EndOfAvailabilityDate: release.EndOfAvailabilityDate,
+		},
+	}
+
+	metadataFilepath := filepath.Join(c.downloadDir, "metadata.yml")
+	c.logger.Debugf(
+		"Writing metadata to file: {metadata: %+v, metadata_filepath: %s}\n",
+		metadata,
+		versionFilepath,
+	)
+
+	yamlMetadata, err := yaml.Marshal(metadata)
+	if err != nil {
+		// Untested as it is too hard to force yaml.Marshal to return an error
+		return concourse.InResponse{}, err
+	}
+
+	err = ioutil.WriteFile(metadataFilepath, yamlMetadata, os.ModePerm)
+	if err != nil {
+		// Untested as it is too hard to force io.WriteFile to return an error
+		return concourse.InResponse{}, err
+	}
+
+	concourseMetadata := []concourse.Metadata{
 		{Name: "version", Value: release.Version},
 		{Name: "release_type", Value: release.ReleaseType},
 		{Name: "release_date", Value: release.ReleaseDate},
@@ -227,11 +269,11 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		{Name: "end_of_availability_date", Value: release.EndOfAvailabilityDate},
 	}
 	if release.EULA != nil {
-		metadata = append(metadata, concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug})
+		concourseMetadata = append(concourseMetadata, concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug})
 	}
 
 	if release.EULA != nil {
-		metadata = append(metadata,
+		concourseMetadata = append(concourseMetadata,
 			concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug},
 		)
 	}
@@ -240,7 +282,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		Version: concourse.Version{
 			ProductVersion: versionWithETag,
 		},
-		Metadata: metadata,
+		Metadata: concourseMetadata,
 	}
 
 	return out, nil

@@ -7,12 +7,15 @@ import (
 	"os"
 	"path/filepath"
 
+	"gopkg.in/yaml.v2"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
@@ -144,7 +147,7 @@ var _ = Describe("In", func() {
 	})
 
 	Context("when the version comes from concourse", func() {
-		It("creates a version file with the downloaded version and etag", func() {
+		It("writes a version file with the downloaded version and etag", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -154,6 +157,22 @@ var _ = Describe("In", func() {
 			Expect(string(versionContents)).To(Equal(versionWithETag))
 		})
 
+		It("writes a metadata file in yaml format", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			versionFilepath := filepath.Join(downloadDir, "metadata.yml")
+			versionContents, err := ioutil.ReadFile(versionFilepath)
+			Expect(err).NotTo(HaveOccurred())
+
+			var writtenMetadata metadata.Metadata
+			err = yaml.Unmarshal(versionContents, &writtenMetadata)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(writtenMetadata.Release).NotTo(BeNil())
+			Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
+		})
+
 		It("does not download any of the files in the specified release", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
@@ -161,9 +180,10 @@ var _ = Describe("In", func() {
 			files, err := ioutil.ReadDir(downloadDir)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			// the version file will always exist
-			Expect(len(files)).To(Equal(1))
-			Expect(files[0].Name()).To(Equal("version"))
+			// the version and metadata files will always exist
+			Expect(len(files)).To(Equal(2))
+			Expect(files[0].Name()).To(Equal("metadata.yml"))
+			Expect(files[1].Name()).To(Equal("version"))
 		})
 	})
 
