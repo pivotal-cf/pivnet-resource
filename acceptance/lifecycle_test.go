@@ -330,11 +330,14 @@ var _ = Describe("Lifecycle test", func() {
 				files, err = ioutil.ReadDir(destDirectory)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				expectedFileCount = 1 // the version file will be present.
+				// one file is version; two files are metadata
+				expectedFileCount = 3
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(files).To(HaveLen(expectedFileCount))
 
-				Expect(files[0].Name()).To(Equal("version"))
+				Expect(files[0].Name()).To(Equal("metadata.json"))
+				Expect(files[1].Name()).To(Equal("metadata.yml"))
+				Expect(files[2].Name()).To(Equal("version"))
 
 				By("Expecting error with in command and mismatched globs")
 				inRequest = concourse.InRequest{
