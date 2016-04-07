@@ -292,7 +292,8 @@ var _ = Describe("Lifecycle test", func() {
 				files, err := ioutil.ReadDir(destDirectory)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				expectedFileCount := totalFiles + 1 // the version file will be present.
+				// one file is version; two files are metadata
+				expectedFileCount := totalFiles + 3
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(files).To(HaveLen(expectedFileCount))
 
