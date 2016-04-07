@@ -1,6 +1,7 @@
 package in
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -235,7 +236,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		},
 	}
 
-	metadataFilepath := filepath.Join(c.downloadDir, "metadata.yml")
+	yamlMetadataFilepath := filepath.Join(c.downloadDir, "metadata.yml")
 	c.logger.Debugf(
 		"Writing metadata to file: {metadata: %+v, metadata_filepath: %s}\n",
 		metadata,
@@ -248,7 +249,26 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
-	err = ioutil.WriteFile(metadataFilepath, yamlMetadata, os.ModePerm)
+	err = ioutil.WriteFile(yamlMetadataFilepath, yamlMetadata, os.ModePerm)
+	if err != nil {
+		// Untested as it is too hard to force io.WriteFile to return an error
+		return concourse.InResponse{}, err
+	}
+
+	jsonMetadataFilepath := filepath.Join(c.downloadDir, "metadata.json")
+	c.logger.Debugf(
+		"Writing metadata to file: {metadata: %+v, metadata_filepath: %s}\n",
+		metadata,
+		versionFilepath,
+	)
+
+	jsonMetadata, err := json.Marshal(metadata)
+	if err != nil {
+		// Untested as it is too hard to force json.Marshal to return an error
+		return concourse.InResponse{}, err
+	}
+
+	err = ioutil.WriteFile(jsonMetadataFilepath, jsonMetadata, os.ModePerm)
 	if err != nil {
 		// Untested as it is too hard to force io.WriteFile to return an error
 		return concourse.InResponse{}, err

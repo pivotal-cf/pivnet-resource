@@ -1,6 +1,7 @@
 package in_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -173,6 +174,22 @@ var _ = Describe("In", func() {
 			Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
 		})
 
+		It("writes a metadata file in json format", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			versionFilepath := filepath.Join(downloadDir, "metadata.json")
+			versionContents, err := ioutil.ReadFile(versionFilepath)
+			Expect(err).NotTo(HaveOccurred())
+
+			var writtenMetadata metadata.Metadata
+			err = json.Unmarshal(versionContents, &writtenMetadata)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(writtenMetadata.Release).NotTo(BeNil())
+			Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
+		})
+
 		It("does not download any of the files in the specified release", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
@@ -181,9 +198,10 @@ var _ = Describe("In", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			// the version and metadata files will always exist
-			Expect(len(files)).To(Equal(2))
-			Expect(files[0].Name()).To(Equal("metadata.yml"))
-			Expect(files[1].Name()).To(Equal("version"))
+			Expect(len(files)).To(Equal(3))
+			Expect(files[0].Name()).To(Equal("metadata.json"))
+			Expect(files[1].Name()).To(Equal("metadata.yml"))
+			Expect(files[2].Name()).To(Equal("version"))
 		})
 	})
 
