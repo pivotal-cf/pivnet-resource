@@ -1,9 +1,11 @@
 package md5
 
 import (
+	"bufio"
 	"crypto/md5"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"os"
 )
 
 //go:generate counterfeiter . Summer
@@ -23,10 +25,18 @@ func NewFileContentsSummer(filepath string) Summer {
 }
 
 func (f fileContentsSummer) Sum() (string, error) {
-	fileContents, err := ioutil.ReadFile(f.filepath)
+	fileToSum, err := os.Open(f.filepath)
+	if err != nil {
+		return "", err
+	}
+	defer fileToSum.Close()
+
+	fileReader := bufio.NewReader(fileToSum)
+	hash := md5.New()
+	_, err = io.Copy(hash, fileReader)
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("%x", md5.Sum(fileContents)), nil
+	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
