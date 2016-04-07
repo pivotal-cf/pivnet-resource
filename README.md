@@ -16,6 +16,9 @@ resource_types:
     tag: v0.6.3
 ```
 
+**The value for `tag` above is an example - the latest value can be found on
+the [releases page](https://github.com/pivotal-cf-experimental/pivnet-resource/releases)**
+
 The docker image is `pivotalcf/pivnet-resource`; the images are available on
 [dockerhub](https://hub.docker.com/r/pivotalcf/pivnet-resource).
 
