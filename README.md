@@ -127,6 +127,10 @@ Discovers all versions of the provided product.
 Downloads the provided product from Pivotal Network. **Any EULAs that have not
 already been accepted will be automatically accepted at this point.**
 
+The metadata for the product is written to both `metadata.json` and
+`metadata.yml` in the working directory (typically `/tmp/build/get`).
+Use this to programmatically determine metadata of the release.
+
 #### Parameters
 
 * `globs`: *Optional.* Array of globs matching files to download.
