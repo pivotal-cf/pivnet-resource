@@ -1,7 +1,6 @@
 package md5
 
 import (
-	"bufio"
 	"crypto/md5"
 	"fmt"
 	"io"
@@ -31,9 +30,8 @@ func (f fileContentsSummer) Sum() (string, error) {
 	}
 	defer fileToSum.Close()
 
-	fileReader := bufio.NewReader(fileToSum)
 	hash := md5.New()
-	_, err = io.Copy(hash, fileReader)
+	_, err = io.Copy(hash, fileToSum)
 	if err != nil {
 		return "", err
 	}
