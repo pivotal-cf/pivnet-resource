@@ -8,35 +8,28 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
 )
 
-var _ = Describe("In Validator", func() {
+var _ = Describe("Check Validator", func() {
 	var (
-		inRequest concourse.InRequest
-		v         validator.Validator
+		checkRequest concourse.CheckRequest
+		v            validator.Validator
 
-		apiToken       string
-		productSlug    string
-		productVersion string
+		apiToken    string
+		productSlug string
 	)
 
 	BeforeEach(func() {
 		apiToken = "some-api-token"
 		productSlug = "some-productSlug"
-		productVersion = "some-product-version"
 	})
 
 	JustBeforeEach(func() {
-		inRequest = concourse.InRequest{
+		checkRequest = concourse.CheckRequest{
 			Source: concourse.Source{
 				APIToken:    apiToken,
 				ProductSlug: productSlug,
 			},
-			Params: concourse.InParams{},
-			Version: concourse.Version{
-				ProductVersion: productVersion,
-			},
 		}
-
-		v = validator.NewInValidator(inRequest)
+		v = validator.NewCheckValidator(checkRequest)
 	})
 
 	It("returns without error", func() {
@@ -65,18 +58,6 @@ var _ = Describe("In Validator", func() {
 			err := v.Validate()
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(".*product_slug.*provided"))
-		})
-	})
-
-	Context("when no product version is provided", func() {
-		BeforeEach(func() {
-			productVersion = ""
-		})
-
-		It("returns an error", func() {
-			err := v.Validate()
-			Expect(err).NotTo(BeNil())
-			Expect(err.Error()).To(MatchRegexp(".*product_version.*provided"))
 		})
 	})
 })

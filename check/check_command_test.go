@@ -163,32 +163,6 @@ var _ = Describe("Check", func() {
 		Expect(response[0].ProductVersion).To(Equal(expectedVersionWithEtag))
 	})
 
-	Context("when no api token is provided", func() {
-		BeforeEach(func() {
-			checkRequest.Source.APIToken = ""
-		})
-
-		It("returns an error", func() {
-			_, err := checkCommand.Run(checkRequest)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(MatchRegexp(".*api_token.*provided"))
-		})
-	})
-
-	Context("when no product slug is provided", func() {
-		BeforeEach(func() {
-			checkRequest.Source.ProductSlug = ""
-		})
-
-		It("returns an error", func() {
-			_, err := checkCommand.Run(checkRequest)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(MatchRegexp(".*product_slug.*provided"))
-		})
-	})
-
 	Context("when no releases are returned", func() {
 		BeforeEach(func() {
 			pivnetResponse = pivnet.ReleasesResponse{Releases: []pivnet.Release{}}

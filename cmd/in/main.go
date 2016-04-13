@@ -11,6 +11,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
+	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
 )
 
 var (
@@ -48,6 +49,12 @@ func main() {
 	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
 
 	l := logger.NewLogger(sanitizer)
+
+	err = validator.NewInValidator(input).Validate()
+	if err != nil {
+		l.Debugf("Exiting with error: %v\n", err)
+		log.Fatalln(err)
+	}
 
 	response, err := in.NewInCommand(version, l, downloadDir).Run(input)
 	if err != nil {

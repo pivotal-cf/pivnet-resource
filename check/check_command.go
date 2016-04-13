@@ -53,14 +53,6 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	if input.Source.APIToken == "" {
-		return nil, fmt.Errorf("%s must be provided", "api_token")
-	}
-
-	if input.Source.ProductSlug == "" {
-		return nil, fmt.Errorf("%s must be provided", "product_slug")
-	}
-
 	c.logger.Debugf("Received input: %+v\n", input)
 
 	var endpoint string
