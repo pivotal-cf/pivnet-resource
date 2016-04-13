@@ -147,62 +147,60 @@ var _ = Describe("In", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	Context("when the version comes from concourse", func() {
-		It("writes a version file with the downloaded version and etag", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).NotTo(HaveOccurred())
+	It("writes a version file with the downloaded version and etag", func() {
+		_, err := inCommand.Run(inRequest)
+		Expect(err).NotTo(HaveOccurred())
 
-			versionFilepath := filepath.Join(downloadDir, "version")
-			versionContents, err := ioutil.ReadFile(versionFilepath)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(versionContents)).To(Equal(versionWithETag))
-		})
+		versionFilepath := filepath.Join(downloadDir, "version")
+		versionContents, err := ioutil.ReadFile(versionFilepath)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(string(versionContents)).To(Equal(versionWithETag))
+	})
 
-		It("writes a metadata file in yaml format", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).NotTo(HaveOccurred())
+	It("writes a metadata file in yaml format", func() {
+		_, err := inCommand.Run(inRequest)
+		Expect(err).NotTo(HaveOccurred())
 
-			versionFilepath := filepath.Join(downloadDir, "metadata.yml")
-			versionContents, err := ioutil.ReadFile(versionFilepath)
-			Expect(err).NotTo(HaveOccurred())
+		versionFilepath := filepath.Join(downloadDir, "metadata.yml")
+		versionContents, err := ioutil.ReadFile(versionFilepath)
+		Expect(err).NotTo(HaveOccurred())
 
-			var writtenMetadata metadata.Metadata
-			err = yaml.Unmarshal(versionContents, &writtenMetadata)
-			Expect(err).NotTo(HaveOccurred())
+		var writtenMetadata metadata.Metadata
+		err = yaml.Unmarshal(versionContents, &writtenMetadata)
+		Expect(err).NotTo(HaveOccurred())
 
-			Expect(writtenMetadata.Release).NotTo(BeNil())
-			Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
-		})
+		Expect(writtenMetadata.Release).NotTo(BeNil())
+		Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
+	})
 
-		It("writes a metadata file in json format", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).NotTo(HaveOccurred())
+	It("writes a metadata file in json format", func() {
+		_, err := inCommand.Run(inRequest)
+		Expect(err).NotTo(HaveOccurred())
 
-			versionFilepath := filepath.Join(downloadDir, "metadata.json")
-			versionContents, err := ioutil.ReadFile(versionFilepath)
-			Expect(err).NotTo(HaveOccurred())
+		versionFilepath := filepath.Join(downloadDir, "metadata.json")
+		versionContents, err := ioutil.ReadFile(versionFilepath)
+		Expect(err).NotTo(HaveOccurred())
 
-			var writtenMetadata metadata.Metadata
-			err = json.Unmarshal(versionContents, &writtenMetadata)
-			Expect(err).NotTo(HaveOccurred())
+		var writtenMetadata metadata.Metadata
+		err = json.Unmarshal(versionContents, &writtenMetadata)
+		Expect(err).NotTo(HaveOccurred())
 
-			Expect(writtenMetadata.Release).NotTo(BeNil())
-			Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
-		})
+		Expect(writtenMetadata.Release).NotTo(BeNil())
+		Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
+	})
 
-		It("does not download any of the files in the specified release", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).NotTo(HaveOccurred())
+	It("does not download any of the files in the specified release", func() {
+		_, err := inCommand.Run(inRequest)
+		Expect(err).NotTo(HaveOccurred())
 
-			files, err := ioutil.ReadDir(downloadDir)
-			Expect(err).ShouldNot(HaveOccurred())
+		files, err := ioutil.ReadDir(downloadDir)
+		Expect(err).ShouldNot(HaveOccurred())
 
-			// the version and metadata files will always exist
-			Expect(len(files)).To(Equal(3))
-			Expect(files[0].Name()).To(Equal("metadata.json"))
-			Expect(files[1].Name()).To(Equal("metadata.yml"))
-			Expect(files[2].Name()).To(Equal("version"))
-		})
+		// the version and metadata files will always exist
+		Expect(len(files)).To(Equal(3))
+		Expect(files[0].Name()).To(Equal("metadata.json"))
+		Expect(files[1].Name()).To(Equal("metadata.yml"))
+		Expect(files[2].Name()).To(Equal("version"))
 	})
 
 	Context("when no api token is provided", func() {
