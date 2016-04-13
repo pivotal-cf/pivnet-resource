@@ -58,6 +58,10 @@ var _ = Describe("Out Validator", func() {
 		v = validator.NewOutValidator(outRequest, false)
 	})
 
+	It("returns without error", func() {
+		Expect(v.Validate()).NotTo(HaveOccurred())
+	})
+
 	Context("when skipping file checks", func() {
 		BeforeEach(func() {
 			versionFile = ""

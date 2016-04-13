@@ -44,14 +44,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	c.logger.Debugf("Received input: %+v\n", input)
 
 	token := input.Source.APIToken
-	if token == "" {
-		return concourse.InResponse{}, fmt.Errorf("%s must be provided", "api_token")
-	}
-
 	productSlug := input.Source.ProductSlug
-	if productSlug == "" {
-		return concourse.InResponse{}, fmt.Errorf("%s must be provided", "product_slug")
-	}
 
 	c.logger.Debugf("Creating download directory: %s\n", c.downloadDir)
 	err := os.MkdirAll(c.downloadDir, os.ModePerm)
@@ -64,11 +57,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		endpoint = input.Source.Endpoint
 	} else {
 		endpoint = pivnet.Endpoint
-	}
-
-	if input.Version.ProductVersion == "" {
-		return concourse.InResponse{},
-			fmt.Errorf("%s must be provided from input version", "product_version")
 	}
 
 	productVersion, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)

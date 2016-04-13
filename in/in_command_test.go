@@ -203,46 +203,6 @@ var _ = Describe("In", func() {
 		Expect(files[2].Name()).To(Equal("version"))
 	})
 
-	Context("when no api token is provided", func() {
-		BeforeEach(func() {
-			inRequest.Source.APIToken = ""
-		})
-
-		It("returns an error", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(MatchRegexp(".*api_token.*provided"))
-		})
-	})
-
-	Context("when no product slug is provided", func() {
-		BeforeEach(func() {
-			inRequest.Source.ProductSlug = ""
-		})
-
-		It("returns an error", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(MatchRegexp(".*product_slug.*provided"))
-		})
-	})
-
-	Context("when no product version is provided", func() {
-		BeforeEach(func() {
-			inRequest.Source.ProductVersion = ""
-			inRequest.Version.ProductVersion = ""
-		})
-
-		It("returns an error", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(MatchRegexp(".*product_version.*provided"))
-		})
-	})
-
 	Context("when version is provided without etag", func() {
 		BeforeEach(func() {
 			inRequest.Version = concourse.Version{
