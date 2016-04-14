@@ -39,6 +39,14 @@ func DownloadLinks(p pivnet.ProductFiles) map[string]string {
 		parts := strings.Split(productFile.AWSObjectKey, "/")
 		fileName := parts[len(parts)-1]
 
+		if productFile.Links == nil {
+			panic("links not present")
+		}
+
+		if productFile.Links.Download == nil {
+			panic("download links not present")
+		}
+
 		links[fileName] = productFile.Links.Download["href"]
 	}
 

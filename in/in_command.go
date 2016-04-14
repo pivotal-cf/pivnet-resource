@@ -122,7 +122,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 			p.ID,
 		)
 		if err != nil {
-			log.Fatalf("Failed to get Product File: %s\n", err.Error())
+			panic(err)
 		}
 
 		parts := strings.Split(productFile.AWSObjectKey, "/")
@@ -207,7 +207,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
-	metadata := metadata.Metadata{
+	mdata := metadata.Metadata{
 		Release: &metadata.Release{
 			Version:               release.Version,
 			ReleaseType:           release.ReleaseType,
@@ -224,14 +224,26 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		},
 	}
 
+	for _, pf := range productFiles.ProductFiles {
+		mdata.ProductFiles = append(mdata.ProductFiles, metadata.ProductFile{
+			ID:           pf.ID,
+			File:         pf.Name,
+			Description:  pf.Description,
+			AWSObjectKey: pf.AWSObjectKey,
+			FileType:     pf.FileType,
+			FileVersion:  pf.FileVersion,
+			MD5:          pf.MD5,
+		})
+	}
+
 	yamlMetadataFilepath := filepath.Join(c.downloadDir, "metadata.yml")
 	c.logger.Debugf(
 		"Writing metadata to file: {metadata: %+v, metadata_filepath: %s}\n",
-		metadata,
-		versionFilepath,
+		mdata,
+		yamlMetadataFilepath,
 	)
 
-	yamlMetadata, err := yaml.Marshal(metadata)
+	yamlMetadata, err := yaml.Marshal(mdata)
 	if err != nil {
 		// Untested as it is too hard to force yaml.Marshal to return an error
 		return concourse.InResponse{}, err
@@ -246,11 +258,11 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	jsonMetadataFilepath := filepath.Join(c.downloadDir, "metadata.json")
 	c.logger.Debugf(
 		"Writing metadata to file: {metadata: %+v, metadata_filepath: %s}\n",
-		metadata,
-		versionFilepath,
+		mdata,
+		jsonMetadataFilepath,
 	)
 
-	jsonMetadata, err := json.Marshal(metadata)
+	jsonMetadata, err := json.Marshal(mdata)
 	if err != nil {
 		// Untested as it is too hard to force json.Marshal to return an error
 		return concourse.InResponse{}, err

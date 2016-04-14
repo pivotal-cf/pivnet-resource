@@ -28,8 +28,9 @@ var _ = Describe("In", func() {
 
 		releaseID int
 
-		file1URLPath  string
-		file1Contents string
+		file1URLPath         string
+		productFiles         []pivnet.ProductFile
+		productFilesResponse pivnet.ProductFiles
 
 		downloadDir string
 
@@ -57,7 +58,39 @@ var _ = Describe("In", func() {
 		releaseID = 1234
 		file1URLPath = "/file1"
 		file1URL := fmt.Sprintf("%s%s", server.URL(), file1URLPath)
-		file1Contents = ""
+		productFiles = []pivnet.ProductFile{
+			{
+				ID:           1234,
+				Name:         "product file 1234",
+				Description:  "some product file 1234",
+				AWSObjectKey: "some-key 1234",
+				FileType:     "some-file-type 1234",
+				FileVersion:  "some-file-version 1234",
+				MD5:          "some-md5 1234",
+				Links: &pivnet.Links{
+					Download: map[string]string{
+						"href": "foo",
+					},
+				},
+			},
+			{
+				ID:           3456,
+				Name:         "product file 3456",
+				Description:  "some product file 3456",
+				AWSObjectKey: "some-key 3456",
+				FileType:     "some-file-type 3456",
+				FileVersion:  "some-file-version 3456",
+				MD5:          "some-md5 3456",
+				Links: &pivnet.Links{
+					Download: map[string]string{
+						"href": "bar",
+					},
+				},
+			},
+		}
+		productFilesResponse = pivnet.ProductFiles{
+			ProductFiles: productFiles,
+		}
 
 		pivnetReleasesResponse = &pivnet.ReleasesResponse{
 			Releases: []pivnet.Release{
@@ -127,9 +160,27 @@ var _ = Describe("In", func() {
 					"GET",
 					file1URLPath,
 				),
-				ghttp.RespondWith(http.StatusOK, file1Contents),
+				ghttp.RespondWithJSONEncoded(http.StatusOK, productFilesResponse),
 			),
 		)
+
+		for _, p := range productFiles {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest(
+						"GET",
+						fmt.Sprintf(
+							"%s/products/%s/releases/%d/product_files/%d",
+							apiPrefix,
+							productSlug,
+							releaseID,
+							p.ID,
+						),
+					),
+					ghttp.RespondWithJSONEncoded(http.StatusOK, p),
+				),
+			)
+		}
 
 		sanitized := concourse.SanitizedSource(inRequest.Source)
 		sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
@@ -157,6 +208,23 @@ var _ = Describe("In", func() {
 		Expect(string(versionContents)).To(Equal(versionWithETag))
 	})
 
+	var validateProductFilesMetadata = func(
+		writtenMetadata metadata.Metadata,
+		productFiles []pivnet.ProductFile,
+	) {
+		Expect(writtenMetadata.ProductFiles).To(HaveLen(len(productFiles)))
+		for i, p := range productFiles {
+			Expect(writtenMetadata.ProductFiles[i].File).To(Equal(p.Name))
+			Expect(writtenMetadata.ProductFiles[i].Description).To(Equal(p.Description))
+			Expect(writtenMetadata.ProductFiles[i].ID).To(Equal(p.ID))
+			Expect(writtenMetadata.ProductFiles[i].AWSObjectKey).To(Equal(p.AWSObjectKey))
+			Expect(writtenMetadata.ProductFiles[i].FileType).To(Equal(p.FileType))
+			Expect(writtenMetadata.ProductFiles[i].FileVersion).To(Equal(p.FileVersion))
+			Expect(writtenMetadata.ProductFiles[i].MD5).To(Equal(p.MD5))
+			Expect(writtenMetadata.ProductFiles[i].UploadAs).To(BeEmpty())
+		}
+	}
+
 	It("writes a metadata file in yaml format", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
@@ -171,6 +239,8 @@ var _ = Describe("In", func() {
 
 		Expect(writtenMetadata.Release).NotTo(BeNil())
 		Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
+
+		validateProductFilesMetadata(writtenMetadata, productFiles)
 	})
 
 	It("writes a metadata file in json format", func() {
@@ -187,6 +257,8 @@ var _ = Describe("In", func() {
 
 		Expect(writtenMetadata.Release).NotTo(BeNil())
 		Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
+
+		validateProductFilesMetadata(writtenMetadata, productFiles)
 	})
 
 	It("does not download any of the files in the specified release", func() {
