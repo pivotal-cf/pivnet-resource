@@ -236,7 +236,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		})
 	}
 
-	yamlMetadataFilepath := filepath.Join(c.downloadDir, "metadata.yml")
+	yamlMetadataFilepath := filepath.Join(c.downloadDir, "metadata.yaml")
 	c.logger.Debugf(
 		"Writing metadata to file: {metadata: %+v, metadata_filepath: %s}\n",
 		mdata,

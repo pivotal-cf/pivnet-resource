@@ -336,7 +336,7 @@ var _ = Describe("Lifecycle test", func() {
 				Expect(files).To(HaveLen(expectedFileCount))
 
 				Expect(files[0].Name()).To(Equal("metadata.json"))
-				Expect(files[1].Name()).To(Equal("metadata.yml"))
+				Expect(files[1].Name()).To(Equal("metadata.yaml"))
 				Expect(files[2].Name()).To(Equal("version"))
 
 				By("Expecting error with in command and mismatched globs")

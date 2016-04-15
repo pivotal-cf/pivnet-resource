@@ -229,7 +229,7 @@ var _ = Describe("In", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
-		versionFilepath := filepath.Join(downloadDir, "metadata.yml")
+		versionFilepath := filepath.Join(downloadDir, "metadata.yaml")
 		versionContents, err := ioutil.ReadFile(versionFilepath)
 		Expect(err).NotTo(HaveOccurred())
 
