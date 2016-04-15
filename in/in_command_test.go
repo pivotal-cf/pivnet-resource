@@ -271,7 +271,7 @@ var _ = Describe("In", func() {
 		// the version and metadata files will always exist
 		Expect(len(files)).To(Equal(3))
 		Expect(files[0].Name()).To(Equal("metadata.json"))
-		Expect(files[1].Name()).To(Equal("metadata.yml"))
+		Expect(files[1].Name()).To(Equal("metadata.yaml"))
 		Expect(files[2].Name()).To(Equal("version"))
 	})
 
