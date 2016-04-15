@@ -41,6 +41,8 @@ var _ = Describe("Check", func() {
 
 		releasesResponseStatus int
 		etagResponseStatus     int
+
+		pivnetClient pivnet.Client
 	)
 
 	BeforeEach(func() {
@@ -139,8 +141,14 @@ var _ = Describe("Check", func() {
 		sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
 
 		ginkgoLogger = logger.NewLogger(sanitizer)
+		pivnetClient = pivnet.NewClient(
+			pivnet.NewClientConfig{
+				Endpoint: server.URL(),
+			},
+			ginkgoLogger,
+		)
 
-		checkCommand = check.NewCheckCommand(binaryVersion, ginkgoLogger, logFilePath)
+		checkCommand = check.NewCheckCommand(binaryVersion, ginkgoLogger, logFilePath, pivnetClient)
 	})
 
 	AfterEach(func() {
