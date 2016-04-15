@@ -3,26 +3,22 @@ package check_test
 import (
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/check"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet/pivnetfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 var _ = Describe("Check", func() {
 	var (
-		server         *ghttp.Server
-		pivnetResponse pivnet.ReleasesResponse
-
 		tempDir     string
 		logFilePath string
 
@@ -33,20 +29,24 @@ var _ = Describe("Check", func() {
 
 		releaseTypes []string
 
-		releaseTypesResponse       pivnet.ReleaseTypesResponse
-		releaseTypesResponseStatus int
+		releaseTypesResponse pivnet.ReleaseTypesResponse
+		releaseTypesErr      error
 
 		allReleases      []pivnet.Release
+		releasesErr      error
 		filteredReleases []pivnet.Release
 
-		releasesResponseStatus int
-		etagResponseStatus     int
+		etagErr error
 
-		pivnetClient pivnet.Client
+		fakePivnetClient *pivnetfakes.FakeClient
 	)
 
 	BeforeEach(func() {
-		server = ghttp.NewServer()
+		fakePivnetClient = &pivnetfakes.FakeClient{}
+
+		releaseTypesErr = nil
+		releasesErr = nil
+		etagErr = nil
 
 		releaseTypes = []string{
 			"foo release",
@@ -57,7 +57,6 @@ var _ = Describe("Check", func() {
 		releaseTypesResponse = pivnet.ReleaseTypesResponse{
 			ReleaseTypes: releaseTypes,
 		}
-		releaseTypesResponseStatus = http.StatusOK
 
 		allReleases = []pivnet.Release{
 			{
@@ -76,12 +75,6 @@ var _ = Describe("Check", func() {
 				ReleaseType: releaseTypes[2],
 			},
 		}
-		releasesResponseStatus = http.StatusOK
-		etagResponseStatus = http.StatusOK
-
-		pivnetResponse = pivnet.ReleasesResponse{
-			Releases: allReleases,
-		}
 
 		filteredReleases = allReleases
 
@@ -89,7 +82,6 @@ var _ = Describe("Check", func() {
 			Source: concourse.Source{
 				APIToken:    "some-api-token",
 				ProductSlug: productSlug,
-				Endpoint:    server.URL(),
 			},
 		}
 
@@ -100,39 +92,28 @@ var _ = Describe("Check", func() {
 		logFilePath = filepath.Join(tempDir, "pivnet-resource-check.log1234")
 		err = ioutil.WriteFile(logFilePath, []byte("initial log content"), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
+
 	})
 
 	JustBeforeEach(func() {
-		server.AppendHandlers(
-			ghttp.CombineHandlers(
-				ghttp.VerifyRequest(
-					"GET",
-					fmt.Sprintf("%s/releases/release_types", apiPrefix)),
-				ghttp.RespondWithJSONEncoded(releaseTypesResponseStatus, releaseTypesResponse),
-			),
-		)
+		fakePivnetClient.ReleaseTypesReturns(releaseTypes, releaseTypesErr)
+		fakePivnetClient.ReleasesForProductSlugReturns(allReleases, releasesErr)
+		fakePivnetClient.ProductVersionsStub = func(productSlug string, releases []pivnet.Release) ([]string, error) {
+			if len(releases) == 0 {
+				return []string{}, nil
+			}
 
-		server.AppendHandlers(
-			ghttp.CombineHandlers(
-				ghttp.VerifyRequest(
-					"GET",
-					fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug)),
-				ghttp.RespondWithJSONEncoded(releasesResponseStatus, pivnetResponse),
-			),
-		)
+			var releaseVersionsWithEtags []string
+			for _, release := range releases {
+				etag := fmt.Sprintf("etag-%d", release.ID)
+				releaseVersionWithEtag := fmt.Sprintf("%s#%s", release.Version, etag)
+				releaseVersionsWithEtags = append(
+					releaseVersionsWithEtags,
+					releaseVersionWithEtag,
+				)
+			}
 
-		for _, release := range filteredReleases {
-			etag := fmt.Sprintf(`"etag-%d"`, release.ID)
-			etagHeader := http.Header{"ETag": []string{etag}}
-			server.AppendHandlers(
-				ghttp.CombineHandlers(
-					ghttp.VerifyRequest(
-						"GET",
-						fmt.Sprintf("%s/products/%s/releases/%d", apiPrefix, productSlug, release.ID),
-					),
-					ghttp.RespondWith(etagResponseStatus, nil, etagHeader),
-				),
-			)
+			return releaseVersionsWithEtags, etagErr
 		}
 
 		binaryVersion := "v0.1.2-unit-tests"
@@ -141,19 +122,11 @@ var _ = Describe("Check", func() {
 		sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
 
 		ginkgoLogger = logger.NewLogger(sanitizer)
-		pivnetClient = pivnet.NewClient(
-			pivnet.NewClientConfig{
-				Endpoint: server.URL(),
-			},
-			ginkgoLogger,
-		)
 
-		checkCommand = check.NewCheckCommand(binaryVersion, ginkgoLogger, logFilePath, pivnetClient)
+		checkCommand = check.NewCheckCommand(binaryVersion, ginkgoLogger, logFilePath, fakePivnetClient)
 	})
 
 	AfterEach(func() {
-		server.Close()
-
 		err := os.RemoveAll(tempDir)
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -173,7 +146,7 @@ var _ = Describe("Check", func() {
 
 	Context("when no releases are returned", func() {
 		BeforeEach(func() {
-			pivnetResponse = pivnet.ReleasesResponse{Releases: []pivnet.Release{}}
+			allReleases = []pivnet.Release{}
 		})
 
 		It("returns empty response without error", func() {
@@ -219,40 +192,40 @@ var _ = Describe("Check", func() {
 
 	Context("when there is an error getting release types", func() {
 		BeforeEach(func() {
-			releaseTypesResponseStatus = http.StatusNotFound
+			releaseTypesErr = fmt.Errorf("some error")
 		})
 
 		It("returns an error", func() {
 			_, err := checkCommand.Run(checkRequest)
 			Expect(err).To(HaveOccurred())
 
-			Expect(err.Error()).To(ContainSubstring("404"))
+			Expect(err.Error()).To(ContainSubstring("some error"))
 		})
 	})
 
 	Context("when there is an error getting releases", func() {
 		BeforeEach(func() {
-			releasesResponseStatus = http.StatusNotFound
+			releasesErr = fmt.Errorf("some error")
 		})
 
 		It("returns an error", func() {
 			_, err := checkCommand.Run(checkRequest)
 			Expect(err).To(HaveOccurred())
 
-			Expect(err.Error()).To(ContainSubstring("404"))
+			Expect(err.Error()).To(ContainSubstring("some error"))
 		})
 	})
 
 	Context("when there is an error getting etag", func() {
 		BeforeEach(func() {
-			etagResponseStatus = http.StatusNotFound
+			etagErr = fmt.Errorf("some error")
 		})
 
 		It("returns an error", func() {
 			_, err := checkCommand.Run(checkRequest)
 			Expect(err).To(HaveOccurred())
 
-			Expect(err.Error()).To(ContainSubstring("404"))
+			Expect(err.Error()).To(ContainSubstring("some error"))
 		})
 	})
 
@@ -322,31 +295,6 @@ var _ = Describe("Check", func() {
 				Expect(err.Error()).To(ContainSubstring(releaseTypes[1]))
 				Expect(err.Error()).To(ContainSubstring(releaseTypes[2]))
 			})
-		})
-	})
-
-	Context("when the product version is specified", func() {
-		BeforeEach(func() {
-			checkRequest.Source.ReleaseType = releaseTypes[1]
-
-			filteredReleases = []pivnet.Release{allReleases[1]}
-		})
-
-		BeforeEach(func() {
-			checkRequest.Source.ProductVersion = "C"
-		})
-
-		It("returns the newest release with that version without error", func() {
-			response, err := checkCommand.Run(checkRequest)
-			Expect(err).NotTo(HaveOccurred())
-
-			versionWithETagC, err := versions.CombineVersionAndETag(
-				allReleases[1].Version, fmt.Sprintf("etag-%d", allReleases[1].ID),
-			)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(response).To(HaveLen(1))
-			Expect(response[0].ProductVersion).To(Equal(versionWithETagC))
 		})
 	})
 })
