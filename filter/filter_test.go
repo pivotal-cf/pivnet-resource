@@ -10,10 +10,14 @@ import (
 
 var _ = Describe("Filter", func() {
 	var (
+		f filter.Filter
+
 		releases []pivnet.Release
 	)
 
 	BeforeEach(func() {
+		f = filter.NewFilter()
+
 		releases = []pivnet.Release{
 			{
 				ID:          1,
@@ -46,7 +50,7 @@ var _ = Describe("Filter", func() {
 				},
 			}}
 
-			links := filter.DownloadLinks(productFiles)
+			links := f.DownloadLinks(productFiles)
 			Expect(links).To(HaveLen(2))
 			Expect(links).To(Equal(map[string]string{
 				"file-name-1.zip": "/products/banana/releases/666/product_files/6/download",
@@ -63,7 +67,7 @@ var _ = Describe("Filter", func() {
 				"random-file.zip":  "/products/banana/releases/666/product_files/8/download",
 			}
 
-			filteredDownloadLinks, err := filter.DownloadLinksByGlob(
+			filteredDownloadLinks, err := f.DownloadLinksByGlob(
 				downloadLinks, []string{"*android*", "*ios*"})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(filteredDownloadLinks).To(HaveLen(2))
@@ -79,7 +83,7 @@ var _ = Describe("Filter", func() {
 					"android-file.zip": "/products/banana/releases/666/product_files/6/download",
 				}
 
-				_, err := filter.DownloadLinksByGlob(downloadLinks, []string{"["})
+				_, err := f.DownloadLinksByGlob(downloadLinks, []string{"["})
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("syntax error in pattern"))
 			})
@@ -91,7 +95,7 @@ var _ = Describe("Filter", func() {
 					"android-file.zip": "/products/banana/releases/666/product_files/6/download",
 				}
 
-				_, err := filter.DownloadLinksByGlob(downloadLinks, []string{"*ios*"})
+				_, err := f.DownloadLinksByGlob(downloadLinks, []string{"*ios*"})
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("no files match glob: *ios*"))
 
@@ -104,7 +108,7 @@ var _ = Describe("Filter", func() {
 					"android-file.zip": "/products/banana/releases/666/product_files/6/download",
 				}
 
-				_, err := filter.DownloadLinksByGlob(downloadLinks, []string{"android-file.zip", "does-not-exist.txt"})
+				_, err := f.DownloadLinksByGlob(downloadLinks, []string{"android-file.zip", "does-not-exist.txt"})
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("no files match glob: does-not-exist.txt"))
 			})
@@ -121,7 +125,7 @@ var _ = Describe("Filter", func() {
 		})
 
 		It("filters releases by release type without error", func() {
-			filteredReleases, err := filter.ReleasesByReleaseType(releases, releaseType)
+			filteredReleases, err := f.ReleasesByReleaseType(releases, releaseType)
 
 			Expect(err).NotTo(HaveOccurred())
 
@@ -136,7 +140,7 @@ var _ = Describe("Filter", func() {
 			})
 
 			It("returns empty slice without error", func() {
-				filteredReleases, err := filter.ReleasesByReleaseType(releases, releaseType)
+				filteredReleases, err := f.ReleasesByReleaseType(releases, releaseType)
 
 				Expect(err).NotTo(HaveOccurred())
 
@@ -156,7 +160,7 @@ var _ = Describe("Filter", func() {
 		})
 
 		It("filters releases by release type without error", func() {
-			filteredReleases, err := filter.ReleasesByVersion(releases, version)
+			filteredReleases, err := f.ReleasesByVersion(releases, version)
 
 			Expect(err).NotTo(HaveOccurred())
 
@@ -170,7 +174,7 @@ var _ = Describe("Filter", func() {
 			})
 
 			It("returns empty slice without error", func() {
-				filteredReleases, err := filter.ReleasesByVersion(releases, version)
+				filteredReleases, err := f.ReleasesByVersion(releases, version)
 
 				Expect(err).NotTo(HaveOccurred())
 

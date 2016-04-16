@@ -18,45 +18,42 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 type InCommand struct {
-	logger        logger.Logger
-	downloadDir   string
-	binaryVersion string
+	logger       logger.Logger
+	downloadDir  string
+	pivnetClient pivnet.Client
+	filter       filter.Filter
+	downloader   downloader.Downloader
 }
 
 func NewInCommand(
-	binaryVersion string,
 	logger logger.Logger,
 	downloadDir string,
+	pivnetClient pivnet.Client,
+	filter filter.Filter,
+	downloader downloader.Downloader,
 ) *InCommand {
 	return &InCommand{
-		logger:        logger,
-		downloadDir:   downloadDir,
-		binaryVersion: binaryVersion,
+		logger:       logger,
+		downloadDir:  downloadDir,
+		pivnetClient: pivnetClient,
+		filter:       filter,
+		downloader:   downloader,
 	}
 }
 
 func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error) {
 	c.logger.Debugf("Received input: %+v\n", input)
 
-	token := input.Source.APIToken
 	productSlug := input.Source.ProductSlug
 
 	c.logger.Debugf("Creating download directory: %s\n", c.downloadDir)
 	err := os.MkdirAll(c.downloadDir, os.ModePerm)
 	if err != nil {
-		log.Fatalf("Failed to create download directory: %s\n", err.Error())
-	}
-
-	var endpoint string
-	if input.Source.Endpoint != "" {
-		endpoint = input.Source.Endpoint
-	} else {
-		endpoint = pivnet.Endpoint
+		return concourse.InResponse{}, err
 	}
 
 	productVersion, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
@@ -65,16 +62,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		productVersion = input.Version.ProductVersion
 	}
 
-	clientConfig := pivnet.NewClientConfig{
-		Endpoint:  endpoint,
-		Token:     token,
-		UserAgent: useragent.UserAgent(c.binaryVersion, "get", productSlug),
-	}
-	client := pivnet.NewClient(
-		clientConfig,
-		c.logger,
-	)
-
 	c.logger.Debugf(
 		"Getting release: {product_slug: %s, product_version: %s, etag: %s}\n",
 		productSlug,
@@ -82,10 +69,15 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		etag,
 	)
 
-	release, err := client.GetRelease(productSlug, productVersion)
+	release, err := c.pivnetClient.GetRelease(productSlug, productVersion)
 	if err != nil {
-		log.Fatalf("Failed to get Release: %s\n", err.Error())
+		return concourse.InResponse{}, err
 	}
+
+	c.logger.Debugf(
+		"Release: %+v\n",
+		release,
+	)
 
 	c.logger.Debugf(
 		"Accepting EULA: {product_slug: %s, release_id: %d}\n",
@@ -93,9 +85,9 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		release.ID,
 	)
 
-	err = client.AcceptEULA(productSlug, release.ID)
+	err = c.pivnetClient.AcceptEULA(productSlug, release.ID)
 	if err != nil {
-		log.Fatalf("EULA acceptance failed for the release: %s\n", err.Error())
+		return concourse.InResponse{}, err
 	}
 
 	c.logger.Debugf(
@@ -103,10 +95,9 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		release.ID,
 	)
 
-	productFiles, err := client.GetProductFiles(release)
+	productFiles, err := c.pivnetClient.GetProductFiles(release)
 	if err != nil {
-		return concourse.InResponse{},
-			fmt.Errorf("Failed to get Product Files: %s\n", err.Error())
+		return concourse.InResponse{}, err
 	}
 
 	c.logger.Debugf(
@@ -116,13 +107,13 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	downloadLinksMD5 := map[string]string{}
 	for _, p := range productFiles.ProductFiles {
-		productFile, err := client.GetProductFile(
+		productFile, err := c.pivnetClient.GetProductFile(
 			productSlug,
 			release.ID,
 			p.ID,
 		)
 		if err != nil {
-			panic(err)
+			return concourse.InResponse{}, err
 		}
 
 		parts := strings.Split(productFile.AWSObjectKey, "/")
@@ -131,7 +122,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		downloadLinksMD5[fileName] = productFile.MD5
 	}
 
-	downloadLinks := filter.DownloadLinks(productFiles)
+	downloadLinks := c.filter.DownloadLinks(productFiles)
 
 	if len(input.Params.Globs) > 0 {
 		c.logger.Debugf(
@@ -140,9 +131,9 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		)
 
 		var err error
-		downloadLinks, err = filter.DownloadLinksByGlob(downloadLinks, input.Params.Globs)
+		downloadLinks, err = c.filter.DownloadLinksByGlob(downloadLinks, input.Params.Globs)
 		if err != nil {
-			log.Fatalf("Failed to filter Product Files: %s\n", err.Error())
+			return concourse.InResponse{}, err
 		}
 
 		c.logger.Debugf(
@@ -151,7 +142,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 			c.downloadDir,
 		)
 
-		files, err := downloader.Download(c.downloadDir, downloadLinks, token)
+		files, err := c.downloader.Download(c.downloadDir, downloadLinks, input.Source.APIToken)
 		if err != nil {
 			log.Fatalf("Failed to Download Files: %s\n", err.Error())
 		}
@@ -188,18 +179,18 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	versionFilepath := filepath.Join(c.downloadDir, "version")
 
-	c.logger.Debugf(
-		"Writing version to file: {version: %s, version_filepath: %s}\n",
-		productVersion,
-		versionFilepath,
-	)
-
 	versionWithETag, err := versions.CombineVersionAndETag(productVersion, etag)
 	if err != nil {
 		// Untested as it is too hard to force versions.CombineVersionAndETag
 		// to return an error
 		return concourse.InResponse{}, err
 	}
+
+	c.logger.Debugf(
+		"Writing version to file: {version: %s, version_filepath: %s}\n",
+		versionWithETag,
+		versionFilepath,
+	)
 
 	err = ioutil.WriteFile(versionFilepath, []byte(versionWithETag), os.ModePerm)
 	if err != nil {
@@ -238,7 +229,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	yamlMetadataFilepath := filepath.Join(c.downloadDir, "metadata.yaml")
 	c.logger.Debugf(
-		"Writing metadata to file: {metadata: %+v, metadata_filepath: %s}\n",
+		"Writing metadata to yaml file: {metadata: %+v, metadata_filepath: %s}\n",
 		mdata,
 		yamlMetadataFilepath,
 	)
@@ -257,7 +248,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	jsonMetadataFilepath := filepath.Join(c.downloadDir, "metadata.json")
 	c.logger.Debugf(
-		"Writing metadata to file: {metadata: %+v, metadata_filepath: %s}\n",
+		"Writing metadata to json file: {metadata: %+v, metadata_filepath: %s}\n",
 		mdata,
 		jsonMetadataFilepath,
 	)

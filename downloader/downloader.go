@@ -9,7 +9,19 @@ import (
 	"path/filepath"
 )
 
-func Download(downloadDir string, downloadLinks map[string]string, token string) ([]string, error) {
+//go:generate counterfeiter . Downloader
+
+type Downloader interface {
+	Download(downloadDir string, downloadLinks map[string]string, token string) ([]string, error)
+}
+
+type downloader struct{}
+
+func NewDownloader() Downloader {
+	return &downloader{}
+}
+
+func (d downloader) Download(downloadDir string, downloadLinks map[string]string, token string) ([]string, error) {
 	client := &http.Client{}
 
 	fileNames := []string{}

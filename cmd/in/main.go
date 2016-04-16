@@ -8,9 +8,13 @@ import (
 	"os"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
+	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
+	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
 )
 
@@ -56,7 +60,27 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	response, err := in.NewInCommand(version, l, downloadDir).Run(input)
+	f := filter.NewFilter()
+	d := downloader.NewDownloader()
+
+	var endpoint string
+	if input.Source.Endpoint != "" {
+		endpoint = input.Source.Endpoint
+	} else {
+		endpoint = pivnet.Endpoint
+	}
+
+	clientConfig := pivnet.NewClientConfig{
+		Endpoint:  endpoint,
+		Token:     input.Source.APIToken,
+		UserAgent: useragent.UserAgent(version, "get", input.Source.ProductSlug),
+	}
+	client := pivnet.NewClient(
+		clientConfig,
+		l,
+	)
+
+	response, err := in.NewInCommand(l, downloadDir, client, f, d).Run(input)
 	if err != nil {
 		l.Debugf("Exiting with error: %v\n", err)
 		log.Fatalln(err)

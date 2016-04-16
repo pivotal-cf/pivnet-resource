@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 
@@ -12,23 +11,24 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/downloader/downloaderfakes"
+	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet/pivnetfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 var _ = Describe("In", func() {
 	var (
-		server *ghttp.Server
+		fakeFilter       *filterfakes.FakeFilter
+		fakeDownloader   *downloaderfakes.FakeDownloader
+		fakePivnetClient *pivnetfakes.FakeClient
 
-		releaseID int
-
-		file1URLPath         string
 		productFiles         []pivnet.ProductFile
 		productFilesResponse pivnet.ProductFiles
 
@@ -40,13 +40,29 @@ var _ = Describe("In", func() {
 		etag            string
 		versionWithETag string
 
-		inRequest              concourse.InRequest
-		inCommand              *in.InCommand
-		pivnetReleasesResponse *pivnet.ReleasesResponse
+		inRequest concourse.InRequest
+		inCommand *in.InCommand
+
+		release       pivnet.Release
+		getReleaseErr error
+
+		acceptEULAErr      error
+		getProductFilesErr error
+		getProductFileErr  error
+
+		downloadLinksByGlobErr error
 	)
 
 	BeforeEach(func() {
-		server = ghttp.NewServer()
+		fakeFilter = &filterfakes.FakeFilter{}
+		fakeDownloader = &downloaderfakes.FakeDownloader{}
+		fakePivnetClient = &pivnetfakes.FakeClient{}
+
+		getReleaseErr = nil
+		acceptEULAErr = nil
+		getProductFilesErr = nil
+		getProductFileErr = nil
+		downloadLinksByGlobErr = nil
 
 		productVersion = "C"
 		etag = "etag-0"
@@ -55,9 +71,7 @@ var _ = Describe("In", func() {
 		versionWithETag, err = versions.CombineVersionAndETag(productVersion, etag)
 		Expect(err).NotTo(HaveOccurred())
 
-		releaseID = 1234
-		file1URLPath = "/file1"
-		file1URL := fmt.Sprintf("%s%s", server.URL(), file1URLPath)
+		file1URL := "some-file-path"
 		productFiles = []pivnet.ProductFile{
 			{
 				ID:           1234,
@@ -92,22 +106,12 @@ var _ = Describe("In", func() {
 			ProductFiles: productFiles,
 		}
 
-		pivnetReleasesResponse = &pivnet.ReleasesResponse{
-			Releases: []pivnet.Release{
-				{
-					Version: "A",
-				},
-				{
-					Version: productVersion,
-					ID:      releaseID,
-					Links: &pivnet.Links{
-						ProductFiles: map[string]string{
-							"href": file1URL,
-						},
-					},
-				},
-				{
-					Version: "B",
+		release = pivnet.Release{
+			Version: productVersion,
+			ID:      1234,
+			Links: &pivnet.Links{
+				ProductFiles: map[string]string{
+					"href": file1URL,
 				},
 			},
 		}
@@ -119,81 +123,48 @@ var _ = Describe("In", func() {
 			Source: concourse.Source{
 				APIToken:    "some-api-token",
 				ProductSlug: productSlug,
-				Endpoint:    server.URL(),
 			},
 			Version: concourse.Version{
 				versionWithETag,
 			},
 		}
-
 	})
 
 	JustBeforeEach(func() {
-		server.AppendHandlers(
-			ghttp.CombineHandlers(
-				ghttp.VerifyRequest(
-					"GET",
-					fmt.Sprintf("%s/products/%s/releases", apiPrefix, productSlug),
-				),
-				ghttp.RespondWithJSONEncoded(http.StatusOK, pivnetReleasesResponse),
-			),
-		)
+		fakePivnetClient.GetReleaseReturns(release, getReleaseErr)
+		fakePivnetClient.AcceptEULAReturns(acceptEULAErr)
+		fakePivnetClient.GetProductFilesReturns(productFilesResponse, getProductFilesErr)
 
-		server.AppendHandlers(
-			ghttp.CombineHandlers(
-				ghttp.VerifyRequest(
-					"POST",
-					fmt.Sprintf(
-						"%s/products/%s/releases/%d/eula_acceptance",
-						apiPrefix,
-						productSlug,
-						releaseID,
-					),
-				),
-				ghttp.RespondWith(http.StatusOK, ""),
-			),
-		)
+		fakePivnetClient.GetProductFileStub = func(
+			productSlug string,
+			releaseID int,
+			productFileID int,
+		) (pivnet.ProductFile, error) {
+			if getProductFileErr != nil {
+				return pivnet.ProductFile{}, getProductFileErr
+			}
 
-		server.AppendHandlers(
-			ghttp.CombineHandlers(
-				ghttp.VerifyRequest(
-					"GET",
-					file1URLPath,
-				),
-				ghttp.RespondWithJSONEncoded(http.StatusOK, productFilesResponse),
-			),
-		)
+			for _, p := range productFiles {
+				if p.ID == productFileID {
+					return p, nil
+				}
+			}
 
-		for _, p := range productFiles {
-			server.AppendHandlers(
-				ghttp.CombineHandlers(
-					ghttp.VerifyRequest(
-						"GET",
-						fmt.Sprintf(
-							"%s/products/%s/releases/%d/product_files/%d",
-							apiPrefix,
-							productSlug,
-							releaseID,
-							p.ID,
-						),
-					),
-					ghttp.RespondWithJSONEncoded(http.StatusOK, p),
-				),
-			)
+			Fail("unexpected productFileID: %d", productFileID)
+			return pivnet.ProductFile{}, nil
 		}
+
+		fakeFilter.DownloadLinksByGlobReturns(map[string]string{}, downloadLinksByGlobErr)
 
 		sanitized := concourse.SanitizedSource(inRequest.Source)
 		sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
 
 		ginkgoLogger = logger.NewLogger(sanitizer)
 
-		binaryVersion := "v0.1.2-unit-tests"
-		inCommand = in.NewInCommand(binaryVersion, ginkgoLogger, downloadDir)
+		inCommand = in.NewInCommand(ginkgoLogger, downloadDir, fakePivnetClient, fakeFilter, fakeDownloader)
 	})
 
 	AfterEach(func() {
-		server.Close()
-
 		err := os.RemoveAll(downloadDir)
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -288,16 +259,85 @@ var _ = Describe("In", func() {
 		})
 	})
 
-	Context("when release has no links", func() {
+	Context("when creating download dir fails", func() {
 		BeforeEach(func() {
-			pivnetReleasesResponse.Releases[1].Links = nil
+			downloadDir = "/not/a/real/dir"
 		})
 
-		It("returns an error", func() {
+		It("returns error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("when getting release returns error", func() {
+		BeforeEach(func() {
+			getReleaseErr = fmt.Errorf("some error")
+		})
+
+		It("returns error", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).To(HaveOccurred())
 
-			Expect(err.Error()).To(MatchRegexp("Failed to get Product File"))
+			Expect(err).To(Equal(getReleaseErr))
+		})
+	})
+
+	Context("when accepting EULA returns error", func() {
+		BeforeEach(func() {
+			acceptEULAErr = fmt.Errorf("some error")
+		})
+
+		It("returns error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(acceptEULAErr))
+		})
+	})
+
+	Context("when getting product files returns error", func() {
+		BeforeEach(func() {
+			getProductFilesErr = fmt.Errorf("some error")
+		})
+
+		It("returns error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(getProductFilesErr))
+		})
+	})
+
+	Context("when getting a product file returns error", func() {
+		BeforeEach(func() {
+			getProductFileErr = fmt.Errorf("some error")
+		})
+
+		It("returns error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(getProductFileErr))
+		})
+	})
+
+	Context("when globs are provided", func() {
+		BeforeEach(func() {
+			inRequest.Params.Globs = []string{"some*glob", "other*glob"}
+		})
+
+		Context("when filtering download links returns error", func() {
+			BeforeEach(func() {
+				downloadLinksByGlobErr = fmt.Errorf("some error")
+			})
+
+			It("returns error", func() {
+				_, err := inCommand.Run(inRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(Equal(downloadLinksByGlobErr))
+			})
 		})
 	})
 })

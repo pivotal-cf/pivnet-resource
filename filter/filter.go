@@ -8,7 +8,23 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 )
 
-func DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error) {
+//go:generate counterfeiter . Filter
+
+type Filter interface {
+	DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error)
+	DownloadLinks(p pivnet.ProductFiles) map[string]string
+	ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error)
+	ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error)
+}
+
+type filter struct {
+}
+
+func NewFilter() Filter {
+	return &filter{}
+}
+
+func (f filter) DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error) {
 	filtered := make(map[string]string)
 
 	for _, pattern := range glob {
@@ -32,7 +48,7 @@ func DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[st
 	return filtered, nil
 }
 
-func DownloadLinks(p pivnet.ProductFiles) map[string]string {
+func (f filter) DownloadLinks(p pivnet.ProductFiles) map[string]string {
 	links := make(map[string]string)
 
 	for _, productFile := range p.ProductFiles {
@@ -53,7 +69,7 @@ func DownloadLinks(p pivnet.ProductFiles) map[string]string {
 	return links
 }
 
-func ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error) {
+func (f filter) ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error) {
 	filteredReleases := make([]pivnet.Release, 0)
 
 	for _, release := range releases {
@@ -65,7 +81,7 @@ func ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]piv
 	return filteredReleases, nil
 }
 
-func ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error) {
+func (f filter) ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error) {
 	filteredReleases := make([]pivnet.Release, 0)
 
 	for _, release := range releases {

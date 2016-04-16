@@ -16,6 +16,8 @@ const (
 	path     = "/api/v2"
 )
 
+//go:generate counterfeiter . Client
+
 type Client interface {
 	ProductVersions(productSlug string, releases []Release) ([]string, error)
 	CreateRelease(CreateReleaseConfig) (Release, error)

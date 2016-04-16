@@ -17,12 +17,15 @@ import (
 
 var _ = Describe("Downloader", func() {
 	var (
+		d          downloader.Downloader
 		server     *ghttp.Server
 		apiAddress string
 		dir        string
 	)
 
 	BeforeEach(func() {
+		d = downloader.NewDownloader()
+
 		var err error
 		server = ghttp.NewServer()
 		apiAddress = server.URL()
@@ -64,7 +67,7 @@ var _ = Describe("Downloader", func() {
 				"the-first-post": apiAddress + "/the-first-post",
 			}
 
-			_, err := downloader.Download(dir, fileNames, token)
+			_, err := d.Download(dir, fileNames, token)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -83,7 +86,7 @@ var _ = Describe("Downloader", func() {
 				))
 			}
 
-			_, err := downloader.Download(dir, fileNames, token)
+			_, err := d.Download(dir, fileNames, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(server.ReceivedRequests())).To(Equal(3))
 
@@ -122,7 +125,7 @@ var _ = Describe("Downloader", func() {
 				))
 			}
 
-			files, err := downloader.Download(dir, fileNames, token)
+			files, err := d.Download(dir, fileNames, token)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(len(files)).To(Equal(3))
@@ -146,7 +149,7 @@ var _ = Describe("Downloader", func() {
 					"the-first-post": apiAddress + "/the-first-post",
 				}
 
-				_, err := downloader.Download(dir, fileNames, token)
+				_, err := d.Download(dir, fileNames, token)
 				Expect(err).To(MatchError("the EULA has not been accepted for the file: the-first-post"))
 			})
 		})
@@ -165,14 +168,14 @@ var _ = Describe("Downloader", func() {
 					"the-first-post": apiAddress + "/the-first-post",
 				}
 
-				_, err := downloader.Download(dir, fileNames, token)
+				_, err := d.Download(dir, fileNames, token)
 				Expect(err).To(MatchError("pivnet returned an error code of 401 for the file: the-first-post"))
 			})
 		})
 
 		Context("when it fails to make a request", func() {
 			It("raises an error", func() {
-				_, err := downloader.Download(
+				_, err := d.Download(
 					dir,
 					map[string]string{"^731drop": "&h%%%%"},
 					token,

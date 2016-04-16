@@ -12,6 +12,7 @@ import (
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/check"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
@@ -22,6 +23,7 @@ var _ = Describe("Check", func() {
 	var (
 		server         *ghttp.Server
 		pivnetResponse pivnet.ReleasesResponse
+		fakeFilter     *filterfakes.FakeFilter
 
 		tempDir     string
 		logFilePath string
@@ -41,10 +43,17 @@ var _ = Describe("Check", func() {
 
 		releasesResponseStatus int
 		etagResponseStatus     int
+
+		releasesByReleaseTypeErr error
+		releasesByVersionErr     error
 	)
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
+		fakeFilter = &filterfakes.FakeFilter{}
+
+		releasesByReleaseTypeErr = nil
+		releasesByVersionErr = nil
 
 		releaseTypes = []string{
 			"foo release",
@@ -133,6 +142,9 @@ var _ = Describe("Check", func() {
 			)
 		}
 
+		fakeFilter.ReleasesByReleaseTypeReturns(filteredReleases, releasesByReleaseTypeErr)
+		fakeFilter.ReleasesByVersionReturns(filteredReleases, releasesByVersionErr)
+
 		binaryVersion := "v0.1.2-unit-tests"
 
 		sanitized := concourse.SanitizedSource(checkRequest.Source)
@@ -140,7 +152,7 @@ var _ = Describe("Check", func() {
 
 		ginkgoLogger = logger.NewLogger(sanitizer)
 
-		checkCommand = check.NewCheckCommand(binaryVersion, ginkgoLogger, logFilePath)
+		checkCommand = check.NewCheckCommand(binaryVersion, ginkgoLogger, logFilePath, fakeFilter)
 	})
 
 	AfterEach(func() {
@@ -339,6 +351,19 @@ var _ = Describe("Check", func() {
 
 			Expect(response).To(HaveLen(1))
 			Expect(response[0].ProductVersion).To(Equal(versionWithETagC))
+		})
+
+		Context("when filtering returns an error", func() {
+			BeforeEach(func() {
+				releasesByVersionErr = fmt.Errorf("some error")
+			})
+
+			It("returns the error", func() {
+				_, err := checkCommand.Run(checkRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(Equal(releasesByVersionErr))
+			})
 		})
 	})
 })
