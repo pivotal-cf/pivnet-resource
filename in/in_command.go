@@ -74,10 +74,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Debugf(
-		"Release: %+v\n",
-		release,
-	)
+	c.logger.Debugf("Release: %+v\n", release)
 
 	c.logger.Debugf(
 		"Accepting EULA: {product_slug: %s, release_id: %d}\n",
@@ -90,50 +87,106 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Debugf(
-		"Getting product files: {release_id: %d}\n",
-		release.ID,
-	)
+	c.logger.Debugf("Getting product files: {release_id: %d}\n", release.ID)
 
 	productFiles, err := c.pivnetClient.GetProductFiles(release)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
+	err = c.downloadFiles(
+		input.Params.Globs,
+		input.Source.APIToken,
+		productFiles,
+		productSlug,
+		release.ID,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	versionWithETag, err := versions.CombineVersionAndETag(productVersion, etag)
+
+	mdata := metadata.Metadata{
+		Release: &metadata.Release{
+			Version:               release.Version,
+			ReleaseType:           release.ReleaseType,
+			ReleaseDate:           release.ReleaseDate,
+			Description:           release.Description,
+			ReleaseNotesURL:       release.ReleaseNotesURL,
+			Availability:          release.Availability,
+			Controlled:            release.Controlled,
+			ECCN:                  release.ECCN,
+			LicenseException:      release.LicenseException,
+			EndOfSupportDate:      release.EndOfSupportDate,
+			EndOfGuidanceDate:     release.EndOfGuidanceDate,
+			EndOfAvailabilityDate: release.EndOfAvailabilityDate,
+		},
+	}
+
+	for _, pf := range productFiles.ProductFiles {
+		mdata.ProductFiles = append(mdata.ProductFiles, metadata.ProductFile{
+			ID:           pf.ID,
+			File:         pf.Name,
+			Description:  pf.Description,
+			AWSObjectKey: pf.AWSObjectKey,
+			FileType:     pf.FileType,
+			FileVersion:  pf.FileVersion,
+			MD5:          pf.MD5,
+		})
+	}
+
+	err = c.writeVersionFile(versionWithETag)
+	if err != nil {
+		return concourse.InResponse{}, err
+	}
+
+	err = c.writeMetadataYAMLFile(mdata)
+	if err != nil {
+		return concourse.InResponse{}, err
+	}
+
+	err = c.writeMetadataJSONFile(mdata)
+	if err != nil {
+		return concourse.InResponse{}, err
+	}
+
+	concourseMetadata := c.addReleaseMetadata([]concourse.Metadata{}, release)
+
+	out := concourse.InResponse{
+		Version: concourse.Version{
+			ProductVersion: versionWithETag,
+		},
+		Metadata: concourseMetadata,
+	}
+
+	return out, nil
+}
+
+func (c InCommand) downloadFiles(
+	globs []string,
+	apiToken string,
+	productFiles pivnet.ProductFiles,
+	productSlug string,
+	releaseID int,
+) error {
 	c.logger.Debugf(
 		"Getting download links: {product_files: %+v}\n",
 		productFiles,
 	)
 
-	downloadLinksMD5 := map[string]string{}
-	for _, p := range productFiles.ProductFiles {
-		productFile, err := c.pivnetClient.GetProductFile(
-			productSlug,
-			release.ID,
-			p.ID,
-		)
-		if err != nil {
-			return concourse.InResponse{}, err
-		}
-
-		parts := strings.Split(productFile.AWSObjectKey, "/")
-		fileName := parts[len(parts)-1]
-
-		downloadLinksMD5[fileName] = productFile.MD5
-	}
-
 	downloadLinks := c.filter.DownloadLinks(productFiles)
 
-	if len(input.Params.Globs) > 0 {
+	if len(globs) > 0 {
 		c.logger.Debugf(
 			"Filtering download links with globs: {globs: %+v}\n",
-			input.Params.Globs,
+			globs,
 		)
 
 		var err error
-		downloadLinks, err = c.filter.DownloadLinksByGlob(downloadLinks, input.Params.Globs)
+		downloadLinks, err = c.filter.DownloadLinksByGlob(downloadLinks, globs)
 		if err != nil {
-			return concourse.InResponse{}, err
+			return err
 		}
 
 		c.logger.Debugf(
@@ -142,9 +195,26 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 			c.downloadDir,
 		)
 
-		files, err := c.downloader.Download(c.downloadDir, downloadLinks, input.Source.APIToken)
+		files, err := c.downloader.Download(c.downloadDir, downloadLinks, apiToken)
 		if err != nil {
-			log.Fatalf("Failed to Download Files: %s\n", err.Error())
+			return err
+		}
+
+		downloadLinksMD5 := map[string]string{}
+		for _, p := range productFiles.ProductFiles {
+			productFile, err := c.pivnetClient.GetProductFile(
+				productSlug,
+				releaseID,
+				p.ID,
+			)
+			if err != nil {
+				return err
+			}
+
+			parts := strings.Split(productFile.AWSObjectKey, "/")
+			fileName := parts[len(parts)-1]
+
+			downloadLinksMD5[fileName] = productFile.MD5
 		}
 
 		for _, f := range files {
@@ -177,14 +247,11 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		}
 	}
 
-	versionFilepath := filepath.Join(c.downloadDir, "version")
+	return nil
+}
 
-	versionWithETag, err := versions.CombineVersionAndETag(productVersion, etag)
-	if err != nil {
-		// Untested as it is too hard to force versions.CombineVersionAndETag
-		// to return an error
-		return concourse.InResponse{}, err
-	}
+func (c InCommand) writeVersionFile(versionWithETag string) error {
+	versionFilepath := filepath.Join(c.downloadDir, "version")
 
 	c.logger.Debugf(
 		"Writing version to file: {version: %s, version_filepath: %s}\n",
@@ -192,86 +259,16 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		versionFilepath,
 	)
 
-	err = ioutil.WriteFile(versionFilepath, []byte(versionWithETag), os.ModePerm)
+	err := ioutil.WriteFile(versionFilepath, []byte(versionWithETag), os.ModePerm)
 	if err != nil {
 		// Untested as it is too hard to force io.WriteFile to return an error
-		return concourse.InResponse{}, err
+		return err
 	}
 
-	mdata := metadata.Metadata{
-		Release: &metadata.Release{
-			Version:               release.Version,
-			ReleaseType:           release.ReleaseType,
-			ReleaseDate:           release.ReleaseDate,
-			Description:           release.Description,
-			ReleaseNotesURL:       release.ReleaseNotesURL,
-			Availability:          release.Availability,
-			Controlled:            release.Controlled,
-			ECCN:                  release.ECCN,
-			LicenseException:      release.LicenseException,
-			EndOfSupportDate:      release.EndOfSupportDate,
-			EndOfGuidanceDate:     release.EndOfGuidanceDate,
-			EndOfAvailabilityDate: release.EndOfAvailabilityDate,
-		},
-	}
-
-	for _, pf := range productFiles.ProductFiles {
-		mdata.ProductFiles = append(mdata.ProductFiles, metadata.ProductFile{
-			ID:           pf.ID,
-			File:         pf.Name,
-			Description:  pf.Description,
-			AWSObjectKey: pf.AWSObjectKey,
-			FileType:     pf.FileType,
-			FileVersion:  pf.FileVersion,
-			MD5:          pf.MD5,
-		})
-	}
-
-	err = c.writeMetadataYAML(mdata)
-	if err != nil {
-		return concourse.InResponse{}, err
-	}
-
-	err = c.writeMetadataJSON(mdata)
-	if err != nil {
-		return concourse.InResponse{}, err
-	}
-
-	concourseMetadata := []concourse.Metadata{
-		{Name: "version", Value: release.Version},
-		{Name: "release_type", Value: release.ReleaseType},
-		{Name: "release_date", Value: release.ReleaseDate},
-		{Name: "description", Value: release.Description},
-		{Name: "release_notes_url", Value: release.ReleaseNotesURL},
-		{Name: "availability", Value: release.Availability},
-		{Name: "controlled", Value: fmt.Sprintf("%t", release.Controlled)},
-		{Name: "eccn", Value: release.ECCN},
-		{Name: "license_exception", Value: release.LicenseException},
-		{Name: "end_of_support_date", Value: release.EndOfSupportDate},
-		{Name: "end_of_guidance_date", Value: release.EndOfGuidanceDate},
-		{Name: "end_of_availability_date", Value: release.EndOfAvailabilityDate},
-	}
-	if release.EULA != nil {
-		concourseMetadata = append(concourseMetadata, concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug})
-	}
-
-	if release.EULA != nil {
-		concourseMetadata = append(concourseMetadata,
-			concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug},
-		)
-	}
-
-	out := concourse.InResponse{
-		Version: concourse.Version{
-			ProductVersion: versionWithETag,
-		},
-		Metadata: concourseMetadata,
-	}
-
-	return out, nil
+	return nil
 }
 
-func (c InCommand) writeMetadataJSON(mdata metadata.Metadata) error {
+func (c InCommand) writeMetadataJSONFile(mdata metadata.Metadata) error {
 	jsonMetadataFilepath := filepath.Join(c.downloadDir, "metadata.json")
 	c.logger.Debugf(
 		"Writing metadata to json file: {metadata: %+v, metadata_filepath: %s}\n",
@@ -294,7 +291,7 @@ func (c InCommand) writeMetadataJSON(mdata metadata.Metadata) error {
 	return nil
 }
 
-func (c InCommand) writeMetadataYAML(mdata metadata.Metadata) error {
+func (c InCommand) writeMetadataYAMLFile(mdata metadata.Metadata) error {
 	yamlMetadataFilepath := filepath.Join(c.downloadDir, "metadata.yaml")
 	c.logger.Debugf(
 		"Writing metadata to yaml file: {metadata: %+v, metadata_filepath: %s}\n",
@@ -315,4 +312,29 @@ func (c InCommand) writeMetadataYAML(mdata metadata.Metadata) error {
 	}
 
 	return nil
+}
+
+func (c InCommand) addReleaseMetadata(concourseMetadata []concourse.Metadata, release pivnet.Release) []concourse.Metadata {
+	cmdata := append(concourseMetadata,
+		concourse.Metadata{Name: "version", Value: release.Version},
+		concourse.Metadata{Name: "release_type", Value: release.ReleaseType},
+		concourse.Metadata{Name: "release_date", Value: release.ReleaseDate},
+		concourse.Metadata{Name: "description", Value: release.Description},
+		concourse.Metadata{Name: "release_notes_url", Value: release.ReleaseNotesURL},
+		concourse.Metadata{Name: "availability", Value: release.Availability},
+		concourse.Metadata{Name: "controlled", Value: fmt.Sprintf("%t", release.Controlled)},
+		concourse.Metadata{Name: "eccn", Value: release.ECCN},
+		concourse.Metadata{Name: "license_exception", Value: release.LicenseException},
+		concourse.Metadata{Name: "end_of_support_date", Value: release.EndOfSupportDate},
+		concourse.Metadata{Name: "end_of_guidance_date", Value: release.EndOfGuidanceDate},
+		concourse.Metadata{Name: "end_of_availability_date", Value: release.EndOfAvailabilityDate},
+	)
+
+	if release.EULA != nil {
+		concourseMetadata = append(concourseMetadata,
+			concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug},
+		)
+	}
+
+	return cmdata
 }

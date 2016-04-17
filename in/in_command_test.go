@@ -49,6 +49,7 @@ var _ = Describe("In", func() {
 		acceptEULAErr      error
 		getProductFilesErr error
 		getProductFileErr  error
+		downloadErr        error
 
 		downloadLinksByGlobErr error
 	)
@@ -63,6 +64,7 @@ var _ = Describe("In", func() {
 		getProductFilesErr = nil
 		getProductFileErr = nil
 		downloadLinksByGlobErr = nil
+		downloadErr = nil
 
 		productVersion = "C"
 		etag = "etag-0"
@@ -155,6 +157,7 @@ var _ = Describe("In", func() {
 		}
 
 		fakeFilter.DownloadLinksByGlobReturns(map[string]string{}, downloadLinksByGlobErr)
+		fakeDownloader.DownloadReturns([]string{}, downloadErr)
 
 		sanitized := concourse.SanitizedSource(inRequest.Source)
 		sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
@@ -337,6 +340,19 @@ var _ = Describe("In", func() {
 				Expect(err).To(HaveOccurred())
 
 				Expect(err).To(Equal(downloadLinksByGlobErr))
+			})
+		})
+
+		Context("when downloading files returns an error", func() {
+			BeforeEach(func() {
+				downloadErr = fmt.Errorf("some error")
+			})
+
+			It("returns the error", func() {
+				_, err := inCommand.Run(inRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(Equal(downloadErr))
 			})
 		})
 	})
