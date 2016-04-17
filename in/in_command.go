@@ -227,41 +227,13 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		})
 	}
 
-	yamlMetadataFilepath := filepath.Join(c.downloadDir, "metadata.yaml")
-	c.logger.Debugf(
-		"Writing metadata to yaml file: {metadata: %+v, metadata_filepath: %s}\n",
-		mdata,
-		yamlMetadataFilepath,
-	)
-
-	yamlMetadata, err := yaml.Marshal(mdata)
+	err = c.writeMetadataYAML(mdata)
 	if err != nil {
-		// Untested as it is too hard to force yaml.Marshal to return an error
 		return concourse.InResponse{}, err
 	}
 
-	err = ioutil.WriteFile(yamlMetadataFilepath, yamlMetadata, os.ModePerm)
+	err = c.writeMetadataJSON(mdata)
 	if err != nil {
-		// Untested as it is too hard to force io.WriteFile to return an error
-		return concourse.InResponse{}, err
-	}
-
-	jsonMetadataFilepath := filepath.Join(c.downloadDir, "metadata.json")
-	c.logger.Debugf(
-		"Writing metadata to json file: {metadata: %+v, metadata_filepath: %s}\n",
-		mdata,
-		jsonMetadataFilepath,
-	)
-
-	jsonMetadata, err := json.Marshal(mdata)
-	if err != nil {
-		// Untested as it is too hard to force json.Marshal to return an error
-		return concourse.InResponse{}, err
-	}
-
-	err = ioutil.WriteFile(jsonMetadataFilepath, jsonMetadata, os.ModePerm)
-	if err != nil {
-		// Untested as it is too hard to force io.WriteFile to return an error
 		return concourse.InResponse{}, err
 	}
 
@@ -297,4 +269,50 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	}
 
 	return out, nil
+}
+
+func (c InCommand) writeMetadataJSON(mdata metadata.Metadata) error {
+	jsonMetadataFilepath := filepath.Join(c.downloadDir, "metadata.json")
+	c.logger.Debugf(
+		"Writing metadata to json file: {metadata: %+v, metadata_filepath: %s}\n",
+		mdata,
+		jsonMetadataFilepath,
+	)
+
+	jsonMetadata, err := json.Marshal(mdata)
+	if err != nil {
+		// Untested as it is too hard to force json.Marshal to return an error
+		return err
+	}
+
+	err = ioutil.WriteFile(jsonMetadataFilepath, jsonMetadata, os.ModePerm)
+	if err != nil {
+		// Untested as it is too hard to force io.WriteFile to return an error
+		return err
+	}
+
+	return nil
+}
+
+func (c InCommand) writeMetadataYAML(mdata metadata.Metadata) error {
+	yamlMetadataFilepath := filepath.Join(c.downloadDir, "metadata.yaml")
+	c.logger.Debugf(
+		"Writing metadata to yaml file: {metadata: %+v, metadata_filepath: %s}\n",
+		mdata,
+		yamlMetadataFilepath,
+	)
+
+	yamlMetadata, err := yaml.Marshal(mdata)
+	if err != nil {
+		// Untested as it is too hard to force yaml.Marshal to return an error
+		return err
+	}
+
+	err = ioutil.WriteFile(yamlMetadataFilepath, yamlMetadata, os.ModePerm)
+	if err != nil {
+		// Untested as it is too hard to force io.WriteFile to return an error
+		return err
+	}
+
+	return nil
 }
