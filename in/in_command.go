@@ -229,7 +229,7 @@ func (c InCommand) downloadFiles(
 			)
 			md5, err := c.fileSummer.SumFile(downloadPath)
 			if err != nil {
-				log.Fatalf("Failed to calculate MD5: %s\n", err.Error())
+				return err
 			}
 
 			expectedMD5 := downloadLinksMD5[f]

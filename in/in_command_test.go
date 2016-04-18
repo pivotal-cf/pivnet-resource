@@ -45,15 +45,16 @@ var _ = Describe("In", func() {
 		inRequest concourse.InRequest
 		inCommand *in.InCommand
 
-		release       pivnet.Release
-		getReleaseErr error
+		release           pivnet.Release
+		downloadFilepaths []string
 
-		acceptEULAErr      error
-		getProductFilesErr error
-		getProductFileErr  error
-		downloadErr        error
-
+		getReleaseErr          error
+		acceptEULAErr          error
+		getProductFilesErr     error
+		getProductFileErr      error
+		downloadErr            error
 		downloadLinksByGlobErr error
+		md5sumErr              error
 	)
 
 	BeforeEach(func() {
@@ -68,6 +69,7 @@ var _ = Describe("In", func() {
 		getProductFileErr = nil
 		downloadLinksByGlobErr = nil
 		downloadErr = nil
+		md5sumErr = nil
 
 		productVersion = "C"
 		etag = "etag-0"
@@ -75,6 +77,10 @@ var _ = Describe("In", func() {
 		var err error
 		versionWithETag, err = versions.CombineVersionAndETag(productVersion, etag)
 		Expect(err).NotTo(HaveOccurred())
+
+		downloadFilepaths = []string{
+			"file-1",
+		}
 
 		file1URL := "some-file-path"
 		productFiles = []pivnet.ProductFile{
@@ -160,7 +166,8 @@ var _ = Describe("In", func() {
 		}
 
 		fakeFilter.DownloadLinksByGlobReturns(map[string]string{}, downloadLinksByGlobErr)
-		fakeDownloader.DownloadReturns([]string{}, downloadErr)
+		fakeDownloader.DownloadReturns(downloadFilepaths, downloadErr)
+		fakeFileSummer.SumFileReturns("", md5sumErr)
 
 		sanitized := concourse.SanitizedSource(inRequest.Source)
 		sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
@@ -363,6 +370,19 @@ var _ = Describe("In", func() {
 				Expect(err).To(HaveOccurred())
 
 				Expect(err).To(Equal(downloadErr))
+			})
+		})
+
+		Context("when calculating md5 sum of file returns an error", func() {
+			BeforeEach(func() {
+				md5sumErr = fmt.Errorf("some md5 err error")
+			})
+
+			It("returns the error", func() {
+				_, err := inCommand.Run(inRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(Equal(md5sumErr))
 			})
 		})
 	})
