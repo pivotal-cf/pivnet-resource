@@ -300,6 +300,19 @@ var _ = Describe("Check", func() {
 				Expect(err.Error()).To(ContainSubstring(releaseTypes[2]))
 			})
 		})
+
+		Context("when filtering returns an error", func() {
+			BeforeEach(func() {
+				releasesByReleaseTypeErr = fmt.Errorf("some release type error")
+			})
+
+			It("returns the error", func() {
+				_, err := checkCommand.Run(checkRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(Equal(releasesByReleaseTypeErr))
+			})
+		})
 	})
 
 	Context("when the product version is specified", func() {
@@ -328,7 +341,7 @@ var _ = Describe("Check", func() {
 
 		Context("when filtering returns an error", func() {
 			BeforeEach(func() {
-				releasesByVersionErr = fmt.Errorf("some error")
+				releasesByVersionErr = fmt.Errorf("some version error")
 			})
 
 			It("returns the error", func() {
