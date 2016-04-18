@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 
@@ -47,6 +48,7 @@ var _ = Describe("In", func() {
 
 		release           pivnet.Release
 		downloadFilepaths []string
+		fileContentsMD5s  []string
 
 		getReleaseErr          error
 		acceptEULAErr          error
@@ -74,12 +76,18 @@ var _ = Describe("In", func() {
 		productVersion = "C"
 		etag = "etag-0"
 
+		fileContentsMD5s = []string{
+			"some-md5 1234",
+			"some-md5 3456",
+		}
+
 		var err error
 		versionWithETag, err = versions.CombineVersionAndETag(productVersion, etag)
 		Expect(err).NotTo(HaveOccurred())
 
 		downloadFilepaths = []string{
-			"file-1",
+			"file-1234",
+			"file-3456",
 		}
 
 		file1URL := "some-file-path"
@@ -88,10 +96,10 @@ var _ = Describe("In", func() {
 				ID:           1234,
 				Name:         "product file 1234",
 				Description:  "some product file 1234",
-				AWSObjectKey: "some-key 1234",
+				AWSObjectKey: downloadFilepaths[0],
 				FileType:     "some-file-type 1234",
 				FileVersion:  "some-file-version 1234",
-				MD5:          "some-md5 1234",
+				MD5:          fileContentsMD5s[0],
 				Links: &pivnet.Links{
 					Download: map[string]string{
 						"href": "foo",
@@ -102,10 +110,10 @@ var _ = Describe("In", func() {
 				ID:           3456,
 				Name:         "product file 3456",
 				Description:  "some product file 3456",
-				AWSObjectKey: "some-key 3456",
+				AWSObjectKey: downloadFilepaths[1],
 				FileType:     "some-file-type 3456",
 				FileVersion:  "some-file-version 3456",
-				MD5:          "some-md5 3456",
+				MD5:          fileContentsMD5s[1],
 				Links: &pivnet.Links{
 					Download: map[string]string{
 						"href": "bar",
@@ -161,13 +169,26 @@ var _ = Describe("In", func() {
 				}
 			}
 
-			Fail("unexpected productFileID: %d", productFileID)
+			Fail(fmt.Sprintf("unexpected productFileID: %d", productFileID))
 			return pivnet.ProductFile{}, nil
 		}
 
 		fakeFilter.DownloadLinksByGlobReturns(map[string]string{}, downloadLinksByGlobErr)
 		fakeDownloader.DownloadReturns(downloadFilepaths, downloadErr)
-		fakeFileSummer.SumFileReturns("", md5sumErr)
+		fakeFileSummer.SumFileStub = func(path string) (string, error) {
+			if md5sumErr != nil {
+				return "", md5sumErr
+			}
+
+			for i, f := range downloadFilepaths {
+				if strings.HasSuffix(path, f) {
+					return fileContentsMD5s[i], nil
+				}
+			}
+
+			Fail(fmt.Sprintf("unexpected path: %s", path))
+			return "", nil
+		}
 
 		sanitized := concourse.SanitizedSource(inRequest.Source)
 		sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
@@ -383,6 +404,17 @@ var _ = Describe("In", func() {
 				Expect(err).To(HaveOccurred())
 
 				Expect(err).To(Equal(md5sumErr))
+			})
+		})
+
+		Context("when the MD5 does not match", func() {
+			BeforeEach(func() {
+				fileContentsMD5s[0] = "incorrect md5"
+			})
+
+			It("returns an error", func() {
+				_, err := inCommand.Run(inRequest)
+				Expect(err).To(HaveOccurred())
 			})
 		})
 	})

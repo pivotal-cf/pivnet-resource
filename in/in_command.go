@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -215,10 +214,21 @@ func (c InCommand) downloadFiles(
 			}
 
 			parts := strings.Split(productFile.AWSObjectKey, "/")
+
+			if len(parts) < 1 {
+				panic("not enough components to form filename")
+			}
+
 			fileName := parts[len(parts)-1]
+
+			if fileName == "" {
+				panic("empty file name")
+			}
 
 			downloadLinksMD5[fileName] = productFile.MD5
 		}
+
+		c.logger.Debugf("All download links MD5: %+v\n", downloadLinksMD5)
 
 		for _, f := range files {
 			downloadPath := filepath.Join(c.downloadDir, f)
@@ -234,7 +244,7 @@ func (c InCommand) downloadFiles(
 
 			expectedMD5 := downloadLinksMD5[f]
 			if md5 != expectedMD5 {
-				log.Fatalf(
+				return fmt.Errorf(
 					"Failed MD5 comparison for file: %s. Expected %s, got %s\n",
 					f,
 					expectedMD5,
