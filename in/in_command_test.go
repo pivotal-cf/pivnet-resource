@@ -355,6 +355,16 @@ var _ = Describe("In", func() {
 			inRequest.Params.Globs = []string{"some*glob", "other*glob"}
 		})
 
+		It("downloads files", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeFilter.DownloadLinksCallCount()).To(Equal(1))
+			Expect(fakeFilter.DownloadLinksByGlobCallCount()).To(Equal(1))
+			Expect(fakePivnetClient.GetProductFileCallCount()).To(Equal(len(productFiles)))
+			Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
+		})
+
 		Context("when getting a product file returns error", func() {
 			BeforeEach(func() {
 				getProductFileErr = fmt.Errorf("some product file error")
