@@ -10,7 +10,6 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
@@ -19,6 +18,7 @@ type CheckCommand struct {
 	logFilePath   string
 	binaryVersion string
 	filter        filter.Filter
+	pivnetClient  pivnet.Client
 }
 
 func NewCheckCommand(
@@ -26,12 +26,14 @@ func NewCheckCommand(
 	logger logger.Logger,
 	logFilePath string,
 	filter filter.Filter,
+	pivnetClient pivnet.Client,
 ) *CheckCommand {
 	return &CheckCommand{
 		logger:        logger,
 		logFilePath:   logFilePath,
 		binaryVersion: binaryVersion,
 		filter:        filter,
+		pivnetClient:  pivnetClient,
 	}
 }
 
@@ -58,28 +60,8 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	c.logger.Debugf("Received input: %+v\n", input)
 
-	var endpoint string
-	if input.Source.Endpoint != "" {
-		endpoint = input.Source.Endpoint
-	} else {
-		endpoint = pivnet.Endpoint
-	}
-
-	productSlug := input.Source.ProductSlug
-
-	clientConfig := pivnet.NewClientConfig{
-		Endpoint:  endpoint,
-		Token:     input.Source.APIToken,
-		UserAgent: useragent.UserAgent(c.binaryVersion, "check", productSlug),
-	}
-	client := pivnet.NewClient(
-		clientConfig,
-		c.logger,
-	)
-
 	c.logger.Debugf("Getting all valid release types\n")
-
-	releaseTypes, err := client.ReleaseTypes()
+	releaseTypes, err := c.pivnetClient.ReleaseTypes()
 	if err != nil {
 		return nil, err
 	}
@@ -101,8 +83,9 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	}
 
 	c.logger.Debugf("Getting all product versions\n")
+	productSlug := input.Source.ProductSlug
 
-	releases, err := client.ReleasesForProductSlug(productSlug)
+	releases, err := c.pivnetClient.ReleasesForProductSlug(productSlug)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +109,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	filteredVersions, err := client.ProductVersions(productSlug, releases)
+	filteredVersions, err := c.pivnetClient.ProductVersions(productSlug, releases)
 	if err != nil {
 		return nil, err
 	}

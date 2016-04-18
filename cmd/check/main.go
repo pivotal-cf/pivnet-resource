@@ -11,7 +11,9 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
+	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
 )
 
@@ -54,9 +56,32 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	var endpoint string
+	if input.Source.Endpoint != "" {
+		endpoint = input.Source.Endpoint
+	} else {
+		endpoint = pivnet.Endpoint
+	}
+
+	clientConfig := pivnet.NewClientConfig{
+		Endpoint:  endpoint,
+		Token:     input.Source.APIToken,
+		UserAgent: useragent.UserAgent(version, "check", input.Source.ProductSlug),
+	}
+	client := pivnet.NewClient(
+		clientConfig,
+		l,
+	)
+
 	f := filter.NewFilter()
 
-	response, err := check.NewCheckCommand(version, l, logFile.Name(), f).Run(input)
+	response, err := check.NewCheckCommand(
+		version,
+		l,
+		logFile.Name(),
+		f,
+		client,
+	).Run(input)
 	if err != nil {
 		l.Debugf("Exiting with error: %v\n", err)
 		log.Fatalln(err)
