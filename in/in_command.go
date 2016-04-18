@@ -15,7 +15,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
-	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
+	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
@@ -27,6 +27,7 @@ type InCommand struct {
 	pivnetClient pivnet.Client
 	filter       filter.Filter
 	downloader   downloader.Downloader
+	fileSummer   md5sum.FileSummer
 }
 
 func NewInCommand(
@@ -35,6 +36,7 @@ func NewInCommand(
 	pivnetClient pivnet.Client,
 	filter filter.Filter,
 	downloader downloader.Downloader,
+	fileSummer md5sum.FileSummer,
 ) *InCommand {
 	return &InCommand{
 		logger:       logger,
@@ -42,6 +44,7 @@ func NewInCommand(
 		pivnetClient: pivnetClient,
 		filter:       filter,
 		downloader:   downloader,
+		fileSummer:   fileSummer,
 	}
 }
 
@@ -102,7 +105,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		release.ID,
 	)
 	if err != nil {
-		panic(err)
+		return concourse.InResponse{}, err
 	}
 
 	versionWithETag, err := versions.CombineVersionAndETag(productVersion, etag)
@@ -224,7 +227,7 @@ func (c InCommand) downloadFiles(
 				"Calcuating MD5 for downloaded file: %s\n",
 				downloadPath,
 			)
-			md5, err := md5.NewFileContentsSummer(downloadPath).Sum()
+			md5, err := c.fileSummer.SumFile(downloadPath)
 			if err != nil {
 				log.Fatalf("Failed to calculate MD5: %s\n", err.Error())
 			}

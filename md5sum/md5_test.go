@@ -1,4 +1,4 @@
-package md5_test
+package md5sum_test
 
 import (
 	"io/ioutil"
@@ -7,17 +7,17 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
+	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 )
 
 var _ = Describe("MD5", func() {
-	Describe("FileContentsSummer", func() {
+	Describe("FileSummer", func() {
 		var (
 			tempFilePath string
 			tempDir      string
 			fileContents []byte
 
-			summer md5.Summer
+			fileSummer md5sum.FileSummer
 		)
 
 		BeforeEach(func() {
@@ -31,7 +31,7 @@ var _ = Describe("MD5", func() {
 
 			ioutil.WriteFile(tempFilePath, fileContents, os.ModePerm)
 
-			summer = md5.NewFileContentsSummer(tempFilePath)
+			fileSummer = md5sum.NewFileSummer()
 		})
 
 		AfterEach(func() {
@@ -40,7 +40,7 @@ var _ = Describe("MD5", func() {
 		})
 
 		It("returns the MD5 of a file without error", func() {
-			md5, err := summer.Sum()
+			md5, err := fileSummer.SumFile(tempFilePath)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Expected md5 of 'foobar contents'
@@ -50,12 +50,10 @@ var _ = Describe("MD5", func() {
 		Context("when there is an error reading the file", func() {
 			BeforeEach(func() {
 				tempFilePath = "/not/a/valid/file"
-
-				summer = md5.NewFileContentsSummer(tempFilePath)
 			})
 
 			It("returns the error", func() {
-				_, err := summer.Sum()
+				_, err := fileSummer.SumFile(tempFilePath)
 				Expect(err).To(HaveOccurred())
 			})
 		})

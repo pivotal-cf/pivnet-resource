@@ -15,7 +15,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/globs"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
-	"github.com/pivotal-cf-experimental/pivnet-resource/md5"
+	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
@@ -284,7 +284,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 		for _, exactGlob := range exactGlobs {
 			fullFilepath := filepath.Join(c.sourcesDir, exactGlob)
-			fileContentsMD5, err := md5.NewFileContentsSummer(fullFilepath).Sum()
+			fileContentsMD5, err := md5sum.NewFileSummer().SumFile(fullFilepath)
 			if err != nil {
 				log.Fatalln(err)
 			}

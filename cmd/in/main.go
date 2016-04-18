@@ -12,6 +12,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
@@ -62,6 +63,7 @@ func main() {
 
 	f := filter.NewFilter()
 	d := downloader.NewDownloader()
+	fs := md5sum.NewFileSummer()
 
 	var endpoint string
 	if input.Source.Endpoint != "" {
@@ -80,7 +82,7 @@ func main() {
 		l,
 	)
 
-	response, err := in.NewInCommand(l, downloadDir, client, f, d).Run(input)
+	response, err := in.NewInCommand(l, downloadDir, client, f, d, fs).Run(input)
 	if err != nil {
 		l.Debugf("Exiting with error: %v\n", err)
 		log.Fatalln(err)

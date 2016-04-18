@@ -16,6 +16,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum/md5sumfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet/pivnetfakes"
@@ -28,6 +29,7 @@ var _ = Describe("In", func() {
 		fakeFilter       *filterfakes.FakeFilter
 		fakeDownloader   *downloaderfakes.FakeDownloader
 		fakePivnetClient *pivnetfakes.FakeClient
+		fakeFileSummer   *md5sumfakes.FakeFileSummer
 
 		productFiles         []pivnet.ProductFile
 		productFilesResponse pivnet.ProductFiles
@@ -58,6 +60,7 @@ var _ = Describe("In", func() {
 		fakeFilter = &filterfakes.FakeFilter{}
 		fakeDownloader = &downloaderfakes.FakeDownloader{}
 		fakePivnetClient = &pivnetfakes.FakeClient{}
+		fakeFileSummer = &md5sumfakes.FakeFileSummer{}
 
 		getReleaseErr = nil
 		acceptEULAErr = nil
@@ -164,7 +167,14 @@ var _ = Describe("In", func() {
 
 		ginkgoLogger = logger.NewLogger(sanitizer)
 
-		inCommand = in.NewInCommand(ginkgoLogger, downloadDir, fakePivnetClient, fakeFilter, fakeDownloader)
+		inCommand = in.NewInCommand(
+			ginkgoLogger,
+			downloadDir,
+			fakePivnetClient,
+			fakeFilter,
+			fakeDownloader,
+			fakeFileSummer,
+		)
 	})
 
 	AfterEach(func() {
@@ -275,7 +285,7 @@ var _ = Describe("In", func() {
 
 	Context("when getting release returns error", func() {
 		BeforeEach(func() {
-			getReleaseErr = fmt.Errorf("some error")
+			getReleaseErr = fmt.Errorf("some release error")
 		})
 
 		It("returns error", func() {
@@ -288,7 +298,7 @@ var _ = Describe("In", func() {
 
 	Context("when accepting EULA returns error", func() {
 		BeforeEach(func() {
-			acceptEULAErr = fmt.Errorf("some error")
+			acceptEULAErr = fmt.Errorf("some eula error")
 		})
 
 		It("returns error", func() {
@@ -301,7 +311,7 @@ var _ = Describe("In", func() {
 
 	Context("when getting product files returns error", func() {
 		BeforeEach(func() {
-			getProductFilesErr = fmt.Errorf("some error")
+			getProductFilesErr = fmt.Errorf("some product files error")
 		})
 
 		It("returns error", func() {
@@ -312,27 +322,27 @@ var _ = Describe("In", func() {
 		})
 	})
 
-	Context("when getting a product file returns error", func() {
-		BeforeEach(func() {
-			getProductFileErr = fmt.Errorf("some error")
-		})
-
-		It("returns error", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err).To(Equal(getProductFileErr))
-		})
-	})
-
 	Context("when globs are provided", func() {
 		BeforeEach(func() {
 			inRequest.Params.Globs = []string{"some*glob", "other*glob"}
 		})
 
+		Context("when getting a product file returns error", func() {
+			BeforeEach(func() {
+				getProductFileErr = fmt.Errorf("some product file error")
+			})
+
+			It("returns error", func() {
+				_, err := inCommand.Run(inRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(Equal(getProductFileErr))
+			})
+		})
+
 		Context("when filtering download links returns error", func() {
 			BeforeEach(func() {
-				downloadLinksByGlobErr = fmt.Errorf("some error")
+				downloadLinksByGlobErr = fmt.Errorf("some filter error")
 			})
 
 			It("returns error", func() {
@@ -345,7 +355,7 @@ var _ = Describe("In", func() {
 
 		Context("when downloading files returns an error", func() {
 			BeforeEach(func() {
-				downloadErr = fmt.Errorf("some error")
+				downloadErr = fmt.Errorf("some download error")
 			})
 
 			It("returns the error", func() {

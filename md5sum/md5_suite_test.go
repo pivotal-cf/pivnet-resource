@@ -1,4 +1,4 @@
-package md5_test
+package md5sum_test
 
 import (
 	. "github.com/onsi/ginkgo"
