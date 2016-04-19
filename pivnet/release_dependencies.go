@@ -5,11 +5,11 @@ import (
 	"net/http"
 )
 
-func (c client) ReleaseDependencies(productID int, releaseID int) ([]ReleaseDependency, error) {
+func (c client) ReleaseDependencies(productSlug string, releaseID int) ([]ReleaseDependency, error) {
 	url := fmt.Sprintf(
-		"%s/products/%d/releases/%d/dependencies",
+		"%s/products/%s/releases/%d/dependencies",
 		c.url,
-		productID,
+		productSlug,
 		releaseID,
 	)
 

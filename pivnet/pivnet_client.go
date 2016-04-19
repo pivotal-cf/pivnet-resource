@@ -37,7 +37,7 @@ type Client interface {
 	AddUserGroup(productSlug string, releaseID int, userGroupID int) error
 	ReleaseETag(string, Release) (string, error)
 	ReleaseTypes() ([]string, error)
-	ReleaseDependencies(productID int, releaseID int) ([]ReleaseDependency, error)
+	ReleaseDependencies(productSlug string, releaseID int) ([]ReleaseDependency, error)
 }
 
 type client struct {

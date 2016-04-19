@@ -35,6 +35,8 @@ var _ = Describe("In", func() {
 		productFiles         []pivnet.ProductFile
 		productFilesResponse pivnet.ProductFiles
 
+		releaseDependencies []pivnet.ReleaseDependency
+
 		downloadDir string
 
 		ginkgoLogger logger.Logger
@@ -135,6 +137,19 @@ var _ = Describe("In", func() {
 			},
 		}
 
+		releaseDependencies = []pivnet.ReleaseDependency{
+			{
+				Release: pivnet.DependentRelease{
+					ID:      56,
+					Version: "dependent release 56",
+					Product: pivnet.Product{
+						ID:   67,
+						Name: "some product",
+					},
+				},
+			},
+		}
+
 		downloadDir, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -153,6 +168,8 @@ var _ = Describe("In", func() {
 		fakePivnetClient.GetReleaseReturns(release, getReleaseErr)
 		fakePivnetClient.AcceptEULAReturns(acceptEULAErr)
 		fakePivnetClient.GetProductFilesReturns(productFilesResponse, getProductFilesErr)
+
+		fakePivnetClient.ReleaseDependenciesReturns(releaseDependencies, nil)
 
 		fakePivnetClient.GetProductFileStub = func(
 			productSlug string,
@@ -237,6 +254,19 @@ var _ = Describe("In", func() {
 		}
 	}
 
+	var validateReleaseDependenciesMetadata = func(
+		writtenMetadata metadata.Metadata,
+		dependencies []pivnet.ReleaseDependency,
+	) {
+		Expect(writtenMetadata.Dependencies).To(HaveLen(len(dependencies)))
+		for i, d := range dependencies {
+			Expect(writtenMetadata.Dependencies[i].Release.ID).To(Equal(d.Release.ID))
+			Expect(writtenMetadata.Dependencies[i].Release.Version).To(Equal(d.Release.Version))
+			Expect(writtenMetadata.Dependencies[i].Release.Product.ID).To(Equal(d.Release.Product.ID))
+			Expect(writtenMetadata.Dependencies[i].Release.Product.Name).To(Equal(d.Release.Product.Name))
+		}
+	}
+
 	It("writes a metadata file in yaml format", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
@@ -253,6 +283,7 @@ var _ = Describe("In", func() {
 		Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
 
 		validateProductFilesMetadata(writtenMetadata, productFiles)
+		validateReleaseDependenciesMetadata(writtenMetadata, releaseDependencies)
 	})
 
 	It("writes a metadata file in json format", func() {
@@ -271,6 +302,7 @@ var _ = Describe("In", func() {
 		Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
 
 		validateProductFilesMetadata(writtenMetadata, productFiles)
+		validateReleaseDependenciesMetadata(writtenMetadata, releaseDependencies)
 	})
 
 	It("does not download any of the files in the specified release", func() {

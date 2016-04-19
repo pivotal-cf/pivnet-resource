@@ -5,6 +5,7 @@ import "fmt"
 type Metadata struct {
 	Release      *Release      `yaml:"release,omitempty"`
 	ProductFiles []ProductFile `yaml:"product_files"`
+	Dependencies []Dependency  `yaml:"dependencies,omitempty"`
 }
 
 type Release struct {
@@ -33,6 +34,22 @@ type ProductFile struct {
 	FileVersion  string `yaml:"file_version,omitempty"`
 	MD5          string `yaml:"md5,omitempty"`
 	ID           int    `yaml:"id,omitempty"`
+}
+
+type Dependency struct {
+	Release DependentRelease `yaml:"release,omitempty"`
+}
+
+type DependentRelease struct {
+	ID      int     `yaml:"id,omitempty"`
+	Version string  `yaml:"version,omitempty"`
+	Product Product `yaml:"product,omitempty"`
+}
+
+type Product struct {
+	ID   int    `yaml:"id,omitempty"`
+	Slug string `yaml:"slug,omitempty"`
+	Name string `yaml:"name,omitempty"`
 }
 
 func (m Metadata) Validate() error {

@@ -96,6 +96,17 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
+	c.logger.Debugf("Found product files: %+v\n", productFiles)
+
+	c.logger.Debugf("Getting release dependencies: {release_id: %d}\n", release.ID)
+
+	releaseDependencies, err := c.pivnetClient.ReleaseDependencies(productSlug, release.ID)
+	if err != nil {
+		panic(err)
+	}
+
+	c.logger.Debugf("Found release dependencies: %+v\n", releaseDependencies)
+
 	err = c.downloadFiles(
 		input.Params.Globs,
 		productFiles,
@@ -134,6 +145,19 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 			FileType:     pf.FileType,
 			FileVersion:  pf.FileVersion,
 			MD5:          pf.MD5,
+		})
+	}
+
+	for _, d := range releaseDependencies {
+		mdata.Dependencies = append(mdata.Dependencies, metadata.Dependency{
+			Release: metadata.DependentRelease{
+				ID:      d.Release.ID,
+				Version: d.Release.Version,
+				Product: metadata.Product{
+					ID:   d.Release.Product.ID,
+					Name: d.Release.Product.Name,
+				},
+			},
 		})
 	}
 

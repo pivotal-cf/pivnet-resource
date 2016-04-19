@@ -24,8 +24,8 @@ var _ = Describe("PivnetClient - release dependencies", func() {
 		newClientConfig pivnet.NewClientConfig
 		fakeLogger      logger.Logger
 
-		productID int
-		releaseID int
+		productSlug string
+		releaseID   int
 	)
 
 	BeforeEach(func() {
@@ -34,7 +34,7 @@ var _ = Describe("PivnetClient - release dependencies", func() {
 		token = "my-auth-token"
 		userAgent = "pivnet-resource/0.1.0 (some-url)"
 
-		productID = 1234
+		productSlug = "some slug"
 		releaseID = 2345
 
 		fakeLogger = &loggerfakes.FakeLogger{}
@@ -81,16 +81,16 @@ var _ = Describe("PivnetClient - release dependencies", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("GET", fmt.Sprintf(
-						"%s/products/%d/releases/%d/dependencies",
+						"%s/products/%s/releases/%d/dependencies",
 						apiPrefix,
-						productID,
+						productSlug,
 						releaseID,
 					)),
 					ghttp.RespondWithJSONEncoded(http.StatusOK, response),
 				),
 			)
 
-			releaseDependencies, err := client.ReleaseDependencies(productID, releaseID)
+			releaseDependencies, err := client.ReleaseDependencies(productSlug, releaseID)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(releaseDependencies).To(HaveLen(2))
@@ -103,9 +103,9 @@ var _ = Describe("PivnetClient - release dependencies", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("GET", fmt.Sprintf(
-							"%s/products/%d/releases/%d/dependencies",
+							"%s/products/%s/releases/%d/dependencies",
 							apiPrefix,
-							productID,
+							productSlug,
 							releaseID,
 						)),
 						ghttp.RespondWith(http.StatusTeapot, nil),
@@ -114,7 +114,7 @@ var _ = Describe("PivnetClient - release dependencies", func() {
 			})
 
 			It("returns an error", func() {
-				_, err := client.ReleaseDependencies(productID, releaseID)
+				_, err := client.ReleaseDependencies(productSlug, releaseID)
 				Expect(err).To(MatchError(errors.New(
 					"Pivnet returned status code: 418 for the request - expected 200")))
 			})
