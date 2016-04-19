@@ -114,9 +114,7 @@ jobs:
   plan:
   - put: p-gitlab-pivnet
     params:
-      version_file: some-metadata-files/version
-      release_type_file: some-metadata-files/release_type
-      eula_slug_file: some-metadata-files/eula_slug
+      metadata_file: some-metadata-file
       file_glob: some-source-files/*
       s3_filepath_prefix: P-Gitlab
 ```
@@ -135,6 +133,7 @@ already been accepted will be automatically accepted at this point.**
 The metadata for the product is written to both `metadata.json` and
 `metadata.yaml` in the working directory (typically `/tmp/build/get`).
 Use this to programmatically determine metadata of the release.
+See [Metadata file](#metadata-file) for more details.
 
 #### Parameters
 
@@ -192,7 +191,10 @@ release creation will fail.
 
 ### Metadata file
 
-A metadata file can be provided in YAML (or JSON) format. The contents of this file are as follows:
+Metadata is written in YAML and JSON format during `in`, and can be provided to
+`out` via a YAML or JSON file.
+
+The contents of this metadata (in YAML format) are as follows:
 
 ```yaml
 ---
@@ -222,6 +224,13 @@ product_files:
     some
     multi-line
     description
+dependencies:
+- release:
+    id: 1234
+    version: v0.1.2
+    product:
+      id: 45
+      name: Some product
 ```
 
 The top-level `release` key is optional at present but will be required in a
@@ -286,6 +295,8 @@ All other keys are optional. The purpose of the keys is as follows:
 * `upload_as` *Optional.* The display name for the file in Pivotal Network.
   This affects only the display name; the filename of the uploaded file remains
   the same as that of the local file.
+
+The top-level `dependencies` key is currently write-only.
 
 ## Developing
 
