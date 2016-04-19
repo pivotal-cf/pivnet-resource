@@ -73,7 +73,8 @@ type Links struct {
 
 type Product struct {
 	ID   int    `json:"id,omitempty"`
-	Slug string `json:"slug"`
+	Slug string `json:"slug,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type UserGroups struct {
@@ -88,4 +89,18 @@ type UserGroup struct {
 
 type ReleaseTypesResponse struct {
 	ReleaseTypes []string `json:"release_types"`
+}
+
+type DependentRelease struct {
+	ID      int     `json:"id,omitempty"`
+	Version string  `json:"version,omitempty"`
+	Product Product `json:"product,omitempty"`
+}
+
+type ReleaseDependency struct {
+	Release DependentRelease `json:"release,omitempty"`
+}
+
+type ReleaseDependenciesResponse struct {
+	ReleaseDependencies []ReleaseDependency `json:"dependencies,omitempty"`
 }

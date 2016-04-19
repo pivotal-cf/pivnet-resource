@@ -22,7 +22,7 @@ type Client interface {
 	ProductVersions(productSlug string, releases []Release) ([]string, error)
 	CreateRelease(CreateReleaseConfig) (Release, error)
 	ReleasesForProductSlug(string) ([]Release, error)
-	GetRelease(string, string) (Release, error)
+	GetRelease(productSlug string, version string) (Release, error)
 	UpdateRelease(string, Release) (Release, error)
 	DeleteRelease(Release, string) error
 	GetProductFiles(Release) (ProductFiles, error)
@@ -37,6 +37,7 @@ type Client interface {
 	AddUserGroup(productSlug string, releaseID int, userGroupID int) error
 	ReleaseETag(string, Release) (string, error)
 	ReleaseTypes() ([]string, error)
+	ReleaseDependencies(productID int, releaseID int) ([]ReleaseDependency, error)
 }
 
 type client struct {
