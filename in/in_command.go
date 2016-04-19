@@ -102,7 +102,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	releaseDependencies, err := c.pivnetClient.ReleaseDependencies(productSlug, release.ID)
 	if err != nil {
-		panic(err)
+		return concourse.InResponse{}, err
 	}
 
 	c.logger.Debugf("Found release dependencies: %+v\n", releaseDependencies)

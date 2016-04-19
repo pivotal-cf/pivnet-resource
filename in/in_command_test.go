@@ -59,6 +59,7 @@ var _ = Describe("In", func() {
 		downloadErr            error
 		downloadLinksByGlobErr error
 		md5sumErr              error
+		releaseDependenciesErr error
 	)
 
 	BeforeEach(func() {
@@ -74,6 +75,7 @@ var _ = Describe("In", func() {
 		downloadLinksByGlobErr = nil
 		downloadErr = nil
 		md5sumErr = nil
+		releaseDependenciesErr = nil
 
 		productVersion = "C"
 		etag = "etag-0"
@@ -169,7 +171,7 @@ var _ = Describe("In", func() {
 		fakePivnetClient.AcceptEULAReturns(acceptEULAErr)
 		fakePivnetClient.GetProductFilesReturns(productFilesResponse, getProductFilesErr)
 
-		fakePivnetClient.ReleaseDependenciesReturns(releaseDependencies, nil)
+		fakePivnetClient.ReleaseDependenciesReturns(releaseDependencies, releaseDependenciesErr)
 
 		fakePivnetClient.GetProductFileStub = func(
 			productSlug string,
@@ -458,6 +460,19 @@ var _ = Describe("In", func() {
 				_, err := inCommand.Run(inRequest)
 				Expect(err).To(HaveOccurred())
 			})
+		})
+	})
+
+	Context("when getting release dependencies returns an error", func() {
+		BeforeEach(func() {
+			releaseDependenciesErr = fmt.Errorf("some release dependencies error")
+		})
+
+		It("returns the error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(releaseDependenciesErr))
 		})
 	})
 })
