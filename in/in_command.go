@@ -98,7 +98,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	err = c.downloadFiles(
 		input.Params.Globs,
-		input.Source.APIToken,
 		productFiles,
 		productSlug,
 		release.ID,
@@ -167,7 +166,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 func (c InCommand) downloadFiles(
 	globs []string,
-	apiToken string,
 	productFiles pivnet.ProductFiles,
 	productSlug string,
 	releaseID int,
@@ -197,7 +195,7 @@ func (c InCommand) downloadFiles(
 			c.downloadDir,
 		)
 
-		files, err := c.downloader.Download(c.downloadDir, downloadLinks, apiToken)
+		files, err := c.downloader.Download(c.downloadDir, downloadLinks)
 		if err != nil {
 			return err
 		}

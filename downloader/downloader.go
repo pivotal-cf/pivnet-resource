@@ -12,16 +12,20 @@ import (
 //go:generate counterfeiter . Downloader
 
 type Downloader interface {
-	Download(downloadDir string, downloadLinks map[string]string, token string) ([]string, error)
+	Download(downloadDir string, downloadLinks map[string]string) ([]string, error)
 }
 
-type downloader struct{}
-
-func NewDownloader() Downloader {
-	return &downloader{}
+type downloader struct {
+	apiToken string
 }
 
-func (d downloader) Download(downloadDir string, downloadLinks map[string]string, token string) ([]string, error) {
+func NewDownloader(apiToken string) Downloader {
+	return &downloader{
+		apiToken: apiToken,
+	}
+}
+
+func (d downloader) Download(downloadDir string, downloadLinks map[string]string) ([]string, error) {
 	client := &http.Client{}
 
 	fileNames := []string{}
@@ -30,7 +34,7 @@ func (d downloader) Download(downloadDir string, downloadLinks map[string]string
 		if err != nil {
 			return nil, err
 		}
-		req.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
+		req.Header.Add("Authorization", fmt.Sprintf("Token %s", d.apiToken))
 
 		response, err := client.Do(req)
 		if err != nil {

@@ -21,10 +21,14 @@ var _ = Describe("Downloader", func() {
 		server     *ghttp.Server
 		apiAddress string
 		dir        string
+
+		apiToken string
 	)
 
 	BeforeEach(func() {
-		d = downloader.NewDownloader()
+		apiToken = "1234-abcd"
+
+		d = downloader.NewDownloader(apiToken)
 
 		var err error
 		server = ghttp.NewServer()
@@ -39,14 +43,6 @@ var _ = Describe("Downloader", func() {
 	})
 
 	Describe("Download", func() {
-		var (
-			token string
-		)
-
-		BeforeEach(func() {
-			token = "1234-abcd"
-		})
-
 		It("follows redirects", func() {
 			header := http.Header{}
 			header.Add("Location", apiAddress+"/some-redirect-link")
@@ -54,7 +50,7 @@ var _ = Describe("Downloader", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("POST", "/the-first-post", ""),
-					ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
+					ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", apiToken)),
 					ghttp.RespondWith(http.StatusFound, nil, header),
 				),
 				ghttp.CombineHandlers(
@@ -67,7 +63,7 @@ var _ = Describe("Downloader", func() {
 				"the-first-post": apiAddress + "/the-first-post",
 			}
 
-			_, err := d.Download(dir, fileNames, token)
+			_, err := d.Download(dir, fileNames)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -86,7 +82,7 @@ var _ = Describe("Downloader", func() {
 				))
 			}
 
-			_, err := d.Download(dir, fileNames, token)
+			_, err := d.Download(dir, fileNames)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(server.ReceivedRequests())).To(Equal(3))
 
@@ -125,7 +121,7 @@ var _ = Describe("Downloader", func() {
 				))
 			}
 
-			files, err := d.Download(dir, fileNames, token)
+			files, err := d.Download(dir, fileNames)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(len(files)).To(Equal(3))
@@ -140,7 +136,7 @@ var _ = Describe("Downloader", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/the-first-post", ""),
-						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
+						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", apiToken)),
 						ghttp.RespondWith(http.StatusUnavailableForLegalReasons, nil, nil),
 					),
 				)
@@ -149,7 +145,7 @@ var _ = Describe("Downloader", func() {
 					"the-first-post": apiAddress + "/the-first-post",
 				}
 
-				_, err := d.Download(dir, fileNames, token)
+				_, err := d.Download(dir, fileNames)
 				Expect(err).To(MatchError("the EULA has not been accepted for the file: the-first-post"))
 			})
 		})
@@ -159,7 +155,7 @@ var _ = Describe("Downloader", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", "/the-first-post", ""),
-						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", token)),
+						ghttp.VerifyHeaderKV("Authorization", fmt.Sprintf("Token %s", apiToken)),
 						ghttp.RespondWith(http.StatusUnauthorized, nil, nil),
 					),
 				)
@@ -168,7 +164,7 @@ var _ = Describe("Downloader", func() {
 					"the-first-post": apiAddress + "/the-first-post",
 				}
 
-				_, err := d.Download(dir, fileNames, token)
+				_, err := d.Download(dir, fileNames)
 				Expect(err).To(MatchError("pivnet returned an error code of 401 for the file: the-first-post"))
 			})
 		})
@@ -178,7 +174,6 @@ var _ = Describe("Downloader", func() {
 				_, err := d.Download(
 					dir,
 					map[string]string{"^731drop": "&h%%%%"},
-					token,
 				)
 
 				Expect(err).Should(HaveOccurred())

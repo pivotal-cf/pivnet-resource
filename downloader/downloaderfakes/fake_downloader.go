@@ -8,12 +8,11 @@ import (
 )
 
 type FakeDownloader struct {
-	DownloadStub        func(downloadDir string, downloadLinks map[string]string, token string) ([]string, error)
+	DownloadStub        func(downloadDir string, downloadLinks map[string]string) ([]string, error)
 	downloadMutex       sync.RWMutex
 	downloadArgsForCall []struct {
 		downloadDir   string
 		downloadLinks map[string]string
-		token         string
 	}
 	downloadReturns struct {
 		result1 []string
@@ -21,16 +20,15 @@ type FakeDownloader struct {
 	}
 }
 
-func (fake *FakeDownloader) Download(downloadDir string, downloadLinks map[string]string, token string) ([]string, error) {
+func (fake *FakeDownloader) Download(downloadDir string, downloadLinks map[string]string) ([]string, error) {
 	fake.downloadMutex.Lock()
 	fake.downloadArgsForCall = append(fake.downloadArgsForCall, struct {
 		downloadDir   string
 		downloadLinks map[string]string
-		token         string
-	}{downloadDir, downloadLinks, token})
+	}{downloadDir, downloadLinks})
 	fake.downloadMutex.Unlock()
 	if fake.DownloadStub != nil {
-		return fake.DownloadStub(downloadDir, downloadLinks, token)
+		return fake.DownloadStub(downloadDir, downloadLinks)
 	} else {
 		return fake.downloadReturns.result1, fake.downloadReturns.result2
 	}
@@ -42,10 +40,10 @@ func (fake *FakeDownloader) DownloadCallCount() int {
 	return len(fake.downloadArgsForCall)
 }
 
-func (fake *FakeDownloader) DownloadArgsForCall(i int) (string, map[string]string, string) {
+func (fake *FakeDownloader) DownloadArgsForCall(i int) (string, map[string]string) {
 	fake.downloadMutex.RLock()
 	defer fake.downloadMutex.RUnlock()
-	return fake.downloadArgsForCall[i].downloadDir, fake.downloadArgsForCall[i].downloadLinks, fake.downloadArgsForCall[i].token
+	return fake.downloadArgsForCall[i].downloadDir, fake.downloadArgsForCall[i].downloadLinks
 }
 
 func (fake *FakeDownloader) DownloadReturns(result1 []string, result2 error) {
