@@ -696,6 +696,31 @@ exit 1`
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
+
+		Context("when metadata file contains file_type for valid file", func() {
+			BeforeEach(func() {
+				metadataFileContents = fmt.Sprintf(
+					`---
+          release:
+           eula_slug: %s
+           version: "1.1.2#etag-0"
+           release_type: %s
+          product_files:
+          - file: %s
+            file_type: some_file_type`,
+					eulas[0].Slug,
+					releaseTypes[0],
+					productFileRelativePath0,
+				)
+
+				newProductFileRequest.ProductFile.FileType = "some_file_type"
+			})
+
+			It("creates product files with the provided name", func() {
+				_, err := outCommand.Run(outRequest)
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
 	})
 
 	Context("when globbing fails", func() {
