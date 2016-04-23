@@ -12,20 +12,22 @@ import (
 //go:generate counterfeiter . Downloader
 
 type Downloader interface {
-	Download(downloadDir string, downloadLinks map[string]string) ([]string, error)
+	Download(downloadLinks map[string]string) ([]string, error)
 }
 
 type downloader struct {
-	apiToken string
+	apiToken    string
+	downloadDir string
 }
 
-func NewDownloader(apiToken string) Downloader {
+func NewDownloader(apiToken string, downloadDir string) Downloader {
 	return &downloader{
-		apiToken: apiToken,
+		apiToken:    apiToken,
+		downloadDir: downloadDir,
 	}
 }
 
-func (d downloader) Download(downloadDir string, downloadLinks map[string]string) ([]string, error) {
+func (d downloader) Download(downloadLinks map[string]string) ([]string, error) {
 	client := &http.Client{}
 
 	fileNames := []string{}
@@ -49,7 +51,7 @@ func (d downloader) Download(downloadDir string, downloadLinks map[string]string
 			return nil, errors.New(fmt.Sprintf("pivnet returned an error code of %d for the file: %s", response.StatusCode, fileName))
 		}
 
-		downloadPath := filepath.Join(downloadDir, fileName)
+		downloadPath := filepath.Join(d.downloadDir, fileName)
 		file, err := os.Create(downloadPath)
 		if err != nil {
 			return nil, err // not tested

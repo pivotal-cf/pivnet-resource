@@ -27,14 +27,14 @@ var _ = Describe("Downloader", func() {
 
 	BeforeEach(func() {
 		apiToken = "1234-abcd"
-
-		d = downloader.NewDownloader(apiToken)
-
-		var err error
 		server = ghttp.NewServer()
 		apiAddress = server.URL()
+
+		var err error
 		dir, err = ioutil.TempDir("", "pivnet-resource")
 		Expect(err).NotTo(HaveOccurred())
+
+		d = downloader.NewDownloader(apiToken, dir)
 	})
 
 	AfterEach(func() {
@@ -63,7 +63,7 @@ var _ = Describe("Downloader", func() {
 				"the-first-post": apiAddress + "/the-first-post",
 			}
 
-			_, err := d.Download(dir, fileNames)
+			_, err := d.Download(fileNames)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -82,7 +82,7 @@ var _ = Describe("Downloader", func() {
 				))
 			}
 
-			_, err := d.Download(dir, fileNames)
+			_, err := d.Download(fileNames)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(server.ReceivedRequests())).To(Equal(3))
 
@@ -121,7 +121,7 @@ var _ = Describe("Downloader", func() {
 				))
 			}
 
-			files, err := d.Download(dir, fileNames)
+			files, err := d.Download(fileNames)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(len(files)).To(Equal(3))
@@ -145,7 +145,7 @@ var _ = Describe("Downloader", func() {
 					"the-first-post": apiAddress + "/the-first-post",
 				}
 
-				_, err := d.Download(dir, fileNames)
+				_, err := d.Download(fileNames)
 				Expect(err).To(MatchError("the EULA has not been accepted for the file: the-first-post"))
 			})
 		})
@@ -164,17 +164,14 @@ var _ = Describe("Downloader", func() {
 					"the-first-post": apiAddress + "/the-first-post",
 				}
 
-				_, err := d.Download(dir, fileNames)
+				_, err := d.Download(fileNames)
 				Expect(err).To(MatchError("pivnet returned an error code of 401 for the file: the-first-post"))
 			})
 		})
 
 		Context("when it fails to make a request", func() {
 			It("raises an error", func() {
-				_, err := d.Download(
-					dir,
-					map[string]string{"^731drop": "&h%%%%"},
-				)
+				_, err := d.Download(map[string]string{"^731drop": "&h%%%%"})
 
 				Expect(err).Should(HaveOccurred())
 			})

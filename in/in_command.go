@@ -214,12 +214,11 @@ func (c InCommand) downloadFiles(
 		}
 
 		c.logger.Debugf(
-			"Downloading files: {download_links: %+v, download_dir: %s}\n",
+			"Downloading files: {download_links: %+v}\n",
 			downloadLinks,
-			c.downloadDir,
 		)
 
-		files, err := c.downloader.Download(c.downloadDir, downloadLinks)
+		files, err := c.downloader.Download(downloadLinks)
 		if err != nil {
 			return err
 		}

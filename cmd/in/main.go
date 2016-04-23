@@ -62,7 +62,7 @@ func main() {
 	}
 
 	f := filter.NewFilter()
-	d := downloader.NewDownloader(input.Source.APIToken)
+	d := downloader.NewDownloader(input.Source.APIToken, downloadDir)
 	fs := md5sum.NewFileSummer()
 
 	var endpoint string
