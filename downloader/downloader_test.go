@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
+	"github.com/pivotal-cf-experimental/pivnet-resource/logger/loggerfakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -21,6 +22,7 @@ var _ = Describe("Downloader", func() {
 		server     *ghttp.Server
 		apiAddress string
 		dir        string
+		fakeLogger *loggerfakes.FakeLogger
 
 		apiToken string
 	)
@@ -29,12 +31,15 @@ var _ = Describe("Downloader", func() {
 		apiToken = "1234-abcd"
 		server = ghttp.NewServer()
 		apiAddress = server.URL()
+		fakeLogger = &loggerfakes.FakeLogger{}
 
 		var err error
 		dir, err = ioutil.TempDir("", "pivnet-resource")
 		Expect(err).NotTo(HaveOccurred())
+	})
 
-		d = downloader.NewDownloader(apiToken, dir)
+	JustBeforeEach(func() {
+		d = downloader.NewDownloader(apiToken, dir, fakeLogger)
 	})
 
 	AfterEach(func() {
@@ -43,6 +48,10 @@ var _ = Describe("Downloader", func() {
 	})
 
 	Describe("Download", func() {
+		var (
+			fileNames map[string]string
+		)
+
 		It("follows redirects", func() {
 			header := http.Header{}
 			header.Add("Location", apiAddress+"/some-redirect-link")
@@ -59,7 +68,7 @@ var _ = Describe("Downloader", func() {
 				),
 			)
 
-			fileNames := map[string]string{
+			fileNames = map[string]string{
 				"the-first-post": apiAddress + "/the-first-post",
 			}
 
@@ -68,7 +77,7 @@ var _ = Describe("Downloader", func() {
 		})
 
 		It("Downloads the files into the directory provided", func() {
-			fileNames := map[string]string{
+			fileNames = map[string]string{
 				"file-0": apiAddress + "/post-0",
 				"file-1": apiAddress + "/post-1",
 				"file-2": apiAddress + "/post-2",
@@ -106,7 +115,7 @@ var _ = Describe("Downloader", func() {
 			}
 		})
 
-		It("returns a list of file names", func() {
+		It("returns a list of (full) filepaths", func() {
 			fileNames := map[string]string{
 				"file-0": apiAddress + "/post-0",
 				"file-1": apiAddress + "/post-1",
@@ -121,14 +130,14 @@ var _ = Describe("Downloader", func() {
 				))
 			}
 
-			files, err := d.Download(fileNames)
+			filepaths, err := d.Download(fileNames)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(len(files)).To(Equal(3))
+			Expect(len(filepaths)).To(Equal(3))
 
-			Expect(files).Should(ContainElement("file-0"))
-			Expect(files).Should(ContainElement("file-1"))
-			Expect(files).Should(ContainElement("file-2"))
+			Expect(filepaths).Should(ContainElement(filepath.Join(dir, "file-0")))
+			Expect(filepaths).Should(ContainElement(filepath.Join(dir, "file-1")))
+			Expect(filepaths).Should(ContainElement(filepath.Join(dir, "file-2")))
 		})
 
 		Context("when the user has not accepted the EULA", func() {
@@ -174,6 +183,20 @@ var _ = Describe("Downloader", func() {
 				_, err := d.Download(map[string]string{"^731drop": "&h%%%%"})
 
 				Expect(err).Should(HaveOccurred())
+			})
+		})
+
+		Context("when the directory does not already exist", func() {
+			BeforeEach(func() {
+				dir = filepath.Join(dir, "sub_directory")
+			})
+
+			It("creates the directory", func() {
+				_, err := d.Download(nil)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = os.Open(dir)
+				Expect(err).ShouldNot(HaveOccurred())
 			})
 		})
 	})

@@ -251,33 +251,9 @@ func (c InCommand) downloadFiles(
 
 		c.logger.Debugf("All download links MD5: %+v\n", downloadLinksMD5)
 
-		for _, f := range files {
-			downloadPath := filepath.Join(c.downloadDir, f)
-
-			c.logger.Debugf(
-				"Calcuating MD5 for downloaded file: %s\n",
-				downloadPath,
-			)
-			md5, err := c.fileSummer.SumFile(downloadPath)
-			if err != nil {
-				return err
-			}
-
-			expectedMD5 := downloadLinksMD5[f]
-			if md5 != expectedMD5 {
-				return fmt.Errorf(
-					"Failed MD5 comparison for file: %s. Expected %s, got %s\n",
-					f,
-					expectedMD5,
-					md5,
-				)
-			}
-
-			c.logger.Debugf(
-				"MD5 for downloaded file: %s matched expected: %s\n",
-				downloadPath,
-				md5,
-			)
+		err = c.compareMD5s(files, downloadLinksMD5)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -371,4 +347,36 @@ func (c InCommand) addReleaseMetadata(concourseMetadata []concourse.Metadata, re
 	}
 
 	return cmdata
+}
+
+func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]string) error {
+	for _, downloadPath := range filepaths {
+		_, f := filepath.Split(downloadPath)
+		c.logger.Debugf(
+			"Calcuating MD5 for downloaded file: %s\n",
+			downloadPath,
+		)
+		md5, err := c.fileSummer.SumFile(downloadPath)
+		if err != nil {
+			return err
+		}
+
+		expectedMD5 := expectedMD5s[f]
+		if md5 != expectedMD5 {
+			return fmt.Errorf(
+				"Failed MD5 comparison for file: %s. Expected %s, got %s\n",
+				f,
+				expectedMD5,
+				md5,
+			)
+		}
+
+		c.logger.Debugf(
+			"MD5 for downloaded file: %s matched expected: %s\n",
+			downloadPath,
+			md5,
+		)
+	}
+
+	return nil
 }
