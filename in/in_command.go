@@ -223,7 +223,7 @@ func (c InCommand) downloadFiles(
 			return err
 		}
 
-		downloadLinksMD5 := map[string]string{}
+		fileMD5s := map[string]string{}
 		for _, p := range productFiles.ProductFiles {
 			productFile, err := c.pivnetClient.GetProductFile(
 				productSlug,
@@ -246,12 +246,12 @@ func (c InCommand) downloadFiles(
 				panic("empty file name")
 			}
 
-			downloadLinksMD5[fileName] = productFile.MD5
+			fileMD5s[fileName] = productFile.MD5
 		}
 
-		c.logger.Debugf("All download links MD5: %+v\n", downloadLinksMD5)
+		c.logger.Debugf("All file MD5s: %+v\n", fileMD5s)
 
-		err = c.compareMD5s(files, downloadLinksMD5)
+		err = c.compareMD5s(files, fileMD5s)
 		if err != nil {
 			return err
 		}
