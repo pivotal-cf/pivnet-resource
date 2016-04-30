@@ -233,35 +233,63 @@ var _ = Describe("Check", func() {
 		})
 	})
 
-	Context("when a version is provided", func() {
-		BeforeEach(func() {
-			versionWithETag, err := versions.CombineVersionAndETag(
-				allReleases[2].Version, fmt.Sprintf("etag-%d", allReleases[2].ID),
-			)
-			Expect(err).NotTo(HaveOccurred())
+	Describe("when a version is provided", func() {
+		Context("when the version is the latest", func() {
+			BeforeEach(func() {
+				versionWithETag, err := versions.CombineVersionAndETag(
+					allReleases[0].Version, fmt.Sprintf("etag-%d", allReleases[0].ID),
+				)
+				Expect(err).NotTo(HaveOccurred())
 
-			checkRequest.Version = concourse.Version{
-				versionWithETag,
-			}
+				checkRequest.Version = concourse.Version{
+					versionWithETag,
+				}
+			})
+
+			It("returns the most recent version", func() {
+				response, err := checkCommand.Run(checkRequest)
+				Expect(err).NotTo(HaveOccurred())
+
+				versionWithETagA, err := versions.CombineVersionAndETag(
+					allReleases[0].Version, fmt.Sprintf("etag-%d", allReleases[0].ID),
+				)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response).To(HaveLen(1))
+				Expect(response[0].ProductVersion).To(Equal(versionWithETagA))
+			})
 		})
 
-		It("returns the most recent version", func() {
-			response, err := checkCommand.Run(checkRequest)
-			Expect(err).NotTo(HaveOccurred())
+		Context("when the version is not the latest", func() {
+			BeforeEach(func() {
+				versionWithETag, err := versions.CombineVersionAndETag(
+					allReleases[2].Version, fmt.Sprintf("etag-%d", allReleases[2].ID),
+				)
+				Expect(err).NotTo(HaveOccurred())
 
-			versionWithETagC, err := versions.CombineVersionAndETag(
-				allReleases[1].Version, fmt.Sprintf("etag-%d", allReleases[1].ID),
-			)
-			Expect(err).NotTo(HaveOccurred())
+				checkRequest.Version = concourse.Version{
+					versionWithETag,
+				}
+			})
 
-			versionWithETagA, err := versions.CombineVersionAndETag(
-				allReleases[0].Version, fmt.Sprintf("etag-%d", allReleases[0].ID),
-			)
-			Expect(err).NotTo(HaveOccurred())
+			It("returns the most recent version", func() {
+				response, err := checkCommand.Run(checkRequest)
+				Expect(err).NotTo(HaveOccurred())
 
-			Expect(response).To(HaveLen(2))
-			Expect(response[0].ProductVersion).To(Equal(versionWithETagC))
-			Expect(response[1].ProductVersion).To(Equal(versionWithETagA))
+				versionWithETagC, err := versions.CombineVersionAndETag(
+					allReleases[1].Version, fmt.Sprintf("etag-%d", allReleases[1].ID),
+				)
+				Expect(err).NotTo(HaveOccurred())
+
+				versionWithETagA, err := versions.CombineVersionAndETag(
+					allReleases[0].Version, fmt.Sprintf("etag-%d", allReleases[0].ID),
+				)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response).To(HaveLen(2))
+				Expect(response[0].ProductVersion).To(Equal(versionWithETagC))
+				Expect(response[1].ProductVersion).To(Equal(versionWithETagA))
+			})
 		})
 	})
 
