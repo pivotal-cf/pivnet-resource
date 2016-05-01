@@ -61,7 +61,7 @@ BOSH releases are available on
 **Values for the `endpoint`, `bucket` and `region` must be consistent or downloads and uploads may fail.**
 
 For example, the default values of `endpoint: https://network.pivotal.io`, `bucket: pivotalnetwork` and `region: eu-west-1`
-are consistent with the production instance of Pivotal Network.`
+are consistent with the production instance of Pivotal Network.
 
 **Note, `product_version` is deprecated and will be removed in future releases.
 Instead, upgrade to concourse v1.2.0 and use [version pinning](http://concourse.ci/get-step.html#get-version).**
