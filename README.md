@@ -46,8 +46,6 @@ BOSH releases are available on
 
 * `product_slug`: *Required.*  Name of product on Pivotal Network.
 
-* `product_version`: *Optional.*  Lock to a specific product version. Must be a string (enclose in "quotes"). Used only when download product releases during `in`.
-
 * `release_type`: *Optional.*  Lock to a specific release type. Used only when downloading product releases during `in`.
 
 * `access_key_id`: *Optional.*  AWS access key id. Required for uploading products via `out`.
@@ -64,6 +62,9 @@ BOSH releases are available on
 
 For example, the default values of `endpoint: https://network.pivotal.io`, `bucket: pivotalnetwork` and `region: eu-west-1`
 are consistent with the production instance of Pivotal Network.`
+
+**Note, `product_version` is deprecated and will be removed in future releases.
+Instead, upgrade to concourse v1.2.0 and use [version pinning](http://concourse.ci/get-step.html#get-version).**
 
 ### Example Pipeline Configuration
 
