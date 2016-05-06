@@ -5,9 +5,10 @@ Interact with [Pivotal Network](https://network.pivotal.io) from concourse.
 ## Installing
 
 For Concourse versions 0.74.0 and higher, the recommended method to use this
-resource is with `resource_types` in the pipeline config, as follows:
+resource is with `resource_types` in the pipeline config as follows:
 
 ```yaml
+---
 resource_types:
 - name: pivnet
   type: docker-image
@@ -15,8 +16,11 @@ resource_types:
     repository: pivotalcf/pivnet-resource
     tag: latest-final
 ```
+See [concourse docs](http://concourse.ci/configuring-resource-types.html) for more details
+on adding `resource_types` to a pipeline config.
 
-**The value for `tag` above will pull the latest final release, found on the
+**Using `tag: latest-final` will pull the latest final release, which can be
+found on the
 [releases page](https://github.com/pivotal-cf-experimental/pivnet-resource/releases)**
 
 **To avoid automatically upgrading, use a fixed tag instead e.g. `tag: v0.6.3`**
