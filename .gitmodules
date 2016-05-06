@@ -1,0 +1,3 @@
+[submodule "vendor/github.com/robdimsdale/sanitizer"]
+	path = vendor/github.com/robdimsdale/sanitizer
+	url = https://github.com/robdimsdale/sanitizer
