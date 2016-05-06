@@ -10,7 +10,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
+	"github.com/robdimsdale/sanitizer"
 
 	"testing"
 )

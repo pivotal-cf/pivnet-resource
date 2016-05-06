@@ -21,8 +21,8 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet/pivnetfakes"
-	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
+	"github.com/robdimsdale/sanitizer"
 )
 
 var _ = Describe("In", func() {

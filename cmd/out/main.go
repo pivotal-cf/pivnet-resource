@@ -11,7 +11,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out"
-	"github.com/pivotal-cf-experimental/pivnet-resource/sanitizer"
+	"github.com/robdimsdale/sanitizer"
 )
 
 const (
