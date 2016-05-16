@@ -3,6 +3,9 @@ package versions
 import (
 	"fmt"
 	"strings"
+
+	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
 )
 
 const (
@@ -42,4 +45,18 @@ func CombineVersionAndETag(version string, etag string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s%s%s", version, etagDelimiter, etag), nil
+}
+
+func ProductVersions(c gp.ExtendedClient, productSlug string, releases []pivnet.Release) ([]string, error) {
+	var versions []string
+	for _, r := range releases {
+		etag, err := c.ReleaseETag(productSlug, r.ID)
+		if err != nil {
+			return nil, err
+		}
+		version := fmt.Sprintf("%s#%s", r.Version, etag)
+		versions = append(versions, version)
+	}
+
+	return versions, nil
 }

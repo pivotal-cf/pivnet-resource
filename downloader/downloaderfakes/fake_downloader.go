@@ -17,6 +17,7 @@ type FakeDownloader struct {
 		result1 []string
 		result2 error
 	}
+	invocations map[string][][]interface{}
 }
 
 func (fake *FakeDownloader) Download(downloadLinks map[string]string) ([]string, error) {
@@ -24,6 +25,8 @@ func (fake *FakeDownloader) Download(downloadLinks map[string]string) ([]string,
 	fake.downloadArgsForCall = append(fake.downloadArgsForCall, struct {
 		downloadLinks map[string]string
 	}{downloadLinks})
+	fake.guard("Download")
+	fake.invocations["Download"] = append(fake.invocations["Download"], []interface{}{downloadLinks})
 	fake.downloadMutex.Unlock()
 	if fake.DownloadStub != nil {
 		return fake.DownloadStub(downloadLinks)
@@ -50,6 +53,19 @@ func (fake *FakeDownloader) DownloadReturns(result1 []string, result2 error) {
 		result1 []string
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeDownloader) Invocations() map[string][][]interface{} {
+	return fake.invocations
+}
+
+func (fake *FakeDownloader) guard(key string) {
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
 }
 
 var _ downloader.Downloader = new(FakeDownloader)

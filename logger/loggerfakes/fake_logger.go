@@ -18,6 +18,7 @@ type FakeLogger struct {
 		result1 int
 		result2 error
 	}
+	invocations map[string][][]interface{}
 }
 
 func (fake *FakeLogger) Debugf(format string, a ...interface{}) (n int, err error) {
@@ -26,6 +27,8 @@ func (fake *FakeLogger) Debugf(format string, a ...interface{}) (n int, err erro
 		format string
 		a      []interface{}
 	}{format, a})
+	fake.guard("Debugf")
+	fake.invocations["Debugf"] = append(fake.invocations["Debugf"], []interface{}{format, a})
 	fake.debugfMutex.Unlock()
 	if fake.DebugfStub != nil {
 		return fake.DebugfStub(format, a...)
@@ -52,6 +55,19 @@ func (fake *FakeLogger) DebugfReturns(result1 int, result2 error) {
 		result1 int
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeLogger) Invocations() map[string][][]interface{} {
+	return fake.invocations
+}
+
+func (fake *FakeLogger) guard(key string) {
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
 }
 
 var _ logger.Logger = new(FakeLogger)

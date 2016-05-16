@@ -17,6 +17,7 @@ type FakeFileSummer struct {
 		result1 string
 		result2 error
 	}
+	invocations map[string][][]interface{}
 }
 
 func (fake *FakeFileSummer) SumFile(filepath string) (string, error) {
@@ -24,6 +25,8 @@ func (fake *FakeFileSummer) SumFile(filepath string) (string, error) {
 	fake.sumFileArgsForCall = append(fake.sumFileArgsForCall, struct {
 		filepath string
 	}{filepath})
+	fake.guard("SumFile")
+	fake.invocations["SumFile"] = append(fake.invocations["SumFile"], []interface{}{filepath})
 	fake.sumFileMutex.Unlock()
 	if fake.SumFileStub != nil {
 		return fake.SumFileStub(filepath)
@@ -50,6 +53,19 @@ func (fake *FakeFileSummer) SumFileReturns(result1 string, result2 error) {
 		result1 string
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeFileSummer) Invocations() map[string][][]interface{} {
+	return fake.invocations
+}
+
+func (fake *FakeFileSummer) guard(key string) {
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
 }
 
 var _ md5sum.FileSummer = new(FakeFileSummer)

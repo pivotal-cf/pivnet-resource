@@ -27,34 +27,22 @@ type FakeFilter struct {
 	downloadLinksReturns struct {
 		result1 map[string]string
 	}
-	ReleasesByReleaseTypeStub        func(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error)
-	releasesByReleaseTypeMutex       sync.RWMutex
-	releasesByReleaseTypeArgsForCall []struct {
-		releases    []pivnet.Release
-		releaseType string
-	}
-	releasesByReleaseTypeReturns struct {
-		result1 []pivnet.Release
-		result2 error
-	}
-	ReleasesByVersionStub        func(releases []pivnet.Release, version string) ([]pivnet.Release, error)
-	releasesByVersionMutex       sync.RWMutex
-	releasesByVersionArgsForCall []struct {
-		releases []pivnet.Release
-		version  string
-	}
-	releasesByVersionReturns struct {
-		result1 []pivnet.Release
-		result2 error
-	}
+	invocations map[string][][]interface{}
 }
 
 func (fake *FakeFilter) DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error) {
+	var globCopy []string
+	if glob != nil {
+		globCopy = make([]string, len(glob))
+		copy(globCopy, glob)
+	}
 	fake.downloadLinksByGlobMutex.Lock()
 	fake.downloadLinksByGlobArgsForCall = append(fake.downloadLinksByGlobArgsForCall, struct {
 		downloadLinks map[string]string
 		glob          []string
-	}{downloadLinks, glob})
+	}{downloadLinks, globCopy})
+	fake.guard("DownloadLinksByGlob")
+	fake.invocations["DownloadLinksByGlob"] = append(fake.invocations["DownloadLinksByGlob"], []interface{}{downloadLinks, globCopy})
 	fake.downloadLinksByGlobMutex.Unlock()
 	if fake.DownloadLinksByGlobStub != nil {
 		return fake.DownloadLinksByGlobStub(downloadLinks, glob)
@@ -88,6 +76,8 @@ func (fake *FakeFilter) DownloadLinks(p pivnet.ProductFiles) map[string]string {
 	fake.downloadLinksArgsForCall = append(fake.downloadLinksArgsForCall, struct {
 		p pivnet.ProductFiles
 	}{p})
+	fake.guard("DownloadLinks")
+	fake.invocations["DownloadLinks"] = append(fake.invocations["DownloadLinks"], []interface{}{p})
 	fake.downloadLinksMutex.Unlock()
 	if fake.DownloadLinksStub != nil {
 		return fake.DownloadLinksStub(p)
@@ -115,72 +105,17 @@ func (fake *FakeFilter) DownloadLinksReturns(result1 map[string]string) {
 	}{result1}
 }
 
-func (fake *FakeFilter) ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error) {
-	fake.releasesByReleaseTypeMutex.Lock()
-	fake.releasesByReleaseTypeArgsForCall = append(fake.releasesByReleaseTypeArgsForCall, struct {
-		releases    []pivnet.Release
-		releaseType string
-	}{releases, releaseType})
-	fake.releasesByReleaseTypeMutex.Unlock()
-	if fake.ReleasesByReleaseTypeStub != nil {
-		return fake.ReleasesByReleaseTypeStub(releases, releaseType)
-	} else {
-		return fake.releasesByReleaseTypeReturns.result1, fake.releasesByReleaseTypeReturns.result2
+func (fake *FakeFilter) Invocations() map[string][][]interface{} {
+	return fake.invocations
+}
+
+func (fake *FakeFilter) guard(key string) {
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
 	}
-}
-
-func (fake *FakeFilter) ReleasesByReleaseTypeCallCount() int {
-	fake.releasesByReleaseTypeMutex.RLock()
-	defer fake.releasesByReleaseTypeMutex.RUnlock()
-	return len(fake.releasesByReleaseTypeArgsForCall)
-}
-
-func (fake *FakeFilter) ReleasesByReleaseTypeArgsForCall(i int) ([]pivnet.Release, string) {
-	fake.releasesByReleaseTypeMutex.RLock()
-	defer fake.releasesByReleaseTypeMutex.RUnlock()
-	return fake.releasesByReleaseTypeArgsForCall[i].releases, fake.releasesByReleaseTypeArgsForCall[i].releaseType
-}
-
-func (fake *FakeFilter) ReleasesByReleaseTypeReturns(result1 []pivnet.Release, result2 error) {
-	fake.ReleasesByReleaseTypeStub = nil
-	fake.releasesByReleaseTypeReturns = struct {
-		result1 []pivnet.Release
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeFilter) ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error) {
-	fake.releasesByVersionMutex.Lock()
-	fake.releasesByVersionArgsForCall = append(fake.releasesByVersionArgsForCall, struct {
-		releases []pivnet.Release
-		version  string
-	}{releases, version})
-	fake.releasesByVersionMutex.Unlock()
-	if fake.ReleasesByVersionStub != nil {
-		return fake.ReleasesByVersionStub(releases, version)
-	} else {
-		return fake.releasesByVersionReturns.result1, fake.releasesByVersionReturns.result2
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
 	}
-}
-
-func (fake *FakeFilter) ReleasesByVersionCallCount() int {
-	fake.releasesByVersionMutex.RLock()
-	defer fake.releasesByVersionMutex.RUnlock()
-	return len(fake.releasesByVersionArgsForCall)
-}
-
-func (fake *FakeFilter) ReleasesByVersionArgsForCall(i int) ([]pivnet.Release, string) {
-	fake.releasesByVersionMutex.RLock()
-	defer fake.releasesByVersionMutex.RUnlock()
-	return fake.releasesByVersionArgsForCall[i].releases, fake.releasesByVersionArgsForCall[i].version
-}
-
-func (fake *FakeFilter) ReleasesByVersionReturns(result1 []pivnet.Release, result2 error) {
-	fake.ReleasesByVersionStub = nil
-	fake.releasesByVersionReturns = struct {
-		result1 []pivnet.Release
-		result2 error
-	}{result1, result2}
 }
 
 var _ filter.Filter = new(FakeFilter)

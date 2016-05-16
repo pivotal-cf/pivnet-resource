@@ -13,8 +13,6 @@ import (
 type Filter interface {
 	DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error)
 	DownloadLinks(p pivnet.ProductFiles) map[string]string
-	ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error)
-	ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error)
 }
 
 type filter struct {
@@ -67,28 +65,4 @@ func (f filter) DownloadLinks(p pivnet.ProductFiles) map[string]string {
 	}
 
 	return links
-}
-
-func (f filter) ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error) {
-	filteredReleases := make([]pivnet.Release, 0)
-
-	for _, release := range releases {
-		if release.ReleaseType == releaseType {
-			filteredReleases = append(filteredReleases, release)
-		}
-	}
-
-	return filteredReleases, nil
-}
-
-func (f filter) ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error) {
-	filteredReleases := make([]pivnet.Release, 0)
-
-	for _, release := range releases {
-		if release.Version == version {
-			filteredReleases = append(filteredReleases, release)
-		}
-	}
-
-	return filteredReleases, nil
 }

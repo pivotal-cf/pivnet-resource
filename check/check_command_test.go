@@ -8,20 +8,21 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/check"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp_filter/gp_filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet/pivnetfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 	"github.com/robdimsdale/sanitizer"
 )
 
 var _ = Describe("Check", func() {
 	var (
-		fakeFilter       *filterfakes.FakeFilter
-		fakePivnetClient *pivnetfakes.FakeClient
+		fakeGPFilter       *gpfilterfakes.FakeFilter
+		fakePivnetClient   *gpfakes.FakeClient
+		fakeExtendedClient *gpfakes.FakeExtendedClient
 
 		tempDir     string
 		logFilePath string
@@ -44,8 +45,9 @@ var _ = Describe("Check", func() {
 	)
 
 	BeforeEach(func() {
-		fakeFilter = &filterfakes.FakeFilter{}
-		fakePivnetClient = &pivnetfakes.FakeClient{}
+		fakeGPFilter = &gpfilterfakes.FakeFilter{}
+		fakePivnetClient = &gpfakes.FakeClient{}
+		fakeExtendedClient = &gpfakes.FakeExtendedClient{}
 
 		releasesByReleaseTypeErr = nil
 		releasesByVersionErr = nil
@@ -99,26 +101,14 @@ var _ = Describe("Check", func() {
 	JustBeforeEach(func() {
 		fakePivnetClient.ReleaseTypesReturns(releaseTypes, releaseTypesErr)
 		fakePivnetClient.ReleasesForProductSlugReturns(allReleases, releasesErr)
-		fakePivnetClient.ProductVersionsStub = func(productSlug string, releases []pivnet.Release) ([]string, error) {
-			if len(releases) == 0 {
-				return []string{}, nil
-			}
 
-			var releaseVersionsWithEtags []string
-			for _, release := range releases {
-				etag := fmt.Sprintf("etag-%d", release.ID)
-				releaseVersionWithEtag := fmt.Sprintf("%s#%s", release.Version, etag)
-				releaseVersionsWithEtags = append(
-					releaseVersionsWithEtags,
-					releaseVersionWithEtag,
-				)
-			}
-
-			return releaseVersionsWithEtags, etagErr
+		fakeExtendedClient.ReleaseETagStub = func(productSlug string, releaseID int) (string, error) {
+			etag := fmt.Sprintf("etag-%d", releaseID)
+			return etag, etagErr
 		}
 
-		fakeFilter.ReleasesByReleaseTypeReturns(filteredReleases, releasesByReleaseTypeErr)
-		fakeFilter.ReleasesByVersionReturns(filteredReleases, releasesByVersionErr)
+		fakeGPFilter.ReleasesByReleaseTypeReturns(filteredReleases, releasesByReleaseTypeErr)
+		fakeGPFilter.ReleasesByVersionReturns(filteredReleases, releasesByVersionErr)
 
 		binaryVersion := "v0.1.2-unit-tests"
 
@@ -127,7 +117,14 @@ var _ = Describe("Check", func() {
 
 		ginkgoLogger = logger.NewLogger(sanitizer)
 
-		checkCommand = check.NewCheckCommand(binaryVersion, ginkgoLogger, logFilePath, fakeFilter, fakePivnetClient)
+		checkCommand = check.NewCheckCommand(
+			binaryVersion,
+			ginkgoLogger,
+			logFilePath,
+			fakeGPFilter,
+			fakePivnetClient,
+			fakeExtendedClient,
+		)
 	})
 
 	AfterEach(func() {

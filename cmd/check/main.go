@@ -7,11 +7,13 @@ import (
 	"log"
 	"os"
 
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/check"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
+	filter "github.com/pivotal-cf-experimental/pivnet-resource/gp_filter"
+	"github.com/pivotal-cf-experimental/pivnet-resource/lagershim"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
@@ -60,20 +62,24 @@ func main() {
 	if input.Source.Endpoint != "" {
 		endpoint = input.Source.Endpoint
 	} else {
-		endpoint = pivnet.Endpoint
+		endpoint = pivnet.DefaultHost
 	}
 
-	clientConfig := pivnet.NewClientConfig{
-		Endpoint:  endpoint,
+	ls := lagershim.NewLagerShim(l)
+
+	clientConfig := pivnet.ClientConfig{
+		Host:      endpoint,
 		Token:     input.Source.APIToken,
 		UserAgent: useragent.UserAgent(version, "check", input.Source.ProductSlug),
 	}
-	client := pivnet.NewClient(
+	client := gp.NewClient(
 		clientConfig,
-		l,
+		ls,
 	)
 
 	f := filter.NewFilter()
+
+	extendedClient := gp.NewExtendedClient(client, ls)
 
 	response, err := check.NewCheckCommand(
 		version,
@@ -81,6 +87,7 @@ func main() {
 		logFile.Name(),
 		f,
 		client,
+		extendedClient,
 	).Run(input)
 	if err != nil {
 		l.Debugf("Exiting with error: %v\n", err)

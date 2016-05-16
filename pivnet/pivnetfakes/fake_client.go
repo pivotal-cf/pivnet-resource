@@ -186,14 +186,22 @@ type FakeClient struct {
 		result1 []pivnet.ReleaseDependency
 		result2 error
 	}
+	invocations map[string][][]interface{}
 }
 
 func (fake *FakeClient) ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error) {
+	var releasesCopy []pivnet.Release
+	if releases != nil {
+		releasesCopy = make([]pivnet.Release, len(releases))
+		copy(releasesCopy, releases)
+	}
 	fake.productVersionsMutex.Lock()
 	fake.productVersionsArgsForCall = append(fake.productVersionsArgsForCall, struct {
 		productSlug string
 		releases    []pivnet.Release
-	}{productSlug, releases})
+	}{productSlug, releasesCopy})
+	fake.guard("ProductVersions")
+	fake.invocations["ProductVersions"] = append(fake.invocations["ProductVersions"], []interface{}{productSlug, releasesCopy})
 	fake.productVersionsMutex.Unlock()
 	if fake.ProductVersionsStub != nil {
 		return fake.ProductVersionsStub(productSlug, releases)
@@ -227,6 +235,8 @@ func (fake *FakeClient) CreateRelease(arg1 pivnet.CreateReleaseConfig) (pivnet.R
 	fake.createReleaseArgsForCall = append(fake.createReleaseArgsForCall, struct {
 		arg1 pivnet.CreateReleaseConfig
 	}{arg1})
+	fake.guard("CreateRelease")
+	fake.invocations["CreateRelease"] = append(fake.invocations["CreateRelease"], []interface{}{arg1})
 	fake.createReleaseMutex.Unlock()
 	if fake.CreateReleaseStub != nil {
 		return fake.CreateReleaseStub(arg1)
@@ -260,6 +270,8 @@ func (fake *FakeClient) ReleasesForProductSlug(arg1 string) ([]pivnet.Release, e
 	fake.releasesForProductSlugArgsForCall = append(fake.releasesForProductSlugArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	fake.guard("ReleasesForProductSlug")
+	fake.invocations["ReleasesForProductSlug"] = append(fake.invocations["ReleasesForProductSlug"], []interface{}{arg1})
 	fake.releasesForProductSlugMutex.Unlock()
 	if fake.ReleasesForProductSlugStub != nil {
 		return fake.ReleasesForProductSlugStub(arg1)
@@ -294,6 +306,8 @@ func (fake *FakeClient) GetRelease(productSlug string, version string) (pivnet.R
 		productSlug string
 		version     string
 	}{productSlug, version})
+	fake.guard("GetRelease")
+	fake.invocations["GetRelease"] = append(fake.invocations["GetRelease"], []interface{}{productSlug, version})
 	fake.getReleaseMutex.Unlock()
 	if fake.GetReleaseStub != nil {
 		return fake.GetReleaseStub(productSlug, version)
@@ -328,6 +342,8 @@ func (fake *FakeClient) UpdateRelease(arg1 string, arg2 pivnet.Release) (pivnet.
 		arg1 string
 		arg2 pivnet.Release
 	}{arg1, arg2})
+	fake.guard("UpdateRelease")
+	fake.invocations["UpdateRelease"] = append(fake.invocations["UpdateRelease"], []interface{}{arg1, arg2})
 	fake.updateReleaseMutex.Unlock()
 	if fake.UpdateReleaseStub != nil {
 		return fake.UpdateReleaseStub(arg1, arg2)
@@ -362,6 +378,8 @@ func (fake *FakeClient) DeleteRelease(arg1 pivnet.Release, arg2 string) error {
 		arg1 pivnet.Release
 		arg2 string
 	}{arg1, arg2})
+	fake.guard("DeleteRelease")
+	fake.invocations["DeleteRelease"] = append(fake.invocations["DeleteRelease"], []interface{}{arg1, arg2})
 	fake.deleteReleaseMutex.Unlock()
 	if fake.DeleteReleaseStub != nil {
 		return fake.DeleteReleaseStub(arg1, arg2)
@@ -394,6 +412,8 @@ func (fake *FakeClient) GetProductFiles(arg1 pivnet.Release) (pivnet.ProductFile
 	fake.getProductFilesArgsForCall = append(fake.getProductFilesArgsForCall, struct {
 		arg1 pivnet.Release
 	}{arg1})
+	fake.guard("GetProductFiles")
+	fake.invocations["GetProductFiles"] = append(fake.invocations["GetProductFiles"], []interface{}{arg1})
 	fake.getProductFilesMutex.Unlock()
 	if fake.GetProductFilesStub != nil {
 		return fake.GetProductFilesStub(arg1)
@@ -429,6 +449,8 @@ func (fake *FakeClient) GetProductFile(productSlug string, releaseID int, produc
 		releaseID   int
 		productID   int
 	}{productSlug, releaseID, productID})
+	fake.guard("GetProductFile")
+	fake.invocations["GetProductFile"] = append(fake.invocations["GetProductFile"], []interface{}{productSlug, releaseID, productID})
 	fake.getProductFileMutex.Unlock()
 	if fake.GetProductFileStub != nil {
 		return fake.GetProductFileStub(productSlug, releaseID, productID)
@@ -460,6 +482,8 @@ func (fake *FakeClient) GetProductFileReturns(result1 pivnet.ProductFile, result
 func (fake *FakeClient) EULAs() ([]pivnet.EULA, error) {
 	fake.eULAsMutex.Lock()
 	fake.eULAsArgsForCall = append(fake.eULAsArgsForCall, struct{}{})
+	fake.guard("EULAs")
+	fake.invocations["EULAs"] = append(fake.invocations["EULAs"], []interface{}{})
 	fake.eULAsMutex.Unlock()
 	if fake.EULAsStub != nil {
 		return fake.EULAsStub()
@@ -488,6 +512,8 @@ func (fake *FakeClient) AcceptEULA(productSlug string, releaseID int) error {
 		productSlug string
 		releaseID   int
 	}{productSlug, releaseID})
+	fake.guard("AcceptEULA")
+	fake.invocations["AcceptEULA"] = append(fake.invocations["AcceptEULA"], []interface{}{productSlug, releaseID})
 	fake.acceptEULAMutex.Unlock()
 	if fake.AcceptEULAStub != nil {
 		return fake.AcceptEULAStub(productSlug, releaseID)
@@ -520,6 +546,8 @@ func (fake *FakeClient) CreateProductFile(arg1 pivnet.CreateProductFileConfig) (
 	fake.createProductFileArgsForCall = append(fake.createProductFileArgsForCall, struct {
 		arg1 pivnet.CreateProductFileConfig
 	}{arg1})
+	fake.guard("CreateProductFile")
+	fake.invocations["CreateProductFile"] = append(fake.invocations["CreateProductFile"], []interface{}{arg1})
 	fake.createProductFileMutex.Unlock()
 	if fake.CreateProductFileStub != nil {
 		return fake.CreateProductFileStub(arg1)
@@ -554,6 +582,8 @@ func (fake *FakeClient) DeleteProductFile(productSlug string, id int) (pivnet.Pr
 		productSlug string
 		id          int
 	}{productSlug, id})
+	fake.guard("DeleteProductFile")
+	fake.invocations["DeleteProductFile"] = append(fake.invocations["DeleteProductFile"], []interface{}{productSlug, id})
 	fake.deleteProductFileMutex.Unlock()
 	if fake.DeleteProductFileStub != nil {
 		return fake.DeleteProductFileStub(productSlug, id)
@@ -589,6 +619,8 @@ func (fake *FakeClient) AddProductFile(productID int, releaseID int, productFile
 		releaseID     int
 		productFileID int
 	}{productID, releaseID, productFileID})
+	fake.guard("AddProductFile")
+	fake.invocations["AddProductFile"] = append(fake.invocations["AddProductFile"], []interface{}{productID, releaseID, productFileID})
 	fake.addProductFileMutex.Unlock()
 	if fake.AddProductFileStub != nil {
 		return fake.AddProductFileStub(productID, releaseID, productFileID)
@@ -621,6 +653,8 @@ func (fake *FakeClient) FindProductForSlug(slug string) (pivnet.Product, error) 
 	fake.findProductForSlugArgsForCall = append(fake.findProductForSlugArgsForCall, struct {
 		slug string
 	}{slug})
+	fake.guard("FindProductForSlug")
+	fake.invocations["FindProductForSlug"] = append(fake.invocations["FindProductForSlug"], []interface{}{slug})
 	fake.findProductForSlugMutex.Unlock()
 	if fake.FindProductForSlugStub != nil {
 		return fake.FindProductForSlugStub(slug)
@@ -655,6 +689,8 @@ func (fake *FakeClient) UserGroups(productSlug string, releaseID int) ([]pivnet.
 		productSlug string
 		releaseID   int
 	}{productSlug, releaseID})
+	fake.guard("UserGroups")
+	fake.invocations["UserGroups"] = append(fake.invocations["UserGroups"], []interface{}{productSlug, releaseID})
 	fake.userGroupsMutex.Unlock()
 	if fake.UserGroupsStub != nil {
 		return fake.UserGroupsStub(productSlug, releaseID)
@@ -690,6 +726,8 @@ func (fake *FakeClient) AddUserGroup(productSlug string, releaseID int, userGrou
 		releaseID   int
 		userGroupID int
 	}{productSlug, releaseID, userGroupID})
+	fake.guard("AddUserGroup")
+	fake.invocations["AddUserGroup"] = append(fake.invocations["AddUserGroup"], []interface{}{productSlug, releaseID, userGroupID})
 	fake.addUserGroupMutex.Unlock()
 	if fake.AddUserGroupStub != nil {
 		return fake.AddUserGroupStub(productSlug, releaseID, userGroupID)
@@ -723,6 +761,8 @@ func (fake *FakeClient) ReleaseETag(arg1 string, arg2 pivnet.Release) (string, e
 		arg1 string
 		arg2 pivnet.Release
 	}{arg1, arg2})
+	fake.guard("ReleaseETag")
+	fake.invocations["ReleaseETag"] = append(fake.invocations["ReleaseETag"], []interface{}{arg1, arg2})
 	fake.releaseETagMutex.Unlock()
 	if fake.ReleaseETagStub != nil {
 		return fake.ReleaseETagStub(arg1, arg2)
@@ -754,6 +794,8 @@ func (fake *FakeClient) ReleaseETagReturns(result1 string, result2 error) {
 func (fake *FakeClient) ReleaseTypes() ([]string, error) {
 	fake.releaseTypesMutex.Lock()
 	fake.releaseTypesArgsForCall = append(fake.releaseTypesArgsForCall, struct{}{})
+	fake.guard("ReleaseTypes")
+	fake.invocations["ReleaseTypes"] = append(fake.invocations["ReleaseTypes"], []interface{}{})
 	fake.releaseTypesMutex.Unlock()
 	if fake.ReleaseTypesStub != nil {
 		return fake.ReleaseTypesStub()
@@ -782,6 +824,8 @@ func (fake *FakeClient) ReleaseDependencies(productSlug string, releaseID int) (
 		productSlug string
 		releaseID   int
 	}{productSlug, releaseID})
+	fake.guard("ReleaseDependencies")
+	fake.invocations["ReleaseDependencies"] = append(fake.invocations["ReleaseDependencies"], []interface{}{productSlug, releaseID})
 	fake.releaseDependenciesMutex.Unlock()
 	if fake.ReleaseDependenciesStub != nil {
 		return fake.ReleaseDependenciesStub(productSlug, releaseID)
@@ -808,6 +852,19 @@ func (fake *FakeClient) ReleaseDependenciesReturns(result1 []pivnet.ReleaseDepen
 		result1 []pivnet.ReleaseDependency
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeClient) Invocations() map[string][][]interface{} {
+	return fake.invocations
+}
+
+func (fake *FakeClient) guard(key string) {
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
 }
 
 var _ pivnet.Client = new(FakeClient)

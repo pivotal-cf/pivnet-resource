@@ -7,33 +7,36 @@ import (
 	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
+	gp_filter "github.com/pivotal-cf-experimental/pivnet-resource/gp_filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 type CheckCommand struct {
-	logger        logger.Logger
-	logFilePath   string
-	binaryVersion string
-	filter        filter.Filter
-	pivnetClient  pivnet.Client
+	logger         logger.Logger
+	logFilePath    string
+	binaryVersion  string
+	gpFilter       gp_filter.Filter
+	pivnetClient   gp.Client
+	extendedClient gp.ExtendedClient
 }
 
 func NewCheckCommand(
 	binaryVersion string,
 	logger logger.Logger,
 	logFilePath string,
-	filter filter.Filter,
-	pivnetClient pivnet.Client,
+	gpFilter gp_filter.Filter,
+	pivnetClient gp.Client,
+	extendedClient gp.ExtendedClient,
 ) *CheckCommand {
 	return &CheckCommand{
-		logger:        logger,
-		logFilePath:   logFilePath,
-		binaryVersion: binaryVersion,
-		filter:        filter,
-		pivnetClient:  pivnetClient,
+		logger:         logger,
+		logFilePath:    logFilePath,
+		binaryVersion:  binaryVersion,
+		gpFilter:       gpFilter,
+		pivnetClient:   pivnetClient,
+		extendedClient: extendedClient,
 	}
 }
 
@@ -93,7 +96,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	if releaseType != "" {
 		c.logger.Debugf("Filtering all releases by release_type: %s\n", releaseType)
 
-		releases, err = c.filter.ReleasesByReleaseType(releases, releaseType)
+		releases, err = c.gpFilter.ReleasesByReleaseType(releases, releaseType)
 		if err != nil {
 			return nil, err
 		}
@@ -103,13 +106,15 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	if productVersion != "" {
 		c.logger.Debugf("Filtering all releases by product_version: %s\n", productVersion)
 
-		releases, err = c.filter.ReleasesByVersion(releases, productVersion)
+		releases, err = c.gpFilter.ReleasesByVersion(releases, productVersion)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	filteredVersions, err := c.pivnetClient.ProductVersions(productSlug, releases)
+	// ls := lagershim.NewLagerShim(c.logger)
+	// extendedClient := extension.NewExtendedClient(c.pivnetClient, ls)
+	filteredVersions, err := versions.ProductVersions(c.extendedClient, productSlug, releases)
 	if err != nil {
 		return nil, err
 	}
