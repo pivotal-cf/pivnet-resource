@@ -63,7 +63,7 @@
 			"importpath": "github.com/pivotal-cf-experimental/go-pivnet",
 			"repository": "https://github.com/pivotal-cf-experimental/go-pivnet",
 			"vcs": "git",
-			"revision": "56c52bc914d54c2418a2ed832de2ea33e42f3312",
+			"revision": "3c3a00bfa262d59007c3903ed4bc40aa6c5e9439",
 			"branch": "master",
 			"notests": true
 		},

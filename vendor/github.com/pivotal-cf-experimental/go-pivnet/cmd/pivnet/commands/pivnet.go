@@ -11,7 +11,7 @@ import (
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/lagershim"
 	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/version"
-	"github.com/pivotal-cf-experimental/go-pivnet/extension"
+	"github.com/pivotal-cf-experimental/go-pivnet/logger"
 	"github.com/pivotal-golang/lager"
 	"github.com/robdimsdale/sanitizer"
 )
@@ -73,6 +73,8 @@ type PivnetCommand struct {
 	ReleaseDependencies ReleaseDependenciesCommand `command:"release-dependencies" description:"List user groups"`
 
 	ReleaseUpgradePaths ReleaseUpgradePathsCommand `command:"release-upgrade-paths" description:"List release upgrade paths"`
+
+	Logger logger.Logger
 }
 
 var Pivnet PivnetCommand
@@ -89,7 +91,7 @@ func init() {
 
 }
 
-func NewClient() extension.ExtendedClient {
+func NewClient() pivnet.Client {
 	if OutputWriter == nil {
 		OutputWriter = os.Stdout
 	}
@@ -124,15 +126,15 @@ func NewClient() extension.ExtendedClient {
 		version.Version,
 	)
 
-	ls := lagershim.NewLagerShim(l)
+	Pivnet.Logger = lagershim.NewLagerShim(l)
 
-	pivnetClient := extension.NewExtendedClient(
+	pivnetClient := pivnet.NewClient(
 		pivnet.ClientConfig{
 			Token:     Pivnet.APIToken,
 			Host:      Pivnet.Host,
 			UserAgent: useragent,
 		},
-		ls,
+		Pivnet.Logger,
 	)
 
 	return pivnetClient

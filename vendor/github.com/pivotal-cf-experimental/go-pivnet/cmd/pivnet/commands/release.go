@@ -6,6 +6,7 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf-experimental/go-pivnet/extension"
 )
 
 type ReleasesCommand struct {
@@ -74,7 +75,8 @@ func (command *ReleaseCommand) Execute([]string) error {
 		return err
 	}
 
-	etag, err := client.ReleaseETag(command.ProductSlug, foundRelease.ID)
+	extendedClient := extension.NewExtendedClient(client, Pivnet.Logger)
+	etag, err := extendedClient.ReleaseETag(command.ProductSlug, foundRelease.ID)
 	if err != nil {
 		return err
 	}

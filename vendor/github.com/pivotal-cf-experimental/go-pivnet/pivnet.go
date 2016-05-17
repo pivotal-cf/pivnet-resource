@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	apiVersion = "/api/v2"
+	DefaultHost = "https://network.pivotal.io"
+	apiVersion  = "/api/v2"
 )
 
 type Client struct {

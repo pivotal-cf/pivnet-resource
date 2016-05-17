@@ -2,29 +2,33 @@ package extension
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
-	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/go-pivnet/logger"
 )
 
+type Client interface {
+	MakeRequest(method string, url string, expectedResponseCode int, body io.Reader, data interface{}) (*http.Response, error)
+}
+
 type ExtendedClient struct {
-	pivnet.Client
+	c      Client
 	logger logger.Logger
 }
 
-func NewExtendedClient(config pivnet.ClientConfig, logger logger.Logger) ExtendedClient {
+func NewExtendedClient(client Client, logger logger.Logger) ExtendedClient {
 	return ExtendedClient{
-		pivnet.NewClient(config, logger),
-		logger,
+		c:      client,
+		logger: logger,
 	}
 }
 
 func (c ExtendedClient) ReleaseETag(productSlug string, releaseID int) (string, error) {
 	url := fmt.Sprintf("/products/%s/releases/%d", productSlug, releaseID)
 
-	resp, err := c.MakeRequest("GET", url, http.StatusOK, nil, nil)
+	resp, err := c.c.MakeRequest("GET", url, http.StatusOK, nil, nil)
 	if err != nil {
 		return "", err
 	}
