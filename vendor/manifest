@@ -1,0 +1,103 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/golang/protobuf/proto",
+			"repository": "https://github.com/golang/protobuf",
+			"vcs": "git",
+			"revision": "7cc19b78d562895b13596ddce7aafb59dd789318",
+			"branch": "master",
+			"path": "/proto",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/golang/protobuf/ptypes/any",
+			"repository": "https://github.com/golang/protobuf",
+			"vcs": "git",
+			"revision": "7cc19b78d562895b13596ddce7aafb59dd789318",
+			"branch": "master",
+			"path": "ptypes/any",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/jessevdk/go-flags",
+			"repository": "https://github.com/jessevdk/go-flags",
+			"vcs": "git",
+			"revision": "6b9493b3cb60367edd942144879646604089e3f7",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/mattn/go-runewidth",
+			"repository": "https://github.com/mattn/go-runewidth",
+			"vcs": "git",
+			"revision": "d6bea18f789704b5f83375793155289da36a3c7f",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/olekukonko/tablewriter",
+			"repository": "https://github.com/olekukonko/tablewriter",
+			"vcs": "git",
+			"revision": "279fecc91ba77130f753d073259d7f9e246acdda",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/onsi/ginkgo",
+			"repository": "https://github.com/onsi/ginkgo",
+			"vcs": "git",
+			"revision": "5437a97bf824dec14e58d68c56ee36e772670c2e",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/onsi/gomega",
+			"repository": "https://github.com/onsi/gomega",
+			"vcs": "git",
+			"revision": "c73e51675ad2455a4515b6213eb7145eaade4824",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/pivotal-cf-experimental/go-pivnet",
+			"repository": "https://github.com/pivotal-cf-experimental/go-pivnet",
+			"vcs": "git",
+			"revision": "56c52bc914d54c2418a2ed832de2ea33e42f3312",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/pivotal-golang/lager",
+			"repository": "https://github.com/pivotal-golang/lager",
+			"vcs": "git",
+			"revision": "7639e31ce6622c55c15aa64144b85d5f4873d127",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/robdimsdale/sanitizer",
+			"repository": "https://github.com/robdimsdale/sanitizer",
+			"vcs": "git",
+			"revision": "0a0a70a490499be653711fda1d2e16a5bb9e46ee",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/check.v1",
+			"repository": "https://gopkg.in/check.v1",
+			"vcs": "git",
+			"revision": "4f90aeace3a26ad7021961c297b22c42160c7b25",
+			"branch": "v1",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/yaml.v2",
+			"repository": "https://gopkg.in/yaml.v2",
+			"vcs": "git",
+			"revision": "a83829b6f1293c91addabc89d0571c246397bbf4",
+			"branch": "v2",
+			"notests": true
+		}
+	]
+}
