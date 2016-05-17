@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-golang/lager"
 )
 
 //go:generate counterfeiter . Downloader
@@ -20,10 +20,10 @@ type Downloader interface {
 type downloader struct {
 	apiToken    string
 	downloadDir string
-	logger      logger.Logger
+	logger      lager.Logger
 }
 
-func NewDownloader(apiToken string, downloadDir string, logger logger.Logger) Downloader {
+func NewDownloader(apiToken string, downloadDir string, logger lager.Logger) Downloader {
 	return &downloader{
 		apiToken:    apiToken,
 		downloadDir: downloadDir,
@@ -32,7 +32,7 @@ func NewDownloader(apiToken string, downloadDir string, logger logger.Logger) Do
 }
 
 func (d downloader) Download(downloadLinks map[string]string) ([]string, error) {
-	d.logger.Debugf("Ensuring download directory exists: %s\n", d.downloadDir)
+	d.logger.Debug("Ensuring download directory exists", lager.Data{"download_dir": d.downloadDir})
 	err := os.MkdirAll(d.downloadDir, os.ModePerm)
 	if err != nil {
 		return nil, err

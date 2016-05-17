@@ -13,9 +13,9 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
-	"github.com/robdimsdale/sanitizer"
+	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("Check", func() {
@@ -27,7 +27,7 @@ var _ = Describe("Check", func() {
 		tempDir     string
 		logFilePath string
 
-		ginkgoLogger logger.Logger
+		testLogger lager.Logger
 
 		checkRequest concourse.CheckRequest
 		checkCommand *check.CheckCommand
@@ -112,14 +112,11 @@ var _ = Describe("Check", func() {
 
 		binaryVersion := "v0.1.2-unit-tests"
 
-		sanitized := concourse.SanitizedSource(checkRequest.Source)
-		sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
-
-		ginkgoLogger = logger.NewLogger(sanitizer)
+		testLogger = lagertest.NewTestLogger("check unit tests")
 
 		checkCommand = check.NewCheckCommand(
 			binaryVersion,
-			ginkgoLogger,
+			testLogger,
 			logFilePath,
 			fakeFilter,
 			fakePivnetClient,

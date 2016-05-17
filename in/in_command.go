@@ -15,14 +15,14 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
+	"github.com/pivotal-golang/lager"
 )
 
 type InCommand struct {
-	logger       logger.Logger
+	logger       lager.Logger
 	downloadDir  string
 	pivnetClient gp.Client
 	filter       filter.Filter
@@ -31,7 +31,7 @@ type InCommand struct {
 }
 
 func NewInCommand(
-	logger logger.Logger,
+	logger lager.Logger,
 	downloadDir string,
 	pivnetClient gp.Client,
 	filter filter.Filter,
@@ -49,11 +49,11 @@ func NewInCommand(
 }
 
 func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error) {
-	c.logger.Debugf("Received input: %+v\n", input)
+	c.logger.Debug("Received input", lager.Data{"input": input})
 
 	productSlug := input.Source.ProductSlug
 
-	c.logger.Debugf("Creating download directory: %s\n", c.downloadDir)
+	c.logger.Debug("Creating download directory", lager.Data{"download_dir": c.downloadDir})
 	err := os.MkdirAll(c.downloadDir, os.ModePerm)
 	if err != nil {
 		return concourse.InResponse{}, err
@@ -61,15 +61,17 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	productVersion, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
 	if err != nil {
-		c.logger.Debugf("Parsing of etag failed; continuing without it\n")
+		c.logger.Debug("Parsing of etag failed; continuing without it")
 		productVersion = input.Version.ProductVersion
 	}
 
-	c.logger.Debugf(
-		"Getting release: {product_slug: %s, product_version: %s, etag: %s}\n",
-		productSlug,
-		productVersion,
-		etag,
+	c.logger.Debug(
+		"Getting release",
+		lager.Data{
+			"product_slug":    productSlug,
+			"product_version": productVersion,
+			"etag":            etag,
+		},
 	)
 
 	release, err := c.pivnetClient.GetRelease(productSlug, productVersion)
@@ -77,12 +79,14 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Debugf("Release: %+v\n", release)
+	c.logger.Debug("Release", lager.Data{"release": release})
 
-	c.logger.Debugf(
-		"Accepting EULA: {product_slug: %s, release_id: %d}\n",
-		productSlug,
-		release.ID,
+	c.logger.Debug(
+		"Accepting EULA",
+		lager.Data{
+			"product_slug": productSlug,
+			"release_id":   release.ID,
+		},
 	)
 
 	err = c.pivnetClient.AcceptEULA(productSlug, release.ID)
@@ -90,23 +94,23 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Debugf("Getting product files: {release_id: %d}\n", release.ID)
+	c.logger.Debug("Getting product files", lager.Data{"release_id": release.ID})
 
 	productFiles, err := c.pivnetClient.GetProductFiles(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Debugf("Found product files: %+v\n", productFiles)
+	c.logger.Debug("Found product files", lager.Data{"product_files": productFiles})
 
-	c.logger.Debugf("Getting release dependencies: {release_id: %d}\n", release.ID)
+	c.logger.Debug("Getting release dependencies", lager.Data{"release_id": release.ID})
 
 	releaseDependencies, err := c.pivnetClient.ReleaseDependencies(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Debugf("Found release dependencies: %+v\n", releaseDependencies)
+	c.logger.Debug("Found release dependencies", lager.Data{"release_dependencies": releaseDependencies})
 
 	err = c.downloadFiles(
 		input.Params.Globs,
@@ -195,17 +199,21 @@ func (c InCommand) downloadFiles(
 	productSlug string,
 	releaseID int,
 ) error {
-	c.logger.Debugf(
-		"Getting download links: {product_files: %+v}\n",
-		productFiles,
+	c.logger.Debug(
+		"Getting download links",
+		lager.Data{
+			"product_files": productFiles,
+		},
 	)
 
 	downloadLinks := c.filter.DownloadLinks(productFiles)
 
 	if len(globs) > 0 {
-		c.logger.Debugf(
-			"Filtering download links with globs: {globs: %+v}\n",
-			globs,
+		c.logger.Debug(
+			"Filtering download links with globs",
+			lager.Data{
+				"globs": globs,
+			},
 		)
 
 		var err error
@@ -214,9 +222,11 @@ func (c InCommand) downloadFiles(
 			return err
 		}
 
-		c.logger.Debugf(
-			"Downloading files: {download_links: %+v}\n",
-			downloadLinks,
+		c.logger.Debug(
+			"Downloading files",
+			lager.Data{
+				"download_links": downloadLinks,
+			},
 		)
 
 		files, err := c.downloader.Download(downloadLinks)
@@ -250,7 +260,7 @@ func (c InCommand) downloadFiles(
 			fileMD5s[fileName] = productFile.MD5
 		}
 
-		c.logger.Debugf("All file MD5s: %+v\n", fileMD5s)
+		c.logger.Debug("All file MD5s", lager.Data{"md5s": fileMD5s})
 
 		err = c.compareMD5s(files, fileMD5s)
 		if err != nil {
@@ -264,10 +274,12 @@ func (c InCommand) downloadFiles(
 func (c InCommand) writeVersionFile(versionWithETag string) error {
 	versionFilepath := filepath.Join(c.downloadDir, "version")
 
-	c.logger.Debugf(
-		"Writing version to file: {version: %s, version_filepath: %s}\n",
-		versionWithETag,
-		versionFilepath,
+	c.logger.Debug(
+		"Writing version to file",
+		lager.Data{
+			"version_with_etag": versionWithETag,
+			"version_filepath":  versionFilepath,
+		},
 	)
 
 	err := ioutil.WriteFile(versionFilepath, []byte(versionWithETag), os.ModePerm)
@@ -281,10 +293,12 @@ func (c InCommand) writeVersionFile(versionWithETag string) error {
 
 func (c InCommand) writeMetadataJSONFile(mdata metadata.Metadata) error {
 	jsonMetadataFilepath := filepath.Join(c.downloadDir, "metadata.json")
-	c.logger.Debugf(
-		"Writing metadata to json file: {metadata: %+v, metadata_filepath: %s}\n",
-		mdata,
-		jsonMetadataFilepath,
+	c.logger.Debug(
+		"Writing metadata to json file",
+		lager.Data{
+			"metadata": mdata,
+			"filepath": jsonMetadataFilepath,
+		},
 	)
 
 	jsonMetadata, err := json.Marshal(mdata)
@@ -304,10 +318,12 @@ func (c InCommand) writeMetadataJSONFile(mdata metadata.Metadata) error {
 
 func (c InCommand) writeMetadataYAMLFile(mdata metadata.Metadata) error {
 	yamlMetadataFilepath := filepath.Join(c.downloadDir, "metadata.yaml")
-	c.logger.Debugf(
-		"Writing metadata to yaml file: {metadata: %+v, metadata_filepath: %s}\n",
-		mdata,
-		yamlMetadataFilepath,
+	c.logger.Debug(
+		"Writing metadata to json file",
+		lager.Data{
+			"metadata": mdata,
+			"filepath": yamlMetadataFilepath,
+		},
 	)
 
 	yamlMetadata, err := yaml.Marshal(mdata)
@@ -353,9 +369,11 @@ func (c InCommand) addReleaseMetadata(concourseMetadata []concourse.Metadata, re
 func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]string) error {
 	for _, downloadPath := range filepaths {
 		_, f := filepath.Split(downloadPath)
-		c.logger.Debugf(
-			"Calcuating MD5 for downloaded file: %s\n",
-			downloadPath,
+		c.logger.Debug(
+			"Calcuating MD5 for downloaded file",
+			lager.Data{
+				"path": downloadPath,
+			},
 		)
 		md5, err := c.fileSummer.SumFile(downloadPath)
 		if err != nil {
@@ -372,10 +390,12 @@ func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]strin
 			)
 		}
 
-		c.logger.Debugf(
-			"MD5 for downloaded file: %s matched expected: %s\n",
-			downloadPath,
-			md5,
+		c.logger.Debug(
+			"MD5 for downloaded file matched expected",
+			lager.Data{
+				"path": downloadPath,
+				"md5":  md5,
+			},
 		)
 	}
 

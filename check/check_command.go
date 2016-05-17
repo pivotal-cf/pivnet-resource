@@ -9,12 +9,12 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
+	"github.com/pivotal-golang/lager"
 )
 
 type CheckCommand struct {
-	logger         logger.Logger
+	logger         lager.Logger
 	logFilePath    string
 	binaryVersion  string
 	filter         filter.Filter
@@ -24,7 +24,7 @@ type CheckCommand struct {
 
 func NewCheckCommand(
 	binaryVersion string,
-	logger logger.Logger,
+	logger lager.Logger,
 	logFilePath string,
 	filter filter.Filter,
 	pivnetClient gp.Client,
@@ -51,7 +51,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	for _, f := range existingLogFiles {
 		if filepath.Base(f) != filepath.Base(c.logFilePath) {
-			c.logger.Debugf("Removing existing log file: %s\n", f)
+			c.logger.Debug("Removing existing log file", lager.Data{"log_file": f})
 			err := os.Remove(f)
 			if err != nil {
 				// This is untested because it is too hard to force os.Remove to return
@@ -61,9 +61,9 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	c.logger.Debugf("Received input: %+v\n", input)
+	c.logger.Debug("Received input", lager.Data{"input": input})
 
-	c.logger.Debugf("Getting all valid release types\n")
+	c.logger.Debug("Getting all valid release types")
 	releaseTypes, err := c.pivnetClient.ReleaseTypes()
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		strings.Join(releaseTypes, "', '"),
 	)
 
-	c.logger.Debugf("All release types: %s\n", releaseTypesPrintable)
+	c.logger.Debug("All release types", lager.Data{"release_types": releaseTypesPrintable})
 
 	releaseType := input.Source.ReleaseType
 	if releaseType != "" && !containsString(releaseTypes, releaseType) {
@@ -85,7 +85,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		)
 	}
 
-	c.logger.Debugf("Getting all product versions\n")
+	c.logger.Debug("Getting all product versions")
 	productSlug := input.Source.ProductSlug
 
 	releases, err := c.pivnetClient.ReleasesForProductSlug(productSlug)
@@ -94,7 +94,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	}
 
 	if releaseType != "" {
-		c.logger.Debugf("Filtering all releases by release_type: %s\n", releaseType)
+		c.logger.Debug("Filtering all releases by release_type", lager.Data{"release_type": releaseType})
 
 		releases, err = c.filter.ReleasesByReleaseType(releases, releaseType)
 		if err != nil {
@@ -104,7 +104,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	productVersion := input.Source.ProductVersion
 	if productVersion != "" {
-		c.logger.Debugf("Filtering all releases by product_version: %s\n", productVersion)
+		c.logger.Debug("Filtering all releases by product_version", lager.Data{"product_version": productVersion})
 
 		releases, err = c.filter.ReleasesByVersion(releases, productVersion)
 		if err != nil {
@@ -119,7 +119,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return nil, err
 	}
 
-	c.logger.Debugf("Filtered versions: %+v\n", filteredVersions)
+	c.logger.Debug("Filtered versions", lager.Data{"filtered_versions": filteredVersions})
 
 	if len(filteredVersions) == 0 {
 		return concourse.CheckResponse{}, nil
@@ -131,7 +131,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return nil, err
 	}
 
-	c.logger.Debugf("New versions: %+v\n", newVersions)
+	c.logger.Debug("New versions", lager.Data{"new_versions": newVersions})
 
 	reversedVersions, err := versions.Reverse(newVersions)
 	if err != nil {
@@ -148,7 +148,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		out = append(out, concourse.Version{ProductVersion: filteredVersions[0]})
 	}
 
-	c.logger.Debugf("Returning output: %+v\n", out)
+	c.logger.Debug("Returning output", lager.Data{"output:": out})
 
 	return out, nil
 }

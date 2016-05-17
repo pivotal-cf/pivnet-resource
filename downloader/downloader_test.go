@@ -9,7 +9,8 @@ import (
 	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger/loggerfakes"
+	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,7 +23,7 @@ var _ = Describe("Downloader", func() {
 		server     *ghttp.Server
 		apiAddress string
 		dir        string
-		fakeLogger *loggerfakes.FakeLogger
+		fakeLogger lager.Logger
 
 		apiToken string
 	)
@@ -31,7 +32,7 @@ var _ = Describe("Downloader", func() {
 		apiToken = "1234-abcd"
 		server = ghttp.NewServer()
 		apiAddress = server.URL()
-		fakeLogger = &loggerfakes.FakeLogger{}
+		fakeLogger = lagertest.NewTestLogger("downloader unit tests")
 
 		var err error
 		dir, err = ioutil.TempDir("", "pivnet-resource")

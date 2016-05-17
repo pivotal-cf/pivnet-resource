@@ -12,18 +12,20 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp/lagershim"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
-	"github.com/pivotal-cf-experimental/pivnet-resource/lagershim"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
+	"github.com/pivotal-golang/lager"
 	"github.com/robdimsdale/sanitizer"
 )
 
 var (
 	// version is deliberately left uninitialized so it can be set at compile-time
 	version string
+
+	l lager.Logger
 )
 
 func main() {
@@ -55,11 +57,12 @@ func main() {
 	sanitized := concourse.SanitizedSource(input.Source)
 	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
 
-	l := logger.NewLogger(sanitizer)
+	l = lager.NewLogger("pivnet-resource")
+	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
 
 	err = validator.NewInValidator(input).Validate()
 	if err != nil {
-		l.Debugf("Exiting with error: %v\n", err)
+		l.Error("Exiting with error", err)
 		log.Fatalln(err)
 	}
 
@@ -97,15 +100,13 @@ func main() {
 		fs,
 	).Run(input)
 	if err != nil {
-		l.Debugf("Exiting with error: %v\n", err)
+		l.Error("Exiting with error", err)
 		log.Fatalln(err)
 	}
 
-	l.Debugf("Returning output: %+v\n", response)
-
 	err = json.NewEncoder(os.Stdout).Encode(response)
 	if err != nil {
-		l.Debugf("Exiting with error: %v\n", err)
+		l.Error("Exiting with error", err)
 		log.Fatalln(err)
 	}
 }

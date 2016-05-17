@@ -18,11 +18,11 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum/md5sumfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
-	"github.com/robdimsdale/sanitizer"
+	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("In", func() {
@@ -38,7 +38,7 @@ var _ = Describe("In", func() {
 
 		downloadDir string
 
-		ginkgoLogger logger.Logger
+		testLogger lager.Logger
 
 		productVersion  string
 		etag            string
@@ -205,13 +205,10 @@ var _ = Describe("In", func() {
 			return "", nil
 		}
 
-		sanitized := concourse.SanitizedSource(inRequest.Source)
-		sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
-
-		ginkgoLogger = logger.NewLogger(sanitizer)
+		testLogger = lagertest.NewTestLogger("in unit tests")
 
 		inCommand = in.NewInCommand(
-			ginkgoLogger,
+			testLogger,
 			downloadDir,
 			fakePivnetClient,
 			fakeFilter,
