@@ -112,7 +112,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Debug("Found release dependencies", lager.Data{"release_dependencies": releaseDependencies})
 
-	err = c.downloadFiles(
+	productFiles, err = c.downloadFiles(
 		input.Params.Globs,
 		productFiles,
 		productSlug,
@@ -198,7 +198,7 @@ func (c InCommand) downloadFiles(
 	productFiles []pivnet.ProductFile,
 	productSlug string,
 	releaseID int,
-) error {
+) ([]pivnet.ProductFile, error) {
 	c.logger.Debug(
 		"Getting download links",
 		lager.Data{
@@ -208,6 +208,7 @@ func (c InCommand) downloadFiles(
 
 	downloadLinks := c.filter.DownloadLinks(productFiles)
 
+	returnProductFiles := productFiles
 	if len(globs) > 0 {
 		c.logger.Debug(
 			"Filtering download links with globs",
@@ -219,7 +220,7 @@ func (c InCommand) downloadFiles(
 		var err error
 		downloadLinks, err = c.filter.DownloadLinksByGlob(downloadLinks, globs)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		c.logger.Debug(
@@ -231,19 +232,21 @@ func (c InCommand) downloadFiles(
 
 		files, err := c.downloader.Download(downloadLinks)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		fileMD5s := map[string]string{}
-		for _, p := range productFiles {
+		for i, p := range productFiles {
 			productFile, err := c.pivnetClient.GetProductFile(
 				productSlug,
 				releaseID,
 				p.ID,
 			)
 			if err != nil {
-				return err
+				return nil, err
 			}
+
+			returnProductFiles[i] = productFile
 
 			parts := strings.Split(productFile.AWSObjectKey, "/")
 
@@ -264,11 +267,11 @@ func (c InCommand) downloadFiles(
 
 		err = c.compareMD5s(files, fileMD5s)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return returnProductFiles, nil
 }
 
 func (c InCommand) writeVersionFile(versionWithETag string) error {

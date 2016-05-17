@@ -33,6 +33,8 @@ var _ = Describe("In", func() {
 		fakeFileSummer   *md5sumfakes.FakeFileSummer
 
 		productFiles []pivnet.ProductFile
+		productFile1 pivnet.ProductFile
+		productFile2 pivnet.ProductFile
 
 		releaseDependencies []pivnet.ReleaseDependency
 
@@ -100,27 +102,41 @@ var _ = Describe("In", func() {
 				Name:         "product file 1234",
 				Description:  "some product file 1234",
 				AWSObjectKey: downloadFilepaths[0],
-				FileType:     "some-file-type 1234",
-				FileVersion:  "some-file-version 1234",
-				MD5:          fileContentsMD5s[0],
-				Links: &pivnet.Links{
-					Download: map[string]string{
-						"href": "foo",
-					},
-				},
 			},
 			{
 				ID:           3456,
 				Name:         "product file 3456",
 				Description:  "some product file 3456",
 				AWSObjectKey: downloadFilepaths[1],
-				FileType:     "some-file-type 3456",
-				FileVersion:  "some-file-version 3456",
-				MD5:          fileContentsMD5s[1],
-				Links: &pivnet.Links{
-					Download: map[string]string{
-						"href": "bar",
-					},
+			},
+		}
+
+		productFile1 = pivnet.ProductFile{
+			ID:           productFiles[0].ID,
+			Name:         productFiles[0].Name,
+			Description:  productFiles[0].Description,
+			AWSObjectKey: productFiles[0].AWSObjectKey,
+			FileVersion:  "some-file-version 1234",
+			FileType:     "some-file-type 1234",
+			MD5:          fileContentsMD5s[0],
+			Links: &pivnet.Links{
+				Download: map[string]string{
+					"href": "foo",
+				},
+			},
+		}
+
+		productFile2 = pivnet.ProductFile{
+			ID:           productFiles[1].ID,
+			Name:         productFiles[1].Name,
+			Description:  productFiles[1].Description,
+			AWSObjectKey: productFiles[1].AWSObjectKey,
+			FileType:     "some-file-type 1234",
+			FileVersion:  "some-file-version 3456",
+			MD5:          fileContentsMD5s[1],
+			Links: &pivnet.Links{
+				Download: map[string]string{
+					"href": "bar",
 				},
 			},
 		}
@@ -178,10 +194,11 @@ var _ = Describe("In", func() {
 				return pivnet.ProductFile{}, getProductFileErr
 			}
 
-			for _, p := range productFiles {
-				if p.ID == productFileID {
-					return p, nil
-				}
+			switch productFileID {
+			case productFile1.ID:
+				return productFile1, nil
+			case productFile2.ID:
+				return productFile2, nil
 			}
 
 			Fail(fmt.Sprintf("unexpected productFileID: %d", productFileID))
@@ -390,6 +407,28 @@ var _ = Describe("In", func() {
 			Expect(fakeFilter.DownloadLinksByGlobCallCount()).To(Equal(1))
 			Expect(fakePivnetClient.GetProductFileCallCount()).To(Equal(len(productFiles)))
 			Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
+		})
+
+		It("writes md5 to metadata file", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			jsonFilepath := filepath.Join(downloadDir, "metadata.json")
+			jsonContents, err := ioutil.ReadFile(jsonFilepath)
+			Expect(err).NotTo(HaveOccurred())
+
+			var writtenMetadata metadata.Metadata
+			err = json.Unmarshal(jsonContents, &writtenMetadata)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(writtenMetadata.Release).NotTo(BeNil())
+			Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
+
+			Expect(productFiles[0].MD5).To(Equal(fileContentsMD5s[0]))
+			Expect(productFiles[1].MD5).To(Equal(fileContentsMD5s[1]))
+
+			validateProductFilesMetadata(writtenMetadata, productFiles)
+			validateReleaseDependenciesMetadata(writtenMetadata, releaseDependencies)
 		})
 
 		Context("when getting a product file returns error", func() {
