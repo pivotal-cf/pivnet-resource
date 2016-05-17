@@ -13,8 +13,8 @@ import (
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
+	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
-	gp_filter "github.com/pivotal-cf-experimental/pivnet-resource/gp_filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
@@ -25,7 +25,7 @@ type InCommand struct {
 	logger       logger.Logger
 	downloadDir  string
 	pivnetClient gp.Client
-	filter       gp_filter.Filter
+	filter       filter.Filter
 	downloader   downloader.Downloader
 	fileSummer   md5sum.FileSummer
 }
@@ -34,7 +34,7 @@ func NewInCommand(
 	logger logger.Logger,
 	downloadDir string,
 	pivnetClient gp.Client,
-	filter gp_filter.Filter,
+	filter filter.Filter,
 	downloader downloader.Downloader,
 	fileSummer md5sum.FileSummer,
 ) *InCommand {

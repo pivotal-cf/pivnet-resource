@@ -1,8 +1,9 @@
 package filter_test
 
 import (
+	"github.com/pivotal-cf-experimental/go-pivnet"
+	gp "github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -37,18 +38,127 @@ var _ = Describe("Filter", func() {
 		}
 	})
 
+	Describe("ReleasesByReleaseType", func() {
+		var (
+			releaseType string
+			releases    []gp.Release
+		)
+
+		BeforeEach(func() {
+			releaseType = "foo"
+
+			releases = []gp.Release{
+				{
+					ID:          1,
+					Version:     "version1",
+					ReleaseType: "foo",
+				},
+				{
+					ID:          2,
+					Version:     "version2",
+					ReleaseType: "bar",
+				},
+				{
+					ID:          3,
+					Version:     "version3",
+					ReleaseType: "foo",
+				},
+			}
+		})
+
+		It("filters releases by release type without error", func() {
+			filteredReleases, err := f.ReleasesByReleaseType(releases, releaseType)
+
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(filteredReleases).To(HaveLen(2))
+			Expect(filteredReleases).To(ContainElement(releases[0]))
+			Expect(filteredReleases).To(ContainElement(releases[2]))
+		})
+
+		Context("when the input releases are nil", func() {
+			BeforeEach(func() {
+				releases = nil
+			})
+
+			It("returns empty slice without error", func() {
+				filteredReleases, err := f.ReleasesByReleaseType(releases, releaseType)
+
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(filteredReleases).NotTo(BeNil())
+				Expect(filteredReleases).To(HaveLen(0))
+			})
+		})
+	})
+
+	Describe("ReleasesByVersion", func() {
+		var (
+			version  string
+			releases []gp.Release
+		)
+
+		BeforeEach(func() {
+			version = "version2"
+
+			releases = []gp.Release{
+				{
+					ID:          1,
+					Version:     "version1",
+					ReleaseType: "foo",
+				},
+				{
+					ID:          2,
+					Version:     "version2",
+					ReleaseType: "bar",
+				},
+				{
+					ID:          3,
+					Version:     "version3",
+					ReleaseType: "foo",
+				},
+			}
+		})
+
+		It("filters releases by release type without error", func() {
+			filteredReleases, err := f.ReleasesByVersion(releases, version)
+
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(filteredReleases).To(HaveLen(1))
+			Expect(filteredReleases).To(ContainElement(releases[1]))
+		})
+
+		Context("when the input releases are nil", func() {
+			BeforeEach(func() {
+				releases = nil
+			})
+
+			It("returns empty slice without error", func() {
+				filteredReleases, err := f.ReleasesByVersion(releases, version)
+
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(filteredReleases).NotTo(BeNil())
+				Expect(filteredReleases).To(HaveLen(0))
+			})
+		})
+	})
+
 	Describe("Download Links", func() {
 		It("returns the download links", func() {
-			productFiles := pivnet.ProductFiles{[]pivnet.ProductFile{
-				{ID: 3,
+			productFiles := []pivnet.ProductFile{
+				{
+					ID:           3,
 					AWSObjectKey: "product_files/banana/file-name-1.zip",
 					Links:        &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/6/download"}},
 				},
-				{ID: 4,
+				{
+					ID:           4,
 					AWSObjectKey: "product_files/banana/file-name-2.zip",
 					Links:        &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}},
 				},
-			}}
+			}
 
 			links := f.DownloadLinks(productFiles)
 			Expect(links).To(HaveLen(2))

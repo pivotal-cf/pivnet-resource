@@ -11,8 +11,8 @@ import (
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/check"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
-	"github.com/pivotal-cf-experimental/pivnet-resource/gp_filter/gp_filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 	"github.com/robdimsdale/sanitizer"
@@ -20,7 +20,7 @@ import (
 
 var _ = Describe("Check", func() {
 	var (
-		fakeGPFilter       *gpfilterfakes.FakeFilter
+		fakeFilter         *filterfakes.FakeFilter
 		fakePivnetClient   *gpfakes.FakeClient
 		fakeExtendedClient *gpfakes.FakeExtendedClient
 
@@ -45,7 +45,7 @@ var _ = Describe("Check", func() {
 	)
 
 	BeforeEach(func() {
-		fakeGPFilter = &gpfilterfakes.FakeFilter{}
+		fakeFilter = &filterfakes.FakeFilter{}
 		fakePivnetClient = &gpfakes.FakeClient{}
 		fakeExtendedClient = &gpfakes.FakeExtendedClient{}
 
@@ -107,8 +107,8 @@ var _ = Describe("Check", func() {
 			return etag, etagErr
 		}
 
-		fakeGPFilter.ReleasesByReleaseTypeReturns(filteredReleases, releasesByReleaseTypeErr)
-		fakeGPFilter.ReleasesByVersionReturns(filteredReleases, releasesByVersionErr)
+		fakeFilter.ReleasesByReleaseTypeReturns(filteredReleases, releasesByReleaseTypeErr)
+		fakeFilter.ReleasesByVersionReturns(filteredReleases, releasesByVersionErr)
 
 		binaryVersion := "v0.1.2-unit-tests"
 
@@ -121,7 +121,7 @@ var _ = Describe("Check", func() {
 			binaryVersion,
 			ginkgoLogger,
 			logFilePath,
-			fakeGPFilter,
+			fakeFilter,
 			fakePivnetClient,
 			fakeExtendedClient,
 		)

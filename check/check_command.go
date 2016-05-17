@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
-	gp_filter "github.com/pivotal-cf-experimental/pivnet-resource/gp_filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
@@ -17,7 +17,7 @@ type CheckCommand struct {
 	logger         logger.Logger
 	logFilePath    string
 	binaryVersion  string
-	gpFilter       gp_filter.Filter
+	filter         filter.Filter
 	pivnetClient   gp.Client
 	extendedClient gp.ExtendedClient
 }
@@ -26,7 +26,7 @@ func NewCheckCommand(
 	binaryVersion string,
 	logger logger.Logger,
 	logFilePath string,
-	gpFilter gp_filter.Filter,
+	filter filter.Filter,
 	pivnetClient gp.Client,
 	extendedClient gp.ExtendedClient,
 ) *CheckCommand {
@@ -34,7 +34,7 @@ func NewCheckCommand(
 		logger:         logger,
 		logFilePath:    logFilePath,
 		binaryVersion:  binaryVersion,
-		gpFilter:       gpFilter,
+		filter:         filter,
 		pivnetClient:   pivnetClient,
 		extendedClient: extendedClient,
 	}
@@ -96,7 +96,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	if releaseType != "" {
 		c.logger.Debugf("Filtering all releases by release_type: %s\n", releaseType)
 
-		releases, err = c.gpFilter.ReleasesByReleaseType(releases, releaseType)
+		releases, err = c.filter.ReleasesByReleaseType(releases, releaseType)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +106,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	if productVersion != "" {
 		c.logger.Debugf("Filtering all releases by product_version: %s\n", productVersion)
 
-		releases, err = c.gpFilter.ReleasesByVersion(releases, productVersion)
+		releases, err = c.filter.ReleasesByVersion(releases, productVersion)
 		if err != nil {
 			return nil, err
 		}
