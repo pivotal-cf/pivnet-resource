@@ -33,7 +33,7 @@ func (command *ReleaseDependenciesCommand) Execute([]string) error {
 		return fmt.Errorf("release not found")
 	}
 
-	releaseDependencies, err := client.ReleaseDependencies.Get(command.ProductSlug, release.ID)
+	releaseDependencies, err := client.ReleaseDependencies.List(command.ProductSlug, release.ID)
 	if err != nil {
 		return err
 	}

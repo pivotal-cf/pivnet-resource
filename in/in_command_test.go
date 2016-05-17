@@ -12,28 +12,27 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader/downloaderfakes"
-	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp_filter/gp_filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum/md5sumfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet/pivnetfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 	"github.com/robdimsdale/sanitizer"
 )
 
 var _ = Describe("In", func() {
 	var (
-		fakeFilter       *filterfakes.FakeFilter
+		fakeGPFilter     *gpfilterfakes.FakeFilter
 		fakeDownloader   *downloaderfakes.FakeDownloader
-		fakePivnetClient *pivnetfakes.FakeClient
+		fakePivnetClient *gpfakes.FakeClient
 		fakeFileSummer   *md5sumfakes.FakeFileSummer
 
-		productFiles         []pivnet.ProductFile
-		productFilesResponse pivnet.ProductFiles
+		productFiles []pivnet.ProductFile
 
 		releaseDependencies []pivnet.ReleaseDependency
 
@@ -63,9 +62,9 @@ var _ = Describe("In", func() {
 	)
 
 	BeforeEach(func() {
-		fakeFilter = &filterfakes.FakeFilter{}
+		fakeGPFilter = &gpfilterfakes.FakeFilter{}
 		fakeDownloader = &downloaderfakes.FakeDownloader{}
-		fakePivnetClient = &pivnetfakes.FakeClient{}
+		fakePivnetClient = &gpfakes.FakeClient{}
 		fakeFileSummer = &md5sumfakes.FakeFileSummer{}
 
 		getReleaseErr = nil
@@ -125,9 +124,6 @@ var _ = Describe("In", func() {
 				},
 			},
 		}
-		productFilesResponse = pivnet.ProductFiles{
-			ProductFiles: productFiles,
-		}
 
 		release = pivnet.Release{
 			Version: productVersion,
@@ -169,7 +165,7 @@ var _ = Describe("In", func() {
 	JustBeforeEach(func() {
 		fakePivnetClient.GetReleaseReturns(release, getReleaseErr)
 		fakePivnetClient.AcceptEULAReturns(acceptEULAErr)
-		fakePivnetClient.GetProductFilesReturns(productFilesResponse, getProductFilesErr)
+		fakePivnetClient.GetProductFilesReturns(productFiles, getProductFilesErr)
 
 		fakePivnetClient.ReleaseDependenciesReturns(releaseDependencies, releaseDependenciesErr)
 
@@ -192,7 +188,7 @@ var _ = Describe("In", func() {
 			return pivnet.ProductFile{}, nil
 		}
 
-		fakeFilter.DownloadLinksByGlobReturns(map[string]string{}, downloadLinksByGlobErr)
+		fakeGPFilter.DownloadLinksByGlobReturns(map[string]string{}, downloadLinksByGlobErr)
 		fakeDownloader.DownloadReturns(downloadFilepaths, downloadErr)
 		fakeFileSummer.SumFileStub = func(path string) (string, error) {
 			if md5sumErr != nil {
@@ -218,7 +214,7 @@ var _ = Describe("In", func() {
 			ginkgoLogger,
 			downloadDir,
 			fakePivnetClient,
-			fakeFilter,
+			fakeGPFilter,
 			fakeDownloader,
 			fakeFileSummer,
 		)
@@ -393,8 +389,8 @@ var _ = Describe("In", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeFilter.DownloadLinksCallCount()).To(Equal(1))
-			Expect(fakeFilter.DownloadLinksByGlobCallCount()).To(Equal(1))
+			Expect(fakeGPFilter.DownloadLinksCallCount()).To(Equal(1))
+			Expect(fakeGPFilter.DownloadLinksByGlobCallCount()).To(Equal(1))
 			Expect(fakePivnetClient.GetProductFileCallCount()).To(Equal(len(productFiles)))
 			Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
 		})

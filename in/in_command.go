@@ -10,21 +10,22 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
-	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
+	gp_filter "github.com/pivotal-cf-experimental/pivnet-resource/gp_filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 type InCommand struct {
 	logger       logger.Logger
 	downloadDir  string
-	pivnetClient pivnet.Client
-	filter       filter.Filter
+	pivnetClient gp.Client
+	filter       gp_filter.Filter
 	downloader   downloader.Downloader
 	fileSummer   md5sum.FileSummer
 }
@@ -32,8 +33,8 @@ type InCommand struct {
 func NewInCommand(
 	logger logger.Logger,
 	downloadDir string,
-	pivnetClient pivnet.Client,
-	filter filter.Filter,
+	pivnetClient gp.Client,
+	filter gp_filter.Filter,
 	downloader downloader.Downloader,
 	fileSummer md5sum.FileSummer,
 ) *InCommand {
@@ -91,7 +92,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Debugf("Getting product files: {release_id: %d}\n", release.ID)
 
-	productFiles, err := c.pivnetClient.GetProductFiles(release)
+	productFiles, err := c.pivnetClient.GetProductFiles(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
@@ -136,7 +137,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		},
 	}
 
-	for _, pf := range productFiles.ProductFiles {
+	for _, pf := range productFiles {
 		mdata.ProductFiles = append(mdata.ProductFiles, metadata.ProductFile{
 			ID:           pf.ID,
 			File:         pf.Name,
@@ -190,7 +191,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 func (c InCommand) downloadFiles(
 	globs []string,
-	productFiles pivnet.ProductFiles,
+	productFiles []pivnet.ProductFile,
 	productSlug string,
 	releaseID int,
 ) error {
@@ -224,7 +225,7 @@ func (c InCommand) downloadFiles(
 		}
 
 		fileMD5s := map[string]string{}
-		for _, p := range productFiles.ProductFiles {
+		for _, p := range productFiles {
 			productFile, err := c.pivnetClient.GetProductFile(
 				productSlug,
 				releaseID,

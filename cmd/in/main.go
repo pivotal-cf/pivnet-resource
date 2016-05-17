@@ -7,13 +7,15 @@ import (
 	"log"
 	"os"
 
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
-	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
+	filter "github.com/pivotal-cf-experimental/pivnet-resource/gp_filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
+	"github.com/pivotal-cf-experimental/pivnet-resource/lagershim"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
@@ -61,7 +63,6 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	f := filter.NewFilter()
 	d := downloader.NewDownloader(input.Source.APIToken, downloadDir, l)
 	fs := md5sum.NewFileSummer()
 
@@ -69,20 +70,32 @@ func main() {
 	if input.Source.Endpoint != "" {
 		endpoint = input.Source.Endpoint
 	} else {
-		endpoint = pivnet.Endpoint
+		endpoint = pivnet.DefaultHost
 	}
 
-	clientConfig := pivnet.NewClientConfig{
-		Endpoint:  endpoint,
+	ls := lagershim.NewLagerShim(l)
+
+	clientConfig := pivnet.ClientConfig{
+		Host:      endpoint,
 		Token:     input.Source.APIToken,
 		UserAgent: useragent.UserAgent(version, "get", input.Source.ProductSlug),
 	}
-	client := pivnet.NewClient(
+
+	client := gp.NewClient(
 		clientConfig,
-		l,
+		ls,
 	)
 
-	response, err := in.NewInCommand(l, downloadDir, client, f, d, fs).Run(input)
+	f := filter.NewFilter()
+
+	response, err := in.NewInCommand(
+		l,
+		downloadDir,
+		client,
+		f,
+		d,
+		fs,
+	).Run(input)
 	if err != nil {
 		l.Debugf("Exiting with error: %v\n", err)
 		log.Fatalln(err)
