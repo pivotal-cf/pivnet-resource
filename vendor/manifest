@@ -79,7 +79,7 @@
 			"importpath": "github.com/robdimsdale/sanitizer",
 			"repository": "https://github.com/robdimsdale/sanitizer",
 			"vcs": "git",
-			"revision": "0a0a70a490499be653711fda1d2e16a5bb9e46ee",
+			"revision": "ab2334cb7539a2ce27b7aea53b7d693087b10cd9",
 			"branch": "master",
 			"notests": true
 		},

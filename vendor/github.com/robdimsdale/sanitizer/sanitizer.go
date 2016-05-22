@@ -15,6 +15,9 @@ type sanitizer struct {
 }
 
 func NewSanitizer(sanitized map[string]string, sink io.Writer) Sanitizer {
+	if _, ok := sanitized[""]; ok {
+		delete(sanitized, "")
+	}
 	return &sanitizer{
 		sanitized: sanitized,
 		sink:      sink,
