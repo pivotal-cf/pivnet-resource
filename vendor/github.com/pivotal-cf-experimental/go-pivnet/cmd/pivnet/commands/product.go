@@ -8,7 +8,7 @@ import (
 )
 
 type ProductCommand struct {
-	ProductSlug string `long:"product-slug" description:"Product slug e.g. p-mysql" required:"true"`
+	ProductSlug string `long:"product-slug" short:"p" description:"Product slug e.g. p-mysql" required:"true"`
 }
 
 type ProductsCommand struct {

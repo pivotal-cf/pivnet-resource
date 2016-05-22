@@ -10,17 +10,17 @@ import (
 )
 
 type FileGroupsCommand struct {
-	ProductSlug    string `long:"product-slug" description:"Product slug e.g. p-mysql" required:"true"`
-	ReleaseVersion string `long:"release-version" description:"Release version e.g. 0.1.2-rc1"`
+	ProductSlug    string `long:"product-slug" short:"p" description:"Product slug e.g. p-mysql" required:"true"`
+	ReleaseVersion string `long:"release-version" short:"v" description:"Release version e.g. 0.1.2-rc1"`
 }
 
 type FileGroupCommand struct {
-	ProductSlug string `long:"product-slug" description:"Product slug e.g. p-mysql" required:"true"`
+	ProductSlug string `long:"product-slug" short:"p" description:"Product slug e.g. p-mysql" required:"true"`
 	FileGroupID int    `long:"file-group-id" description:"Filegroup ID e.g. 1234" required:"true"`
 }
 
 type DeleteFileGroupCommand struct {
-	ProductSlug string `long:"product-slug" description:"Product slug e.g. p-mysql" required:"true"`
+	ProductSlug string `long:"product-slug" short:"p" description:"Product slug e.g. p-mysql" required:"true"`
 	FileGroupID int    `long:"file-group-id" description:"File group ID e.g. 1234" required:"true"`
 }
 

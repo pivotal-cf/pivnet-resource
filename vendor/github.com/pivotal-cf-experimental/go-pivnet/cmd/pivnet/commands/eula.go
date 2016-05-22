@@ -16,8 +16,8 @@ type EULACommand struct {
 }
 
 type AcceptEULACommand struct {
-	ProductSlug    string `long:"product-slug" description:"Product slug e.g. p-mysql" required:"true"`
-	ReleaseVersion string `long:"release-version" description:"Release version e.g. 0.1.2-rc1" required:"true"`
+	ProductSlug    string `long:"product-slug" short:"p" description:"Product slug e.g. p-mysql" required:"true"`
+	ReleaseVersion string `long:"release-version" short:"v" description:"Release version e.g. 0.1.2-rc1" required:"true"`
 }
 
 func (command *EULAsCommand) Execute([]string) error {

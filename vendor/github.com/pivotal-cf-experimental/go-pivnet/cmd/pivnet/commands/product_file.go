@@ -9,30 +9,30 @@ import (
 )
 
 type ProductFilesCommand struct {
-	ProductSlug    string `long:"product-slug" description:"Product slug e.g. p-mysql" required:"true"`
-	ReleaseVersion string `long:"release-version" description:"Release version e.g. 0.1.2-rc1"`
+	ProductSlug    string `long:"product-slug" short:"p" description:"Product slug e.g. p-mysql" required:"true"`
+	ReleaseVersion string `long:"release-version" short:"v" description:"Release version e.g. 0.1.2-rc1"`
 }
 
 type ProductFileCommand struct {
-	ProductSlug    string `long:"product-slug" description:"Product slug e.g. p-mysql" required:"true"`
-	ReleaseVersion string `long:"release-version" description:"Release version e.g. 0.1.2-rc1"`
+	ProductSlug    string `long:"product-slug" short:"p" description:"Product slug e.g. p-mysql" required:"true"`
+	ReleaseVersion string `long:"release-version" short:"v" description:"Release version e.g. 0.1.2-rc1"`
 	ProductFileID  int    `long:"product-file-id" description:"Product file ID e.g. 1234" required:"true"`
 }
 
 type AddProductFileCommand struct {
-	ProductSlug    string `long:"product-slug" description:"Product slug e.g. p-mysql" required:"true"`
-	ReleaseVersion string `long:"release-version" description:"Release version e.g. 0.1.2-rc1" required:"true"`
+	ProductSlug    string `long:"product-slug" short:"p" description:"Product slug e.g. p-mysql" required:"true"`
+	ReleaseVersion string `long:"release-version" short:"v" description:"Release version e.g. 0.1.2-rc1" required:"true"`
 	ProductFileID  int    `long:"product-file-id" description:"Product file ID e.g. 1234" required:"true"`
 }
 
 type RemoveProductFileCommand struct {
-	ProductSlug    string `long:"product-slug" description:"Product slug e.g. p-mysql" required:"true"`
-	ReleaseVersion string `long:"release-version" description:"Release version e.g. 0.1.2-rc1" required:"true"`
+	ProductSlug    string `long:"product-slug" short:"p" description:"Product slug e.g. p-mysql" required:"true"`
+	ReleaseVersion string `long:"release-version" short:"v" description:"Release version e.g. 0.1.2-rc1" required:"true"`
 	ProductFileID  int    `long:"product-file-id" description:"Product file ID e.g. 1234" required:"true"`
 }
 
 type DeleteProductFileCommand struct {
-	ProductSlug   string `long:"product-slug" description:"Product slug e.g. p-mysql" required:"true"`
+	ProductSlug   string `long:"product-slug" short:"p" description:"Product slug e.g. p-mysql" required:"true"`
 	ProductFileID int    `long:"product-file-id" description:"Product file ID e.g. 1234" required:"true"`
 }
 

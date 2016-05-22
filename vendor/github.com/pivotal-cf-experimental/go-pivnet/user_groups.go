@@ -11,7 +11,7 @@ type UserGroupsService struct {
 	client Client
 }
 
-type addUserGroupBody struct {
+type addRemoveUserGroupBody struct {
 	UserGroup UserGroup `json:"user_group"`
 }
 
@@ -99,7 +99,39 @@ func (u UserGroupsService) AddToRelease(productSlug string, releaseID int, userG
 		releaseID,
 	)
 
-	body := addUserGroupBody{
+	body := addRemoveUserGroupBody{
+		UserGroup: UserGroup{
+			ID: userGroupID,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = u.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusNoContent,
+		bytes.NewReader(b),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u UserGroupsService) RemoveFromRelease(productSlug string, releaseID int, userGroupID int) error {
+	url := fmt.Sprintf(
+		"/products/%s/releases/%d/remove_user_group",
+		productSlug,
+		releaseID,
+	)
+
+	body := addRemoveUserGroupBody{
 		UserGroup: UserGroup{
 			ID: userGroupID,
 		},
