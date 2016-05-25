@@ -6,6 +6,7 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/printer"
 )
 
 type ReleaseDependenciesCommand struct {
@@ -18,7 +19,7 @@ func (command *ReleaseDependenciesCommand) Execute([]string) error {
 
 	releases, err := client.Releases.List(command.ProductSlug)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	var release pivnet.Release
@@ -35,11 +36,11 @@ func (command *ReleaseDependenciesCommand) Execute([]string) error {
 
 	releaseDependencies, err := client.ReleaseDependencies.List(command.ProductSlug, release.ID)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	switch Pivnet.Format {
-	case PrintAsTable:
+	case printer.PrintAsTable:
 		table := tablewriter.NewWriter(OutputWriter)
 		table.SetHeader([]string{
 			"ID",
@@ -58,10 +59,10 @@ func (command *ReleaseDependenciesCommand) Execute([]string) error {
 		}
 		table.Render()
 		return nil
-	case PrintAsJSON:
-		return printJSON(releaseDependencies)
-	case PrintAsYAML:
-		return printYAML(releaseDependencies)
+	case printer.PrintAsJSON:
+		return Printer.PrintJSON(releaseDependencies)
+	case printer.PrintAsYAML:
+		return Printer.PrintYAML(releaseDependencies)
 	}
 
 	return nil

@@ -1,6 +1,9 @@
 package commands
 
-import "github.com/olekukonko/tablewriter"
+import (
+	"github.com/olekukonko/tablewriter"
+	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/printer"
+)
 
 type ReleaseTypesCommand struct {
 }
@@ -9,11 +12,11 @@ func (command *ReleaseTypesCommand) Execute([]string) error {
 	client := NewClient()
 	releaseTypes, err := client.ReleaseTypes.Get()
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	switch Pivnet.Format {
-	case PrintAsTable:
+	case printer.PrintAsTable:
 		table := tablewriter.NewWriter(OutputWriter)
 		table.SetHeader([]string{"ReleaseTypes"})
 
@@ -22,10 +25,10 @@ func (command *ReleaseTypesCommand) Execute([]string) error {
 		}
 		table.Render()
 		return nil
-	case PrintAsJSON:
-		return printJSON(releaseTypes)
-	case PrintAsYAML:
-		return printYAML(releaseTypes)
+	case printer.PrintAsJSON:
+		return Printer.PrintJSON(releaseTypes)
+	case printer.PrintAsYAML:
+		return Printer.PrintYAML(releaseTypes)
 	}
 
 	return nil

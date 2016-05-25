@@ -7,6 +7,7 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/printer"
 )
 
 type UserGroupsCommand struct {
@@ -53,7 +54,7 @@ func (command *UserGroupCommand) Execute([]string) error {
 		command.UserGroupID,
 	)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	return printUserGroup(userGroup)
@@ -66,7 +67,7 @@ func (command *UserGroupsCommand) Execute([]string) error {
 		var err error
 		userGroups, err := client.UserGroups.List()
 		if err != nil {
-			return err
+			return ErrorHandler.HandleError(err)
 		}
 
 		return printUserGroups(userGroups)
@@ -78,7 +79,7 @@ func (command *UserGroupsCommand) Execute([]string) error {
 
 	releases, err := client.Releases.List(command.ProductSlug)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	var release pivnet.Release
@@ -95,7 +96,7 @@ func (command *UserGroupsCommand) Execute([]string) error {
 
 	userGroups, err := client.UserGroups.ListForRelease(command.ProductSlug, release.ID)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	return printUserGroups(userGroups)
@@ -103,7 +104,7 @@ func (command *UserGroupsCommand) Execute([]string) error {
 
 func printUserGroups(userGroups []pivnet.UserGroup) error {
 	switch Pivnet.Format {
-	case PrintAsTable:
+	case printer.PrintAsTable:
 		table := tablewriter.NewWriter(OutputWriter)
 		table.SetHeader([]string{"ID", "Name", "Description"})
 
@@ -116,10 +117,10 @@ func printUserGroups(userGroups []pivnet.UserGroup) error {
 		}
 		table.Render()
 		return nil
-	case PrintAsJSON:
-		return printJSON(userGroups)
-	case PrintAsYAML:
-		return printYAML(userGroups)
+	case printer.PrintAsJSON:
+		return Printer.PrintJSON(userGroups)
+	case printer.PrintAsYAML:
+		return Printer.PrintYAML(userGroups)
 	}
 
 	return nil
@@ -130,7 +131,7 @@ func (command *CreateUserGroupCommand) Execute([]string) error {
 
 	userGroup, err := client.UserGroups.Create(command.Name, command.Description, command.Members)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	return printUserGroup(userGroup)
@@ -138,7 +139,7 @@ func (command *CreateUserGroupCommand) Execute([]string) error {
 
 func printUserGroup(userGroup pivnet.UserGroup) error {
 	switch Pivnet.Format {
-	case PrintAsTable:
+	case printer.PrintAsTable:
 		table := tablewriter.NewWriter(OutputWriter)
 		table.SetHeader([]string{"ID", "Name", "Description", "Members"})
 
@@ -151,10 +152,10 @@ func printUserGroup(userGroup pivnet.UserGroup) error {
 
 		table.Render()
 		return nil
-	case PrintAsJSON:
-		return printJSON(userGroup)
-	case PrintAsYAML:
-		return printYAML(userGroup)
+	case printer.PrintAsJSON:
+		return Printer.PrintJSON(userGroup)
+	case printer.PrintAsYAML:
+		return Printer.PrintYAML(userGroup)
 	}
 
 	return nil
@@ -165,10 +166,10 @@ func (command *DeleteUserGroupCommand) Execute([]string) error {
 
 	err := client.UserGroups.Delete(command.UserGroupID)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
-	if Pivnet.Format == PrintAsTable {
+	if Pivnet.Format == printer.PrintAsTable {
 		_, err = fmt.Fprintf(
 			OutputWriter,
 			"user group %d deleted successfully\n",
@@ -184,7 +185,7 @@ func (command *UpdateUserGroupCommand) Execute([]string) error {
 
 	userGroup, err := client.UserGroups.Get(command.UserGroupID)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	if command.Name != nil {
@@ -197,7 +198,7 @@ func (command *UpdateUserGroupCommand) Execute([]string) error {
 
 	updated, err := client.UserGroups.Update(userGroup)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	return printUserGroup(updated)
@@ -208,7 +209,7 @@ func (command *AddUserGroupCommand) Execute([]string) error {
 
 	releases, err := client.Releases.List(command.ProductSlug)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	var release pivnet.Release
@@ -229,10 +230,10 @@ func (command *AddUserGroupCommand) Execute([]string) error {
 		command.UserGroupID,
 	)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
-	if Pivnet.Format == PrintAsTable {
+	if Pivnet.Format == printer.PrintAsTable {
 		_, err = fmt.Fprintf(
 			OutputWriter,
 			"user group %d added successfully to %s/%s\n",
@@ -250,7 +251,7 @@ func (command *RemoveUserGroupCommand) Execute([]string) error {
 
 	releases, err := client.Releases.List(command.ProductSlug)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	var release pivnet.Release
@@ -271,10 +272,10 @@ func (command *RemoveUserGroupCommand) Execute([]string) error {
 		command.UserGroupID,
 	)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
-	if Pivnet.Format == PrintAsTable {
+	if Pivnet.Format == printer.PrintAsTable {
 		_, err = fmt.Fprintf(
 			OutputWriter,
 			"user group %d removed successfully from %s/%s\n",

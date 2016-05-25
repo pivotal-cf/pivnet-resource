@@ -6,6 +6,7 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/printer"
 )
 
 type ProductFilesCommand struct {
@@ -44,7 +45,7 @@ func (command *ProductFilesCommand) Execute([]string) error {
 			command.ProductSlug,
 		)
 		if err != nil {
-			return err
+			return ErrorHandler.HandleError(err)
 		}
 
 		return printProductFiles(productFiles)
@@ -52,7 +53,7 @@ func (command *ProductFilesCommand) Execute([]string) error {
 
 	releases, err := client.Releases.List(command.ProductSlug)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	var release pivnet.Release
@@ -72,7 +73,7 @@ func (command *ProductFilesCommand) Execute([]string) error {
 		release.ID,
 	)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	return printProductFiles(productFiles)
@@ -81,7 +82,7 @@ func (command *ProductFilesCommand) Execute([]string) error {
 func printProductFiles(productFiles []pivnet.ProductFile) error {
 	switch Pivnet.Format {
 
-	case PrintAsTable:
+	case printer.PrintAsTable:
 		table := tablewriter.NewWriter(OutputWriter)
 		table.SetHeader([]string{
 			"ID",
@@ -101,10 +102,10 @@ func printProductFiles(productFiles []pivnet.ProductFile) error {
 		}
 		table.Render()
 		return nil
-	case PrintAsJSON:
-		return printJSON(productFiles)
-	case PrintAsYAML:
-		return printYAML(productFiles)
+	case printer.PrintAsJSON:
+		return Printer.PrintJSON(productFiles)
+	case printer.PrintAsYAML:
+		return Printer.PrintYAML(productFiles)
 	}
 
 	return nil
@@ -112,7 +113,7 @@ func printProductFiles(productFiles []pivnet.ProductFile) error {
 
 func printProductFile(productFile pivnet.ProductFile) error {
 	switch Pivnet.Format {
-	case PrintAsTable:
+	case printer.PrintAsTable:
 		table := tablewriter.NewWriter(OutputWriter)
 		table.SetHeader([]string{
 			"ID",
@@ -136,10 +137,10 @@ func printProductFile(productFile pivnet.ProductFile) error {
 		table.Append(productFileAsString)
 		table.Render()
 		return nil
-	case PrintAsJSON:
-		return printJSON(productFile)
-	case PrintAsYAML:
-		return printYAML(productFile)
+	case printer.PrintAsJSON:
+		return Printer.PrintJSON(productFile)
+	case printer.PrintAsYAML:
+		return Printer.PrintYAML(productFile)
 	}
 
 	return nil
@@ -154,14 +155,14 @@ func (command *ProductFileCommand) Execute([]string) error {
 			command.ProductFileID,
 		)
 		if err != nil {
-			return err
+			return ErrorHandler.HandleError(err)
 		}
 		return printProductFile(productFile)
 	}
 
 	releases, err := client.Releases.List(command.ProductSlug)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	var release pivnet.Release
@@ -182,7 +183,7 @@ func (command *ProductFileCommand) Execute([]string) error {
 		command.ProductFileID,
 	)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	return printProductFile(productFile)
@@ -193,7 +194,7 @@ func (command *AddProductFileCommand) Execute([]string) error {
 
 	releases, err := client.Releases.List(command.ProductSlug)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	var release pivnet.Release
@@ -214,10 +215,10 @@ func (command *AddProductFileCommand) Execute([]string) error {
 		command.ProductFileID,
 	)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
-	if Pivnet.Format == PrintAsTable {
+	if Pivnet.Format == printer.PrintAsTable {
 		_, err = fmt.Fprintf(
 			OutputWriter,
 			"product file %d added successfully to %s/%s\n",
@@ -235,7 +236,7 @@ func (command *RemoveProductFileCommand) Execute([]string) error {
 
 	releases, err := client.Releases.List(command.ProductSlug)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	var release pivnet.Release
@@ -256,10 +257,10 @@ func (command *RemoveProductFileCommand) Execute([]string) error {
 		command.ProductFileID,
 	)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
-	if Pivnet.Format == PrintAsTable {
+	if Pivnet.Format == printer.PrintAsTable {
 		_, err = fmt.Fprintf(
 			OutputWriter,
 			"product file %d removed successfully from %s/%s\n",
@@ -267,6 +268,10 @@ func (command *RemoveProductFileCommand) Execute([]string) error {
 			command.ProductSlug,
 			command.ReleaseVersion,
 		)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -280,10 +285,10 @@ func (command *DeleteProductFileCommand) Execute([]string) error {
 		command.ProductFileID,
 	)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
-	if Pivnet.Format == PrintAsTable {
+	if Pivnet.Format == printer.PrintAsTable {
 		_, err = fmt.Fprintf(
 			OutputWriter,
 			"product file %d deleted successfully for %s\n",

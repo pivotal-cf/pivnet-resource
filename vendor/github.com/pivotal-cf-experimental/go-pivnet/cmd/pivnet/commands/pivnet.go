@@ -1,15 +1,14 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/errors"
 	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/lagershim"
+	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/printer"
 	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/version"
 	"github.com/pivotal-cf-experimental/go-pivnet/logger"
 	"github.com/pivotal-golang/lager"
@@ -17,16 +16,15 @@ import (
 )
 
 const (
-	PrintAsTable = "table"
-	PrintAsJSON  = "json"
-	PrintAsYAML  = "yaml"
-
 	DefaultHost = "https://network.pivotal.io"
 )
 
 var (
 	OutputWriter io.Writer
 	LogWriter    io.Writer
+
+	ErrorHandler errors.ErrorHandler
+	Printer      printer.Printer
 )
 
 type PivnetCommand struct {
@@ -89,7 +87,6 @@ func init() {
 	if Pivnet.Host == "" {
 		Pivnet.Host = DefaultHost
 	}
-
 }
 
 func NewClient() pivnet.Client {
@@ -99,12 +96,20 @@ func NewClient() pivnet.Client {
 
 	if LogWriter == nil {
 		switch Pivnet.Format {
-		case PrintAsJSON, PrintAsYAML:
+		case printer.PrintAsJSON, printer.PrintAsYAML:
 			LogWriter = os.Stderr
 			break
 		default:
 			LogWriter = os.Stdout
 		}
+	}
+
+	if ErrorHandler == nil {
+		ErrorHandler = errors.NewErrorHandler(Pivnet.Format, OutputWriter, LogWriter)
+	}
+
+	if Printer == nil {
+		Printer = printer.NewPrinter(OutputWriter)
 	}
 
 	l := lager.NewLogger("pivnet CLI")
@@ -139,25 +144,4 @@ func NewClient() pivnet.Client {
 	)
 
 	return pivnetClient
-}
-
-func printYAML(object interface{}) error {
-	b, err := yaml.Marshal(object)
-	if err != nil {
-		return err
-	}
-
-	output := fmt.Sprintf("---\n%s\n", string(b))
-	OutputWriter.Write([]byte(output))
-	return nil
-}
-
-func printJSON(object interface{}) error {
-	b, err := json.Marshal(object)
-	if err != nil {
-		return err
-	}
-
-	OutputWriter.Write(b)
-	return nil
 }

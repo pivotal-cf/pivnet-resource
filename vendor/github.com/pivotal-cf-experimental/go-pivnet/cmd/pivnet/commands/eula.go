@@ -6,6 +6,7 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/printer"
 )
 
 type EULAsCommand struct {
@@ -24,7 +25,7 @@ func (command *EULAsCommand) Execute([]string) error {
 	client := NewClient()
 	eulas, err := client.EULA.List()
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	return printEULAs(eulas)
@@ -32,7 +33,7 @@ func (command *EULAsCommand) Execute([]string) error {
 
 func printEULA(eula pivnet.EULA) error {
 	switch Pivnet.Format {
-	case PrintAsTable:
+	case printer.PrintAsTable:
 		table := tablewriter.NewWriter(OutputWriter)
 		table.SetHeader([]string{"ID", "Slug", "Name"})
 
@@ -42,10 +43,10 @@ func printEULA(eula pivnet.EULA) error {
 		table.Append(eulaAsString)
 		table.Render()
 		return nil
-	case PrintAsJSON:
-		return printJSON(eula)
-	case PrintAsYAML:
-		return printYAML(eula)
+	case printer.PrintAsJSON:
+		return Printer.PrintJSON(eula)
+	case printer.PrintAsYAML:
+		return Printer.PrintYAML(eula)
 	}
 
 	return nil
@@ -55,7 +56,7 @@ func (command *EULACommand) Execute([]string) error {
 	client := NewClient()
 	eula, err := client.EULA.Get(command.EULASlug)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	return printEULA(eula)
@@ -63,7 +64,7 @@ func (command *EULACommand) Execute([]string) error {
 
 func printEULAs(eulas []pivnet.EULA) error {
 	switch Pivnet.Format {
-	case PrintAsTable:
+	case printer.PrintAsTable:
 		table := tablewriter.NewWriter(OutputWriter)
 		table.SetHeader([]string{"ID", "Slug", "Name"})
 
@@ -75,10 +76,10 @@ func printEULAs(eulas []pivnet.EULA) error {
 		}
 		table.Render()
 		return nil
-	case PrintAsJSON:
-		return printJSON(eulas)
-	case PrintAsYAML:
-		return printYAML(eulas)
+	case printer.PrintAsJSON:
+		return Printer.PrintJSON(eulas)
+	case printer.PrintAsYAML:
+		return Printer.PrintYAML(eulas)
 	}
 
 	return nil
@@ -89,7 +90,7 @@ func (command *AcceptEULACommand) Execute([]string) error {
 
 	releases, err := client.Releases.List(command.ProductSlug)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
 	var release pivnet.Release
@@ -106,17 +107,21 @@ func (command *AcceptEULACommand) Execute([]string) error {
 
 	err = client.EULA.Accept(command.ProductSlug, release.ID)
 	if err != nil {
-		return err
+		return ErrorHandler.HandleError(err)
 	}
 
-	if Pivnet.Format == PrintAsTable {
+	if Pivnet.Format == printer.PrintAsTable {
 		_, err = fmt.Fprintf(
 			OutputWriter,
 			"eula acccepted successfully for %s/%s\n",
 			command.ProductSlug,
 			command.ReleaseVersion,
 		)
+
+		if err != nil {
+			return err
+		}
 	}
 
-	return err
+	return nil
 }

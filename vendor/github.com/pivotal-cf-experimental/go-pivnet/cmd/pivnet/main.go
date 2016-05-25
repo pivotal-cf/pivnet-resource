@@ -1,11 +1,12 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/commands"
+	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/errors"
 	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/version"
 )
 
@@ -32,6 +33,21 @@ func main() {
 			helpParser.WriteHelp(os.Stderr)
 			os.Exit(0)
 		}
-		log.Fatal(err)
+
+		// Do not consider the built-in help an error
+		if e, ok := err.(*flags.Error); ok {
+			if e.Type == flags.ErrHelp {
+				fmt.Fprintln(os.Stderr, err.Error())
+				os.Exit(0)
+			}
+		}
+
+		if err == errors.ErrAlreadyHandled {
+			os.Exit(1)
+		}
+
+		coloredMessage := fmt.Sprintf(errors.RedFunc(err.Error()))
+		fmt.Fprintln(os.Stderr, coloredMessage)
+		os.Exit(1)
 	}
 }

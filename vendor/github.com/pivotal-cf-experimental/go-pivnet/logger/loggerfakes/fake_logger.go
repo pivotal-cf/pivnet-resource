@@ -20,6 +20,7 @@ type FakeLogger struct {
 		action string
 		data   []logger.Data
 	}
+	invocations map[string][][]interface{}
 }
 
 func (fake *FakeLogger) Debug(action string, data ...logger.Data) {
@@ -28,6 +29,8 @@ func (fake *FakeLogger) Debug(action string, data ...logger.Data) {
 		action string
 		data   []logger.Data
 	}{action, data})
+	fake.guard("Debug")
+	fake.invocations["Debug"] = append(fake.invocations["Debug"], []interface{}{action, data})
 	fake.debugMutex.Unlock()
 	if fake.DebugStub != nil {
 		fake.DebugStub(action, data...)
@@ -52,6 +55,8 @@ func (fake *FakeLogger) Info(action string, data ...logger.Data) {
 		action string
 		data   []logger.Data
 	}{action, data})
+	fake.guard("Info")
+	fake.invocations["Info"] = append(fake.invocations["Info"], []interface{}{action, data})
 	fake.infoMutex.Unlock()
 	if fake.InfoStub != nil {
 		fake.InfoStub(action, data...)
@@ -68,6 +73,19 @@ func (fake *FakeLogger) InfoArgsForCall(i int) (string, []logger.Data) {
 	fake.infoMutex.RLock()
 	defer fake.infoMutex.RUnlock()
 	return fake.infoArgsForCall[i].action, fake.infoArgsForCall[i].data
+}
+
+func (fake *FakeLogger) Invocations() map[string][][]interface{} {
+	return fake.invocations
+}
+
+func (fake *FakeLogger) guard(key string) {
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
 }
 
 var _ logger.Logger = new(FakeLogger)
