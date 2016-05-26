@@ -18,6 +18,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
+	"github.com/pivotal-cf-experimental/pivnet-resource/in/filesystem"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum/md5sumfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
@@ -233,6 +234,8 @@ var _ = Describe("In", func() {
 
 		testLogger = lagertest.NewTestLogger("in unit tests")
 
+		fileWriter := filesystem.NewFileWriter(downloadDir, testLogger)
+
 		inCommand = in.NewInCommand(
 			testLogger,
 			downloadDir,
@@ -240,6 +243,7 @@ var _ = Describe("In", func() {
 			fakeFilter,
 			fakeDownloader,
 			fakeFileSummer,
+			fileWriter,
 		)
 	})
 

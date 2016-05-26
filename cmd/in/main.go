@@ -14,6 +14,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/lagershim"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
+	"github.com/pivotal-cf-experimental/pivnet-resource/in/filesystem"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
@@ -91,6 +92,8 @@ func main() {
 
 	f := filter.NewFilter()
 
+	fileWriter := filesystem.NewFileWriter(downloadDir, l)
+
 	response, err := in.NewInCommand(
 		l,
 		downloadDir,
@@ -98,6 +101,7 @@ func main() {
 		f,
 		d,
 		fs,
+		fileWriter,
 	).Run(input)
 	if err != nil {
 		l.Error("Exiting with error", err)

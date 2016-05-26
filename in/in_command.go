@@ -1,20 +1,17 @@
 package in
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"gopkg.in/yaml.v2"
 
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
+	"github.com/pivotal-cf-experimental/pivnet-resource/in/filesystem"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
@@ -28,6 +25,7 @@ type InCommand struct {
 	filter       filter.Filter
 	downloader   downloader.Downloader
 	fileSummer   md5sum.FileSummer
+	fileWriter   filesystem.FileWriter
 }
 
 func NewInCommand(
@@ -37,6 +35,7 @@ func NewInCommand(
 	filter filter.Filter,
 	downloader downloader.Downloader,
 	fileSummer md5sum.FileSummer,
+	fileWriter filesystem.FileWriter,
 ) *InCommand {
 	return &InCommand{
 		logger:       logger,
@@ -45,6 +44,7 @@ func NewInCommand(
 		filter:       filter,
 		downloader:   downloader,
 		fileSummer:   fileSummer,
+		fileWriter:   fileWriter,
 	}
 }
 
@@ -170,17 +170,17 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		})
 	}
 
-	err = c.writeVersionFile(versionWithETag)
+	err = c.fileWriter.WriteVersionFile(versionWithETag)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	err = c.writeMetadataYAMLFile(mdata)
+	err = c.fileWriter.WriteMetadataYAMLFile(mdata)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	err = c.writeMetadataJSONFile(mdata)
+	err = c.fileWriter.WriteMetadataJSONFile(mdata)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
@@ -276,76 +276,6 @@ func (c InCommand) downloadFiles(
 	}
 
 	return returnProductFiles, nil
-}
-
-func (c InCommand) writeVersionFile(versionWithETag string) error {
-	versionFilepath := filepath.Join(c.downloadDir, "version")
-
-	c.logger.Debug(
-		"Writing version to file",
-		lager.Data{
-			"version_with_etag": versionWithETag,
-			"version_filepath":  versionFilepath,
-		},
-	)
-
-	err := ioutil.WriteFile(versionFilepath, []byte(versionWithETag), os.ModePerm)
-	if err != nil {
-		// Untested as it is too hard to force io.WriteFile to return an error
-		return err
-	}
-
-	return nil
-}
-
-func (c InCommand) writeMetadataJSONFile(mdata metadata.Metadata) error {
-	jsonMetadataFilepath := filepath.Join(c.downloadDir, "metadata.json")
-	c.logger.Debug(
-		"Writing metadata to json file",
-		lager.Data{
-			"metadata": mdata,
-			"filepath": jsonMetadataFilepath,
-		},
-	)
-
-	jsonMetadata, err := json.Marshal(mdata)
-	if err != nil {
-		// Untested as it is too hard to force json.Marshal to return an error
-		return err
-	}
-
-	err = ioutil.WriteFile(jsonMetadataFilepath, jsonMetadata, os.ModePerm)
-	if err != nil {
-		// Untested as it is too hard to force io.WriteFile to return an error
-		return err
-	}
-
-	return nil
-}
-
-func (c InCommand) writeMetadataYAMLFile(mdata metadata.Metadata) error {
-	yamlMetadataFilepath := filepath.Join(c.downloadDir, "metadata.yaml")
-	c.logger.Debug(
-		"Writing metadata to json file",
-		lager.Data{
-			"metadata": mdata,
-			"filepath": yamlMetadataFilepath,
-		},
-	)
-
-	yamlMetadata, err := yaml.Marshal(mdata)
-	if err != nil {
-		// Untested as it is too hard to force yaml.Marshal to return an error
-		return err
-	}
-
-	err = ioutil.WriteFile(yamlMetadataFilepath, yamlMetadata, os.ModePerm)
-	if err != nil {
-		// Untested as it is too hard to force io.WriteFile to return an error
-		return err
-	}
-
-	return nil
 }
 
 func (c InCommand) addReleaseMetadata(concourseMetadata []concourse.Metadata, release pivnet.Release) []concourse.Metadata {
