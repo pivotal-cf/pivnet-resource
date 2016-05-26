@@ -4,7 +4,7 @@ import "fmt"
 
 type Metadata struct {
 	Release      *Release      `yaml:"release,omitempty"`
-	ProductFiles []ProductFile `yaml:"product_files"`
+	ProductFiles []ProductFile `yaml:"product_files,omitempty"`
 	Dependencies []Dependency  `yaml:"dependencies,omitempty"`
 }
 
@@ -16,7 +16,7 @@ type Release struct {
 	Description           string   `yaml:"description"`
 	ReleaseNotesURL       string   `yaml:"release_notes_url"`
 	Availability          string   `yaml:"availability"`
-	UserGroupIDs          []string `yaml:"user_group_ids"`
+	UserGroupIDs          []string `yaml:"user_group_ids,omitempty"`
 	Controlled            bool     `yaml:"controlled"`
 	ECCN                  string   `yaml:"eccn"`
 	LicenseException      string   `yaml:"license_exception"`

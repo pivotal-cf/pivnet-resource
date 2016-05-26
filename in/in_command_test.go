@@ -1,14 +1,10 @@
 package in_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
-
-	"gopkg.in/yaml.v2"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,7 +14,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
-	"github.com/pivotal-cf-experimental/pivnet-resource/in/filesystem"
+	"github.com/pivotal-cf-experimental/pivnet-resource/in/filesystem/filesystemfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum/md5sumfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
@@ -36,6 +32,7 @@ var _ = Describe("In", func() {
 		fakeDownloader   *downloaderfakes.FakeDownloader
 		fakePivnetClient *gpfakes.FakeClient
 		fakeFileSummer   *md5sumfakes.FakeFileSummer
+		fakeFileWriter   *filesystemfakes.FakeFileWriter
 
 		productFiles []pivnet.ProductFile
 		productFile1 pivnet.ProductFile
@@ -73,6 +70,7 @@ var _ = Describe("In", func() {
 		fakeDownloader = &downloaderfakes.FakeDownloader{}
 		fakePivnetClient = &gpfakes.FakeClient{}
 		fakeFileSummer = &md5sumfakes.FakeFileSummer{}
+		fakeFileWriter = &filesystemfakes.FakeFileWriter{}
 
 		getReleaseErr = nil
 		acceptEULAErr = nil
@@ -234,8 +232,6 @@ var _ = Describe("In", func() {
 
 		testLogger = lagertest.NewTestLogger("in unit tests")
 
-		fileWriter := filesystem.NewFileWriter(downloadDir, testLogger)
-
 		inCommand = in.NewInCommand(
 			testLogger,
 			downloadDir,
@@ -243,7 +239,7 @@ var _ = Describe("In", func() {
 			fakeFilter,
 			fakeDownloader,
 			fakeFileSummer,
-			fileWriter,
+			fakeFileWriter,
 		)
 	})
 
@@ -252,14 +248,12 @@ var _ = Describe("In", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("writes a version file with the downloaded version and etag", func() {
+	It("invokes the version file writer with downloaded version and etag", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
-		versionFilepath := filepath.Join(downloadDir, "version")
-		versionContents, err := ioutil.ReadFile(versionFilepath)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(string(versionContents)).To(Equal(versionWithETag))
+		Expect(fakeFileWriter.WriteVersionFileCallCount()).To(Equal(1))
+		Expect(fakeFileWriter.WriteVersionFileArgsForCall(0)).To(Equal(versionWithETag))
 	})
 
 	var validateProductFilesMetadata = func(
@@ -292,58 +286,41 @@ var _ = Describe("In", func() {
 		}
 	}
 
-	It("writes a metadata file in yaml format", func() {
+	It("invokes the json metadata file writer with correct metadata", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
-		versionFilepath := filepath.Join(downloadDir, "metadata.yaml")
-		versionContents, err := ioutil.ReadFile(versionFilepath)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(fakeFileWriter.WriteMetadataJSONFileCallCount()).To(Equal(1))
+		invokedMetadata := fakeFileWriter.WriteMetadataJSONFileArgsForCall(0)
 
-		var writtenMetadata metadata.Metadata
-		err = yaml.Unmarshal(versionContents, &writtenMetadata)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(invokedMetadata.Release).NotTo(BeNil())
+		Expect(invokedMetadata.Release.Version).To(Equal(productVersion))
+		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-		Expect(writtenMetadata.Release).NotTo(BeNil())
-		Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
-		Expect(writtenMetadata.Release.EULASlug).To(Equal(eulaSlug))
-
-		validateProductFilesMetadata(writtenMetadata, productFiles)
-		validateReleaseDependenciesMetadata(writtenMetadata, releaseDependencies)
+		validateProductFilesMetadata(invokedMetadata, productFiles)
+		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 	})
 
-	It("writes a metadata file in json format", func() {
+	It("invokes the yaml metadata file writer with correct metadata", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
-		versionFilepath := filepath.Join(downloadDir, "metadata.json")
-		versionContents, err := ioutil.ReadFile(versionFilepath)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(fakeFileWriter.WriteMetadataYAMLFileCallCount()).To(Equal(1))
+		invokedMetadata := fakeFileWriter.WriteMetadataYAMLFileArgsForCall(0)
 
-		var writtenMetadata metadata.Metadata
-		err = json.Unmarshal(versionContents, &writtenMetadata)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(invokedMetadata.Release).NotTo(BeNil())
+		Expect(invokedMetadata.Release.Version).To(Equal(productVersion))
+		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-		Expect(writtenMetadata.Release).NotTo(BeNil())
-		Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
-		Expect(writtenMetadata.Release.EULASlug).To(Equal(eulaSlug))
-
-		validateProductFilesMetadata(writtenMetadata, productFiles)
-		validateReleaseDependenciesMetadata(writtenMetadata, releaseDependencies)
+		validateProductFilesMetadata(invokedMetadata, productFiles)
+		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 	})
 
 	It("does not download any of the files in the specified release", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
-		files, err := ioutil.ReadDir(downloadDir)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		// the version and metadata files will always exist
-		Expect(len(files)).To(Equal(3))
-		Expect(files[0].Name()).To(Equal("metadata.json"))
-		Expect(files[1].Name()).To(Equal("metadata.yaml"))
-		Expect(files[2].Name()).To(Equal("version"))
+		Expect(fakeDownloader.DownloadCallCount()).To(Equal(0))
 	})
 
 	Context("when version is provided without etag", func() {
@@ -424,26 +401,19 @@ var _ = Describe("In", func() {
 			Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
 		})
 
-		It("writes md5 to metadata file", func() {
+		It("includes md5 when invoking metadata writer", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			jsonFilepath := filepath.Join(downloadDir, "metadata.json")
-			jsonContents, err := ioutil.ReadFile(jsonFilepath)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeFileWriter.WriteMetadataYAMLFileCallCount()).To(Equal(1))
+			invokedMetadata := fakeFileWriter.WriteMetadataYAMLFileArgsForCall(0)
 
-			var writtenMetadata metadata.Metadata
-			err = json.Unmarshal(jsonContents, &writtenMetadata)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(invokedMetadata.Release).NotTo(BeNil())
+			Expect(invokedMetadata.Release.Version).To(Equal(productVersion))
+			Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-			Expect(writtenMetadata.Release).NotTo(BeNil())
-			Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
-
-			Expect(productFiles[0].MD5).To(Equal(fileContentsMD5s[0]))
-			Expect(productFiles[1].MD5).To(Equal(fileContentsMD5s[1]))
-
-			validateProductFilesMetadata(writtenMetadata, productFiles)
-			validateReleaseDependenciesMetadata(writtenMetadata, releaseDependencies)
+			validateProductFilesMetadata(invokedMetadata, productFiles)
+			validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		})
 
 		Context("when getting a product file returns error", func() {

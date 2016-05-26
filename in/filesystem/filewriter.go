@@ -11,6 +11,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+//go:generate counterfeiter . FileWriter
+
 type FileWriter interface {
 	WriteMetadataJSONFile(mdata metadata.Metadata) error
 	WriteMetadataYAMLFile(mdata metadata.Metadata) error
