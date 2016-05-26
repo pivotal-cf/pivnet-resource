@@ -26,6 +26,10 @@ import (
 )
 
 var _ = Describe("In", func() {
+	const (
+		eulaSlug = "some-eula"
+	)
+
 	var (
 		fakeFilter       *filterfakes.FakeFilter
 		fakeDownloader   *downloaderfakes.FakeDownloader
@@ -148,6 +152,11 @@ var _ = Describe("In", func() {
 				ProductFiles: map[string]string{
 					"href": file1URL,
 				},
+			},
+			EULA: &pivnet.EULA{
+				Slug: eulaSlug,
+				ID:   1234,
+				Name: "some EULA",
 			},
 		}
 
@@ -293,6 +302,7 @@ var _ = Describe("In", func() {
 
 		Expect(writtenMetadata.Release).NotTo(BeNil())
 		Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
+		Expect(writtenMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
 		validateProductFilesMetadata(writtenMetadata, productFiles)
 		validateReleaseDependenciesMetadata(writtenMetadata, releaseDependencies)
@@ -312,6 +322,7 @@ var _ = Describe("In", func() {
 
 		Expect(writtenMetadata.Release).NotTo(BeNil())
 		Expect(writtenMetadata.Release.Version).To(Equal(productVersion))
+		Expect(writtenMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
 		validateProductFilesMetadata(writtenMetadata, productFiles)
 		validateReleaseDependenciesMetadata(writtenMetadata, releaseDependencies)

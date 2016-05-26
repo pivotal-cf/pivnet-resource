@@ -141,6 +141,10 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		},
 	}
 
+	if release.EULA != nil {
+		mdata.Release.EULASlug = release.EULA.Slug
+	}
+
 	for _, pf := range productFiles {
 		mdata.ProductFiles = append(mdata.ProductFiles, metadata.ProductFile{
 			ID:           pf.ID,
