@@ -101,6 +101,15 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
+	// Get individual product files to obtain metadata that isn't found
+	// in the endpoint for all product files.
+	for i, p := range productFiles {
+		productFiles[i], err = c.pivnetClient.GetProductFile(productSlug, release.ID, p.ID)
+		if err != nil {
+			return concourse.InResponse{}, err
+		}
+	}
+
 	c.logger.Debug("Found product files", lager.Data{"product_files": productFiles})
 
 	c.logger.Debug("Getting release dependencies", lager.Data{"release_id": release.ID})
@@ -110,9 +119,12 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Debug("Found release dependencies", lager.Data{"release_dependencies": releaseDependencies})
+	c.logger.Debug(
+		"Found release dependencies",
+		lager.Data{"release_dependencies": releaseDependencies},
+	)
 
-	productFiles, err = c.downloadFiles(
+	err = c.downloadFiles(
 		input.Params.Globs,
 		productFiles,
 		productSlug,
@@ -202,7 +214,7 @@ func (c InCommand) downloadFiles(
 	productFiles []pivnet.ProductFile,
 	productSlug string,
 	releaseID int,
-) ([]pivnet.ProductFile, error) {
+) error {
 	c.logger.Debug(
 		"Getting download links",
 		lager.Data{
@@ -212,7 +224,6 @@ func (c InCommand) downloadFiles(
 
 	downloadLinks := c.filter.DownloadLinks(productFiles)
 
-	returnProductFiles := productFiles
 	if len(globs) > 0 {
 		c.logger.Debug(
 			"Filtering download links with globs",
@@ -224,7 +235,7 @@ func (c InCommand) downloadFiles(
 		var err error
 		downloadLinks, err = c.filter.DownloadLinksByGlob(downloadLinks, globs)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		c.logger.Debug(
@@ -236,23 +247,12 @@ func (c InCommand) downloadFiles(
 
 		files, err := c.downloader.Download(downloadLinks)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		fileMD5s := map[string]string{}
-		for i, p := range productFiles {
-			productFile, err := c.pivnetClient.GetProductFile(
-				productSlug,
-				releaseID,
-				p.ID,
-			)
-			if err != nil {
-				return nil, err
-			}
-
-			returnProductFiles[i] = productFile
-
-			parts := strings.Split(productFile.AWSObjectKey, "/")
+		for _, p := range productFiles {
+			parts := strings.Split(p.AWSObjectKey, "/")
 
 			if len(parts) < 1 {
 				panic("not enough components to form filename")
@@ -264,18 +264,18 @@ func (c InCommand) downloadFiles(
 				panic("empty file name")
 			}
 
-			fileMD5s[fileName] = productFile.MD5
+			fileMD5s[fileName] = p.MD5
 		}
 
 		c.logger.Debug("All file MD5s", lager.Data{"md5s": fileMD5s})
 
 		err = c.compareMD5s(files, fileMD5s)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return returnProductFiles, nil
+	return nil
 }
 
 func (c InCommand) addReleaseMetadata(concourseMetadata []concourse.Metadata, release pivnet.Release) []concourse.Metadata {

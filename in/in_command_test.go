@@ -98,7 +98,8 @@ var _ = Describe("In", func() {
 			"file-3456",
 		}
 
-		file1URL := "some-file-path"
+		// The endpoint for all product files returns less metadata than the
+		// individual product files, so we split them apart to differentiate them
 		productFiles = []pivnet.ProductFile{
 			{
 				ID:           1234,
@@ -143,6 +144,8 @@ var _ = Describe("In", func() {
 				},
 			},
 		}
+
+		file1URL := "some-file-path"
 
 		release = pivnet.Release{
 			Version: productVersion,
@@ -258,10 +261,10 @@ var _ = Describe("In", func() {
 
 	var validateProductFilesMetadata = func(
 		writtenMetadata metadata.Metadata,
-		productFiles []pivnet.ProductFile,
+		pF []pivnet.ProductFile,
 	) {
-		Expect(writtenMetadata.ProductFiles).To(HaveLen(len(productFiles)))
-		for i, p := range productFiles {
+		Expect(writtenMetadata.ProductFiles).To(HaveLen(len(pF)))
+		for i, p := range pF {
 			Expect(writtenMetadata.ProductFiles[i].File).To(Equal(p.Name))
 			Expect(writtenMetadata.ProductFiles[i].Description).To(Equal(p.Description))
 			Expect(writtenMetadata.ProductFiles[i].ID).To(Equal(p.ID))
@@ -297,7 +300,12 @@ var _ = Describe("In", func() {
 		Expect(invokedMetadata.Release.Version).To(Equal(productVersion))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-		validateProductFilesMetadata(invokedMetadata, productFiles)
+		pFiles := []pivnet.ProductFile{
+			productFile1,
+			productFile2,
+		}
+
+		validateProductFilesMetadata(invokedMetadata, pFiles)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 	})
 
@@ -312,7 +320,12 @@ var _ = Describe("In", func() {
 		Expect(invokedMetadata.Release.Version).To(Equal(productVersion))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-		validateProductFilesMetadata(invokedMetadata, productFiles)
+		pFiles := []pivnet.ProductFile{
+			productFile1,
+			productFile2,
+		}
+
+		validateProductFilesMetadata(invokedMetadata, pFiles)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 	})
 
@@ -386,6 +399,19 @@ var _ = Describe("In", func() {
 		})
 	})
 
+	Context("when getting individual product file returns error", func() {
+		BeforeEach(func() {
+			getProductFileErr = fmt.Errorf("some product file error")
+		})
+
+		It("returns error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(getProductFileErr))
+		})
+	})
+
 	Context("when globs are provided", func() {
 		BeforeEach(func() {
 			inRequest.Params.Globs = []string{"some*glob", "other*glob"}
@@ -412,7 +438,12 @@ var _ = Describe("In", func() {
 			Expect(invokedMetadata.Release.Version).To(Equal(productVersion))
 			Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-			validateProductFilesMetadata(invokedMetadata, productFiles)
+			pFiles := []pivnet.ProductFile{
+				productFile1,
+				productFile2,
+			}
+
+			validateProductFilesMetadata(invokedMetadata, pFiles)
 			validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		})
 
