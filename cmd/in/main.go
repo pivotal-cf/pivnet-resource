@@ -61,6 +61,13 @@ func main() {
 	l = lager.NewLogger("pivnet-resource")
 	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
 
+	l.Debug("Creating download directory", lager.Data{"download_dir": downloadDir})
+	err = os.MkdirAll(downloadDir, os.ModePerm)
+	if err != nil {
+		l.Error("Exiting with error", err)
+		log.Fatalln(err)
+	}
+
 	err = validator.NewInValidator(input).Validate()
 	if err != nil {
 		l.Error("Exiting with error", err)
@@ -96,7 +103,6 @@ func main() {
 
 	response, err := in.NewInCommand(
 		l,
-		downloadDir,
 		client,
 		f,
 		d,

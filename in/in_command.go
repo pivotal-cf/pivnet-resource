@@ -2,7 +2,6 @@ package in
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -30,7 +29,6 @@ type InCommand struct {
 
 func NewInCommand(
 	logger lager.Logger,
-	downloadDir string,
 	pivnetClient gp.Client,
 	filter filter.Filter,
 	downloader downloader.Downloader,
@@ -39,7 +37,6 @@ func NewInCommand(
 ) *InCommand {
 	return &InCommand{
 		logger:       logger,
-		downloadDir:  downloadDir,
 		pivnetClient: pivnetClient,
 		filter:       filter,
 		downloader:   downloader,
@@ -52,12 +49,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	c.logger.Debug("Received input", lager.Data{"input": input})
 
 	productSlug := input.Source.ProductSlug
-
-	c.logger.Debug("Creating download directory", lager.Data{"download_dir": c.downloadDir})
-	err := os.MkdirAll(c.downloadDir, os.ModePerm)
-	if err != nil {
-		return concourse.InResponse{}, err
-	}
 
 	productVersion, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
 	if err != nil {

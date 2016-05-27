@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -56,7 +57,7 @@ var _ = Describe("In", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Creating command object")
-		command = exec.Command(inPath, destDirectory)
+		command = exec.Command(inPath, filepath.Join(destDirectory, "my-resource"))
 
 		By("Creating default request")
 		inRequest = concourse.InRequest{

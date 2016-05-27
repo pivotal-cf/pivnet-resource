@@ -2,8 +2,6 @@ package in_test
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -39,8 +37,6 @@ var _ = Describe("In", func() {
 		productFile2 pivnet.ProductFile
 
 		releaseDependencies []pivnet.ReleaseDependency
-
-		downloadDir string
 
 		testLogger lager.Logger
 
@@ -175,9 +171,6 @@ var _ = Describe("In", func() {
 			},
 		}
 
-		downloadDir, err = ioutil.TempDir("", "")
-		Expect(err).NotTo(HaveOccurred())
-
 		inRequest = concourse.InRequest{
 			Source: concourse.Source{
 				APIToken:    "some-api-token",
@@ -237,18 +230,12 @@ var _ = Describe("In", func() {
 
 		inCommand = in.NewInCommand(
 			testLogger,
-			downloadDir,
 			fakePivnetClient,
 			fakeFilter,
 			fakeDownloader,
 			fakeFileSummer,
 			fakeFileWriter,
 		)
-	})
-
-	AfterEach(func() {
-		err := os.RemoveAll(downloadDir)
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("invokes the version file writer with downloaded version and etag", func() {
@@ -346,17 +333,6 @@ var _ = Describe("In", func() {
 		It("returns without error", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
-		})
-	})
-
-	Context("when creating download dir fails", func() {
-		BeforeEach(func() {
-			downloadDir = "/not/a/real/dir"
-		})
-
-		It("returns error", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).To(HaveOccurred())
 		})
 	})
 
