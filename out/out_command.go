@@ -303,10 +303,14 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 			var description string
 			uploadAs := filename
+			fileType := "Software"
 			for _, f := range m.ProductFiles {
 				if f.File == exactGlob {
 					c.logger.Debugf("exact glob '%s' matches metadata file: '%s'\n", exactGlob, f.File)
 					description = f.Description
+					if f.FileType != "" {
+						fileType = f.FileType
+					}
 					if f.UploadAs != "" {
 						c.logger.Debugf("upload_as provided for exact glob: '%s' - uploading to remote filename: '%s' instead\n", exactGlob, f.UploadAs)
 						uploadAs = f.UploadAs
@@ -317,9 +321,10 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 			}
 
 			c.logger.Debugf(
-				"Creating product file: {product_slug: %s, filename: %s, aws_object_key: %s, file_version: %s, description: %s}\n",
+				"Creating product file: {product_slug: %s, filename: %s, file_type: %s, aws_object_key: %s, file_version: %s, description: %s}\n",
 				productSlug,
 				uploadAs,
+				fileType,
 				remotePath,
 				release.Version,
 				description,
@@ -328,6 +333,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 			productFile, err := pivnetClient.CreateProductFile(pivnet.CreateProductFileConfig{
 				ProductSlug:  productSlug,
 				Name:         uploadAs,
+				FileType:     fileType,
 				AWSObjectKey: remotePath,
 				FileVersion:  release.Version,
 				MD5:          fileContentsMD5,
