@@ -223,7 +223,7 @@ release:
   end_of_guidance_date: "2015-06-30"
   end_of_availability_date: "2015-07-04"
 product_files:
-- file: /path/to/some/product/file
+- file: relative/path/to/some/product/file
   upload_as: some human-readable name
   description: |
     some
