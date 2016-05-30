@@ -364,6 +364,11 @@ S3_FILEPATH_PREFIX=Case-Sensitive-Path-eg-Pivotal-Diego-PCF \
 ./bin/test
 ```
 
+### Contributing
+
+Please make all pull requests to the `develop` branch, and
+[ensure the tests pass locally](https://github.com/pivotal-cf-experimental/pivnet-resource#running-the-tests).
+
 ### Project management
 
 The CI for this project can be found at https://sunrise.ci.cf-app.com and the
