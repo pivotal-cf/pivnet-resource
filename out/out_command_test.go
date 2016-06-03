@@ -18,7 +18,7 @@ import (
 	"github.com/robdimsdale/sanitizer"
 )
 
-var _ = Describe("Out", func() {
+var _ = PDescribe("Out", func() {
 	var (
 		tempDir string
 

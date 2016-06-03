@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
@@ -16,15 +15,8 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
-	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
-)
-
-const (
-	defaultBucket = "pivotalnetwork"
-	defaultRegion = "eu-west-1"
 )
 
 type OutCommand struct {
@@ -35,6 +27,8 @@ type OutCommand struct {
 	logFilePath     string
 	s3OutBinaryName string
 	screenWriter    *log.Logger
+	pivnetClient    pivnet.Client
+	uploaderClient  uploader.Client
 }
 
 type OutCommandConfig struct {
@@ -45,6 +39,8 @@ type OutCommandConfig struct {
 	LogFilePath     string
 	S3OutBinaryName string
 	ScreenWriter    *log.Logger
+	PivnetClient    pivnet.Client
+	UploaderClient  uploader.Client
 }
 
 func NewOutCommand(config OutCommandConfig) *OutCommand {
@@ -56,6 +52,8 @@ func NewOutCommand(config OutCommandConfig) *OutCommand {
 		logFilePath:     config.LogFilePath,
 		s3OutBinaryName: config.S3OutBinaryName,
 		screenWriter:    config.ScreenWriter,
+		pivnetClient:    config.PivnetClient,
+		uploaderClient:  config.UploaderClient,
 	}
 }
 
@@ -132,66 +130,9 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 			fmt.Errorf("product_files were provided in metadata that match no globs: %v", missingFiles)
 	}
 
-	var endpoint string
-	if input.Source.Endpoint != "" {
-		endpoint = input.Source.Endpoint
-	} else {
-		endpoint = pivnet.Endpoint
-	}
-
-	productSlug := input.Source.ProductSlug
-
-	clientConfig := pivnet.NewClientConfig{
-		Endpoint:  endpoint,
-		Token:     input.Source.APIToken,
-		UserAgent: useragent.UserAgent(c.binaryVersion, "put", productSlug),
-	}
-	pivnetClient := pivnet.NewClient(
-		clientConfig,
-		c.logger,
-	)
-
-	bucket := input.Source.Bucket
-	if bucket == "" {
-		bucket = defaultBucket
-	}
-
-	region := input.Source.Region
-	if region == "" {
-		region = defaultRegion
-	}
-
-	logFile, err := os.OpenFile(c.logFilePath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	s3Client := s3.NewClient(s3.NewClientConfig{
-		AccessKeyID:     input.Source.AccessKeyID,
-		SecretAccessKey: input.Source.SecretAccessKey,
-		RegionName:      region,
-		Bucket:          bucket,
-
-		Logger: c.logger,
-
-		Stdout: os.Stdout,
-		Stderr: logFile,
-
-		OutBinaryPath: filepath.Join(c.outDir, c.s3OutBinaryName),
-	})
-
-	uploaderClient := uploader.NewClient(uploader.Config{
-		FilepathPrefix: input.Params.FilepathPrefix,
-		SourcesDir:     c.sourcesDir,
-
-		Logger: c.logger,
-
-		Transport: s3Client,
-	})
-
 	metadataFetcher := release.NewMetadataFetcher(m, skipFileCheck)
 
-	releaseCreator := release.NewReleaseCreator(pivnetClient, metadataFetcher, c.logger, m, skipFileCheck, input.Params, c.sourcesDir, productSlug)
+	releaseCreator := release.NewReleaseCreator(c.pivnetClient, metadataFetcher, c.logger, m, skipFileCheck, input.Params, c.sourcesDir, input.Source.ProductSlug)
 	pivnetRelease, err := releaseCreator.Create()
 	if err != nil {
 		return concourse.OutResponse{}, err
@@ -201,13 +142,13 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 	md5summer := md5sum.NewFileSummer()
 
-	releaseUploader := release.NewReleaseUploader(uploaderClient, pivnetClient, c.logger, md5summer, m, skipUpload, c.sourcesDir, productSlug)
+	releaseUploader := release.NewReleaseUploader(c.uploaderClient, c.pivnetClient, c.logger, md5summer, m, skipUpload, c.sourcesDir, input.Source.ProductSlug)
 	err = releaseUploader.Upload(pivnetRelease, exactGlobs)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
 
-	releaseFinalizer := release.NewFinalizer(pivnetClient, metadataFetcher, input.Params, c.sourcesDir, productSlug)
+	releaseFinalizer := release.NewFinalizer(c.pivnetClient, metadataFetcher, input.Params, c.sourcesDir, input.Source.ProductSlug)
 
 	out := releaseFinalizer.Finalize(pivnetRelease)
 

@@ -11,11 +11,17 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out"
+	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
+	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
+	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/robdimsdale/sanitizer"
 )
 
 const (
 	s3OutBinaryName = "s3-out"
+	defaultBucket   = "pivotalnetwork"
+	defaultRegion   = "eu-west-1"
 )
 
 var (
@@ -60,6 +66,57 @@ func main() {
 
 	l := logger.NewLogger(sanitizer)
 
+	var endpoint string
+	if input.Source.Endpoint != "" {
+		endpoint = input.Source.Endpoint
+	} else {
+		endpoint = pivnet.Endpoint
+	}
+
+	clientConfig := pivnet.NewClientConfig{
+		Endpoint:  endpoint,
+		Token:     input.Source.APIToken,
+		UserAgent: useragent.UserAgent(version, "put", input.Source.ProductSlug),
+	}
+
+	pivnetClient := pivnet.NewClient(
+		clientConfig,
+		l,
+	)
+
+	bucket := input.Source.Bucket
+	if bucket == "" {
+		bucket = defaultBucket
+	}
+
+	region := input.Source.Region
+	if region == "" {
+		region = defaultRegion
+	}
+
+	s3Client := s3.NewClient(s3.NewClientConfig{
+		AccessKeyID:     input.Source.AccessKeyID,
+		SecretAccessKey: input.Source.SecretAccessKey,
+		RegionName:      region,
+		Bucket:          bucket,
+
+		Logger: l,
+
+		Stdout: os.Stdout,
+		Stderr: logFile,
+
+		OutBinaryPath: filepath.Join(outDir, s3OutBinaryName),
+	})
+
+	uploaderClient := uploader.NewClient(uploader.Config{
+		FilepathPrefix: input.Params.FilepathPrefix,
+		SourcesDir:     sourcesDir,
+
+		Logger: l,
+
+		Transport: s3Client,
+	})
+
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
 		BinaryVersion:   version,
 		Logger:          l,
@@ -68,6 +125,8 @@ func main() {
 		LogFilePath:     logFile.Name(),
 		S3OutBinaryName: s3OutBinaryName,
 		ScreenWriter:    log.New(os.Stderr, "", 0),
+		PivnetClient:    pivnetClient,
+		UploaderClient:  uploaderClient,
 	})
 
 	response, err := outCmd.Run(input)
