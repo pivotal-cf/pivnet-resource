@@ -26,6 +26,7 @@ type OutCommand struct {
 	screenWriter   *log.Logger
 	pivnetClient   pivnet.Client
 	uploaderClient uploader.Client
+	globClient     globs.Globber
 }
 
 type OutCommandConfig struct {
@@ -35,6 +36,7 @@ type OutCommandConfig struct {
 	ScreenWriter   *log.Logger
 	PivnetClient   pivnet.Client
 	UploaderClient uploader.Client
+	GlobClient     globs.Globber
 }
 
 func NewOutCommand(config OutCommandConfig) *OutCommand {
@@ -45,6 +47,7 @@ func NewOutCommand(config OutCommandConfig) *OutCommand {
 		screenWriter:   config.ScreenWriter,
 		pivnetClient:   config.PivnetClient,
 		uploaderClient: config.UploaderClient,
+		globClient:     config.GlobClient,
 	}
 }
 
@@ -90,13 +93,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 	c.logger.Debugf("Received input: %+v\n", input)
 
-	globber := globs.NewGlobber(globs.GlobberConfig{
-		FileGlob:   input.Params.FileGlob,
-		SourcesDir: c.sourcesDir,
-		Logger:     c.logger,
-	})
-
-	exactGlobs, err := globber.ExactGlobs()
+	exactGlobs, err := c.globClient.ExactGlobs()
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}

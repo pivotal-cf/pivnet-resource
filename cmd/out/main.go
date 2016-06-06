@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/globs"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
@@ -112,6 +113,12 @@ func main() {
 		Transport:      s3Client,
 	})
 
+	globber := globs.NewGlobber(globs.GlobberConfig{
+		FileGlob:   input.Params.FileGlob,
+		SourcesDir: sourcesDir,
+		Logger:     l,
+	})
+
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
 		Logger:         l,
 		OutDir:         outDir,
@@ -119,6 +126,7 @@ func main() {
 		ScreenWriter:   log.New(os.Stderr, "", 0),
 		PivnetClient:   pivnetClient,
 		UploaderClient: uploaderClient,
+		GlobClient:     globber,
 	})
 
 	response, err := outCmd.Run(input)
