@@ -99,34 +99,26 @@ func main() {
 		SecretAccessKey: input.Source.SecretAccessKey,
 		RegionName:      region,
 		Bucket:          bucket,
-
-		Logger: l,
-
-		Stdout: os.Stdout,
-		Stderr: logFile,
-
-		OutBinaryPath: filepath.Join(outDir, s3OutBinaryName),
+		Logger:          l,
+		Stdout:          os.Stdout,
+		Stderr:          logFile,
+		OutBinaryPath:   filepath.Join(outDir, s3OutBinaryName),
 	})
 
 	uploaderClient := uploader.NewClient(uploader.Config{
 		FilepathPrefix: input.Params.FilepathPrefix,
 		SourcesDir:     sourcesDir,
-
-		Logger: l,
-
-		Transport: s3Client,
+		Logger:         l,
+		Transport:      s3Client,
 	})
 
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
-		BinaryVersion:   version,
-		Logger:          l,
-		OutDir:          outDir,
-		SourcesDir:      sourcesDir,
-		LogFilePath:     logFile.Name(),
-		S3OutBinaryName: s3OutBinaryName,
-		ScreenWriter:    log.New(os.Stderr, "", 0),
-		PivnetClient:    pivnetClient,
-		UploaderClient:  uploaderClient,
+		Logger:         l,
+		OutDir:         outDir,
+		SourcesDir:     sourcesDir,
+		ScreenWriter:   log.New(os.Stderr, "", 0),
+		PivnetClient:   pivnetClient,
+		UploaderClient: uploaderClient,
 	})
 
 	response, err := outCmd.Run(input)

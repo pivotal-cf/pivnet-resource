@@ -20,40 +20,31 @@ import (
 )
 
 type OutCommand struct {
-	binaryVersion   string
-	logger          logger.Logger
-	outDir          string
-	sourcesDir      string
-	logFilePath     string
-	s3OutBinaryName string
-	screenWriter    *log.Logger
-	pivnetClient    pivnet.Client
-	uploaderClient  uploader.Client
+	logger         logger.Logger
+	outDir         string
+	sourcesDir     string
+	screenWriter   *log.Logger
+	pivnetClient   pivnet.Client
+	uploaderClient uploader.Client
 }
 
 type OutCommandConfig struct {
-	BinaryVersion   string
-	Logger          logger.Logger
-	OutDir          string
-	SourcesDir      string
-	LogFilePath     string
-	S3OutBinaryName string
-	ScreenWriter    *log.Logger
-	PivnetClient    pivnet.Client
-	UploaderClient  uploader.Client
+	Logger         logger.Logger
+	OutDir         string
+	SourcesDir     string
+	ScreenWriter   *log.Logger
+	PivnetClient   pivnet.Client
+	UploaderClient uploader.Client
 }
 
 func NewOutCommand(config OutCommandConfig) *OutCommand {
 	return &OutCommand{
-		binaryVersion:   config.BinaryVersion,
-		logger:          config.Logger,
-		outDir:          config.OutDir,
-		sourcesDir:      config.SourcesDir,
-		logFilePath:     config.LogFilePath,
-		s3OutBinaryName: config.S3OutBinaryName,
-		screenWriter:    config.ScreenWriter,
-		pivnetClient:    config.PivnetClient,
-		uploaderClient:  config.UploaderClient,
+		logger:         config.Logger,
+		outDir:         config.OutDir,
+		sourcesDir:     config.SourcesDir,
+		screenWriter:   config.ScreenWriter,
+		pivnetClient:   config.PivnetClient,
+		uploaderClient: config.UploaderClient,
 	}
 }
 

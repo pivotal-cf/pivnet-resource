@@ -41,7 +41,6 @@ var _ = PDescribe("Out", func() {
 
 		outDir          string
 		sourcesDir      string
-		logFilePath     string
 		s3OutBinaryName string
 
 		fileGlob         string
@@ -182,8 +181,6 @@ var _ = PDescribe("Out", func() {
 		tempDir, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
 
-		logFilePath = filepath.Join(tempDir, "pivnet-resource-check.log1234")
-		err = ioutil.WriteFile(logFilePath, []byte("initial log content"), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
 		s3OutBinaryName = "s3-out"
@@ -389,14 +386,10 @@ echo "$@"`
 
 		ginkgoLogger = logger.NewLogger(sanitizer)
 
-		binaryVersion := "v0.1.2-unit-tests"
 		outCommand = out.NewOutCommand(out.OutCommandConfig{
-			BinaryVersion:   binaryVersion,
-			Logger:          ginkgoLogger,
-			OutDir:          outDir,
-			SourcesDir:      sourcesDir,
-			LogFilePath:     logFilePath,
-			S3OutBinaryName: s3OutBinaryName,
+			Logger:     ginkgoLogger,
+			OutDir:     outDir,
+			SourcesDir: sourcesDir,
 		})
 	})
 
