@@ -6,19 +6,17 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 )
 
-type outValidator struct {
-	input         concourse.OutRequest
-	skipFileCheck bool
+type OutValidator struct {
+	input concourse.OutRequest
 }
 
-func NewOutValidator(input concourse.OutRequest, skipFileCheck bool) Validator {
-	return &outValidator{
-		input:         input,
-		skipFileCheck: skipFileCheck,
+func NewOutValidator(input concourse.OutRequest) OutValidator {
+	return OutValidator{
+		input: input,
 	}
 }
 
-func (v outValidator) Validate() error {
+func (v OutValidator) Validate(skipFileCheck bool) error {
 	if v.input.Source.APIToken == "" {
 		return fmt.Errorf("%s must be provided", "api_token")
 	}
@@ -27,7 +25,7 @@ func (v outValidator) Validate() error {
 		return fmt.Errorf("%s must be provided", "product_slug")
 	}
 
-	if !v.skipFileCheck {
+	if !skipFileCheck {
 		if v.input.Params.VersionFile == "" {
 			return fmt.Errorf("%s must be provided", "version_file")
 		}

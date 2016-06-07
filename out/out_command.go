@@ -16,7 +16,6 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
-	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
 )
 
 type OutCommand struct {
@@ -27,6 +26,7 @@ type OutCommand struct {
 	pivnetClient   pivnet.Client
 	uploaderClient uploader.Client
 	globClient     globs.Globber
+	validation     validation
 }
 
 type OutCommandConfig struct {
@@ -37,6 +37,7 @@ type OutCommandConfig struct {
 	PivnetClient   pivnet.Client
 	UploaderClient uploader.Client
 	GlobClient     globs.Globber
+	Validation     validation
 }
 
 func NewOutCommand(config OutCommandConfig) *OutCommand {
@@ -48,7 +49,12 @@ func NewOutCommand(config OutCommandConfig) *OutCommand {
 		pivnetClient:   config.PivnetClient,
 		uploaderClient: config.UploaderClient,
 		globClient:     config.GlobClient,
+		validation:     config.Validation,
 	}
+}
+
+type validation interface {
+	Validate(skipFileCheck bool) error
 }
 
 func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, error) {
@@ -86,7 +92,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 	warnIfDeprecatedFilesFound(input.Params, c.logger, c.screenWriter)
 
-	err := validator.NewOutValidator(input, skipFileCheck).Validate()
+	err := c.validation.Validate(skipFileCheck)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}

@@ -16,6 +16,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
+	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
 )
 
@@ -119,6 +120,8 @@ func main() {
 		Logger:     l,
 	})
 
+	validation := validator.NewOutValidator(input)
+
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
 		Logger:         l,
 		OutDir:         outDir,
@@ -127,6 +130,7 @@ func main() {
 		PivnetClient:   pivnetClient,
 		UploaderClient: uploaderClient,
 		GlobClient:     globber,
+		Validation:     validation,
 	})
 
 	response, err := outCmd.Run(input)
