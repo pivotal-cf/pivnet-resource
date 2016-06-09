@@ -144,7 +144,10 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 
 	releaseFinalizer := release.NewFinalizer(c.pivnetClient, metadataFetcher, input.Params, c.sourcesDir, input.Source.ProductSlug)
 
-	out := releaseFinalizer.Finalize(pivnetRelease)
+	out, err := releaseFinalizer.Finalize(pivnetRelease)
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
 
 	return out, nil
 }

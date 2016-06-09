@@ -19,19 +19,16 @@ type ReleaseUploader struct {
 	productSlug string
 }
 
-//go:generate counterfeiter -o ../fakes/upload_client.go --fake-name UploadClient . uploadClient
 type uploadClient interface {
 	FindProductForSlug(slug string) (pivnet.Product, error)
 	CreateProductFile(pivnet.CreateProductFileConfig) (pivnet.ProductFile, error)
 	AddProductFile(productID int, releaseID int, productFileID int) error
 }
 
-//go:generate counterfeiter -o ../fakes/s3.go --fake-name S3 . s3
 type s3client interface {
 	UploadFile(string) (string, error)
 }
 
-//go:generate counterfeiter -o ../fakes/md5_summer.go --fake-name Md5Summer . md5Summer
 type md5Summer interface {
 	SumFile(filepath string) (string, error)
 }

@@ -2,7 +2,6 @@ package release
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -11,7 +10,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
-type releaseFinalizer struct {
+type ReleaseFinalizer struct {
 	pivnet          updateClient
 	metadataFetcher fetcher
 	sourcesDir      string
@@ -19,8 +18,8 @@ type releaseFinalizer struct {
 	productSlug     string
 }
 
-func NewFinalizer(pivnetClient updateClient, metadataFetcher fetcher, params concourse.OutParams, sourcesDir, productSlug string) releaseFinalizer {
-	return releaseFinalizer{
+func NewFinalizer(pivnetClient updateClient, metadataFetcher fetcher, params concourse.OutParams, sourcesDir, productSlug string) ReleaseFinalizer {
+	return ReleaseFinalizer{
 		pivnet:          pivnetClient,
 		metadataFetcher: metadataFetcher,
 		params:          params,
@@ -29,13 +28,19 @@ func NewFinalizer(pivnetClient updateClient, metadataFetcher fetcher, params con
 	}
 }
 
+//go:generate counterfeiter --fake-name UpdateClient . updateClient
 type updateClient interface {
 	UpdateRelease(string, pivnet.Release) (pivnet.Release, error)
 	ReleaseETag(string, pivnet.Release) (string, error)
 	AddUserGroup(productSlug string, releaseID int, userGroupID int) error
 }
 
-func (rf releaseFinalizer) Finalize(release pivnet.Release) concourse.OutResponse {
+//go:generate counterfeiter --fake-name Fetcher . fetcher
+type fetcher interface {
+	Fetch(yamlKey, dir, file string) string
+}
+
+func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutResponse, error) {
 	availability := rf.metadataFetcher.Fetch("Availability", rf.sourcesDir, rf.params.AvailabilityFile)
 	if availability != "Admins Only" {
 		releaseUpdate := pivnet.Release{
@@ -46,7 +51,7 @@ func (rf releaseFinalizer) Finalize(release pivnet.Release) concourse.OutRespons
 		var err error
 		release, err = rf.pivnet.UpdateRelease(rf.productSlug, releaseUpdate)
 		if err != nil {
-			log.Fatalln(err)
+			return concourse.OutResponse{}, err
 		}
 
 		if availability == "Selected User Groups Only" {
@@ -58,24 +63,25 @@ func (rf releaseFinalizer) Finalize(release pivnet.Release) concourse.OutRespons
 			for _, userGroupIDString := range userGroupIDs {
 				userGroupID, err := strconv.Atoi(userGroupIDString)
 				if err != nil {
-					log.Fatalln(err)
+					panic(err)
 				}
 
-				rf.pivnet.AddUserGroup(rf.productSlug, release.ID, userGroupID)
+				err = rf.pivnet.AddUserGroup(rf.productSlug, release.ID, userGroupID)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
 
 	releaseETag, err := rf.pivnet.ReleaseETag(rf.productSlug, release)
-	//TODO this should not panic
 	if err != nil {
-		panic(err)
+		return concourse.OutResponse{}, err
 	}
 
 	outputVersion, err := versions.CombineVersionAndETag(release.Version, releaseETag)
-	//TODO this should not panic
 	if err != nil {
-		panic(err)
+		return concourse.OutResponse{}, err // this will never return an error
 	}
 
 	metadata := []concourse.Metadata{
@@ -84,7 +90,6 @@ func (rf releaseFinalizer) Finalize(release pivnet.Release) concourse.OutRespons
 		{Name: "release_date", Value: release.ReleaseDate},
 		{Name: "description", Value: release.Description},
 		{Name: "release_notes_url", Value: release.ReleaseNotesURL},
-		{Name: "eula_slug", Value: release.EULA.Slug},
 		{Name: "availability", Value: release.Availability},
 		{Name: "controlled", Value: fmt.Sprintf("%t", release.Controlled)},
 		{Name: "eccn", Value: release.ECCN},
@@ -102,5 +107,5 @@ func (rf releaseFinalizer) Finalize(release pivnet.Release) concourse.OutRespons
 			ProductVersion: outputVersion,
 		},
 		Metadata: metadata,
-	}
+	}, nil
 }

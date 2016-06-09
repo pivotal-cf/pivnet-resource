@@ -20,7 +20,6 @@ type ReleaseCreator struct {
 	params          concourse.OutParams
 }
 
-//go:generate counterfeiter -o ../fakes/release_client.go --fake-name ReleaseClient . releaseClient
 type releaseClient interface {
 	EULAs() ([]pivnet.EULA, error)
 	ReleaseTypes() ([]string, error)
@@ -29,14 +28,8 @@ type releaseClient interface {
 	ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error)
 }
 
-//go:generate counterfeiter -o ../fakes/logger.go --fake-name Logger . logger
 type logging interface {
 	Debugf(format string, a ...interface{}) (n int, err error)
-}
-
-//go:generate counterfeiter -o ../fakes/metadata_fetcher.go --fake-name MetadataFetcher . fetcher
-type fetcher interface {
-	Fetch(yamlKey, dir, file string) string
 }
 
 func NewReleaseCreator(pivnet releaseClient, metadataFetcher fetcher, logger logging, metadata metadata.Metadata, skipFileCheck bool, params concourse.OutParams, sourcesDir, productSlug string) ReleaseCreator {
