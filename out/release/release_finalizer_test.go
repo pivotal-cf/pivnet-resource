@@ -98,12 +98,43 @@ var _ = Describe("ReleaseFinalizer", func() {
 
 		Context("when the release availability is Selected User Groups Only", func() {
 			BeforeEach(func() {
-				fetcherClient.FetchReturns("Selected User Groups Only")
-				pivnetClient.UpdateReleaseReturns(pivnet.Release{Version: "another-version", EULA: &pivnet.EULA{Slug: "eula_slug"}}, nil)
+				fetcherClient.FetchStub = func(name string, sourcesDir string, file string) string {
+					switch name {
+					case "Availability":
+						return "Selected User Groups Only"
+					case "UserGroupIDs":
+						return "111,222"
+					default:
+						panic("too many calls")
+					}
+				}
+
+				pivnetClient.UpdateReleaseReturns(pivnet.Release{ID: 2001, Version: "another-version", EULA: &pivnet.EULA{Slug: "eula_slug"}}, nil)
 				pivnetClient.ReleaseETagReturns("a-sep-etag", nil)
 			})
 
 			It("returns a final concourse out response", func() {
+				response, err := finalizer.Finalize(pivnetRelease)
+				Expect(err).NotTo(HaveOccurred())
+
+				metadataIdentifier, sourcesDir, groupIDsFile := fetcherClient.FetchArgsForCall(1)
+				Expect(metadataIdentifier).To(Equal("UserGroupIDs"))
+				Expect(sourcesDir).To(Equal("/some/sources/dir"))
+				Expect(groupIDsFile).To(Equal("/some/usergroupids/file"))
+
+				slug, releaseID, userGroupID := pivnetClient.AddUserGroupArgsForCall(0)
+				Expect(slug).To(Equal("a-product-slug"))
+				Expect(releaseID).To(Equal(2001))
+				Expect(userGroupID).To(Equal(111))
+
+				slug, releaseID, userGroupID = pivnetClient.AddUserGroupArgsForCall(1)
+				Expect(slug).To(Equal("a-product-slug"))
+				Expect(releaseID).To(Equal(2001))
+				Expect(userGroupID).To(Equal(222))
+
+				Expect(response.Version).To(Equal(concourse.Version{
+					ProductVersion: "another-version#a-sep-etag",
+				}))
 			})
 		})
 
