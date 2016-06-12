@@ -136,6 +136,39 @@ var _ = Describe("ReleaseFinalizer", func() {
 					ProductVersion: "another-version#a-sep-etag",
 				}))
 			})
+
+			Context("when an error occurs", func() {
+				Context("when a user group ID cannpt be converted to a number", func() {
+					BeforeEach(func() {
+						fetcherClient.FetchStub = func(name string, sourcesDir string, file string) string {
+							switch name {
+							case "Availability":
+								return "Selected User Groups Only"
+							case "UserGroupIDs":
+								return "&&&"
+							default:
+								panic("too many calls")
+							}
+						}
+					})
+
+					It("returns an error", func() {
+						_, err := finalizer.Finalize(pivnetRelease)
+						Expect(err).To(MatchError(ContainSubstring(`parsing "&&&": invalid syntax`)))
+					})
+				})
+
+				Context("when adding a user group to pivnet fails", func() {
+					BeforeEach(func() {
+						pivnetClient.AddUserGroupReturns(errors.New("failed to add user group"))
+					})
+
+					It("returns an error", func() {
+						_, err := finalizer.Finalize(pivnetRelease)
+						Expect(err).To(MatchError(errors.New("failed to add user group")))
+					})
+				})
+			})
 		})
 
 		Context("when the release availability is any other value", func() {

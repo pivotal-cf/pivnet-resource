@@ -63,12 +63,12 @@ func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutRespon
 			for _, userGroupIDString := range userGroupIDs {
 				userGroupID, err := strconv.Atoi(userGroupIDString)
 				if err != nil {
-					panic(err)
+					return concourse.OutResponse{}, err
 				}
 
 				err = rf.pivnet.AddUserGroup(rf.productSlug, release.ID, userGroupID)
 				if err != nil {
-					panic(err)
+					return concourse.OutResponse{}, err
 				}
 			}
 		}
