@@ -1,7 +1,6 @@
 package release
 
 import (
-	"log"
 	"path/filepath"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
@@ -9,7 +8,7 @@ import (
 )
 
 type ReleaseUploader struct {
-	s3          s3client
+	s3          s3Client
 	pivnet      uploadClient
 	logger      logging
 	md5Summer   md5Summer
@@ -19,21 +18,24 @@ type ReleaseUploader struct {
 	productSlug string
 }
 
+//go:generate counterfeiter --fake-name UploadClient . uploadClient
 type uploadClient interface {
 	FindProductForSlug(slug string) (pivnet.Product, error)
 	CreateProductFile(pivnet.CreateProductFileConfig) (pivnet.ProductFile, error)
 	AddProductFile(productID int, releaseID int, productFileID int) error
 }
 
-type s3client interface {
+//go:generate counterfeiter --fake-name S3Client . s3Client
+type s3Client interface {
 	UploadFile(string) (string, error)
 }
 
+//go:generate counterfeiter --fake-name Md5Summer . md5Summer
 type md5Summer interface {
 	SumFile(filepath string) (string, error)
 }
 
-func NewReleaseUploader(s3 s3client, pivnet uploadClient, logger logging, md5Summer md5Summer, metadata metadata.Metadata, skip bool, sourcesDir, productSlug string) ReleaseUploader {
+func NewReleaseUploader(s3 s3Client, pivnet uploadClient, logger logging, md5Summer md5Summer, metadata metadata.Metadata, skip bool, sourcesDir, productSlug string) ReleaseUploader {
 	return ReleaseUploader{
 		s3:          s3,
 		pivnet:      pivnet,
@@ -56,17 +58,17 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		fullFilepath := filepath.Join(u.sourcesDir, exactGlob)
 		fileContentsMD5, err := u.md5Summer.SumFile(fullFilepath)
 		if err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
 
 		remotePath, err := u.s3.UploadFile(exactGlob)
 		if err != nil {
-			return err
+			panic(err)
 		}
 
 		product, err := u.pivnet.FindProductForSlug(u.productSlug)
 		if err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
 
 		filename := filepath.Base(exactGlob)
@@ -104,7 +106,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			Description:  description,
 		})
 		if err != nil {
-			return err
+			panic(err)
 		}
 
 		u.logger.Debugf(
@@ -118,7 +120,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		err = u.pivnet.AddProductFile(product.ID, release.ID, productFile.ID)
 		if err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
 	}
 

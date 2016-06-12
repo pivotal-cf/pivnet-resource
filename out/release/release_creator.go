@@ -20,6 +20,7 @@ type ReleaseCreator struct {
 	params          concourse.OutParams
 }
 
+//go:generate counterfeiter --fake-name ReleaseClient . releaseClient
 type releaseClient interface {
 	EULAs() ([]pivnet.EULA, error)
 	ReleaseTypes() ([]string, error)
@@ -28,6 +29,7 @@ type releaseClient interface {
 	ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error)
 }
 
+//go:generate counterfeiter --fake-name Logging . logging
 type logging interface {
 	Debugf(format string, a ...interface{}) (n int, err error)
 }
