@@ -48,6 +48,24 @@ func NewReleaseCreator(pivnet releaseClient, metadataFetcher fetcher, logger log
 }
 
 func (rc ReleaseCreator) Create() (pivnet.Release, error) {
+	productVersion := rc.metadataFetcher.Fetch("Version", rc.sourcesDir, rc.params.VersionFile)
+
+	releases, err := rc.pivnet.ReleasesForProductSlug(rc.productSlug)
+	if err != nil {
+		panic(err)
+	}
+
+	existingVersions, err := rc.pivnet.ProductVersions(rc.productSlug, releases)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, v := range existingVersions {
+		if v == productVersion {
+			return pivnet.Release{}, fmt.Errorf("release already exists with version: %s", productVersion)
+		}
+	}
+
 	rc.logger.Debugf("Getting all valid eulas\n")
 
 	eulas, err := rc.pivnet.EULAs()
@@ -113,24 +131,6 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 			releaseType,
 			releaseTypesPrintable,
 		)
-	}
-
-	productVersion := rc.metadataFetcher.Fetch("Version", rc.sourcesDir, rc.params.VersionFile)
-
-	releases, err := rc.pivnet.ReleasesForProductSlug(rc.productSlug)
-	if err != nil {
-		panic(err)
-	}
-
-	existingVersions, err := rc.pivnet.ProductVersions(rc.productSlug, releases)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, v := range existingVersions {
-		if v == productVersion {
-			return pivnet.Release{}, fmt.Errorf("release already exists with version: %s", productVersion)
-		}
 	}
 
 	config := pivnet.CreateReleaseConfig{

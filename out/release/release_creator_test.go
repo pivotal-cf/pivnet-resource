@@ -1,6 +1,8 @@
 package release_test
 
 import (
+	"errors"
+
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
@@ -95,6 +97,11 @@ var _ = Describe("ReleaseCreator", func() {
 				Expect(pivnetClient.EULAsCallCount()).To(Equal(1))
 
 				key, sourcesDir, fileName := fetcherClient.FetchArgsForCall(0)
+				Expect(key).To(Equal("Version"))
+				Expect(sourcesDir).To(Equal("/some/sources/dir"))
+				Expect(fileName).To(Equal("some-version-file"))
+
+				key, sourcesDir, fileName = fetcherClient.FetchArgsForCall(1)
 				Expect(key).To(Equal("EULASlug"))
 				Expect(sourcesDir).To(Equal("/some/sources/dir"))
 				Expect(fileName).To(Equal("some-eula-slug-file"))
@@ -104,15 +111,10 @@ var _ = Describe("ReleaseCreator", func() {
 
 				Expect(pivnetClient.ReleaseTypesCallCount()).To(Equal(1))
 
-				key, sourcesDir, fileName = fetcherClient.FetchArgsForCall(1)
+				key, sourcesDir, fileName = fetcherClient.FetchArgsForCall(2)
 				Expect(key).To(Equal("ReleaseType"))
 				Expect(sourcesDir).To(Equal("/some/sources/dir"))
 				Expect(fileName).To(Equal("some-release-type-file"))
-
-				key, sourcesDir, fileName = fetcherClient.FetchArgsForCall(2)
-				Expect(key).To(Equal("Version"))
-				Expect(sourcesDir).To(Equal("/some/sources/dir"))
-				Expect(fileName).To(Equal("some-version-file"))
 
 				Expect(pivnetClient.ReleasesForProductSlugArgsForCall(0)).To(Equal("some-product-slug"))
 
@@ -129,6 +131,19 @@ var _ = Describe("ReleaseCreator", func() {
 					ReleaseNotesURL: "some-url",
 					ReleaseDate:     "1/17/2016",
 				}))
+			})
+		})
+
+		Context("when the release already exists", func() {
+			BeforeEach(func() {
+				fetcherClient.FetchReturns("an-existing-version")
+				pivnetClient.ReleasesForProductSlugReturns([]pivnet.Release{{Version: "an-existing-version"}}, nil)
+				pivnetClient.ProductVersionsReturns([]string{"an-existing-version"}, nil)
+			})
+
+			It("returns a error", func() {
+				_, err := creator.Create()
+				Expect(err).To(MatchError(errors.New("release already exists with version: an-existing-version")))
 			})
 		})
 	})
