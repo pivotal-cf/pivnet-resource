@@ -2,55 +2,72 @@ package out
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"path/filepath"
-
-	"gopkg.in/yaml.v2"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/globs"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
-	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
-	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 )
 
 type OutCommand struct {
-	logger         logger.Logger
-	outDir         string
-	sourcesDir     string
-	screenWriter   *log.Logger
-	pivnetClient   pivnet.Client
-	uploaderClient uploader.Client
-	globClient     globs.Globber
-	validation     validation
+	skipFileCheck bool
+	logger        logger.Logger
+	outDir        string
+	sourcesDir    string
+	screenWriter  *log.Logger
+	pivnetClient  pivnet.Client
+	globClient    globs.Globber
+	validation    validation
+	creator       creator
+	finalizer     finalizer
+	uploader      uploader
+	m             metadata.Metadata
 }
 
 type OutCommandConfig struct {
-	Logger         logger.Logger
-	OutDir         string
-	SourcesDir     string
-	ScreenWriter   *log.Logger
-	PivnetClient   pivnet.Client
-	UploaderClient uploader.Client
-	GlobClient     globs.Globber
-	Validation     validation
+	SkipFileCheck bool
+	Logger        logger.Logger
+	OutDir        string
+	SourcesDir    string
+	ScreenWriter  *log.Logger
+	PivnetClient  pivnet.Client
+	GlobClient    globs.Globber
+	Validation    validation
+	Creator       creator
+	Finalizer     finalizer
+	Uploader      uploader
+	M             metadata.Metadata
 }
 
 func NewOutCommand(config OutCommandConfig) *OutCommand {
 	return &OutCommand{
-		logger:         config.Logger,
-		outDir:         config.OutDir,
-		sourcesDir:     config.SourcesDir,
-		screenWriter:   config.ScreenWriter,
-		pivnetClient:   config.PivnetClient,
-		uploaderClient: config.UploaderClient,
-		globClient:     config.GlobClient,
-		validation:     config.Validation,
+		skipFileCheck: config.SkipFileCheck,
+		logger:        config.Logger,
+		outDir:        config.OutDir,
+		sourcesDir:    config.SourcesDir,
+		screenWriter:  config.ScreenWriter,
+		pivnetClient:  config.PivnetClient,
+		globClient:    config.GlobClient,
+		validation:    config.Validation,
+		creator:       config.Creator,
+		finalizer:     config.Finalizer,
+		uploader:      config.Uploader,
+		m:             config.M,
 	}
+}
+
+type creator interface {
+	Create() (pivnet.Release, error)
+}
+
+type uploader interface {
+	Upload(release pivnet.Release, exactGlobs []string) error
+}
+
+type finalizer interface {
+	Finalize(release pivnet.Release) (concourse.OutResponse, error)
 }
 
 type validation interface {
@@ -62,37 +79,14 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 		return concourse.OutResponse{}, fmt.Errorf("%s must be provided", "out dir")
 	}
 
-	var m metadata.Metadata
-	var skipFileCheck bool
-	if input.Params.MetadataFile != "" {
-		metadataFilepath := filepath.Join(c.sourcesDir, input.Params.MetadataFile)
-		metadataBytes, err := ioutil.ReadFile(metadataFilepath)
-		if err != nil {
-			return concourse.OutResponse{}, fmt.Errorf("metadata_file could not be read: %s", err.Error())
-		}
-
-		err = yaml.Unmarshal(metadataBytes, &m)
-		if err != nil {
-			return concourse.OutResponse{}, fmt.Errorf("metadata_file could not be parsed: %s", err.Error())
-		}
-
-		err = m.Validate()
-		if err != nil {
-			return concourse.OutResponse{}, fmt.Errorf("metadata_file is invalid: %s", err.Error())
-		}
-
-		skipFileCheck = true
-	}
-
-	c.logger.Debugf("metadata product_files parsed; contents: %+v\n", m.ProductFiles)
-
-	if m.Release != nil {
-		c.logger.Debugf("metadata release parsed; contents: %+v\n", *m.Release)
+	if c.m.Release != nil {
+		c.logger.Debugf("metadata release parsed; contents: %+v\n", *c.m.Release)
 	}
 
 	warnIfDeprecatedFilesFound(input.Params, c.logger, c.screenWriter)
+	c.logger.Debugf("here")
 
-	err := c.validation.Validate(skipFileCheck)
+	err := c.validation.Validate(c.skipFileCheck)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
@@ -105,7 +99,7 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 	}
 
 	var missingFiles []string
-	for _, f := range m.ProductFiles {
+	for _, f := range c.m.ProductFiles {
 		var foundFile bool
 		for _, glob := range exactGlobs {
 			if glob == f.File {
@@ -124,27 +118,17 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 			fmt.Errorf("product_files were provided in metadata that match no globs: %v", missingFiles)
 	}
 
-	metadataFetcher := release.NewMetadataFetcher(m, skipFileCheck)
-
-	releaseCreator := release.NewReleaseCreator(c.pivnetClient, metadataFetcher, c.logger, m, skipFileCheck, input.Params, c.sourcesDir, input.Source.ProductSlug)
-	pivnetRelease, err := releaseCreator.Create()
+	pivnetRelease, err := c.creator.Create()
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
 
-	skipUpload := input.Params.FileGlob == "" && input.Params.FilepathPrefix == ""
-
-	md5summer := md5sum.NewFileSummer()
-
-	releaseUploader := release.NewReleaseUploader(c.uploaderClient, c.pivnetClient, c.logger, md5summer, m, skipUpload, c.sourcesDir, input.Source.ProductSlug)
-	err = releaseUploader.Upload(pivnetRelease, exactGlobs)
+	err = c.uploader.Upload(pivnetRelease, exactGlobs)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
 
-	releaseFinalizer := release.NewFinalizer(c.pivnetClient, metadataFetcher, input.Params, c.sourcesDir, input.Source.ProductSlug)
-
-	out, err := releaseFinalizer.Finalize(pivnetRelease)
+	out, err := c.finalizer.Finalize(pivnetRelease)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}

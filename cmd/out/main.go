@@ -8,10 +8,15 @@ import (
 	"os"
 	"path/filepath"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/globs"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
+	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out"
+	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
@@ -120,17 +125,53 @@ func main() {
 		Logger:     l,
 	})
 
+	skipUpload := input.Params.FileGlob == "" && input.Params.FilepathPrefix == ""
+
+	var m metadata.Metadata
+	var skipFileCheck bool
+	if input.Params.MetadataFile != "" {
+		metadataFilepath := filepath.Join(sourcesDir, input.Params.MetadataFile)
+		metadataBytes, err := ioutil.ReadFile(metadataFilepath)
+		if err != nil {
+			log.Fatalln("metadata_file could not be read: %s", err.Error())
+		}
+
+		err = yaml.Unmarshal(metadataBytes, &m)
+		if err != nil {
+			log.Fatalln("metadata_file could not be parsed: %s", err.Error())
+		}
+
+		err = m.Validate()
+		if err != nil {
+			log.Fatalln("metadata_file is invalid: %s", err.Error())
+		}
+
+		skipFileCheck = true
+	}
+
 	validation := validator.NewOutValidator(input)
 
+	metadataFetcher := release.NewMetadataFetcher(m, skipFileCheck)
+
+	md5summer := md5sum.NewFileSummer()
+
+	releaseCreator := release.NewReleaseCreator(pivnetClient, metadataFetcher, l, m, skipFileCheck, input.Params, sourcesDir, input.Source.ProductSlug)
+	releaseUploader := release.NewReleaseUploader(uploaderClient, pivnetClient, l, md5summer, m, skipUpload, sourcesDir, input.Source.ProductSlug)
+	releaseFinalizer := release.NewFinalizer(pivnetClient, metadataFetcher, input.Params, sourcesDir, input.Source.ProductSlug)
+
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
-		Logger:         l,
-		OutDir:         outDir,
-		SourcesDir:     sourcesDir,
-		ScreenWriter:   log.New(os.Stderr, "", 0),
-		PivnetClient:   pivnetClient,
-		UploaderClient: uploaderClient,
-		GlobClient:     globber,
-		Validation:     validation,
+		SkipFileCheck: skipFileCheck,
+		Logger:        l,
+		OutDir:        outDir,
+		SourcesDir:    sourcesDir,
+		ScreenWriter:  log.New(os.Stderr, "", 0),
+		PivnetClient:  pivnetClient,
+		GlobClient:    globber,
+		Validation:    validation,
+		Creator:       releaseCreator,
+		Uploader:      releaseUploader,
+		Finalizer:     releaseFinalizer,
+		M:             m,
 	})
 
 	response, err := outCmd.Run(input)
