@@ -52,12 +52,12 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	releases, err := rc.pivnet.ReleasesForProductSlug(rc.productSlug)
 	if err != nil {
-		panic(err)
+		return pivnet.Release{}, err
 	}
 
 	existingVersions, err := rc.pivnet.ProductVersions(rc.productSlug, releases)
 	if err != nil {
-		panic(err)
+		return pivnet.Release{}, err
 	}
 
 	for _, v := range existingVersions {
@@ -70,7 +70,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	eulas, err := rc.pivnet.EULAs()
 	if err != nil {
-		panic(err)
+		return pivnet.Release{}, err
 	}
 
 	eulaSlugs := make([]string, len(eulas))
@@ -106,7 +106,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	releaseTypes, err := rc.pivnet.ReleaseTypes()
 	if err != nil {
-		panic(err)
+		return pivnet.Release{}, err
 	}
 
 	releaseTypesPrintable := fmt.Sprintf(

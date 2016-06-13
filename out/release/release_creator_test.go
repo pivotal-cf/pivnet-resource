@@ -132,6 +132,85 @@ var _ = Describe("ReleaseCreator", func() {
 					ReleaseDate:     "1/17/2016",
 				}))
 			})
+
+			Context("when an error occurs", func() {
+				Context("wyhne pivnet fails getting releases for a product slug", func() {
+					BeforeEach(func() {
+						pivnetClient.ReleasesForProductSlugReturns([]pivnet.Release{}, errors.New("product slug error"))
+					})
+
+					It("returns an error", func() {
+						_, err := creator.Create()
+						Expect(err).To(MatchError(errors.New("product slug error")))
+					})
+				})
+
+				Context("when pivnet fails getting product versions", func() {
+					BeforeEach(func() {
+						pivnetClient.ProductVersionsReturns([]string{""}, errors.New("missing product version"))
+					})
+
+					It("returns an error", func() {
+						_, err := creator.Create()
+						Expect(err).To(MatchError(errors.New("missing product version")))
+					})
+				})
+
+				Context("when pivnet fails fetching eulas", func() {
+					BeforeEach(func() {
+						pivnetClient.EULAsReturns([]pivnet.EULA{}, errors.New("failed getting eulas"))
+					})
+
+					It("returns an error", func() {
+						_, err := creator.Create()
+						Expect(err).To(MatchError(errors.New("failed getting eulas")))
+					})
+				})
+
+				Context("when the metadata does not contain the eula slug", func() {
+					BeforeEach(func() {
+						pivnetClient.EULAsReturns([]pivnet.EULA{{Slug: "a-failing-slug"}}, nil)
+					})
+
+					It("returns an error", func() {
+						_, err := creator.Create()
+						Expect(err).To(MatchError(errors.New("provided eula_slug: 'magic-slug' must be one of: ['a-failing-slug']")))
+					})
+				})
+
+				Context("when pivnet fails fetching release types", func() {
+					BeforeEach(func() {
+						pivnetClient.ReleaseTypesReturns([]string{""}, errors.New("failed fetching release types"))
+					})
+
+					It("returns an error", func() {
+						_, err := creator.Create()
+						Expect(err).To(MatchError(errors.New("failed fetching release types")))
+					})
+				})
+
+				Context("when the metadata does not contain the release type", func() {
+					BeforeEach(func() {
+						pivnetClient.ReleaseTypesReturns([]string{"a-missing-release-type"}, nil)
+					})
+
+					It("returns an error", func() {
+						_, err := creator.Create()
+						Expect(err).To(MatchError(errors.New("provided release_type: 'some-release-type' must be one of: ['a-missing-release-type']")))
+					})
+				})
+
+				Context("when the release cannot be created", func() {
+					BeforeEach(func() {
+						pivnetClient.CreateReleaseReturns(pivnet.Release{}, errors.New("cannot create release"))
+					})
+
+					It("returns an error", func() {
+						_, err := creator.Create()
+						Expect(err).To(MatchError(errors.New("cannot create release")))
+					})
+				})
+			})
 		})
 
 		Context("when the release already exists", func() {
