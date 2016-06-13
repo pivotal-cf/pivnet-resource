@@ -1,6 +1,8 @@
 package release_test
 
 import (
+	"errors"
+
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release/releasefakes"
@@ -110,10 +112,75 @@ var _ = Describe("ReleaseUploader", func() {
 				Expect(productFileID).To(Equal(13367))
 			})
 
-			Context("when the globs do not match", func() {
+			Context("when the glob do not match", func() {
+				It("logs a message", func() {
+					err := uploader.Upload(pivnetRelease, []string{"/broken/glob"})
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(logging.DebugfCallCount()).To(Equal(3))
+
+					message, types := logging.DebugfArgsForCall(0)
+					Expect(message).To(Equal("exact glob %s does not match metadata file: %s\n"))
+					Expect(types[0].(string)).To(Equal("/broken/glob"))
+					Expect(types[1].(string)).To(Equal("some/file"))
+				})
 			})
 
 			Context("when an error occurs", func() {
+				Context("when the file md5 cannot be computed", func() {
+					BeforeEach(func() {
+						md5Summer.SumFileReturns("", errors.New("md5 error"))
+					})
+
+					It("returns an error", func() {
+						err := uploader.Upload(pivnetRelease, []string{""})
+						Expect(err).To(MatchError(errors.New("md5 error")))
+					})
+				})
+
+				Context("when the s3 upload fails", func() {
+					BeforeEach(func() {
+						s3Client.UploadFileReturns("", errors.New("s3 failed"))
+					})
+
+					It("returns an error", func() {
+						err := uploader.Upload(pivnetRelease, []string{""})
+						Expect(err).To(MatchError(errors.New("s3 failed")))
+					})
+				})
+
+				Context("when pivnet fails to find a product", func() {
+					BeforeEach(func() {
+						uploadClient.CreateProductFileReturns(pivnet.ProductFile{}, errors.New("pivnet product blew up"))
+					})
+
+					It("returns an error", func() {
+						err := uploader.Upload(pivnetRelease, []string{""})
+						Expect(err).To(MatchError("pivnet product blew up"))
+					})
+				})
+
+				Context("when pivnet cannot create a product file", func() {
+					BeforeEach(func() {
+						uploadClient.FindProductForSlugReturns(pivnet.Product{}, errors.New("cannot create product file"))
+					})
+
+					It("returns an error", func() {
+						err := uploader.Upload(pivnetRelease, []string{""})
+						Expect(err).To(MatchError(errors.New("cannot create product file")))
+					})
+				})
+
+				Context("when pivnet cannot add a product file", func() {
+					BeforeEach(func() {
+						uploadClient.AddProductFileReturns(errors.New("error adding product"))
+					})
+
+					It("returns an error", func() {
+						err := uploader.Upload(pivnetRelease, []string{""})
+						Expect(err).To(MatchError(errors.New("error adding product")))
+					})
+				})
 			})
 		})
 

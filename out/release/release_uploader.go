@@ -58,17 +58,17 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		fullFilepath := filepath.Join(u.sourcesDir, exactGlob)
 		fileContentsMD5, err := u.md5Summer.SumFile(fullFilepath)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		remotePath, err := u.s3.UploadFile(exactGlob)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		product, err := u.pivnet.FindProductForSlug(u.productSlug)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		filename := filepath.Base(exactGlob)
@@ -106,7 +106,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			Description:  description,
 		})
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		u.logger.Debugf(
@@ -120,7 +120,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		err = u.pivnet.AddProductFile(product.ID, release.ID, productFile.ID)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
