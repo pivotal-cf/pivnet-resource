@@ -28,7 +28,9 @@ var _ = Describe("ReleaseCreator", func() {
 			logging = &releasefakes.Logging{}
 
 			meta := metadata.Metadata{
-				Release: nil,
+				Release: &metadata.Release{
+					Controlled: true,
+				},
 				ProductFiles: []metadata.ProductFile{
 					{
 						File:        "some/file",
@@ -130,6 +132,7 @@ var _ = Describe("ReleaseCreator", func() {
 					Description:     "wow, a description",
 					ReleaseNotesURL: "some-url",
 					ReleaseDate:     "1/17/2016",
+					Controlled:      true,
 				}))
 			})
 
