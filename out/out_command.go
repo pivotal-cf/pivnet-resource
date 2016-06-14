@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/globs"
 	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
@@ -13,12 +12,11 @@ import (
 
 type OutCommand struct {
 	skipFileCheck bool
-	logger        logger.Logger
+	logger        logging
 	outDir        string
 	sourcesDir    string
 	screenWriter  *log.Logger
-	pivnetClient  pivnet.Client
-	globClient    globs.Globber
+	globClient    globber
 	validation    validation
 	creator       creator
 	finalizer     finalizer
@@ -28,12 +26,11 @@ type OutCommand struct {
 
 type OutCommandConfig struct {
 	SkipFileCheck bool
-	Logger        logger.Logger
+	Logger        logging
 	OutDir        string
 	SourcesDir    string
 	ScreenWriter  *log.Logger
-	PivnetClient  pivnet.Client
-	GlobClient    globs.Globber
+	GlobClient    globber
 	Validation    validation
 	Creator       creator
 	Finalizer     finalizer
@@ -41,14 +38,13 @@ type OutCommandConfig struct {
 	M             metadata.Metadata
 }
 
-func NewOutCommand(config OutCommandConfig) *OutCommand {
-	return &OutCommand{
+func NewOutCommand(config OutCommandConfig) OutCommand {
+	return OutCommand{
 		skipFileCheck: config.SkipFileCheck,
 		logger:        config.Logger,
 		outDir:        config.OutDir,
 		sourcesDir:    config.SourcesDir,
 		screenWriter:  config.ScreenWriter,
-		pivnetClient:  config.PivnetClient,
 		globClient:    config.GlobClient,
 		validation:    config.Validation,
 		creator:       config.Creator,
@@ -58,25 +54,39 @@ func NewOutCommand(config OutCommandConfig) *OutCommand {
 	}
 }
 
+//go:generate counterfeiter --fake-name Creator . creator
 type creator interface {
 	Create() (pivnet.Release, error)
 }
 
+//go:generate counterfeiter --fake-name Uploader . uploader
 type uploader interface {
 	Upload(release pivnet.Release, exactGlobs []string) error
 }
 
+//go:generate counterfeiter --fake-name Finalizer . finalizer
 type finalizer interface {
 	Finalize(release pivnet.Release) (concourse.OutResponse, error)
 }
 
+//go:generate counterfeiter --fake-name Validation . validation
 type validation interface {
 	Validate(skipFileCheck bool) error
 }
 
-func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, error) {
+//go:generate counterfeiter --fake-name Logging . logging
+type logging interface {
+	Debugf(format string, a ...interface{}) (n int, err error)
+}
+
+//go:generate counterfeiter --fake-name Globber . globber
+type globber interface {
+	ExactGlobs() ([]string, error)
+}
+
+func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, error) {
 	if c.outDir == "" {
-		return concourse.OutResponse{}, fmt.Errorf("%s must be provided", "out dir")
+		return concourse.OutResponse{}, fmt.Errorf("out dir must be provided")
 	}
 
 	if c.m.Release != nil {
@@ -84,14 +94,11 @@ func (c *OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, err
 	}
 
 	warnIfDeprecatedFilesFound(input.Params, c.logger, c.screenWriter)
-	c.logger.Debugf("here")
 
 	err := c.validation.Validate(c.skipFileCheck)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
-
-	c.logger.Debugf("Received input: %+v\n", input)
 
 	exactGlobs, err := c.globClient.ExactGlobs()
 	if err != nil {
