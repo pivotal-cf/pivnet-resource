@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -47,16 +46,10 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	logFile, err := ioutil.TempFile("", "pivnet-resource-in.log")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	fmt.Fprintf(logFile, "PivNet Resource version: %s\n", version)
-
-	fmt.Fprintf(os.Stderr, "logging to %s\n", logFile.Name())
+	fmt.Fprintf(os.Stderr, "PivNet Resource version: %s\n", version)
 
 	sanitized := concourse.SanitizedSource(input.Source)
-	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
+	sanitizer := sanitizer.NewSanitizer(sanitized, os.Stderr)
 
 	l = lager.NewLogger("pivnet-resource")
 	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))

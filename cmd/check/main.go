@@ -33,22 +33,16 @@ func main() {
 
 	var input concourse.CheckRequest
 
-	logFile, err := ioutil.TempFile("", "pivnet-resource-check.log")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	fmt.Fprintf(logFile, "PivNet Resource version: %s\n", version)
+	fmt.Fprintf(os.Stderr, "PivNet Resource version: %s\n", version)
 
-	fmt.Fprintf(os.Stderr, "Logging to %s\n", logFile.Name())
-
-	err = json.NewDecoder(os.Stdin).Decode(&input)
+	err := json.NewDecoder(os.Stdin).Decode(&input)
 	if err != nil {
-		fmt.Fprintf(logFile, "Exiting with error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Exiting with error: %v\n", err)
 		log.Fatalln(err)
 	}
 
 	sanitized := concourse.SanitizedSource(input.Source)
-	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
+	sanitizer := sanitizer.NewSanitizer(sanitized, os.Stderr)
 
 	l = lager.NewLogger("pivnet-resource")
 	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
@@ -66,7 +60,9 @@ func main() {
 		endpoint = pivnet.DefaultHost
 	}
 
-	ls := lagershim.NewLagerShim(l)
+	specialLogger := lager.NewLogger("pivnet client")
+	specialLogger.RegisterSink(lager.NewWriterSink(ioutil.Discard, lager.DEBUG))
+	sp := lagershim.NewLagerShim(specialLogger)
 
 	clientConfig := pivnet.ClientConfig{
 		Host:      endpoint,
@@ -75,17 +71,16 @@ func main() {
 	}
 	client := gp.NewClient(
 		clientConfig,
-		ls,
+		sp,
 	)
 
 	f := filter.NewFilter()
 
-	extendedClient := gp.NewExtendedClient(client, ls)
+	extendedClient := gp.NewExtendedClient(client, sp)
 
 	response, err := check.NewCheckCommand(
 		version,
 		l,
-		logFile.Name(),
 		f,
 		client,
 		extendedClient,

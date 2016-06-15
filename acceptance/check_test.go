@@ -72,6 +72,11 @@ var _ = Describe("Check", func() {
 		err := json.Unmarshal(session.Out.Contents(), &response)
 		Expect(err).ShouldNot(HaveOccurred())
 
+		By("Printing what is actually happening")
+		Eventually(session.Err).Should(gbytes.Say("pivnet-resource.Getting all valid release types"))
+		Eventually(session.Err).Should(gbytes.Say("pivnet-resource.Filtered versions"))
+		Eventually(session.Err).Should(gbytes.Say("pivnet-resource.Returning output"))
+
 		By("Validating all the expected elements were returned")
 		Expect(response).To(HaveLen(3))
 

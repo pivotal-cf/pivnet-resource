@@ -60,16 +60,10 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	logFile, err := ioutil.TempFile("", "pivnet-resource-out.log")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	fmt.Fprintf(logFile, "PivNet Resource version: %s\n", version)
-
-	fmt.Fprintf(os.Stderr, "logging to %s\n", logFile.Name())
+	fmt.Fprintf(os.Stderr, "PivNet Resource version: %s\n", version)
 
 	sanitized := concourse.SanitizedSource(input.Source)
-	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
+	sanitizer := sanitizer.NewSanitizer(sanitized, os.Stderr)
 
 	l := logger.NewLogger(sanitizer)
 
@@ -86,9 +80,11 @@ func main() {
 		UserAgent: useragent.UserAgent(version, "put", input.Source.ProductSlug),
 	}
 
+	specialLogger := logger.NewLogger(ioutil.Discard)
+
 	pivnetClient := pivnet.NewClient(
 		clientConfig,
-		l,
+		specialLogger,
 	)
 
 	bucket := input.Source.Bucket
@@ -108,7 +104,7 @@ func main() {
 		Bucket:          bucket,
 		Logger:          l,
 		Stdout:          os.Stdout,
-		Stderr:          logFile,
+		Stderr:          os.Stderr,
 		OutBinaryPath:   filepath.Join(outDir, s3OutBinaryName),
 	})
 

@@ -2,9 +2,6 @@ package check_test
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -23,9 +20,6 @@ var _ = Describe("Check", func() {
 		fakeFilter         *filterfakes.FakeFilter
 		fakePivnetClient   *gpfakes.FakeClient
 		fakeExtendedClient *gpfakes.FakeExtendedClient
-
-		tempDir     string
-		logFilePath string
 
 		testLogger lager.Logger
 
@@ -88,14 +82,6 @@ var _ = Describe("Check", func() {
 			},
 		}
 
-		var err error
-		tempDir, err = ioutil.TempDir("", "")
-		Expect(err).NotTo(HaveOccurred())
-
-		logFilePath = filepath.Join(tempDir, "pivnet-resource-check.log1234")
-		err = ioutil.WriteFile(logFilePath, []byte("initial log content"), os.ModePerm)
-		Expect(err).NotTo(HaveOccurred())
-
 	})
 
 	JustBeforeEach(func() {
@@ -117,16 +103,10 @@ var _ = Describe("Check", func() {
 		checkCommand = check.NewCheckCommand(
 			binaryVersion,
 			testLogger,
-			logFilePath,
 			fakeFilter,
 			fakePivnetClient,
 			fakeExtendedClient,
 		)
-	})
-
-	AfterEach(func() {
-		err := os.RemoveAll(tempDir)
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("returns the most recent version without error", func() {
@@ -152,39 +132,6 @@ var _ = Describe("Check", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(response).To(BeEmpty())
-		})
-	})
-
-	Context("when log files already exist", func() {
-		var (
-			otherFilePath1 string
-			otherFilePath2 string
-		)
-
-		BeforeEach(func() {
-			otherFilePath1 = filepath.Join(tempDir, "pivnet-resource-check.log1")
-			err := ioutil.WriteFile(otherFilePath1, []byte("initial log content"), os.ModePerm)
-			Expect(err).NotTo(HaveOccurred())
-
-			otherFilePath2 = filepath.Join(tempDir, "pivnet-resource-check.log2")
-			err = ioutil.WriteFile(otherFilePath2, []byte("initial log content"), os.ModePerm)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("removes the other log files", func() {
-			_, err := checkCommand.Run(checkRequest)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = os.Stat(otherFilePath1)
-			Expect(err).To(HaveOccurred())
-			Expect(os.IsNotExist(err)).To(BeTrue())
-
-			_, err = os.Stat(otherFilePath2)
-			Expect(err).To(HaveOccurred())
-			Expect(os.IsNotExist(err)).To(BeTrue())
-
-			_, err = os.Stat(logFilePath)
-			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 
@@ -236,7 +183,7 @@ var _ = Describe("Check", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				checkRequest.Version = concourse.Version{
-					versionWithETag,
+					ProductVersion: versionWithETag,
 				}
 			})
 
@@ -262,7 +209,7 @@ var _ = Describe("Check", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				checkRequest.Version = concourse.Version{
-					versionWithETag,
+					ProductVersion: versionWithETag,
 				}
 			})
 

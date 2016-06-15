@@ -2,8 +2,6 @@ package check
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
@@ -15,7 +13,6 @@ import (
 
 type CheckCommand struct {
 	logger         lager.Logger
-	logFilePath    string
 	binaryVersion  string
 	filter         filter.Filter
 	pivnetClient   gp.Client
@@ -25,14 +22,12 @@ type CheckCommand struct {
 func NewCheckCommand(
 	binaryVersion string,
 	logger lager.Logger,
-	logFilePath string,
 	filter filter.Filter,
 	pivnetClient gp.Client,
 	extendedClient gp.ExtendedClient,
 ) *CheckCommand {
 	return &CheckCommand{
 		logger:         logger,
-		logFilePath:    logFilePath,
 		binaryVersion:  binaryVersion,
 		filter:         filter,
 		pivnetClient:   pivnetClient,
@@ -41,26 +36,6 @@ func NewCheckCommand(
 }
 
 func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckResponse, error) {
-	logDir := filepath.Dir(c.logFilePath)
-	existingLogFiles, err := filepath.Glob(filepath.Join(logDir, "pivnet-resource-check.log*"))
-	if err != nil {
-		// This is untested because the only error returned by filepath.Glob is a
-		// malformed glob, and this glob is hard-coded to be correct.
-		return nil, err
-	}
-
-	for _, f := range existingLogFiles {
-		if filepath.Base(f) != filepath.Base(c.logFilePath) {
-			c.logger.Debug("Removing existing log file", lager.Data{"log_file": f})
-			err := os.Remove(f)
-			if err != nil {
-				// This is untested because it is too hard to force os.Remove to return
-				// an error.
-				return nil, err
-			}
-		}
-	}
-
 	c.logger.Debug("Received input", lager.Data{"input": input})
 
 	c.logger.Debug("Getting all valid release types")
