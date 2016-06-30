@@ -64,7 +64,8 @@ BOSH releases are available on
 
 **Values for the `endpoint`, `bucket` and `region` must be consistent or downloads and uploads may fail.**
 
-For example, the default values of `endpoint: https://network.pivotal.io`, `bucket: pivotalnetwork` and `region: eu-west-1`
+For example, the default values of `endpoint: https://network.pivotal.io`,
+`bucket: pivotalnetwork` and `region: eu-west-1`
 are consistent with the production instance of Pivotal Network.
 
 **Note, `product_version` is deprecated and will be removed in future releases.
@@ -303,6 +304,15 @@ All other keys are optional. The purpose of the keys is as follows:
 
 The top-level `dependencies` key is currently write-only.
 
+## Integration Environment
+
+The Pivotal Network team maintain an integration environment at `https://pivnet-integration.cfapps.io/`
+The credentials for this environment are the same as for production, and the
+corresponding S3 bucket is `pivotal-network-acceptance`.
+
+This environment is useful for teams to develop against, as changes to products
+in this account are separated from the live account.
+
 ## Developing
 
 ### Prerequisites
@@ -345,9 +355,9 @@ files to the specified S3 bucket, ensure the bucket is already created and
 permissions are set correctly such that the user associated with the provided
 credentials can upload, download and delete.
 
-It is advised to run the acceptance tests against the Pivotal Network staging
-environment endpoint `https://pivnet-acceptance.cfapps.io` and to use the
-corresponding S3 bucket `pivnet-acceptance`.
+It is advised to run the acceptance tests against the Pivotal Network integration
+environment endpoint `https://pivnet-integration.cfapps.io` and to use the
+corresponding S3 bucket `pivotal-network-staging`.
 
 Run the tests with the following command:
 
