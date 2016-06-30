@@ -62,14 +62,13 @@ BOSH releases are available on
 
 * `region`: *Optional.* AWS S3 region where the bucket is located. Defaults to `eu-west-1`.
 
+* `product_version`: *Optional.* Regex to match product version e.g. `1\.2\..*`. Empty values match all product versions.
+
 **Values for the `endpoint`, `bucket` and `region` must be consistent or downloads and uploads may fail.**
 
 For example, the default values of `endpoint: https://network.pivotal.io`,
 `bucket: pivotalnetwork` and `region: eu-west-1`
 are consistent with the production instance of Pivotal Network.
-
-**Note, `product_version` is deprecated and will be removed in future releases.
-Instead, upgrade to concourse v1.2.0 and use [version pinning](http://concourse.ci/get-step.html#get-version).**
 
 ### Example Pipeline Configuration
 
@@ -130,6 +129,7 @@ jobs:
 ### `check`: Check for new product versions on Pivotal Network.
 
 Discovers all versions of the provided product.
+Returned versions are filtered by the `source` configuration.
 
 ### `in`: Download the product from Pivotal Network.
 
