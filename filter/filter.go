@@ -3,6 +3,7 @@ package filter
 import (
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/pivotal-cf-experimental/go-pivnet"
@@ -40,7 +41,12 @@ func (f filter) ReleasesByVersion(releases []pivnet.Release, version string) ([]
 	filteredReleases := make([]pivnet.Release, 0)
 
 	for _, release := range releases {
-		if release.Version == version {
+		match, err := regexp.MatchString(version, release.Version)
+		if err != nil {
+			return nil, err
+		}
+
+		if match {
 			filteredReleases = append(filteredReleases, release)
 		}
 	}
