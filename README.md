@@ -50,7 +50,7 @@ BOSH releases are available on
 
 * `product_slug`: *Required.*  Name of product on Pivotal Network.
 
-* `release_type`: *Optional.*  Lock to a specific release type. Used only when downloading product releases during `in`.
+* `release_type`: *Optional.*  Lock to a specific release type.
 
 * `access_key_id`: *Optional.*  AWS access key id. Required for uploading products via `out`.
 
