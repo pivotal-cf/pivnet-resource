@@ -308,7 +308,7 @@ The top-level `dependencies` key is currently write-only.
 
 The Pivotal Network team maintain an integration environment at `https://pivnet-integration.cfapps.io/`
 The credentials for this environment are the same as for production, and the
-corresponding S3 bucket is `pivotal-network-staging`.
+corresponding S3 bucket is `pivotal-network-acceptance`.
 
 This environment is useful for teams to develop against, as changes to products
 in this account are separated from the live account.
