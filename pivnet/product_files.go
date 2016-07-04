@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/pivotal-golang/lager"
 )
 
 type CreateProductFileConfig struct {
@@ -25,7 +27,7 @@ func (c client) GetProductFiles(release Release) (ProductFiles, error) {
 	productFiles := ProductFiles{}
 
 	link := links.ProductFiles["href"]
-	c.logger.Debugf("link: %s\n", link)
+	c.logger.Debug("Found links", lager.Data{"links": link})
 
 	err := c.makeRequest(
 		"GET",

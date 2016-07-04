@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-golang/lager"
 )
 
 const (
@@ -17,7 +17,6 @@ const (
 )
 
 //go:generate counterfeiter . Client
-
 type Client interface {
 	ProductVersions(productSlug string, releases []Release) ([]string, error)
 	CreateRelease(CreateReleaseConfig) (Release, error)
@@ -44,7 +43,7 @@ type client struct {
 	url       string
 	token     string
 	userAgent string
-	logger    logger.Logger
+	logger    lager.Logger
 }
 
 type NewClientConfig struct {
@@ -53,7 +52,7 @@ type NewClientConfig struct {
 	UserAgent string
 }
 
-func NewClient(config NewClientConfig, logger logger.Logger) Client {
+func NewClient(config NewClientConfig, logger lager.Logger) Client {
 	url := fmt.Sprintf("%s%s", config.Endpoint, path)
 
 	return &client{
@@ -96,19 +95,19 @@ func (c client) makeRequestWithHTTPResponse(
 
 	reqBytes, err := httputil.DumpRequestOut(req, true)
 	if err != nil {
-		c.logger.Debugf("Error dumping request: %+v\n", err)
+		c.logger.Debug("Error dumping request", lager.Data{"error": err})
 		return nil, err
 	}
 
-	c.logger.Debugf("Making request: %s\n", string(reqBytes))
+	c.logger.Debug("Making request", lager.Data{"request": string(reqBytes)})
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		c.logger.Debugf("Error making request: %+v\n", err)
+		c.logger.Debug("Error making request", lager.Data{"error": err})
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	c.logger.Debugf("Response status code: %d\n", resp.StatusCode)
+	c.logger.Debug("Response status code", lager.Data{"status code": resp.StatusCode})
 	if resp.StatusCode != expectedStatusCode {
 		return nil, fmt.Errorf(
 			"Pivnet returned status code: %d for the request - expected %d",
@@ -123,7 +122,7 @@ func (c client) makeRequestWithHTTPResponse(
 	}
 
 	if len(b) > 0 {
-		c.logger.Debugf("Response body: %s\n", string(b))
+		c.logger.Debug("Response", lager.Data{"body": string(b)})
 		err = json.Unmarshal(b, data)
 		if err != nil {
 			return nil, err

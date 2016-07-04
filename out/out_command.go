@@ -5,9 +5,9 @@ import (
 	"log"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-golang/lager"
 )
 
 type OutCommand struct {
@@ -77,6 +77,7 @@ type validation interface {
 //go:generate counterfeiter --fake-name Logging . logging
 type logging interface {
 	Debugf(format string, a ...interface{}) (n int, err error)
+	Debug(action string, data ...lager.Data)
 }
 
 //go:generate counterfeiter --fake-name Globber . globber
@@ -143,11 +144,7 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 	return out, nil
 }
 
-func warnIfDeprecatedFilesFound(
-	params concourse.OutParams,
-	logger logger.Logger,
-	screenWriter *log.Logger,
-) {
+func warnIfDeprecatedFilesFound(params concourse.OutParams, logger logging, screenWriter *log.Logger) {
 	files := map[string]string{
 		"version_file":        params.VersionFile,
 		"eula_slug_file":      params.EULASlugFile,
@@ -163,7 +160,7 @@ func warnIfDeprecatedFilesFound(
 			continue
 		}
 
-		logger.Debugf("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m\n", key)
+		logger.Debug("DEPRECATION WARNING, this file is deprecated and will be removed in a future release", lager.Data{"file": key})
 
 		if screenWriter != nil {
 			screenWriter.Printf("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m", key)

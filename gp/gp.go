@@ -11,7 +11,6 @@ import (
 )
 
 //go:generate counterfeiter . Client
-
 type Client interface {
 	ReleaseTypes() ([]string, error)
 	GetRelease(productSlug string, productVersion string) (pivnet.Release, error)
@@ -28,7 +27,6 @@ type Client interface {
 }
 
 //go:generate counterfeiter . ExtendedClient
-
 type ExtendedClient interface {
 	ReleaseETag(productSlug string, releaseID int) (string, error)
 }

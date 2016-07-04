@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-golang/lager"
 )
 
 type Globber interface {
@@ -15,14 +15,14 @@ type globber struct {
 	fileGlob   string
 	sourcesDir string
 
-	logger logger.Logger
+	logger lager.Logger
 }
 
 type GlobberConfig struct {
 	FileGlob   string
 	SourcesDir string
 
-	Logger logger.Logger
+	Logger lager.Logger
 }
 
 func NewGlobber(config GlobberConfig) Globber {
@@ -48,11 +48,12 @@ func (g globber) ExactGlobs() ([]string, error) {
 	if err != nil {
 		panic(err)
 	}
-	g.logger.Debugf("Absolute path to sourcesDir: %s\n", absPathSourcesDir)
+
+	g.logger.Debug("Absolute path to sourcesDir", lager.Data{"sources dir": absPathSourcesDir})
 
 	exactGlobs := []string{}
 	for _, match := range matches {
-		g.logger.Debugf("Matched file: %s\n", match)
+		g.logger.Debug("Matched file", lager.Data{"file": match})
 
 		absPath, err := filepath.Abs(match)
 		if err != nil {
@@ -64,11 +65,7 @@ func (g globber) ExactGlobs() ([]string, error) {
 			panic(err)
 		}
 
-		g.logger.Debugf(
-			"Exact glob: %s for file %s\n",
-			exactGlob,
-			match,
-		)
+		g.logger.Debug("Exact globs matched", lager.Data{"glob": exactGlob, "matches": match})
 
 		exactGlobs = append(exactGlobs, exactGlob)
 	}

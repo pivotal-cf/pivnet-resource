@@ -8,9 +8,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger/loggerfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-golang/lager"
 )
 
 var _ = Describe("PivnetClient - product files", func() {
@@ -22,7 +21,6 @@ var _ = Describe("PivnetClient - product files", func() {
 		userAgent  string
 
 		newClientConfig pivnet.NewClientConfig
-		fakeLogger      logger.Logger
 	)
 
 	BeforeEach(func() {
@@ -30,14 +28,15 @@ var _ = Describe("PivnetClient - product files", func() {
 		apiAddress = server.URL()
 		token = "my-auth-token"
 		userAgent = "pivnet-resource/0.1.0 (some-url)"
+		logger := lager.NewLogger("doesn't matter")
 
-		fakeLogger = &loggerfakes.FakeLogger{}
 		newClientConfig = pivnet.NewClientConfig{
 			Endpoint:  apiAddress,
 			Token:     token,
 			UserAgent: userAgent,
 		}
-		client = pivnet.NewClient(newClientConfig, fakeLogger)
+
+		client = pivnet.NewClient(newClientConfig, logger)
 	})
 
 	AfterEach(func() {
@@ -58,10 +57,11 @@ var _ = Describe("PivnetClient - product files", func() {
 				},
 			}
 
-			response = pivnet.ProductFiles{[]pivnet.ProductFile{
-				{ID: 3, AWSObjectKey: "anything", Links: &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/6/download"}}},
-				{ID: 4, AWSObjectKey: "something", Links: &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}}},
-			}}
+			response = pivnet.ProductFiles{
+				ProductFiles: []pivnet.ProductFile{
+					{ID: 3, AWSObjectKey: "anything", Links: &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/6/download"}}},
+					{ID: 4, AWSObjectKey: "something", Links: &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}}},
+				}}
 
 			responseStatusCode = http.StatusOK
 		})
@@ -128,13 +128,14 @@ var _ = Describe("PivnetClient - product files", func() {
 			productID = 8
 			releaseID = 12
 
-			response = pivnet.ProductFileResponse{pivnet.ProductFile{
-				ID:           productID,
-				AWSObjectKey: "something",
-				Links: &pivnet.Links{Download: map[string]string{
-					"href": "/products/banana/releases/666/product_files/8/download"},
-				},
-			}}
+			response = pivnet.ProductFileResponse{
+				ProductFile: pivnet.ProductFile{
+					ID:           productID,
+					AWSObjectKey: "something",
+					Links: &pivnet.Links{Download: map[string]string{
+						"href": "/products/banana/releases/666/product_files/8/download"},
+					},
+				}}
 
 			responseStatusCode = http.StatusOK
 		})
@@ -252,10 +253,11 @@ var _ = Describe("PivnetClient - product files", func() {
 
 					expectedRequestBody.ProductFile.Description = description
 
-					productFileResponse = pivnet.ProductFileResponse{pivnet.ProductFile{
-						ID:          1234,
-						Description: description,
-					}}
+					productFileResponse = pivnet.ProductFileResponse{
+						ProductFile: pivnet.ProductFile{
+							ID:          1234,
+							Description: description,
+						}}
 				})
 
 				It("creates the product file with the description field", func() {

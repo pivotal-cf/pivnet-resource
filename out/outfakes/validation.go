@@ -12,6 +12,8 @@ type Validation struct {
 	validateReturns struct {
 		result1 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *Validation) Validate(skipFileCheck bool) error {
@@ -19,6 +21,7 @@ func (fake *Validation) Validate(skipFileCheck bool) error {
 	fake.validateArgsForCall = append(fake.validateArgsForCall, struct {
 		skipFileCheck bool
 	}{skipFileCheck})
+	fake.recordInvocation("Validate", []interface{}{skipFileCheck})
 	fake.validateMutex.Unlock()
 	if fake.ValidateStub != nil {
 		return fake.ValidateStub(skipFileCheck)
@@ -44,4 +47,24 @@ func (fake *Validation) ValidateReturns(result1 error) {
 	fake.validateReturns = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *Validation) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.validateMutex.RLock()
+	defer fake.validateMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *Validation) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }

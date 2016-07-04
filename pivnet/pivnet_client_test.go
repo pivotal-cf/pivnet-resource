@@ -8,8 +8,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-golang/lager"
 )
 
 var _ = Describe("PivnetClient", func() {
@@ -23,7 +23,6 @@ var _ = Describe("PivnetClient", func() {
 		etagHeader []http.Header
 
 		newClientConfig pivnet.NewClientConfig
-		fakeLogger      logger.Logger
 	)
 
 	BeforeEach(func() {
@@ -46,14 +45,15 @@ var _ = Describe("PivnetClient", func() {
 		server = ghttp.NewServer()
 		token = "my-auth-token"
 		userAgent = "pivnet-resource/0.1.0 (some-url)"
+		logger := lager.NewLogger("doesn't matter")
 
-		fakeLogger = logger.NewLogger(GinkgoWriter)
 		newClientConfig = pivnet.NewClientConfig{
 			Endpoint:  server.URL(),
 			Token:     token,
 			UserAgent: userAgent,
 		}
-		client = pivnet.NewClient(newClientConfig, fakeLogger)
+
+		client = pivnet.NewClient(newClientConfig, logger)
 	})
 
 	AfterEach(func() {
@@ -123,7 +123,8 @@ var _ = Describe("PivnetClient", func() {
 	Context("when parsing the url fails with error", func() {
 		It("forwards the error", func() {
 			newClientConfig.Endpoint = "%%%"
-			client = pivnet.NewClient(newClientConfig, fakeLogger)
+			logger := lager.NewLogger("doesn't matter")
+			client = pivnet.NewClient(newClientConfig, logger)
 
 			_, err := client.ReleasesForProductSlug("some product")
 			Expect(err).To(HaveOccurred())
@@ -134,7 +135,8 @@ var _ = Describe("PivnetClient", func() {
 	Context("when making the request fails with error", func() {
 		It("forwards the error", func() {
 			newClientConfig.Endpoint = "https://not-a-real-url.com"
-			client = pivnet.NewClient(newClientConfig, fakeLogger)
+			logger := lager.NewLogger("doesn't matter")
+			client = pivnet.NewClient(newClientConfig, logger)
 
 			_, err := client.ReleasesForProductSlug("some-product")
 			Expect(err).To(HaveOccurred())

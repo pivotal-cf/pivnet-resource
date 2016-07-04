@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-golang/lager"
 )
 
 type Client interface {
@@ -16,7 +16,7 @@ type client struct {
 	sourcesDir     string
 
 	transport Transport
-	logger    logger.Logger
+	logger    lager.Logger
 }
 
 type Config struct {
@@ -24,7 +24,7 @@ type Config struct {
 	SourcesDir     string
 
 	Transport Transport
-	Logger    logger.Logger
+	Logger    lager.Logger
 }
 
 func NewClient(config Config) Client {

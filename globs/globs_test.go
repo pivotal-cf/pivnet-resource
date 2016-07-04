@@ -8,13 +8,13 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf-experimental/pivnet-resource/globs"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-golang/lager"
 )
 
 var _ = Describe("Globber", func() {
 	Describe("ExactGlobs", func() {
 		var (
-			l             logger.Logger
+			l             lager.Logger
 			globberConfig globs.GlobberConfig
 			globber       globs.Globber
 
@@ -23,7 +23,8 @@ var _ = Describe("Globber", func() {
 		)
 
 		BeforeEach(func() {
-			l = logger.NewLogger(GinkgoWriter)
+			l = lager.NewLogger("glob tests")
+			l.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
 			var err error
 			tempDir, err = ioutil.TempDir("", "pivnet-resource")

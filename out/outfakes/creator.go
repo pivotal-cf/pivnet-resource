@@ -15,11 +15,14 @@ type Creator struct {
 		result1 pivnet.Release
 		result2 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *Creator) Create() (pivnet.Release, error) {
 	fake.createMutex.Lock()
 	fake.createArgsForCall = append(fake.createArgsForCall, struct{}{})
+	fake.recordInvocation("Create", []interface{}{})
 	fake.createMutex.Unlock()
 	if fake.CreateStub != nil {
 		return fake.CreateStub()
@@ -40,4 +43,24 @@ func (fake *Creator) CreateReturns(result1 pivnet.Release, result2 error) {
 		result1 pivnet.Release
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *Creator) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.createMutex.RLock()
+	defer fake.createMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *Creator) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }

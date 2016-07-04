@@ -11,11 +11,14 @@ type Globber struct {
 		result1 []string
 		result2 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *Globber) ExactGlobs() ([]string, error) {
 	fake.exactGlobsMutex.Lock()
 	fake.exactGlobsArgsForCall = append(fake.exactGlobsArgsForCall, struct{}{})
+	fake.recordInvocation("ExactGlobs", []interface{}{})
 	fake.exactGlobsMutex.Unlock()
 	if fake.ExactGlobsStub != nil {
 		return fake.ExactGlobsStub()
@@ -36,4 +39,24 @@ func (fake *Globber) ExactGlobsReturns(result1 []string, result2 error) {
 		result1 []string
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *Globber) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.exactGlobsMutex.RLock()
+	defer fake.exactGlobsMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *Globber) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }

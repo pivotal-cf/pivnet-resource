@@ -8,9 +8,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger/loggerfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-golang/lager"
 )
 
 var _ = Describe("PivnetClient - release dependencies", func() {
@@ -22,7 +21,6 @@ var _ = Describe("PivnetClient - release dependencies", func() {
 		userAgent  string
 
 		newClientConfig pivnet.NewClientConfig
-		fakeLogger      logger.Logger
 
 		productSlug string
 		releaseID   int
@@ -33,17 +31,17 @@ var _ = Describe("PivnetClient - release dependencies", func() {
 		apiAddress = server.URL()
 		token = "my-auth-token"
 		userAgent = "pivnet-resource/0.1.0 (some-url)"
-
 		productSlug = "some slug"
 		releaseID = 2345
+		logger := lager.NewLogger("doesn't matter")
 
-		fakeLogger = &loggerfakes.FakeLogger{}
 		newClientConfig = pivnet.NewClientConfig{
 			Endpoint:  apiAddress,
 			Token:     token,
 			UserAgent: userAgent,
 		}
-		client = pivnet.NewClient(newClientConfig, fakeLogger)
+
+		client = pivnet.NewClient(newClientConfig, logger)
 	})
 
 	AfterEach(func() {

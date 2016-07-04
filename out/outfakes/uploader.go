@@ -17,6 +17,8 @@ type Uploader struct {
 	uploadReturns struct {
 		result1 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *Uploader) Upload(release pivnet.Release, exactGlobs []string) error {
@@ -30,6 +32,7 @@ func (fake *Uploader) Upload(release pivnet.Release, exactGlobs []string) error 
 		release    pivnet.Release
 		exactGlobs []string
 	}{release, exactGlobsCopy})
+	fake.recordInvocation("Upload", []interface{}{release, exactGlobsCopy})
 	fake.uploadMutex.Unlock()
 	if fake.UploadStub != nil {
 		return fake.UploadStub(release, exactGlobs)
@@ -55,4 +58,24 @@ func (fake *Uploader) UploadReturns(result1 error) {
 	fake.uploadReturns = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *Uploader) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.uploadMutex.RLock()
+	defer fake.uploadMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *Uploader) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }

@@ -8,8 +8,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-golang/lager"
 	"github.com/robdimsdale/sanitizer"
 
 	"testing"
@@ -107,7 +107,8 @@ var _ = BeforeSuite(func() {
 	GinkgoWriter = sanitizer
 
 	By("Creating pivnet client (for out-of-band operations)")
-	testLogger := logger.NewLogger(GinkgoWriter)
+	testLogger := lager.NewLogger("acceptance-tests")
+	testLogger.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
 
 	clientConfig := pivnet.NewClientConfig{
 		Endpoint:  endpoint,

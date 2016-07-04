@@ -18,6 +18,8 @@ type Finalizer struct {
 		result1 concourse.OutResponse
 		result2 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *Finalizer) Finalize(release pivnet.Release) (concourse.OutResponse, error) {
@@ -25,6 +27,7 @@ func (fake *Finalizer) Finalize(release pivnet.Release) (concourse.OutResponse, 
 	fake.finalizeArgsForCall = append(fake.finalizeArgsForCall, struct {
 		release pivnet.Release
 	}{release})
+	fake.recordInvocation("Finalize", []interface{}{release})
 	fake.finalizeMutex.Unlock()
 	if fake.FinalizeStub != nil {
 		return fake.FinalizeStub(release)
@@ -51,4 +54,24 @@ func (fake *Finalizer) FinalizeReturns(result1 concourse.OutResponse, result2 er
 		result1 concourse.OutResponse
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *Finalizer) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.finalizeMutex.RLock()
+	defer fake.finalizeMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *Finalizer) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }

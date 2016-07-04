@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/pivotal-golang/lager"
 )
 
 type createReleaseBody struct {
@@ -95,9 +97,9 @@ func (c client) CreateRelease(config CreateReleaseConfig) (Release, error) {
 
 	if config.ReleaseDate == "" {
 		body.Release.ReleaseDate = time.Now().Format("2006-01-02")
-		c.logger.Debugf(
-			"No release date found - defaulting to %s\n",
-			body.Release.ReleaseDate,
+		c.logger.Debug(
+			"No release date found, defaulting",
+			lager.Data{"default data": body.Release.ReleaseDate},
 		)
 	}
 
@@ -150,17 +152,17 @@ func (c client) ReleaseETag(productSlug string, release Release) (string, error)
 	rawEtag := resp.Header.Get("ETag")
 
 	if rawEtag == "" {
-		c.logger.Debugf("Missing ETag")
+		c.logger.Debug("Missing ETag")
 		return "", fmt.Errorf("ETag header not present")
 	}
 
-	c.logger.Debugf("Received ETag: %v\n", rawEtag)
+	c.logger.Debug("Received ETag", lager.Data{"etag": rawEtag})
 
 	// Weak ETag looks like: W/"my-etag"; strong ETag looks like: "my-etag"
 	splitRawEtag := strings.SplitN(rawEtag, `"`, -1)
 
 	if len(splitRawEtag) < 2 {
-		c.logger.Debugf("Malformed ETag: %s\n", rawEtag)
+		c.logger.Debug("Malformed ETag", lager.Data{"etag": rawEtag})
 		return "", fmt.Errorf("ETag header malformed: %s", rawEtag)
 	}
 

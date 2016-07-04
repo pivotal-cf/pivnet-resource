@@ -9,15 +9,14 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader/uploaderfakes"
+	"github.com/pivotal-golang/lager"
 )
 
 var _ = Describe("Uploader", func() {
 	Describe("UploadFile", func() {
 		var (
-			l              logger.Logger
 			fakeTransport  *uploaderfakes.FakeTransport
 			uploaderConfig uploader.Config
 			uploaderClient uploader.Client
@@ -29,7 +28,7 @@ var _ = Describe("Uploader", func() {
 		)
 
 		BeforeEach(func() {
-			l = logger.NewLogger(GinkgoWriter)
+			l := lager.NewLogger("doesn't matter")
 			fakeTransport = &uploaderfakes.FakeTransport{}
 
 			var err error

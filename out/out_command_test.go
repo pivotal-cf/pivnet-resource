@@ -228,9 +228,9 @@ var _ = Describe("Out", func() {
 				_, err := cmd.Run(request)
 				Expect(err).NotTo(HaveOccurred())
 
-				message, types := logger.DebugfArgsForCall(1)
-				Expect(message).To(Equal("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m\n"))
-				Expect(types[0].(string)).To(Equal("version_file"))
+				message, data := logger.DebugArgsForCall(0)
+				Expect(message).To(Equal("DEPRECATION WARNING, this file is deprecated and will be removed in a future release"))
+				Expect(data[0]["file"]).To(Equal("version_file"))
 			})
 		})
 	})
