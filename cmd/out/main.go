@@ -12,7 +12,6 @@ import (
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/globs"
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out"
@@ -22,6 +21,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
+	"github.com/pivotal-golang/lager"
 	"github.com/robdimsdale/sanitizer"
 )
 
@@ -65,7 +65,8 @@ func main() {
 	sanitized := concourse.SanitizedSource(input.Source)
 	sanitizer := sanitizer.NewSanitizer(sanitized, os.Stderr)
 
-	l := logger.NewLogger(sanitizer)
+	l = lager.NewLogger("pivnet-resource")
+	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
 
 	var endpoint string
 	if input.Source.Endpoint != "" {
@@ -80,11 +81,9 @@ func main() {
 		UserAgent: useragent.UserAgent(version, "put", input.Source.ProductSlug),
 	}
 
-	specialLogger := logger.NewLogger(ioutil.Discard)
-
 	pivnetClient := pivnet.NewClient(
 		clientConfig,
-		specialLogger,
+		l,
 	)
 
 	bucket := input.Source.Bucket
@@ -171,15 +170,15 @@ func main() {
 
 	response, err := outCmd.Run(input)
 	if err != nil {
-		l.Debugf("Exiting with error: %v\n", err)
+		l.Debug("Exiting with error", lager.Data{"error": err})
 		log.Fatalln(err)
 	}
 
-	l.Debugf("Returning output: %+v\n", response)
+	l.Debug("Returning output", lager.Data{"response": response})
 
 	err = json.NewEncoder(os.Stdout).Encode(response)
 	if err != nil {
-		l.Debugf("Exiting with error: %v\n", err)
+		l.Debug("Exiting with error", lager.Data{"error": err})
 		log.Fatalln(err)
 	}
 }
