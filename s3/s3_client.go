@@ -6,7 +6,7 @@ import (
 	"io"
 	"os/exec"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/logger"
+	"github.com/pivotal-golang/lager"
 )
 
 type Client interface {
@@ -19,7 +19,7 @@ type client struct {
 	regionName      string
 	bucket          string
 
-	logger logger.Logger
+	logger lager.Logger
 
 	stdout io.Writer
 	stderr io.Writer
@@ -33,7 +33,7 @@ type NewClientConfig struct {
 	RegionName      string
 	Bucket          string
 
-	Logger logger.Logger
+	Logger lager.Logger
 
 	Stdout io.Writer
 	Stderr io.Writer
@@ -68,11 +68,7 @@ func (c client) Upload(fileGlob string, to string, sourcesDir string) error {
 		},
 	}
 
-	c.logger.Debugf(
-		"Input to s3out: %+v, sourcesDir: %s\n",
-		s3Input,
-		sourcesDir,
-	)
+	c.logger.Debug("Input to s3out", lager.Data{"input": s3Input, "sources dir": sourcesDir})
 
 	cmd := exec.Command(c.outBinaryPath, sourcesDir)
 
