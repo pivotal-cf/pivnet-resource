@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -30,11 +31,16 @@ func main() {
 
 	var input concourse.CheckRequest
 
-	logger := log.New(os.Stderr, "pivnet check", log.LstdFlags)
+	logFile, err := ioutil.TempFile("", "pivnet-check.log")
+	if err != nil {
+		log.Printf("could not create log file")
+	}
+
+	logger := log.New(logFile, "pivnet check", log.LstdFlags)
 
 	logger.Printf("PivNet Resource version: %s", version)
 
-	err := json.NewDecoder(os.Stdin).Decode(&input)
+	err = json.NewDecoder(os.Stdin).Decode(&input)
 	if err != nil {
 		log.Fatalf("Exiting with error: %s", err)
 	}

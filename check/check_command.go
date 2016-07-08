@@ -113,12 +113,16 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return nil, err
 	}
 
+	c.logger.Printf("New versions contained: %s", newVersions)
+
 	reversedVersions, err := versions.Reverse(newVersions)
 	if err != nil {
 		// Untested because versions.Reverse cannot be forced to return an error.
 		return nil, err
 	}
 	c.logger.Debug("Reversed versions", lager.Data{"reversed_versions": reversedVersions})
+
+	c.logger.Printf("Reversed versions contained: %s", reversedVersions)
 
 	var out concourse.CheckResponse
 	for _, v := range reversedVersions {
