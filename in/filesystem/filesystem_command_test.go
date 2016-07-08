@@ -3,23 +3,23 @@ package filesystem_test
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in/filesystem"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
-	"github.com/pivotal-golang/lager/lagertest"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("FileWriter", func() {
 	var (
 		fileWriter  filesystem.FileWriter
 		downloadDir string
-		testLogger  *lagertest.TestLogger
 	)
 
 	BeforeEach(func() {
@@ -27,9 +27,9 @@ var _ = Describe("FileWriter", func() {
 		downloadDir, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
 
-		testLogger = lagertest.NewTestLogger("In FileWriter")
+		logging := log.New(ioutil.Discard, "doesn't matter", 0)
 
-		fileWriter = filesystem.NewFileWriter(downloadDir, testLogger)
+		fileWriter = filesystem.NewFileWriter(downloadDir, logging)
 	})
 
 	AfterEach(func() {

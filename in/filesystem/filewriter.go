@@ -3,11 +3,11 @@ package filesystem
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
-	"github.com/pivotal-golang/lager"
 	"gopkg.in/yaml.v2"
 )
 
@@ -21,10 +21,10 @@ type FileWriter interface {
 
 type fileWriter struct {
 	downloadDir string
-	logger      lager.Logger
+	logger      *log.Logger
 }
 
-func NewFileWriter(downloadDir string, logger lager.Logger) FileWriter {
+func NewFileWriter(downloadDir string, logger *log.Logger) FileWriter {
 	return &fileWriter{
 		downloadDir: downloadDir,
 		logger:      logger,
@@ -33,13 +33,7 @@ func NewFileWriter(downloadDir string, logger lager.Logger) FileWriter {
 
 func (w fileWriter) WriteMetadataYAMLFile(mdata metadata.Metadata) error {
 	yamlMetadataFilepath := filepath.Join(w.downloadDir, "metadata.yaml")
-	w.logger.Debug(
-		"Writing metadata to json file",
-		lager.Data{
-			"metadata": mdata,
-			"filepath": yamlMetadataFilepath,
-		},
-	)
+	w.logger.Println("Writing metadata to json file")
 
 	yamlMetadata, err := yaml.Marshal(mdata)
 	if err != nil {
@@ -58,13 +52,7 @@ func (w fileWriter) WriteMetadataYAMLFile(mdata metadata.Metadata) error {
 
 func (w fileWriter) WriteMetadataJSONFile(mdata metadata.Metadata) error {
 	jsonMetadataFilepath := filepath.Join(w.downloadDir, "metadata.json")
-	w.logger.Debug(
-		"Writing metadata to json file",
-		lager.Data{
-			"metadata": mdata,
-			"filepath": jsonMetadataFilepath,
-		},
-	)
+	w.logger.Println("Writing metadata to json file")
 
 	jsonMetadata, err := json.Marshal(mdata)
 	if err != nil {
@@ -84,13 +72,7 @@ func (w fileWriter) WriteMetadataJSONFile(mdata metadata.Metadata) error {
 func (w fileWriter) WriteVersionFile(versionWithETag string) error {
 	versionFilepath := filepath.Join(w.downloadDir, "version")
 
-	w.logger.Debug(
-		"Writing version to file",
-		lager.Data{
-			"version_with_etag": versionWithETag,
-			"version_filepath":  versionFilepath,
-		},
-	)
+	w.logger.Println("Writing version to file")
 
 	err := ioutil.WriteFile(versionFilepath, []byte(versionWithETag), os.ModePerm)
 	if err != nil {

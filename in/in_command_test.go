@@ -16,7 +16,6 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum/md5sumfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
-	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 )
 
@@ -37,8 +36,6 @@ var _ = Describe("In", func() {
 		productFile2 pivnet.ProductFile
 
 		releaseDependencies []pivnet.ReleaseDependency
-
-		testLogger lager.Logger
 
 		productVersion  string
 		etag            string
@@ -177,7 +174,7 @@ var _ = Describe("In", func() {
 				ProductSlug: productSlug,
 			},
 			Version: concourse.Version{
-				versionWithETag,
+				ProductVersion: versionWithETag,
 			},
 		}
 	})

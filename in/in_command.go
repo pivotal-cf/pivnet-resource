@@ -1,7 +1,9 @@
 package in
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"path/filepath"
 	"strings"
 
@@ -14,11 +16,10 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
-	"github.com/pivotal-golang/lager"
 )
 
 type InCommand struct {
-	logger       lager.Logger
+	logger       *log.Logger
 	downloadDir  string
 	pivnetClient gp.Client
 	filter       filter.Filter
@@ -28,7 +29,7 @@ type InCommand struct {
 }
 
 func NewInCommand(
-	logger lager.Logger,
+	logger *log.Logger,
 	pivnetClient gp.Client,
 	filter filter.Filter,
 	downloader downloader.Downloader,
@@ -46,46 +47,31 @@ func NewInCommand(
 }
 
 func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error) {
-	c.logger.Debug("Received input", lager.Data{"input": input})
+	c.logger.Printf("Received input: %s", input)
 
 	productSlug := input.Source.ProductSlug
 
 	productVersion, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
 	if err != nil {
-		c.logger.Debug("Parsing of etag failed; continuing without it")
+		c.logger.Println("Parsing of etag failed; continuing without it")
 		productVersion = input.Version.ProductVersion
 	}
 
-	c.logger.Debug(
-		"Getting release",
-		lager.Data{
-			"product_slug":    productSlug,
-			"product_version": productVersion,
-			"etag":            etag,
-		},
-	)
+	c.logger.Printf("Getting release for product_slug %s and product_version %s", productSlug, productVersion)
 
 	release, err := c.pivnetClient.GetRelease(productSlug, productVersion)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Debug("Release", lager.Data{"release": release})
-
-	c.logger.Debug(
-		"Accepting EULA",
-		lager.Data{
-			"product_slug": productSlug,
-			"release_id":   release.ID,
-		},
-	)
+	c.logger.Printf("Accepting EULA for release_id %d", release.ID)
 
 	err = c.pivnetClient.AcceptEULA(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Debug("Getting product files", lager.Data{"release_id": release.ID})
+	c.logger.Println("Getting product files")
 
 	productFiles, err := c.pivnetClient.GetProductFiles(productSlug, release.ID)
 	if err != nil {
@@ -101,26 +87,14 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		}
 	}
 
-	c.logger.Debug("Found product files", lager.Data{"product_files": productFiles})
-
-	c.logger.Debug("Getting release dependencies", lager.Data{"release_id": release.ID})
+	c.logger.Println("Getting release dependencies")
 
 	releaseDependencies, err := c.pivnetClient.ReleaseDependencies(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Debug(
-		"Found release dependencies",
-		lager.Data{"release_dependencies": releaseDependencies},
-	)
-
-	err = c.downloadFiles(
-		input.Params.Globs,
-		productFiles,
-		productSlug,
-		release.ID,
-	)
+	err = c.downloadFiles(input.Params.Globs, productFiles, productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
@@ -200,28 +174,13 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	return out, nil
 }
 
-func (c InCommand) downloadFiles(
-	globs []string,
-	productFiles []pivnet.ProductFile,
-	productSlug string,
-	releaseID int,
-) error {
-	c.logger.Debug(
-		"Getting download links",
-		lager.Data{
-			"product_files": productFiles,
-		},
-	)
+func (c InCommand) downloadFiles(globs []string, productFiles []pivnet.ProductFile, productSlug string, releaseID int) error {
+	c.logger.Println("Getting download links")
 
 	downloadLinks := c.filter.DownloadLinks(productFiles)
 
 	if len(globs) > 0 {
-		c.logger.Debug(
-			"Filtering download links with globs",
-			lager.Data{
-				"globs": globs,
-			},
-		)
+		c.logger.Println("Filtering download links by glob")
 
 		var err error
 		downloadLinks, err = c.filter.DownloadLinksByGlob(downloadLinks, globs)
@@ -229,12 +188,7 @@ func (c InCommand) downloadFiles(
 			return err
 		}
 
-		c.logger.Debug(
-			"Downloading files",
-			lager.Data{
-				"download_links": downloadLinks,
-			},
-		)
+		c.logger.Println("Downloading files")
 
 		files, err := c.downloader.Download(downloadLinks)
 		if err != nil {
@@ -257,8 +211,6 @@ func (c InCommand) downloadFiles(
 
 			fileMD5s[fileName] = p.MD5
 		}
-
-		c.logger.Debug("All file MD5s", lager.Data{"md5s": fileMD5s})
 
 		err = c.compareMD5s(files, fileMD5s)
 		if err != nil {
@@ -295,14 +247,11 @@ func (c InCommand) addReleaseMetadata(concourseMetadata []concourse.Metadata, re
 }
 
 func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]string) error {
+	c.logger.Println("Calcuating MD5 for downloaded files")
+
 	for _, downloadPath := range filepaths {
 		_, f := filepath.Split(downloadPath)
-		c.logger.Debug(
-			"Calcuating MD5 for downloaded file",
-			lager.Data{
-				"path": downloadPath,
-			},
-		)
+
 		md5, err := c.fileSummer.SumFile(downloadPath)
 		if err != nil {
 			return err
@@ -310,21 +259,11 @@ func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]strin
 
 		expectedMD5 := expectedMD5s[f]
 		if md5 != expectedMD5 {
-			return fmt.Errorf(
-				"Failed MD5 comparison for file: %s. Expected %s, got %s\n",
-				f,
-				expectedMD5,
-				md5,
-			)
+			log.Printf("Failed MD5 comparison for file: %s. Expected %s, got %s\n", f, expectedMD5, md5)
+			return errors.New("failed comparison")
 		}
 
-		c.logger.Debug(
-			"MD5 for downloaded file matched expected",
-			lager.Data{
-				"path": downloadPath,
-				"md5":  md5,
-			},
-		)
+		c.logger.Println("MD5 for downloaded file matched")
 	}
 
 	return nil

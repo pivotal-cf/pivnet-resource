@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 
@@ -24,8 +23,6 @@ import (
 var (
 	// version is deliberately left uninitialized so it can be set at compile-time
 	version string
-
-	l lager.Logger
 )
 
 func main() {
@@ -33,9 +30,12 @@ func main() {
 		version = "dev"
 	}
 
+	logger := log.New(os.Stderr, "pivnet in", log.LstdFlags)
+
+	logger.Printf("PivNet Resource version: %s", version)
+
 	if len(os.Args) < 2 {
-		log.Fatalln(fmt.Sprintf(
-			"not enough args - usage: %s <sources directory>", os.Args[0]))
+		log.Fatalf("not enough args - usage: %s <sources directory>", os.Args[0])
 	}
 
 	downloadDir := os.Args[1]
@@ -46,28 +46,26 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	fmt.Fprintf(os.Stderr, "PivNet Resource version: %s\n", version)
-
 	sanitized := concourse.SanitizedSource(input.Source)
 	sanitizer := sanitizer.NewSanitizer(sanitized, os.Stderr)
 
-	l = lager.NewLogger("pivnet-resource")
+	l := lager.NewLogger("pivnet-resource")
 	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
+	ls := lagershim.NewLagerShim(l)
 
-	l.Debug("Creating download directory", lager.Data{"download_dir": downloadDir})
+	logger.Printf("Creating download directory: %s", downloadDir)
+
 	err = os.MkdirAll(downloadDir, os.ModePerm)
 	if err != nil {
-		l.Error("Exiting with error", err)
-		log.Fatalln(err)
+		log.Fatalf("Exiting with error: %s", err)
 	}
 
 	err = validator.NewInValidator(input).Validate()
 	if err != nil {
-		l.Error("Exiting with error", err)
-		log.Fatalln(err)
+		log.Fatalf("Exiting with error: %s", err)
 	}
 
-	d := downloader.NewDownloader(input.Source.APIToken, downloadDir, l)
+	d := downloader.NewDownloader(input.Source.APIToken, downloadDir, logger)
 	fs := md5sum.NewFileSummer()
 
 	var endpoint string
@@ -76,8 +74,6 @@ func main() {
 	} else {
 		endpoint = pivnet.DefaultHost
 	}
-
-	ls := lagershim.NewLagerShim(l)
 
 	clientConfig := pivnet.ClientConfig{
 		Host:      endpoint,
@@ -92,10 +88,10 @@ func main() {
 
 	f := filter.NewFilter()
 
-	fileWriter := filesystem.NewFileWriter(downloadDir, l)
+	fileWriter := filesystem.NewFileWriter(downloadDir, logger)
 
 	response, err := in.NewInCommand(
-		l,
+		logger,
 		client,
 		f,
 		d,
@@ -103,13 +99,11 @@ func main() {
 		fileWriter,
 	).Run(input)
 	if err != nil {
-		l.Error("Exiting with error", err)
-		log.Fatalln(err)
+		log.Fatalf("Exiting with error: %s", err)
 	}
 
 	err = json.NewEncoder(os.Stdout).Encode(response)
 	if err != nil {
-		l.Error("Exiting with error", err)
-		log.Fatalln(err)
+		log.Fatalf("Exiting with error: %s", err)
 	}
 }
