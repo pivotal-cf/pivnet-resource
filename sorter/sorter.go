@@ -4,12 +4,13 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
+	"github.com/pivotal-cf-experimental/go-pivnet"
 )
 
 //go:generate counterfeiter . Sorter
 
 type Sorter interface {
-	SortBySemver([]string) ([]string, error)
+	SortBySemver([]pivnet.Release) ([]pivnet.Release, error)
 }
 
 type sorter struct {
@@ -19,32 +20,41 @@ func NewSorter() Sorter {
 	return &sorter{}
 }
 
-func (sorter) SortBySemver(input []string) ([]string, error) {
-	versions, err := toSemverVersions(input)
+func (sorter) SortBySemver(input []pivnet.Release) ([]pivnet.Release, error) {
+	versions := make([]string, len(input))
+	versionsToReleases := make(map[string]pivnet.Release)
+
+	for i, release := range input {
+		appended := appendZerosIfNecessary(release.Version)
+		versionsToReleases[appended] = release
+		versions[i] = appended
+	}
+
+	semverVersions, err := toSemverVersions(versions)
 	if err != nil {
 		return nil, err
 	}
-	semver.Sort(versions)
+	semver.Sort(semverVersions)
 
-	sortedStrings := toStrings(versions)
+	sortedStrings := toStrings(semverVersions)
 
-	return reverse(sortedStrings), nil
+	// we know we want to order highest-first
+	reversedStrings := reverse(sortedStrings)
+
+	sortedReleases := make([]pivnet.Release, len(input))
+
+	for i, v := range reversedStrings {
+		sortedReleases[i] = versionsToReleases[v]
+	}
+
+	return sortedReleases, nil
 }
 
 func toSemverVersions(input []string) (semver.Versions, error) {
 	versions := make([]semver.Version, len(input))
 
 	for i, s := range input {
-		probablySemver := s
-		segs := strings.SplitN(probablySemver, ".", 3)
-		switch len(segs) {
-		case 2:
-			probablySemver += ".0"
-		case 1:
-			probablySemver += ".0.0"
-		}
-
-		v, err := semver.Parse(probablySemver)
+		v, err := semver.Parse(s)
 		if err != nil {
 			return nil, err
 		}
@@ -52,6 +62,20 @@ func toSemverVersions(input []string) (semver.Versions, error) {
 	}
 
 	return versions, nil
+}
+
+func appendZerosIfNecessary(input string) string {
+	probablySemver := input
+
+	segs := strings.SplitN(probablySemver, ".", 3)
+	switch len(segs) {
+	case 2:
+		probablySemver += ".0"
+	case 1:
+		probablySemver += ".0.0"
+	}
+
+	return probablySemver
 }
 
 func toStrings(input semver.Versions) []string {
