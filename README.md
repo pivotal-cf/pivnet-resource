@@ -150,21 +150,25 @@ See [Metadata file](#metadata-file) for more details.
   downloading files.
   - If one or more globs fails to match any files the release download fails
   with error.
-  - If `globs` is not provided, no files will be downloaded.
+  - If `globs` is not provided, **no files will be downloaded**.
   - Files are downloaded to the working directory (e.g. `/tmp/build/get`) and the
   file names will be the same as they are on Pivotal Network - e.g. a file with
   name `some-file.txt` will be downloaded to `/tmp/build/get/some-file.txt`.
+  - Downloaded files will be avaliable to tasks under the folder specified by the 
+  tasks inputs. File names will be preserved.
 
 ### `out`: Upload a product to Pivotal Network.
 
 Creates a new release on Pivotal Network with the provided version and metadata.
 
 Also optionally uploads one or more files to the Pivotal Network bucket under
-the provided `s3_filepath_prefix`, adding them both to the Pivotal Network as well as to
-the newly-created release. The MD5 checksum of each file is taken locally, and
+the provided `s3_filepath_prefix`, adding them both to the Pivotal Network as well as 
+to the newly-created release. The MD5 checksum of each file is taken locally, and
 added to the file metadata in Pivotal Network.
 
-If a product release already exists on Pivotal Network with the desired version, the resource will exit with error without attempting to create the release or upload any files.
+If a product release already exists on Pivotal Network with the desired version, the 
+resource will exit with error without attempting to create the release or upload any 
+files.
 
 #### Parameters
 
