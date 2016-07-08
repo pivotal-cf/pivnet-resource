@@ -47,6 +47,7 @@ func CombineVersionAndETag(version string, etag string) (string, error) {
 	return fmt.Sprintf("%s%s%s", version, etagDelimiter, etag), nil
 }
 
+// ProductVersions adds the release ETags to the release versions
 func ProductVersions(c gp.ExtendedClient, productSlug string, releases []pivnet.Release) ([]string, error) {
 	var versions []string
 	for _, r := range releases {

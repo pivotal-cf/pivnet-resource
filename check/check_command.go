@@ -7,6 +7,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
+	"github.com/pivotal-cf-experimental/pivnet-resource/sorter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 	"github.com/pivotal-golang/lager"
 )
@@ -17,6 +18,7 @@ type CheckCommand struct {
 	filter         filter.Filter
 	pivnetClient   gp.Client
 	extendedClient gp.ExtendedClient
+	semverSorter   sorter.Sorter
 }
 
 func NewCheckCommand(
@@ -25,6 +27,7 @@ func NewCheckCommand(
 	filter filter.Filter,
 	pivnetClient gp.Client,
 	extendedClient gp.ExtendedClient,
+	semverSorter sorter.Sorter,
 ) *CheckCommand {
 	return &CheckCommand{
 		logger:         logger,
@@ -32,6 +35,7 @@ func NewCheckCommand(
 		filter:         filter,
 		pivnetClient:   pivnetClient,
 		extendedClient: extendedClient,
+		semverSorter:   semverSorter,
 	}
 }
 
@@ -87,20 +91,31 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
+	if input.Source.SortBy == concourse.SortBySemver {
+		releases, err = c.semverSorter.SortBySemver(releases)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// ls := lagershim.NewLagerShim(c.logger)
 	// extendedClient := extension.NewExtendedClient(c.pivnetClient, ls)
-	filteredVersions, err := versions.ProductVersions(c.extendedClient, productSlug, releases)
+	versionsWithETags, err := versions.ProductVersions(
+		c.extendedClient,
+		productSlug,
+		releases,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	c.logger.Debug("Filtered versions", lager.Data{"filtered_versions": filteredVersions})
+	c.logger.Debug("Filtered versions with ETags", lager.Data{"filtered_versions": versionsWithETags})
 
-	if len(filteredVersions) == 0 {
+	if len(versionsWithETags) == 0 {
 		return concourse.CheckResponse{}, nil
 	}
 
-	newVersions, err := versions.Since(filteredVersions, input.Version.ProductVersion)
+	newVersions, err := versions.Since(versionsWithETags, input.Version.ProductVersion)
 	if err != nil {
 		// Untested because versions.Since cannot be forced to return an error.
 		return nil, err
@@ -120,7 +135,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	}
 
 	if len(out) == 0 {
-		out = append(out, concourse.Version{ProductVersion: filteredVersions[0]})
+		out = append(out, concourse.Version{ProductVersion: versionsWithETags[0]})
 	}
 
 	c.logger.Debug("Returning output", lager.Data{"output:": out})

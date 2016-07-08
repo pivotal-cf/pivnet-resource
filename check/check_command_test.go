@@ -1,6 +1,7 @@
 package check_test
 
 import (
+	"errors"
 	"fmt"
 
 	. "github.com/onsi/ginkgo"
@@ -10,6 +11,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
+	"github.com/pivotal-cf-experimental/pivnet-resource/sorter/sorterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
@@ -20,6 +22,7 @@ var _ = Describe("Check", func() {
 		fakeFilter         *filterfakes.FakeFilter
 		fakePivnetClient   *gpfakes.FakeClient
 		fakeExtendedClient *gpfakes.FakeExtendedClient
+		fakeSorter         *sorterfakes.FakeSorter
 
 		testLogger lager.Logger
 
@@ -42,6 +45,7 @@ var _ = Describe("Check", func() {
 		fakeFilter = &filterfakes.FakeFilter{}
 		fakePivnetClient = &gpfakes.FakeClient{}
 		fakeExtendedClient = &gpfakes.FakeExtendedClient{}
+		fakeSorter = &sorterfakes.FakeSorter{}
 
 		releasesByReleaseTypeErr = nil
 		releasesByVersionErr = nil
@@ -106,6 +110,7 @@ var _ = Describe("Check", func() {
 			fakeFilter,
 			fakePivnetClient,
 			fakeExtendedClient,
+			fakeSorter,
 		)
 	})
 
@@ -318,6 +323,62 @@ var _ = Describe("Check", func() {
 				Expect(err).To(HaveOccurred())
 
 				Expect(err).To(Equal(releasesByVersionErr))
+			})
+		})
+	})
+
+	Context("when sorting by semver", func() {
+		var (
+			semverOrderedReleases []pivnet.Release
+		)
+
+		BeforeEach(func() {
+			checkRequest.Source.SortBy = concourse.SortBySemver
+
+			semverOrderedReleases = []pivnet.Release{
+				{
+					ID:      5432,
+					Version: "1.2.3",
+				},
+				{
+					ID:      6543,
+					Version: "2.3.4",
+				},
+			}
+
+			fakeSorter.SortBySemverReturns(semverOrderedReleases, nil)
+		})
+
+		It("invokes the semver sorter", func() {
+			response, err := checkCommand.Run(checkRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			versionWithETag, err := versions.CombineVersionAndETag(
+				"1.2.3", fmt.Sprintf("etag-%d", 5432),
+			)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(response).To(HaveLen(1))
+			Expect(response[0].ProductVersion).To(Equal(versionWithETag))
+			Expect(fakeSorter.SortBySemverCallCount()).To(Equal(1))
+		})
+
+		Context("when sorting by semver returns an error", func() {
+			var (
+				semverErr error
+			)
+
+			BeforeEach(func() {
+				semverErr = errors.New("semver error")
+
+				fakeSorter.SortBySemverReturns(nil, semverErr)
+			})
+
+			It("returns error", func() {
+				_, err := checkCommand.Run(checkRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(Equal(semverErr))
 			})
 		})
 	})

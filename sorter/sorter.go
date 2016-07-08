@@ -1,7 +1,10 @@
 package sorter
 
 import (
+	"fmt"
 	"strings"
+
+	"github.com/pivotal-golang/lager"
 
 	"github.com/blang/semver"
 	"github.com/pivotal-cf-experimental/go-pivnet"
@@ -14,68 +17,91 @@ type Sorter interface {
 }
 
 type sorter struct {
+	logger lager.Logger
 }
 
-func NewSorter() Sorter {
-	return &sorter{}
+func NewSorter(logger lager.Logger) Sorter {
+	return &sorter{
+		logger: logger,
+	}
 }
 
-func (sorter) SortBySemver(input []pivnet.Release) ([]pivnet.Release, error) {
-	versions := make([]string, len(input))
+// SortBySemver returns the provided releases, ordered by semantic versioning.
+// If a version cannot be parsed as semantic versioning, this is logged to stdout
+// and that release is not returned. No error is returned in this case.
+// Therefore the number of returned releases may be fewer than the number of
+// provided releases.
+func (s sorter) SortBySemver(input []pivnet.Release) ([]pivnet.Release, error) {
+	var versions []string
 	versionsToReleases := make(map[string]pivnet.Release)
 
-	for i, release := range input {
-		appended := appendZerosIfNecessary(release.Version)
-		versionsToReleases[appended] = release
-		versions[i] = appended
+	for _, release := range input {
+		appended := s.toValidSemver(release.Version)
+		if appended != "" {
+			versionsToReleases[appended] = release
+			versions = append(versions, appended)
+		}
 	}
 
-	semverVersions, err := toSemverVersions(versions)
-	if err != nil {
-		return nil, err
-	}
+	semverVersions := s.toSemverVersions(versions)
+
 	semver.Sort(semverVersions)
 
 	sortedStrings := toStrings(semverVersions)
 
-	// we know we want to order highest-first
-	reversedStrings := reverse(sortedStrings)
+	sortedReleases := make([]pivnet.Release, len(sortedStrings))
 
-	sortedReleases := make([]pivnet.Release, len(input))
-
-	for i, v := range reversedStrings {
+	for i, v := range sortedStrings {
 		sortedReleases[i] = versionsToReleases[v]
 	}
 
 	return sortedReleases, nil
 }
 
-func toSemverVersions(input []string) (semver.Versions, error) {
-	versions := make([]semver.Version, len(input))
+// toSemverVersions expects all versions are valid semver
+func (s sorter) toSemverVersions(input []string) semver.Versions {
+	var versions []semver.Version
 
-	for i, s := range input {
-		v, err := semver.Parse(s)
+	for _, str := range input {
+		v, err := semver.Parse(str)
 		if err != nil {
-			return nil, err
+			s.logger.Info(fmt.Sprintf("failed to parse semver: '%s' - should be valid by this point\n", str))
+		} else {
+			versions = append(versions, v)
 		}
-		versions[i] = v
 	}
 
-	return versions, nil
+	return versions
 }
 
-func appendZerosIfNecessary(input string) string {
-	probablySemver := input
-
-	segs := strings.SplitN(probablySemver, ".", 3)
-	switch len(segs) {
-	case 2:
-		probablySemver += ".0"
-	case 1:
-		probablySemver += ".0.0"
+// toValidSemver attempts to return the input as valid semver.
+// It appends .0 or .0.0 to the input
+// If this is still not valid semver, it gives up and returns empty string
+func (s sorter) toValidSemver(input string) string {
+	_, err := semver.Parse(input)
+	if err == nil {
+		return input
 	}
 
-	return probablySemver
+	s.logger.Info(fmt.Sprintf("failed to parse semver: '%s', appending zeros and trying again\n", input))
+	maybeSemver := input
+
+	segs := strings.SplitN(maybeSemver, ".", 3)
+	switch len(segs) {
+	case 2:
+		maybeSemver += ".0"
+	case 1:
+		maybeSemver += ".0.0"
+	}
+
+	_, err = semver.Parse(maybeSemver)
+	if err == nil {
+		return maybeSemver
+	}
+
+	s.logger.Info(fmt.Sprintf("still failed to parse semver: '%s', giving up\n", maybeSemver))
+
+	return ""
 }
 
 func toStrings(input semver.Versions) []string {
@@ -86,13 +112,4 @@ func toStrings(input semver.Versions) []string {
 	}
 
 	return strings
-}
-
-func reverse(input []string) []string {
-	count := len(input)
-	reversed := make([]string, count)
-	for i, s := range input {
-		reversed[count-1-i] = s
-	}
-	return reversed
 }

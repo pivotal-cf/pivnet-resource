@@ -37,6 +37,7 @@ func (f filter) ReleasesByReleaseType(releases []pivnet.Release, releaseType str
 	return filteredReleases, nil
 }
 
+// ReleasesByVersion returns all releases that match the provided version regex
 func (f filter) ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error) {
 	filteredReleases := make([]pivnet.Release, 0)
 

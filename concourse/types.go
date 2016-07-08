@@ -1,5 +1,12 @@
 package concourse
 
+type SortBy string
+
+const (
+	SortByNone   SortBy = "none"
+	SortBySemver SortBy = "semver"
+)
+
 type Source struct {
 	APIToken        string `json:"api_token"`
 	ProductSlug     string `json:"product_slug"`
@@ -10,6 +17,7 @@ type Source struct {
 	Endpoint        string `json:"endpoint"`
 	Region          string `json:"region"`
 	ReleaseType     string `json:"release_type"`
+	SortBy          SortBy `json:"sort_by"`
 }
 
 type CheckRequest struct {

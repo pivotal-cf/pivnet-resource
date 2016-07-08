@@ -13,6 +13,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/lagershim"
+	"github.com/pivotal-cf-experimental/pivnet-resource/sorter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
 	"github.com/pivotal-golang/lager"
@@ -78,12 +79,15 @@ func main() {
 
 	extendedClient := gp.NewExtendedClient(client, sp)
 
+	s := sorter.NewSorter(specialLogger)
+
 	response, err := check.NewCheckCommand(
 		version,
 		l,
 		f,
 		client,
 		extendedClient,
+		s,
 	).Run(input)
 	if err != nil {
 		l.Error("Exiting with error", err)
