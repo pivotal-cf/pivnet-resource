@@ -3,9 +3,9 @@ package check_test
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/check"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
@@ -13,8 +13,9 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sorter/sorterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
-	"github.com/pivotal-golang/lager"
-	"github.com/pivotal-golang/lager/lagertest"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Check", func() {
@@ -23,8 +24,6 @@ var _ = Describe("Check", func() {
 		fakePivnetClient   *gpfakes.FakeClient
 		fakeExtendedClient *gpfakes.FakeExtendedClient
 		fakeSorter         *sorterfakes.FakeSorter
-
-		testLogger lager.Logger
 
 		checkRequest concourse.CheckRequest
 		checkCommand *check.CheckCommand
@@ -39,13 +38,18 @@ var _ = Describe("Check", func() {
 		releasesByReleaseTypeErr error
 		releasesByVersionErr     error
 		etagErr                  error
+		logging                  *log.Logger
 	)
 
 	BeforeEach(func() {
 		fakeFilter = &filterfakes.FakeFilter{}
 		fakePivnetClient = &gpfakes.FakeClient{}
 		fakeExtendedClient = &gpfakes.FakeExtendedClient{}
+<<<<<<< 3bf769944a05b8aa50ef40a9132fc10cbac12eb2
 		fakeSorter = &sorterfakes.FakeSorter{}
+=======
+		logging = log.New(ioutil.Discard, "doesn't matter", 0)
+>>>>>>> Coverting check to log.Logger
 
 		releasesByReleaseTypeErr = nil
 		releasesByVersionErr = nil
@@ -102,11 +106,9 @@ var _ = Describe("Check", func() {
 
 		binaryVersion := "v0.1.2-unit-tests"
 
-		testLogger = lagertest.NewTestLogger("check unit tests")
-
 		checkCommand = check.NewCheckCommand(
+			logging,
 			binaryVersion,
-			testLogger,
 			fakeFilter,
 			fakePivnetClient,
 			fakeExtendedClient,

@@ -2,6 +2,7 @@ package check
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
@@ -13,7 +14,7 @@ import (
 )
 
 type CheckCommand struct {
-	logger         lager.Logger
+	logger         *log.Logger
 	binaryVersion  string
 	filter         filter.Filter
 	pivnetClient   gp.Client
@@ -22,8 +23,8 @@ type CheckCommand struct {
 }
 
 func NewCheckCommand(
+	logger *log.Logger,
 	binaryVersion string,
-	logger lager.Logger,
 	filter filter.Filter,
 	pivnetClient gp.Client,
 	extendedClient gp.ExtendedClient,
@@ -40,9 +41,9 @@ func NewCheckCommand(
 }
 
 func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckResponse, error) {
-	c.logger.Debug("Received input", lager.Data{"input": input})
+	c.logger.Println("Received input, starting Check CMD run")
 
-	c.logger.Debug("Getting all valid release types")
+	c.logger.Println("Getting all valid release types")
 	releaseTypes, err := c.pivnetClient.ReleaseTypes()
 	if err != nil {
 		return nil, err
@@ -53,8 +54,6 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		strings.Join(releaseTypes, "', '"),
 	)
 
-	c.logger.Debug("All release types", lager.Data{"release_types": releaseTypesPrintable})
-
 	releaseType := input.Source.ReleaseType
 	if releaseType != "" && !containsString(releaseTypes, releaseType) {
 		return nil, fmt.Errorf(
@@ -64,17 +63,16 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		)
 	}
 
-	c.logger.Debug("Getting all product versions")
 	productSlug := input.Source.ProductSlug
 
+	c.logger.Println("Getting all product versions")
 	releases, err := c.pivnetClient.ReleasesForProductSlug(productSlug)
 	if err != nil {
 		return nil, err
 	}
 
 	if releaseType != "" {
-		c.logger.Debug("Filtering all releases by release_type", lager.Data{"release_type": releaseType})
-
+		c.logger.Println("Filtering all releases by release_type")
 		releases, err = c.filter.ReleasesByReleaseType(releases, releaseType)
 		if err != nil {
 			return nil, err
@@ -83,8 +81,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	productVersion := input.Source.ProductVersion
 	if productVersion != "" {
-		c.logger.Debug("Filtering all releases by product_version", lager.Data{"product_version": productVersion})
-
+		c.logger.Println("Filtering all releases by product_version")
 		releases, err = c.filter.ReleasesByVersion(releases, productVersion)
 		if err != nil {
 			return nil, err
@@ -99,30 +96,22 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	// ls := lagershim.NewLagerShim(c.logger)
-	// extendedClient := extension.NewExtendedClient(c.pivnetClient, ls)
-	versionsWithETags, err := versions.ProductVersions(
-		c.extendedClient,
-		productSlug,
-		releases,
-	)
+	versionsWithETags, err := versions.ProductVersions(c.extendedClient, productSlug, releases)
 	if err != nil {
 		return nil, err
 	}
 
-	c.logger.Debug("Filtered versions with ETags", lager.Data{"filtered_versions": versionsWithETags})
-
 	if len(versionsWithETags) == 0 {
 		return concourse.CheckResponse{}, nil
 	}
+
+	c.logger.Println("Gathering new versions")
 
 	newVersions, err := versions.Since(versionsWithETags, input.Version.ProductVersion)
 	if err != nil {
 		// Untested because versions.Since cannot be forced to return an error.
 		return nil, err
 	}
-
-	c.logger.Debug("New versions", lager.Data{"new_versions": newVersions})
 
 	reversedVersions, err := versions.Reverse(newVersions)
 	if err != nil {
@@ -140,7 +129,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		out = append(out, concourse.Version{ProductVersion: versionsWithETags[0]})
 	}
 
-	c.logger.Debug("Returning output", lager.Data{"output:": out})
+	c.logger.Println("Finishing check and returning ouput")
 
 	return out, nil
 }

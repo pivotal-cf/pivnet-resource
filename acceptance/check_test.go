@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,6 +14,10 @@ import (
 )
 
 var _ = Describe("Check", func() {
+	const (
+		checkTimeout = 20 * time.Second
+	)
+
 	var (
 		productSlug = "p-mysql"
 
@@ -66,11 +71,6 @@ var _ = Describe("Check", func() {
 		response := concourse.CheckResponse{}
 		err := json.Unmarshal(session.Out.Contents(), &response)
 		Expect(err).ShouldNot(HaveOccurred())
-
-		By("Printing what is actually happening")
-		Eventually(session.Err).Should(gbytes.Say("pivnet-resource.Getting all valid release types"))
-		Eventually(session.Err).Should(gbytes.Say("pivnet-resource.Filtered versions"))
-		Eventually(session.Err).Should(gbytes.Say("pivnet-resource.Returning output"))
 
 		By("Validating all the expected elements were returned")
 		Expect(response).To(HaveLen(3))

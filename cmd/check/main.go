@@ -2,8 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -23,8 +21,6 @@ import (
 var (
 	// version is deliberately left uninitialized so it can be set at compile-time
 	version string
-
-	l lager.Logger
 )
 
 func main() {
@@ -34,24 +30,25 @@ func main() {
 
 	var input concourse.CheckRequest
 
-	fmt.Fprintf(os.Stderr, "PivNet Resource version: %s\n", version)
+	logger := log.New(os.Stderr, "pivnet check", log.LstdFlags)
+
+	logger.Printf("PivNet Resource version: %s", version)
 
 	err := json.NewDecoder(os.Stdin).Decode(&input)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Exiting with error: %v\n", err)
-		log.Fatalln(err)
+		log.Fatalf("Exiting with error: %s", err)
 	}
 
 	sanitized := concourse.SanitizedSource(input.Source)
 	sanitizer := sanitizer.NewSanitizer(sanitized, os.Stderr)
 
-	l = lager.NewLogger("pivnet-resource")
-	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
+	pivnetClientLogger := lager.NewLogger("pivnet-resource")
+	pivnetClientLogger.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
+	sp := lagershim.NewLagerShim(pivnetClientLogger)
 
 	err = validator.NewCheckValidator(input).Validate()
 	if err != nil {
-		l.Error("Exiting with error", err)
-		log.Fatalln(err)
+		log.Fatalf("Exiting with error: %s", err)
 	}
 
 	var endpoint string
@@ -60,10 +57,6 @@ func main() {
 	} else {
 		endpoint = pivnet.DefaultHost
 	}
-
-	specialLogger := lager.NewLogger("pivnet client")
-	specialLogger.RegisterSink(lager.NewWriterSink(ioutil.Discard, lager.DEBUG))
-	sp := lagershim.NewLagerShim(specialLogger)
 
 	clientConfig := pivnet.ClientConfig{
 		Host:      endpoint,
@@ -82,21 +75,19 @@ func main() {
 	s := sorter.NewSorter(specialLogger)
 
 	response, err := check.NewCheckCommand(
+		logger,
 		version,
-		l,
 		f,
 		client,
 		extendedClient,
 		s,
 	).Run(input)
 	if err != nil {
-		l.Error("Exiting with error", err)
-		log.Fatalln(err)
+		log.Fatalf("Exiting with error: %s", err)
 	}
 
 	err = json.NewEncoder(os.Stdout).Encode(response)
 	if err != nil {
-		l.Error("Exiting with error", err)
-		log.Fatalln(err)
+		log.Fatalf("Exiting with error: %s", err)
 	}
 }
