@@ -116,14 +116,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return concourse.CheckResponse{}, nil
 	}
 
-	reversedVersions, err := versions.Reverse(versionsWithETags)
-	if err != nil {
-		// Untested because versions.Since cannot be forced to return an error.
-		return nil, err
-	}
-	c.logger.Debug("Reversed versions", lager.Data{"reversed_versions": reversedVersions})
-
-	newVersions, err := versions.Since(reversedVersions, input.Version.ProductVersion)
+	newVersions, err := versions.Since(versionsWithETags, input.Version.ProductVersion)
 	if err != nil {
 		// Untested because versions.Since cannot be forced to return an error.
 		return nil, err
@@ -131,8 +124,15 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	c.logger.Debug("New versions", lager.Data{"new_versions": newVersions})
 
+	reversedVersions, err := versions.Reverse(newVersions)
+	if err != nil {
+		// Untested because versions.Reverse cannot be forced to return an error.
+		return nil, err
+	}
+	c.logger.Debug("Reversed versions", lager.Data{"reversed_versions": reversedVersions})
+
 	var out concourse.CheckResponse
-	for _, v := range newVersions {
+	for _, v := range reversedVersions {
 		out = append(out, concourse.Version{ProductVersion: v})
 	}
 

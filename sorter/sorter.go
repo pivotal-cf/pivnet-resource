@@ -26,7 +26,8 @@ func NewSorter(logger lager.Logger) Sorter {
 	}
 }
 
-// SortBySemver returns the provided releases, ordered by semantic versioning.
+// SortBySemver returns the provided releases, ordered by semantic versioning,
+// in descending order i.e. [4.2.3, 1.2.1, 1.2.0]
 // If a version cannot be parsed as semantic versioning, this is logged to stdout
 // and that release is not returned. No error is returned in this case.
 // Therefore the number of returned releases may be fewer than the number of
@@ -51,8 +52,10 @@ func (s sorter) SortBySemver(input []pivnet.Release) ([]pivnet.Release, error) {
 
 	sortedReleases := make([]pivnet.Release, len(sortedStrings))
 
+	// reverse
+	count := len(sortedStrings)
 	for i, v := range sortedStrings {
-		sortedReleases[i] = versionsToReleases[v]
+		sortedReleases[count-i-1] = versionsToReleases[v]
 	}
 
 	return sortedReleases, nil

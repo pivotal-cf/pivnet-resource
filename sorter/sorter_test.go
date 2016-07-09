@@ -21,7 +21,7 @@ var _ = Describe("Sorter", func() {
 	})
 
 	Describe("SortBySemver", func() {
-		It("sorts, highest first", func() {
+		It("sorts descending", func() {
 			input := releasesWithVersions(
 				"1.0.0", "2.4.1", "2.0.0", "2.4.1-edge.12", "2.4.1-edge.11",
 			)
@@ -30,20 +30,20 @@ var _ = Describe("Sorter", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(versionsFromReleases(returned)).To(Equal(
-				[]string{"1.0.0", "2.0.0", "2.4.1-edge.11", "2.4.1-edge.12", "2.4.1"}))
+				[]string{"2.4.1", "2.4.1-edge.12", "2.4.1-edge.11", "2.0.0", "1.0.0"}))
 		})
 
 		Context("when parsing a version as semver fails", func() {
 			It("ignores that value", func() {
 				input := releasesWithVersions(
-					"1.0.0", "2.4.1", "not-semver",
+					"1.0.1", "2.4.1", "not-semver",
 				)
 
 				returned, err := s.SortBySemver(input)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(versionsFromReleases(returned)).To(Equal(
-					[]string{"1.0.0", "2.4.1"}))
+					[]string{"2.4.1", "1.0.1"}))
 			})
 		})
 
@@ -57,7 +57,7 @@ var _ = Describe("Sorter", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(versionsFromReleases(returned)).To(Equal(
-					[]string{"1", "2.1", "2.4.1"}))
+					[]string{"2.4.1", "2.1", "1"}))
 			})
 		})
 
@@ -71,7 +71,7 @@ var _ = Describe("Sorter", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(versionsFromReleases(returned)).To(Equal(
-					[]string{"2.1", "2.4.1"}))
+					[]string{"2.4.1", "2.1"}))
 			})
 		})
 	})

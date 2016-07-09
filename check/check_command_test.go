@@ -340,33 +340,33 @@ var _ = Describe("Check", func() {
 
 			semverOrderedReleases = []pivnet.Release{
 				{
-					ID:      5432,
-					Version: "1.2.3",
+					ID:      7654,
+					Version: "2.3.4",
 				},
 				{
 					ID:      6543,
 					Version: "1.2.4",
 				},
 				{
-					ID:      7654,
-					Version: "2.3.4",
+					ID:      5432,
+					Version: "1.2.3",
 				},
 			}
 
 			fakeSorter.SortBySemverReturns(semverOrderedReleases, nil)
 		})
 
-		It("returns in descending semver order", func() {
+		It("returns in ascending semver order", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
 			versionsWithETags := make([]string, len(semverOrderedReleases))
 
 			versionsWithETags[0], err = versions.CombineVersionAndETag(
-				"2.3.4", fmt.Sprintf("etag-%d", 7654),
+				"1.2.4", fmt.Sprintf("etag-%d", 6543),
 			)
 			versionsWithETags[1], err = versions.CombineVersionAndETag(
-				"1.2.4", fmt.Sprintf("etag-%d", 6543),
+				"2.3.4", fmt.Sprintf("etag-%d", 7654),
 			)
 
 			Expect(response).To(HaveLen(2))
