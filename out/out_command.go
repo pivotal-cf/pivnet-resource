@@ -114,7 +114,10 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 
 	if len(missingFiles) > 0 {
 		return concourse.OutResponse{},
-			fmt.Errorf("product_files were provided in metadata that match no globs: %v", missingFiles)
+			fmt.Errorf(
+				"product_files were provided in metadata that match no globs: %v",
+				missingFiles,
+			)
 	}
 
 	pivnetRelease, err := c.creator.Create()

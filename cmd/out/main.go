@@ -148,9 +148,35 @@ func main() {
 
 	md5summer := md5sum.NewFileSummer()
 
-	releaseCreator := release.NewReleaseCreator(pivnetClient, metadataFetcher, logger, m, skipFileCheck, input.Params, sourcesDir, input.Source.ProductSlug)
-	releaseUploader := release.NewReleaseUploader(uploaderClient, pivnetClient, logger, md5summer, m, skipUpload, sourcesDir, input.Source.ProductSlug)
-	releaseFinalizer := release.NewFinalizer(pivnetClient, metadataFetcher, input.Params, sourcesDir, input.Source.ProductSlug)
+	releaseCreator := release.NewReleaseCreator(
+		pivnetClient,
+		metadataFetcher,
+		logger,
+		m,
+		skipFileCheck,
+		input.Params,
+		sourcesDir,
+		input.Source.ProductSlug,
+	)
+
+	releaseUploader := release.NewReleaseUploader(
+		uploaderClient,
+		pivnetClient,
+		logger,
+		md5summer,
+		m,
+		skipUpload,
+		sourcesDir,
+		input.Source.ProductSlug,
+	)
+
+	releaseFinalizer := release.NewFinalizer(
+		pivnetClient,
+		metadataFetcher,
+		input.Params,
+		sourcesDir,
+		input.Source.ProductSlug,
+	)
 
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
 		SkipFileCheck: skipFileCheck,

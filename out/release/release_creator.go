@@ -30,7 +30,16 @@ type releaseClient interface {
 	ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error)
 }
 
-func NewReleaseCreator(pivnet releaseClient, metadataFetcher fetcher, logger *log.Logger, metadata metadata.Metadata, skipFileCheck bool, params concourse.OutParams, sourcesDir, productSlug string) ReleaseCreator {
+func NewReleaseCreator(
+	pivnet releaseClient,
+	metadataFetcher fetcher,
+	logger *log.Logger,
+	metadata metadata.Metadata,
+	skipFileCheck bool,
+	params concourse.OutParams,
+	sourcesDir,
+	productSlug string,
+) ReleaseCreator {
 	return ReleaseCreator{
 		pivnet:          pivnet,
 		metadataFetcher: metadataFetcher,
@@ -44,7 +53,11 @@ func NewReleaseCreator(pivnet releaseClient, metadataFetcher fetcher, logger *lo
 }
 
 func (rc ReleaseCreator) Create() (pivnet.Release, error) {
-	productVersion := rc.metadataFetcher.Fetch("Version", rc.sourcesDir, rc.params.VersionFile)
+	productVersion := rc.metadataFetcher.Fetch(
+		"Version",
+		rc.sourcesDir,
+		rc.params.VersionFile,
+	)
 
 	releases, err := rc.pivnet.ReleasesForProductSlug(rc.productSlug)
 	if err != nil {
@@ -58,7 +71,8 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	for _, v := range existingVersions {
 		if v == productVersion {
-			return pivnet.Release{}, fmt.Errorf("release already exists with version: %s", productVersion)
+			return pivnet.Release{},
+				fmt.Errorf("release already exists with version: %s", productVersion)
 		}
 	}
 
@@ -76,7 +90,11 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	rc.logger.Println("validating eula_slug")
 
-	eulaSlug := rc.metadataFetcher.Fetch("EULASlug", rc.sourcesDir, rc.params.EULASlugFile)
+	eulaSlug := rc.metadataFetcher.Fetch(
+		"EULASlug",
+		rc.sourcesDir,
+		rc.params.EULASlugFile,
+	)
 
 	var containsSlug bool
 	for _, slug := range eulaSlugs {
@@ -102,11 +120,18 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		return pivnet.Release{}, err
 	}
 
-	releaseTypesPrintable := fmt.Sprintf("['%s']", strings.Join(releaseTypes, "', '"))
+	releaseTypesPrintable := fmt.Sprintf(
+		"['%s']",
+		strings.Join(releaseTypes, "', '"),
+	)
 
 	rc.logger.Println("validating release_type")
 
-	releaseType := rc.metadataFetcher.Fetch("ReleaseType", rc.sourcesDir, rc.params.ReleaseTypeFile)
+	releaseType := rc.metadataFetcher.Fetch(
+		"ReleaseType",
+		rc.sourcesDir,
+		rc.params.ReleaseTypeFile,
+	)
 
 	var containsReleaseType bool
 	for _, t := range releaseTypes {
@@ -123,14 +148,38 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		)
 	}
 
+	eulaSlug = rc.metadataFetcher.Fetch(
+		"EULASlug",
+		rc.sourcesDir,
+		rc.params.EULASlugFile,
+	)
+
+	description := rc.metadataFetcher.Fetch(
+		"Description",
+		rc.sourcesDir,
+		rc.params.DescriptionFile,
+	)
+
+	releaseNotesURL := rc.metadataFetcher.Fetch(
+		"ReleaseNotesURL",
+		rc.sourcesDir,
+		rc.params.ReleaseNotesURLFile,
+	)
+
+	releaseDate := rc.metadataFetcher.Fetch(
+		"ReleaseDate",
+		rc.sourcesDir,
+		rc.params.ReleaseDateFile,
+	)
+
 	config := pivnet.CreateReleaseConfig{
 		ProductSlug:     rc.productSlug,
 		ReleaseType:     releaseType,
-		EULASlug:        rc.metadataFetcher.Fetch("EULASlug", rc.sourcesDir, rc.params.EULASlugFile),
+		EULASlug:        eulaSlug,
 		ProductVersion:  productVersion,
-		Description:     rc.metadataFetcher.Fetch("Description", rc.sourcesDir, rc.params.DescriptionFile),
-		ReleaseNotesURL: rc.metadataFetcher.Fetch("ReleaseNotesURL", rc.sourcesDir, rc.params.ReleaseNotesURLFile),
-		ReleaseDate:     rc.metadataFetcher.Fetch("ReleaseDate", rc.sourcesDir, rc.params.ReleaseDateFile),
+		Description:     description,
+		ReleaseNotesURL: releaseNotesURL,
+		ReleaseDate:     releaseDate,
 	}
 	if rc.metadata.Release != nil {
 		config.Controlled = rc.metadata.Release.Controlled

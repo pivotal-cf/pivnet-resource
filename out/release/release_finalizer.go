@@ -18,7 +18,13 @@ type ReleaseFinalizer struct {
 	productSlug     string
 }
 
-func NewFinalizer(pivnetClient updateClient, metadataFetcher fetcher, params concourse.OutParams, sourcesDir, productSlug string) ReleaseFinalizer {
+func NewFinalizer(
+	pivnetClient updateClient,
+	metadataFetcher fetcher,
+	params concourse.OutParams,
+	sourcesDir,
+	productSlug string,
+) ReleaseFinalizer {
 	return ReleaseFinalizer{
 		pivnet:          pivnetClient,
 		metadataFetcher: metadataFetcher,
@@ -41,7 +47,12 @@ type fetcher interface {
 }
 
 func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutResponse, error) {
-	availability := rf.metadataFetcher.Fetch("Availability", rf.sourcesDir, rf.params.AvailabilityFile)
+	availability := rf.metadataFetcher.Fetch(
+		"Availability",
+		rf.sourcesDir,
+		rf.params.AvailabilityFile,
+	)
+
 	if availability != "Admins Only" {
 		releaseUpdate := pivnet.Release{
 			ID:           release.ID,
@@ -56,7 +67,11 @@ func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutRespon
 
 		if availability == "Selected User Groups Only" {
 			userGroupIDs := strings.Split(
-				rf.metadataFetcher.Fetch("UserGroupIDs", rf.sourcesDir, rf.params.UserGroupIDsFile),
+				rf.metadataFetcher.Fetch(
+					"UserGroupIDs",
+					rf.sourcesDir,
+					rf.params.UserGroupIDsFile,
+				),
 				",",
 			)
 
@@ -99,7 +114,9 @@ func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutRespon
 		{Name: "end_of_availability_date", Value: release.EndOfAvailabilityDate},
 	}
 	if release.EULA != nil {
-		metadata = append(metadata, concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug})
+		metadata = append(
+			metadata,
+			concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug})
 	}
 
 	return concourse.OutResponse{

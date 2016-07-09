@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,10 +13,6 @@ import (
 )
 
 var _ = Describe("Check", func() {
-	const (
-		checkTimeout = 20 * time.Second
-	)
-
 	var (
 		productSlug = "p-mysql"
 
