@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
-
-	"github.com/pivotal-golang/lager"
 )
 
 type Client interface {
@@ -19,8 +17,6 @@ type client struct {
 	regionName      string
 	bucket          string
 
-	logger lager.Logger
-
 	stdout io.Writer
 	stderr io.Writer
 
@@ -32,8 +28,6 @@ type NewClientConfig struct {
 	SecretAccessKey string
 	RegionName      string
 	Bucket          string
-
-	Logger lager.Logger
 
 	Stdout io.Writer
 	Stderr io.Writer
@@ -50,7 +44,6 @@ func NewClient(config NewClientConfig) Client {
 		stdout:          config.Stdout,
 		stderr:          config.Stderr,
 		outBinaryPath:   config.OutBinaryPath,
-		logger:          config.Logger,
 	}
 }
 
@@ -67,8 +60,6 @@ func (c client) Upload(fileGlob string, to string, sourcesDir string) error {
 			To:   to,
 		},
 	}
-
-	c.logger.Debug("Input to s3out", lager.Data{"input": s3Input, "sources dir": sourcesDir})
 
 	cmd := exec.Command(c.outBinaryPath, sourcesDir)
 

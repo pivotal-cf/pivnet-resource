@@ -2,6 +2,8 @@ package out_test
 
 import (
 	"errors"
+	"io/ioutil"
+	"log"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
@@ -16,7 +18,7 @@ import (
 var _ = Describe("Out", func() {
 	Describe("Run", func() {
 		var (
-			logger    *outfakes.Logging
+			logger    *log.Logger
 			finalizer *outfakes.Finalizer
 			creator   *outfakes.Creator
 			validator *outfakes.Validation
@@ -26,7 +28,7 @@ var _ = Describe("Out", func() {
 		)
 
 		BeforeEach(func() {
-			logger = &outfakes.Logging{}
+			logger = log.New(ioutil.Discard, "doesn't matter", 0)
 			finalizer = &outfakes.Finalizer{}
 			creator = &outfakes.Creator{}
 			validator = &outfakes.Validation{}
@@ -52,7 +54,6 @@ var _ = Describe("Out", func() {
 				Logger:        logger,
 				OutDir:        "some/out/dir",
 				SourcesDir:    "some/sources/dir",
-				ScreenWriter:  nil,
 				GlobClient:    globber,
 				Validation:    validator,
 				Creator:       creator,
@@ -82,10 +83,6 @@ var _ = Describe("Out", func() {
 					ProductVersion: "some-returned-product-version",
 				},
 			}))
-
-			message, types := logger.DebugfArgsForCall(0)
-			Expect(message).To(Equal("metadata release parsed; contents: %+v\n"))
-			Expect(types[0].(metadata.Release)).To(Equal(metadata.Release{Version: "release-version"}))
 
 			Expect(validator.ValidateArgsForCall(0)).To(Equal(false))
 
@@ -155,7 +152,6 @@ var _ = Describe("Out", func() {
 						Logger:        logger,
 						OutDir:        "some/out/dir",
 						SourcesDir:    "some/sources/dir",
-						ScreenWriter:  nil,
 						GlobClient:    globber,
 						Validation:    validator,
 						Creator:       nil,
@@ -214,23 +210,6 @@ var _ = Describe("Out", func() {
 					_, err := cmd.Run(request)
 					Expect(err).To(MatchError(errors.New("some finalize error")))
 				})
-			})
-		})
-
-		Context("when deprecated files are found", func() {
-			It("logs a deprecation warning", func() {
-				request := concourse.OutRequest{
-					Params: concourse.OutParams{
-						VersionFile: "some-version-file",
-					},
-				}
-
-				_, err := cmd.Run(request)
-				Expect(err).NotTo(HaveOccurred())
-
-				message, data := logger.DebugArgsForCall(0)
-				Expect(message).To(Equal("DEPRECATION WARNING, this file is deprecated and will be removed in a future release"))
-				Expect(data[0]["file"]).To(Equal("version_file"))
 			})
 		})
 	})

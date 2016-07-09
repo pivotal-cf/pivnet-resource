@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -30,7 +31,7 @@ func main() {
 		version = "dev"
 	}
 
-	logger := log.New(os.Stderr, "pivnet in", log.LstdFlags)
+	logger := log.New(os.Stderr, "pivnet in ", log.LstdFlags)
 
 	logger.Printf("PivNet Resource version: %s", version)
 
@@ -47,7 +48,7 @@ func main() {
 	}
 
 	sanitized := concourse.SanitizedSource(input.Source)
-	sanitizer := sanitizer.NewSanitizer(sanitized, os.Stderr)
+	sanitizer := sanitizer.NewSanitizer(sanitized, ioutil.Discard)
 
 	l := lager.NewLogger("pivnet-resource")
 	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))

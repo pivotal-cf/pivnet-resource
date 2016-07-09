@@ -2,6 +2,8 @@ package in_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -16,7 +18,6 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum/md5sumfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
-	"github.com/pivotal-golang/lager/lagertest"
 )
 
 var _ = Describe("In", func() {
@@ -223,10 +224,10 @@ var _ = Describe("In", func() {
 			return "", nil
 		}
 
-		testLogger = lagertest.NewTestLogger("in unit tests")
+		logging := log.New(ioutil.Discard, "doesn't matter", 0)
 
 		inCommand = in.NewInCommand(
-			testLogger,
+			logging,
 			fakePivnetClient,
 			fakeFilter,
 			fakeDownloader,

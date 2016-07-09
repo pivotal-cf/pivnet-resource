@@ -3,14 +3,13 @@ package downloader_test
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
-	"github.com/pivotal-golang/lager"
-	"github.com/pivotal-golang/lager/lagertest"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -23,7 +22,7 @@ var _ = Describe("Downloader", func() {
 		server     *ghttp.Server
 		apiAddress string
 		dir        string
-		fakeLogger lager.Logger
+		logger     *log.Logger
 
 		apiToken string
 	)
@@ -32,7 +31,7 @@ var _ = Describe("Downloader", func() {
 		apiToken = "1234-abcd"
 		server = ghttp.NewServer()
 		apiAddress = server.URL()
-		fakeLogger = lagertest.NewTestLogger("downloader unit tests")
+		logger = log.New(ioutil.Discard, "doesn't matter", 0)
 
 		var err error
 		dir, err = ioutil.TempDir("", "pivnet-resource")
@@ -40,7 +39,7 @@ var _ = Describe("Downloader", func() {
 	})
 
 	JustBeforeEach(func() {
-		d = downloader.NewDownloader(apiToken, dir, fakeLogger)
+		d = downloader.NewDownloader(apiToken, dir, logger)
 	})
 
 	AfterEach(func() {

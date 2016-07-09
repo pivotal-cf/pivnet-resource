@@ -1,6 +1,7 @@
 package release
 
 import (
+	"log"
 	"path/filepath"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
@@ -10,7 +11,7 @@ import (
 type ReleaseUploader struct {
 	s3          s3Client
 	pivnet      uploadClient
-	logger      logging
+	logger      *log.Logger
 	md5Summer   md5Summer
 	metadata    metadata.Metadata
 	skipUpload  bool
@@ -35,7 +36,7 @@ type md5Summer interface {
 	SumFile(filepath string) (string, error)
 }
 
-func NewReleaseUploader(s3 s3Client, pivnet uploadClient, logger logging, md5Summer md5Summer, metadata metadata.Metadata, skip bool, sourcesDir, productSlug string) ReleaseUploader {
+func NewReleaseUploader(s3 s3Client, pivnet uploadClient, logger *log.Logger, md5Summer md5Summer, metadata metadata.Metadata, skip bool, sourcesDir, productSlug string) ReleaseUploader {
 	return ReleaseUploader{
 		s3:          s3,
 		pivnet:      pivnet,
@@ -50,7 +51,7 @@ func NewReleaseUploader(s3 s3Client, pivnet uploadClient, logger logging, md5Sum
 
 func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) error {
 	if u.skipUpload {
-		u.logger.Debugf("File glob and s3_filepath_prefix not provided - skipping upload to s3")
+		u.logger.Println("file glob and s3_filepath_prefix not provided - skipping upload to s3")
 		return nil
 	}
 
@@ -60,6 +61,8 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		if err != nil {
 			return err
 		}
+
+		u.logger.Println("file uploading to s3")
 
 		remotePath, err := u.s3.UploadFile(exactGlob)
 		if err != nil {
@@ -77,25 +80,18 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		uploadAs := filename
 		for _, f := range u.metadata.ProductFiles {
 			if f.File == exactGlob {
-				u.logger.Debugf("exact glob '%s' matches metadata file: '%s'\n", exactGlob, f.File)
+				u.logger.Printf("exact glob '%s' matches metadata file: '%s'\n", exactGlob, f.File)
 				description = f.Description
 				if f.UploadAs != "" {
-					u.logger.Debugf("upload_as provided for exact glob: '%s' - uploading to remote filename: '%s' instead\n", exactGlob, f.UploadAs)
+					u.logger.Printf("upload_as provided for exact glob: '%s' - uploading to remote filename: '%s' instead\n", exactGlob, f.UploadAs)
 					uploadAs = f.UploadAs
 				}
 			} else {
-				u.logger.Debugf("exact glob %s does not match metadata file: %s\n", exactGlob, f.File)
+				u.logger.Printf("exact glob %s does not match metadata file: %s\n", exactGlob, f.File)
 			}
 		}
 
-		u.logger.Debugf(
-			"Creating product file: {product_slug: %s, filename: %s, aws_object_key: %s, file_version: %s, description: %s}\n",
-			u.productSlug,
-			uploadAs,
-			remotePath,
-			release.Version,
-			description,
-		)
+		u.logger.Printf("Creating product file with product_slug: %s and filename: %s", u.productSlug, uploadAs)
 
 		productFile, err := u.pivnet.CreateProductFile(pivnet.CreateProductFileConfig{
 			ProductSlug:  u.productSlug,
@@ -109,14 +105,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			return err
 		}
 
-		u.logger.Debugf(
-			"Adding product file: {product_slug: %s, product_id: %d, filename: %s, product_file_id: %d, release_id: %d}\n",
-			u.productSlug,
-			product.ID,
-			filename,
-			productFile.ID,
-			release.ID,
-		)
+		u.logger.Printf("Adding product file with product_slug: %s and filename: %s", u.productSlug, filename)
 
 		err = u.pivnet.AddProductFile(product.ID, release.ID, productFile.ID)
 		if err != nil {

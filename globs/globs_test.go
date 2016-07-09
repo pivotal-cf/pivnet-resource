@@ -2,19 +2,18 @@ package globs_test
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf-experimental/pivnet-resource/globs"
-	"github.com/pivotal-golang/lager"
 )
 
 var _ = Describe("Globber", func() {
 	Describe("ExactGlobs", func() {
 		var (
-			l             lager.Logger
 			globberConfig globs.GlobberConfig
 			globber       globs.Globber
 
@@ -23,9 +22,6 @@ var _ = Describe("Globber", func() {
 		)
 
 		BeforeEach(func() {
-			l = lager.NewLogger("glob tests")
-			l.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
-
 			var err error
 			tempDir, err = ioutil.TempDir("", "pivnet-resource")
 			Expect(err).NotTo(HaveOccurred())
@@ -36,6 +32,8 @@ var _ = Describe("Globber", func() {
 
 			_, err = os.Create(filepath.Join(myFilesDir, "file-0"))
 			Expect(err).NotTo(HaveOccurred())
+
+			l := log.New(ioutil.Discard, "doesn't matter", 0)
 
 			globberConfig = globs.GlobberConfig{
 				FileGlob:   "my_files/*",

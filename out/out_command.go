@@ -7,15 +7,13 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
-	"github.com/pivotal-golang/lager"
 )
 
 type OutCommand struct {
 	skipFileCheck bool
-	logger        logging
+	logger        *log.Logger
 	outDir        string
 	sourcesDir    string
-	screenWriter  *log.Logger
 	globClient    globber
 	validation    validation
 	creator       creator
@@ -26,10 +24,9 @@ type OutCommand struct {
 
 type OutCommandConfig struct {
 	SkipFileCheck bool
-	Logger        logging
+	Logger        *log.Logger
 	OutDir        string
 	SourcesDir    string
-	ScreenWriter  *log.Logger
 	GlobClient    globber
 	Validation    validation
 	Creator       creator
@@ -44,7 +41,6 @@ func NewOutCommand(config OutCommandConfig) OutCommand {
 		logger:        config.Logger,
 		outDir:        config.OutDir,
 		sourcesDir:    config.SourcesDir,
-		screenWriter:  config.ScreenWriter,
 		globClient:    config.GlobClient,
 		validation:    config.Validation,
 		creator:       config.Creator,
@@ -74,12 +70,6 @@ type validation interface {
 	Validate(skipFileCheck bool) error
 }
 
-//go:generate counterfeiter --fake-name Logging . logging
-type logging interface {
-	Debugf(format string, a ...interface{}) (n int, err error)
-	Debug(action string, data ...lager.Data)
-}
-
 //go:generate counterfeiter --fake-name Globber . globber
 type globber interface {
 	ExactGlobs() ([]string, error)
@@ -91,11 +81,12 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 	}
 
 	if c.m.Release != nil {
-		c.logger.Debugf("metadata release parsed; contents: %+v\n", *c.m.Release)
+		c.logger.Println("metadata release parsed")
 	}
 
-	warnIfDeprecatedFilesFound(input.Params, c.logger, c.screenWriter)
+	warnIfDeprecatedFilesFound(input.Params, c.logger)
 
+	c.logger.Println("validating metadata")
 	err := c.validation.Validate(c.skipFileCheck)
 	if err != nil {
 		return concourse.OutResponse{}, err
@@ -144,7 +135,7 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 	return out, nil
 }
 
-func warnIfDeprecatedFilesFound(params concourse.OutParams, logger logging, screenWriter *log.Logger) {
+func warnIfDeprecatedFilesFound(params concourse.OutParams, logger *log.Logger) {
 	files := map[string]string{
 		"version_file":        params.VersionFile,
 		"eula_slug_file":      params.EULASlugFile,
@@ -160,10 +151,6 @@ func warnIfDeprecatedFilesFound(params concourse.OutParams, logger logging, scre
 			continue
 		}
 
-		logger.Debug("DEPRECATION WARNING, this file is deprecated and will be removed in a future release", lager.Data{"file": key})
-
-		if screenWriter != nil {
-			screenWriter.Printf("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m", key)
-		}
+		logger.Printf("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m", key)
 	}
 }

@@ -3,8 +3,6 @@ package uploader
 import (
 	"fmt"
 	"path/filepath"
-
-	"github.com/pivotal-golang/lager"
 )
 
 type Client interface {
@@ -16,7 +14,6 @@ type client struct {
 	sourcesDir     string
 
 	transport Transport
-	logger    lager.Logger
 }
 
 type Config struct {
@@ -24,7 +21,6 @@ type Config struct {
 	SourcesDir     string
 
 	Transport Transport
-	Logger    lager.Logger
 }
 
 func NewClient(config Config) Client {
@@ -33,7 +29,6 @@ func NewClient(config Config) Client {
 		sourcesDir:     config.SourcesDir,
 
 		transport: config.Transport,
-		logger:    config.Logger,
 	}
 }
 

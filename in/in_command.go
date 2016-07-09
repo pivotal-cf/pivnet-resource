@@ -47,8 +47,6 @@ func NewInCommand(
 }
 
 func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error) {
-	c.logger.Printf("Received input: %s", input)
-
 	productSlug := input.Source.ProductSlug
 
 	productVersion, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
@@ -259,7 +257,7 @@ func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]strin
 
 		expectedMD5 := expectedMD5s[f]
 		if md5 != expectedMD5 {
-			log.Printf("Failed MD5 comparison for file: %s. Expected %s, got %s\n", f, expectedMD5, md5)
+			c.logger.Printf("Failed MD5 comparison for file: %s. Expected %s, got %s\n", f, expectedMD5, md5)
 			return errors.New("failed comparison")
 		}
 

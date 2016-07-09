@@ -2,6 +2,7 @@ package release
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
@@ -12,7 +13,7 @@ import (
 type ReleaseCreator struct {
 	pivnet          releaseClient
 	metadataFetcher fetcher
-	logger          logging
+	logger          *log.Logger
 	metadata        metadata.Metadata
 	skipFileCheck   bool
 	sourcesDir      string
@@ -29,12 +30,7 @@ type releaseClient interface {
 	ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error)
 }
 
-//go:generate counterfeiter --fake-name Logging . logging
-type logging interface {
-	Debugf(format string, a ...interface{}) (n int, err error)
-}
-
-func NewReleaseCreator(pivnet releaseClient, metadataFetcher fetcher, logger logging, metadata metadata.Metadata, skipFileCheck bool, params concourse.OutParams, sourcesDir, productSlug string) ReleaseCreator {
+func NewReleaseCreator(pivnet releaseClient, metadataFetcher fetcher, logger *log.Logger, metadata metadata.Metadata, skipFileCheck bool, params concourse.OutParams, sourcesDir, productSlug string) ReleaseCreator {
 	return ReleaseCreator{
 		pivnet:          pivnet,
 		metadataFetcher: metadataFetcher,
@@ -66,7 +62,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		}
 	}
 
-	rc.logger.Debugf("Getting all valid eulas\n")
+	rc.logger.Println("getting all valid eulas")
 
 	eulas, err := rc.pivnet.EULAs()
 	if err != nil {
@@ -78,12 +74,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		eulaSlugs[i] = e.Slug
 	}
 
-	eulaSlugsPrintable := fmt.Sprintf(
-		"['%s']",
-		strings.Join(eulaSlugs, "', '"),
-	)
-
-	rc.logger.Debugf("All valid eula slugs: %s\n", eulaSlugsPrintable)
+	rc.logger.Println("validating eula_slug")
 
 	eulaSlug := rc.metadataFetcher.Fetch("EULASlug", rc.sourcesDir, rc.params.EULASlugFile)
 
@@ -94,6 +85,8 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		}
 	}
 
+	eulaSlugsPrintable := fmt.Sprintf("['%s']", strings.Join(eulaSlugs, "', '"))
+
 	if !containsSlug {
 		return pivnet.Release{}, fmt.Errorf(
 			"provided eula_slug: '%s' must be one of: %s",
@@ -102,19 +95,16 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		)
 	}
 
-	rc.logger.Debugf("Getting all valid release types\n")
+	rc.logger.Println("getting all valid release types")
 
 	releaseTypes, err := rc.pivnet.ReleaseTypes()
 	if err != nil {
 		return pivnet.Release{}, err
 	}
 
-	releaseTypesPrintable := fmt.Sprintf(
-		"['%s']",
-		strings.Join(releaseTypes, "', '"),
-	)
+	releaseTypesPrintable := fmt.Sprintf("['%s']", strings.Join(releaseTypes, "', '"))
 
-	rc.logger.Debugf("All release types: %s\n", releaseTypesPrintable)
+	rc.logger.Println("validating release_type")
 
 	releaseType := rc.metadataFetcher.Fetch("ReleaseType", rc.sourcesDir, rc.params.ReleaseTypeFile)
 
@@ -151,7 +141,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		config.EndOfAvailabilityDate = rc.metadata.Release.EndOfAvailabilityDate
 	}
 
-	rc.logger.Debugf("config used to create pivnet release: %+v\n", config)
+	rc.logger.Printf("config used to create pivnet release: %+v\n", config)
 
 	return rc.pivnet.CreateRelease(config)
 }

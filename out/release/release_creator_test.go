@@ -2,6 +2,8 @@ package release_test
 
 import (
 	"errors"
+	"io/ioutil"
+	"log"
 
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
@@ -17,7 +19,7 @@ var _ = Describe("ReleaseCreator", func() {
 	var (
 		fetcherClient *releasefakes.Fetcher
 		pivnetClient  *releasefakes.ReleaseClient
-		logging       *releasefakes.Logging
+		logging       *log.Logger
 		creator       release.ReleaseCreator
 	)
 
@@ -25,7 +27,7 @@ var _ = Describe("ReleaseCreator", func() {
 		BeforeEach(func() {
 			pivnetClient = &releasefakes.ReleaseClient{}
 			fetcherClient = &releasefakes.Fetcher{}
-			logging = &releasefakes.Logging{}
+			logging = log.New(ioutil.Discard, "it doesn't matter", 0)
 
 			meta := metadata.Metadata{
 				Release: &metadata.Release{
@@ -93,9 +95,6 @@ var _ = Describe("ReleaseCreator", func() {
 
 				Expect(r).To(Equal(pivnet.Release{ID: 1337}))
 
-				message, _ := logging.DebugfArgsForCall(0)
-				Expect(message).To(Equal("Getting all valid eulas\n"))
-
 				Expect(pivnetClient.EULAsCallCount()).To(Equal(1))
 
 				key, sourcesDir, fileName := fetcherClient.FetchArgsForCall(0)
@@ -107,9 +106,6 @@ var _ = Describe("ReleaseCreator", func() {
 				Expect(key).To(Equal("EULASlug"))
 				Expect(sourcesDir).To(Equal("/some/sources/dir"))
 				Expect(fileName).To(Equal("some-eula-slug-file"))
-
-				message, _ = logging.DebugfArgsForCall(2)
-				Expect(message).To(Equal("Getting all valid release types\n"))
 
 				Expect(pivnetClient.ReleaseTypesCallCount()).To(Equal(1))
 

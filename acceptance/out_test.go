@@ -140,10 +140,6 @@ var _ = Describe("Out", func() {
 			session := run(command, stdinContents)
 			Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
-			By("Printing what is actually happening")
-			Eventually(session.Err).Should(gbytes.Say("metadata release parsed; contents:"))
-			Eventually(session.Err).Should(gbytes.Say("config used to create pivnet release"))
-
 			By("Validating new release exists on pivnet")
 			releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
 			Expect(err).NotTo(HaveOccurred())

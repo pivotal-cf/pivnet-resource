@@ -1,14 +1,12 @@
 package downloader
 
 import (
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/pivotal-golang/lager"
 )
 
 //go:generate counterfeiter . Downloader
@@ -20,10 +18,10 @@ type Downloader interface {
 type downloader struct {
 	apiToken    string
 	downloadDir string
-	logger      lager.Logger
+	logger      *log.Logger
 }
 
-func NewDownloader(apiToken string, downloadDir string, logger lager.Logger) Downloader {
+func NewDownloader(apiToken string, downloadDir string, logger *log.Logger) Downloader {
 	return &downloader{
 		apiToken:    apiToken,
 		downloadDir: downloadDir,
@@ -32,7 +30,8 @@ func NewDownloader(apiToken string, downloadDir string, logger lager.Logger) Dow
 }
 
 func (d downloader) Download(downloadLinks map[string]string) ([]string, error) {
-	d.logger.Debug("Ensuring download directory exists", lager.Data{"download_dir": d.downloadDir})
+	d.logger.Println("Ensuring download directory exists")
+
 	err := os.MkdirAll(d.downloadDir, os.ModePerm)
 	if err != nil {
 		return nil, err
@@ -68,11 +67,11 @@ func (d downloader) download(fileName string, downloadLink string) (string, erro
 	}
 
 	if response.StatusCode == http.StatusUnavailableForLegalReasons {
-		return "", errors.New(fmt.Sprintf("the EULA has not been accepted for the file: %s", fileName))
+		return "", fmt.Errorf("the EULA has not been accepted for the file: %s", fileName)
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return "", errors.New(fmt.Sprintf("pivnet returned an error code of %d for the file: %s", response.StatusCode, fileName))
+		return "", fmt.Errorf("pivnet returned an error code of %d for the file: %s", response.StatusCode, fileName)
 	}
 
 	file, err := os.Create(downloadPath)

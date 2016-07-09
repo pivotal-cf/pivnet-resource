@@ -88,10 +88,6 @@ var _ = Describe("In", func() {
 		session := run(command, stdinContents)
 		Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
-		By("Printing what is actually happening")
-		Eventually(session.Err).Should(gbytes.Say("Getting release"))
-		Eventually(session.Err).Should(gbytes.Say("Writing metadata to json file"))
-
 		By("Outputting a valid json response")
 		response := concourse.InResponse{}
 		err := json.Unmarshal(session.Out.Contents(), &response)

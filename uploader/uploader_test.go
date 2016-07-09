@@ -11,7 +11,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader/uploaderfakes"
-	"github.com/pivotal-golang/lager"
 )
 
 var _ = Describe("Uploader", func() {
@@ -28,7 +27,6 @@ var _ = Describe("Uploader", func() {
 		)
 
 		BeforeEach(func() {
-			l := lager.NewLogger("doesn't matter")
 			fakeTransport = &uploaderfakes.FakeTransport{}
 
 			var err error
@@ -46,7 +44,6 @@ var _ = Describe("Uploader", func() {
 				FilepathPrefix: filepathPrefix,
 				Transport:      fakeTransport,
 				SourcesDir:     tempDir,
-				Logger:         l,
 			}
 
 			uploaderClient = uploader.NewClient(uploaderConfig)

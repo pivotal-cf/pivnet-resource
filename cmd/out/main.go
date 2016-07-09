@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -41,9 +40,12 @@ func main() {
 		version = "dev"
 	}
 
+	logger := log.New(os.Stderr, "pivnet out", log.LstdFlags)
+
+	logger.Printf("PivNet Resource version: %s", version)
+
 	if len(os.Args) < 2 {
-		log.Fatalln(fmt.Sprintf(
-			"not enough args - usage: %s <sources directory>", os.Args[0]))
+		log.Fatalf("not enough args - usage: %s <sources directory>", os.Args[0])
 	}
 
 	sourcesDir := os.Args[1]
@@ -60,12 +62,10 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	fmt.Fprintf(os.Stderr, "PivNet Resource version: %s\n", version)
-
 	sanitized := concourse.SanitizedSource(input.Source)
-	sanitizer := sanitizer.NewSanitizer(sanitized, os.Stderr)
+	sanitizer := sanitizer.NewSanitizer(sanitized, ioutil.Discard)
 
-	l = lager.NewLogger("pivnet-resource")
+	l := lager.NewLogger("pivnet-resource")
 	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
 
 	var endpoint string
@@ -101,7 +101,6 @@ func main() {
 		SecretAccessKey: input.Source.SecretAccessKey,
 		RegionName:      region,
 		Bucket:          bucket,
-		Logger:          l,
 		Stdout:          os.Stdout,
 		Stderr:          os.Stderr,
 		OutBinaryPath:   filepath.Join(outDir, s3OutBinaryName),
@@ -110,14 +109,13 @@ func main() {
 	uploaderClient := uploader.NewClient(uploader.Config{
 		FilepathPrefix: input.Params.FilepathPrefix,
 		SourcesDir:     sourcesDir,
-		Logger:         l,
 		Transport:      s3Client,
 	})
 
 	globber := globs.NewGlobber(globs.GlobberConfig{
 		FileGlob:   input.Params.FileGlob,
 		SourcesDir: sourcesDir,
-		Logger:     l,
+		Logger:     logger,
 	})
 
 	skipUpload := input.Params.FileGlob == "" && input.Params.FilepathPrefix == ""
@@ -128,17 +126,17 @@ func main() {
 		metadataFilepath := filepath.Join(sourcesDir, input.Params.MetadataFile)
 		metadataBytes, err := ioutil.ReadFile(metadataFilepath)
 		if err != nil {
-			log.Fatalln("metadata_file could not be read: %s", err.Error())
+			log.Fatalf("metadata_file could not be read: %s", err)
 		}
 
 		err = yaml.Unmarshal(metadataBytes, &m)
 		if err != nil {
-			log.Fatalln("metadata_file could not be parsed: %s", err.Error())
+			log.Fatalf("metadata_file could not be parsed: %s", err)
 		}
 
 		err = m.Validate()
 		if err != nil {
-			log.Fatalln("metadata_file is invalid: %s", err.Error())
+			log.Fatalf("metadata_file is invalid: %s", err)
 		}
 
 		skipFileCheck = true
@@ -150,16 +148,15 @@ func main() {
 
 	md5summer := md5sum.NewFileSummer()
 
-	releaseCreator := release.NewReleaseCreator(pivnetClient, metadataFetcher, l, m, skipFileCheck, input.Params, sourcesDir, input.Source.ProductSlug)
-	releaseUploader := release.NewReleaseUploader(uploaderClient, pivnetClient, l, md5summer, m, skipUpload, sourcesDir, input.Source.ProductSlug)
+	releaseCreator := release.NewReleaseCreator(pivnetClient, metadataFetcher, logger, m, skipFileCheck, input.Params, sourcesDir, input.Source.ProductSlug)
+	releaseUploader := release.NewReleaseUploader(uploaderClient, pivnetClient, logger, md5summer, m, skipUpload, sourcesDir, input.Source.ProductSlug)
 	releaseFinalizer := release.NewFinalizer(pivnetClient, metadataFetcher, input.Params, sourcesDir, input.Source.ProductSlug)
 
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
 		SkipFileCheck: skipFileCheck,
-		Logger:        l,
+		Logger:        logger,
 		OutDir:        outDir,
 		SourcesDir:    sourcesDir,
-		ScreenWriter:  log.New(os.Stderr, "", 0),
 		GlobClient:    globber,
 		Validation:    validation,
 		Creator:       releaseCreator,
@@ -170,15 +167,11 @@ func main() {
 
 	response, err := outCmd.Run(input)
 	if err != nil {
-		l.Debug("Exiting with error", lager.Data{"error": err})
 		log.Fatalln(err)
 	}
 
-	l.Debug("Returning output", lager.Data{"response": response})
-
 	err = json.NewEncoder(os.Stdout).Encode(response)
 	if err != nil {
-		l.Debug("Exiting with error", lager.Data{"error": err})
 		log.Fatalln(err)
 	}
 }
