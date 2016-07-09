@@ -334,6 +334,9 @@ var _ = Describe("Check", func() {
 
 		BeforeEach(func() {
 			checkRequest.Source.SortBy = concourse.SortBySemver
+			checkRequest.Version = concourse.Version{
+				ProductVersion: "1.2.3#etag-5432",
+			}
 
 			semverOrderedReleases = []pivnet.Release{
 				{
@@ -342,6 +345,10 @@ var _ = Describe("Check", func() {
 				},
 				{
 					ID:      6543,
+					Version: "1.2.4",
+				},
+				{
+					ID:      7654,
 					Version: "2.3.4",
 				},
 			}
@@ -349,17 +356,22 @@ var _ = Describe("Check", func() {
 			fakeSorter.SortBySemverReturns(semverOrderedReleases, nil)
 		})
 
-		It("invokes the semver sorter", func() {
+		It("returns in descending semver order", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			versionWithETag, err := versions.CombineVersionAndETag(
-				"1.2.3", fmt.Sprintf("etag-%d", 5432),
-			)
-			Expect(err).NotTo(HaveOccurred())
+			versionsWithETags := make([]string, len(semverOrderedReleases))
 
-			Expect(response).To(HaveLen(1))
-			Expect(response[0].ProductVersion).To(Equal(versionWithETag))
+			versionsWithETags[0], err = versions.CombineVersionAndETag(
+				"2.3.4", fmt.Sprintf("etag-%d", 7654),
+			)
+			versionsWithETags[1], err = versions.CombineVersionAndETag(
+				"1.2.4", fmt.Sprintf("etag-%d", 6543),
+			)
+
+			Expect(response).To(HaveLen(2))
+			Expect(response[0].ProductVersion).To(Equal(versionsWithETags[0]))
+			Expect(response[1].ProductVersion).To(Equal(versionsWithETags[1]))
 			Expect(fakeSorter.SortBySemverCallCount()).To(Equal(1))
 		})
 

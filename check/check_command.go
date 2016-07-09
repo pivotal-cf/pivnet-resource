@@ -92,6 +92,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	}
 
 	if input.Source.SortBy == concourse.SortBySemver {
+		c.logger.Debug("Sorting all releases by semver")
 		releases, err = c.semverSorter.SortBySemver(releases)
 		if err != nil {
 			return nil, err
@@ -115,7 +116,14 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return concourse.CheckResponse{}, nil
 	}
 
-	newVersions, err := versions.Since(versionsWithETags, input.Version.ProductVersion)
+	reversedVersions, err := versions.Reverse(versionsWithETags)
+	if err != nil {
+		// Untested because versions.Since cannot be forced to return an error.
+		return nil, err
+	}
+	c.logger.Debug("Reversed versions", lager.Data{"reversed_versions": reversedVersions})
+
+	newVersions, err := versions.Since(reversedVersions, input.Version.ProductVersion)
 	if err != nil {
 		// Untested because versions.Since cannot be forced to return an error.
 		return nil, err
@@ -123,14 +131,8 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	c.logger.Debug("New versions", lager.Data{"new_versions": newVersions})
 
-	reversedVersions, err := versions.Reverse(newVersions)
-	if err != nil {
-		// Untested because versions.Since cannot be forced to return an error.
-		return nil, err
-	}
-
 	var out concourse.CheckResponse
-	for _, v := range reversedVersions {
+	for _, v := range newVersions {
 		out = append(out, concourse.Version{ProductVersion: v})
 	}
 
