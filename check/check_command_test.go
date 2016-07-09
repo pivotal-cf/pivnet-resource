@@ -45,11 +45,8 @@ var _ = Describe("Check", func() {
 		fakeFilter = &filterfakes.FakeFilter{}
 		fakePivnetClient = &gpfakes.FakeClient{}
 		fakeExtendedClient = &gpfakes.FakeExtendedClient{}
-<<<<<<< 3bf769944a05b8aa50ef40a9132fc10cbac12eb2
 		fakeSorter = &sorterfakes.FakeSorter{}
-=======
 		logging = log.New(ioutil.Discard, "doesn't matter", 0)
->>>>>>> Coverting check to log.Logger
 
 		releasesByReleaseTypeErr = nil
 		releasesByVersionErr = nil

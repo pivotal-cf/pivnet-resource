@@ -1,9 +1,11 @@
 package sorter_test
 
 import (
+	"io/ioutil"
+	"log"
+
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sorter"
-	"github.com/pivotal-golang/lager/lagertest"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -11,12 +13,11 @@ import (
 
 var _ = Describe("Sorter", func() {
 	var (
-		testLogger *lagertest.TestLogger
-		s          sorter.Sorter
+		s sorter.Sorter
 	)
 
 	BeforeEach(func() {
-		testLogger = lagertest.NewTestLogger("sorter tests")
+		testLogger := log.New(ioutil.Discard, "it doesn't matter", 0)
 		s = sorter.NewSorter(testLogger)
 	})
 

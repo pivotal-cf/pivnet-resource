@@ -46,7 +46,7 @@ func main() {
 	}
 
 	sanitized := concourse.SanitizedSource(input.Source)
-	sanitizer := sanitizer.NewSanitizer(sanitized, os.Stderr)
+	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
 
 	pivnetClientLogger := lager.NewLogger("pivnet-resource")
 	pivnetClientLogger.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
@@ -78,7 +78,7 @@ func main() {
 
 	extendedClient := gp.NewExtendedClient(client, sp)
 
-	s := sorter.NewSorter(specialLogger)
+	s := sorter.NewSorter(logger)
 
 	response, err := check.NewCheckCommand(
 		logger,

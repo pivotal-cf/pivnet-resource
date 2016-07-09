@@ -10,7 +10,6 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sorter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
-	"github.com/pivotal-golang/lager"
 )
 
 type CheckCommand struct {
@@ -49,10 +48,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return nil, err
 	}
 
-	releaseTypesPrintable := fmt.Sprintf(
-		"['%s']",
-		strings.Join(releaseTypes, "', '"),
-	)
+	releaseTypesPrintable := fmt.Sprintf("['%s']", strings.Join(releaseTypes, "', '"))
 
 	releaseType := input.Source.ReleaseType
 	if releaseType != "" && !containsString(releaseTypes, releaseType) {
@@ -89,7 +85,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	}
 
 	if input.Source.SortBy == concourse.SortBySemver {
-		c.logger.Debug("Sorting all releases by semver")
+		c.logger.Println("Sorting all releases by semver")
 		releases, err = c.semverSorter.SortBySemver(releases)
 		if err != nil {
 			return nil, err
@@ -120,7 +116,6 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		// Untested because versions.Reverse cannot be forced to return an error.
 		return nil, err
 	}
-	c.logger.Debug("Reversed versions", lager.Data{"reversed_versions": reversedVersions})
 
 	c.logger.Printf("Reversed versions contained: %s", reversedVersions)
 

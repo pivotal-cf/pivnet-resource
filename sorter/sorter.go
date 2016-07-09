@@ -1,26 +1,23 @@
 package sorter
 
 import (
-	"fmt"
+	"log"
 	"strings"
-
-	"github.com/pivotal-golang/lager"
 
 	"github.com/blang/semver"
 	"github.com/pivotal-cf-experimental/go-pivnet"
 )
 
 //go:generate counterfeiter . Sorter
-
 type Sorter interface {
 	SortBySemver([]pivnet.Release) ([]pivnet.Release, error)
 }
 
 type sorter struct {
-	logger lager.Logger
+	logger *log.Logger
 }
 
-func NewSorter(logger lager.Logger) Sorter {
+func NewSorter(logger *log.Logger) Sorter {
 	return &sorter{
 		logger: logger,
 	}
@@ -68,7 +65,7 @@ func (s sorter) toSemverVersions(input []string) semver.Versions {
 	for _, str := range input {
 		v, err := semver.Parse(str)
 		if err != nil {
-			s.logger.Info(fmt.Sprintf("failed to parse semver: '%s' - should be valid by this point\n", str))
+			s.logger.Printf("failed to parse semver: '%s' - should be valid by this point", str)
 		} else {
 			versions = append(versions, v)
 		}
@@ -86,7 +83,7 @@ func (s sorter) toValidSemver(input string) string {
 		return input
 	}
 
-	s.logger.Info(fmt.Sprintf("failed to parse semver: '%s', appending zeros and trying again\n", input))
+	s.logger.Printf("failed to parse semver: '%s', appending zeros and trying again", input)
 	maybeSemver := input
 
 	segs := strings.SplitN(maybeSemver, ".", 3)
@@ -102,7 +99,7 @@ func (s sorter) toValidSemver(input string) string {
 		return maybeSemver
 	}
 
-	s.logger.Info(fmt.Sprintf("still failed to parse semver: '%s', giving up\n", maybeSemver))
+	s.logger.Printf("still failed to parse semver: '%s', giving up", maybeSemver)
 
 	return ""
 }
