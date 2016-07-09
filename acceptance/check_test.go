@@ -4,17 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-)
-
-const (
-	checkTimeout = 20 * time.Second
 )
 
 var _ = Describe("Check", func() {
@@ -65,7 +60,7 @@ var _ = Describe("Check", func() {
 	It("returns all newer versions than the provided version without error", func() {
 		By("Running the command")
 		session := run(command, stdinContents)
-		Eventually(session, checkTimeout).Should(gexec.Exit(0))
+		Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
 		By("Outputting a valid json response")
 		response := concourse.CheckResponse{}
@@ -100,7 +95,7 @@ var _ = Describe("Check", func() {
 			session := run(command, stdinContents)
 
 			By("Validating command exited with error")
-			Eventually(session, checkTimeout).Should(gexec.Exit(1))
+			Eventually(session, executableTimeout).Should(gexec.Exit(1))
 			Expect(session.Err).Should(gbytes.Say("product_slug must be provided"))
 		})
 	})
