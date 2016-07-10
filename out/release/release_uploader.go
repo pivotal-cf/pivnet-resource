@@ -88,7 +88,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		var description string
 		uploadAs := filename
-		fileType := "software"
+		fileType := "Software"
 
 		for _, f := range u.metadata.ProductFiles {
 			if f.File == exactGlob {
