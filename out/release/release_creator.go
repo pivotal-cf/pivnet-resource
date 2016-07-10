@@ -1,10 +1,12 @@
 package release
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/blang/semver"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
@@ -19,6 +21,7 @@ type ReleaseCreator struct {
 	sourcesDir      string
 	productSlug     string
 	params          concourse.OutParams
+	source          concourse.Source
 }
 
 //go:generate counterfeiter --fake-name ReleaseClient . releaseClient
@@ -37,6 +40,7 @@ func NewReleaseCreator(
 	metadata metadata.Metadata,
 	skipFileCheck bool,
 	params concourse.OutParams,
+	source concourse.Source,
 	sourcesDir,
 	productSlug string,
 ) ReleaseCreator {
@@ -48,6 +52,7 @@ func NewReleaseCreator(
 		skipFileCheck:   skipFileCheck,
 		sourcesDir:      sourcesDir,
 		params:          params,
+		source:          source,
 		productSlug:     productSlug,
 	}
 }
@@ -58,6 +63,14 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		rc.sourcesDir,
 		rc.params.VersionFile,
 	)
+
+	if rc.source.SortBy == concourse.SortBySemver {
+		_, err := semver.Parse(productVersion)
+		if err != nil {
+			return pivnet.Release{},
+				errors.New(fmt.Sprintf("Failed to parse as semver: %s", productVersion))
+		}
+	}
 
 	releases, err := rc.pivnet.ReleasesForProductSlug(rc.productSlug)
 	if err != nil {

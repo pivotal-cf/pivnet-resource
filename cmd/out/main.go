@@ -155,6 +155,7 @@ func main() {
 		m,
 		skipFileCheck,
 		input.Params,
+		input.Source,
 		sourcesDir,
 		input.Source.ProductSlug,
 	)

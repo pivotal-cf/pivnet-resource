@@ -2,6 +2,7 @@ package release_test
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 
@@ -20,15 +21,36 @@ var _ = Describe("ReleaseCreator", func() {
 		fetcherClient *releasefakes.Fetcher
 		pivnetClient  *releasefakes.ReleaseClient
 		logging       *log.Logger
-		creator       release.ReleaseCreator
+
+		creator release.ReleaseCreator
+
+		sortBy                      concourse.SortBy
+		fetchReturnedProductVersion string
+		existingProductVersion      string
+		eulaSlug                    string
+		releaseType                 string
 	)
 
-	Describe("Create", func() {
-		BeforeEach(func() {
-			pivnetClient = &releasefakes.ReleaseClient{}
-			fetcherClient = &releasefakes.Fetcher{}
-			logging = log.New(ioutil.Discard, "it doesn't matter", 0)
+	BeforeEach(func() {
+		pivnetClient = &releasefakes.ReleaseClient{}
+		fetcherClient = &releasefakes.Fetcher{}
+		logging = log.New(ioutil.Discard, "it doesn't matter", 0)
 
+		sortBy = concourse.SortByNone
+
+		existingProductVersion = "existing-product-version"
+		fetchReturnedProductVersion = "a-product-version"
+		eulaSlug = "magic-slug"
+		releaseType = "some-release-type"
+
+		pivnetClient.EULAsReturns([]pivnet.EULA{{Slug: eulaSlug}}, nil)
+		pivnetClient.ReleaseTypesReturns([]string{releaseType}, nil)
+		pivnetClient.ReleasesForProductSlugReturns([]pivnet.Release{{Version: existingProductVersion}}, nil)
+		pivnetClient.CreateReleaseReturns(pivnet.Release{ID: 1337}, nil)
+	})
+
+	Describe("Create", func() {
+		JustBeforeEach(func() {
 			meta := metadata.Metadata{
 				Release: &metadata.Release{
 					Controlled: true,
@@ -50,6 +72,10 @@ var _ = Describe("ReleaseCreator", func() {
 				ReleaseDateFile:     "some-release-date-file",
 			}
 
+			source := concourse.Source{
+				SortBy: sortBy,
+			}
+
 			creator = release.NewReleaseCreator(
 				pivnetClient,
 				fetcherClient,
@@ -57,36 +83,34 @@ var _ = Describe("ReleaseCreator", func() {
 				meta,
 				false,
 				params,
+				source,
 				"/some/sources/dir",
 				"some-product-slug",
 			)
+
+			fetcherClient.FetchStub = func(name string, sourcesDir string, file string) string {
+				switch name {
+				case "EULASlug":
+					return eulaSlug
+				case "ReleaseType":
+					return releaseType
+				case "Version":
+					return fetchReturnedProductVersion
+				case "Description":
+					return "wow, a description"
+				case "ReleaseNotesURL":
+					return "some-url"
+				case "ReleaseDate":
+					return "1/17/2016"
+				default:
+					panic("unexpected call")
+				}
+			}
 		})
 
 		Context("when the release does not exist", func() {
 			BeforeEach(func() {
-				pivnetClient.EULAsReturns([]pivnet.EULA{{Slug: "magic-slug"}}, nil)
-				fetcherClient.FetchStub = func(name string, sourcesDir string, file string) string {
-					switch name {
-					case "EULASlug":
-						return "magic-slug"
-					case "ReleaseType":
-						return "some-release-type"
-					case "Version":
-						return "a-product-version"
-					case "Description":
-						return "wow, a description"
-					case "ReleaseNotesURL":
-						return "some-url"
-					case "ReleaseDate":
-						return "1/17/2016"
-					default:
-						panic("unexpected call")
-					}
-				}
-				pivnetClient.ReleaseTypesReturns([]string{"some-release-type"}, nil)
-				pivnetClient.ReleasesForProductSlugReturns([]pivnet.Release{{Version: "a version"}}, nil)
 				pivnetClient.ProductVersionsReturns([]string{"a version that has not been uploaded"}, nil)
-				pivnetClient.CreateReleaseReturns(pivnet.Release{ID: 1337}, nil)
 			})
 
 			It("constructs the release", func() {
@@ -118,13 +142,13 @@ var _ = Describe("ReleaseCreator", func() {
 
 				slug, releases := pivnetClient.ProductVersionsArgsForCall(0)
 				Expect(slug).To(Equal("some-product-slug"))
-				Expect(releases).To(Equal([]pivnet.Release{{Version: "a version"}}))
+				Expect(releases).To(Equal([]pivnet.Release{{Version: existingProductVersion}}))
 
 				Expect(pivnetClient.CreateReleaseArgsForCall(0)).To(Equal(pivnet.CreateReleaseConfig{
 					ProductSlug:     "some-product-slug",
-					ReleaseType:     "some-release-type",
-					EULASlug:        "magic-slug",
-					ProductVersion:  "a-product-version",
+					ReleaseType:     releaseType,
+					EULASlug:        eulaSlug,
+					ProductVersion:  fetchReturnedProductVersion,
 					Description:     "wow, a description",
 					ReleaseNotesURL: "some-url",
 					ReleaseDate:     "1/17/2016",
@@ -133,7 +157,7 @@ var _ = Describe("ReleaseCreator", func() {
 			})
 
 			Context("when an error occurs", func() {
-				Context("wyhne pivnet fails getting releases for a product slug", func() {
+				Context("when pivnet fails getting releases for a product slug", func() {
 					BeforeEach(func() {
 						pivnetClient.ReleasesForProductSlugReturns([]pivnet.Release{}, errors.New("product slug error"))
 					})
@@ -214,14 +238,31 @@ var _ = Describe("ReleaseCreator", func() {
 
 		Context("when the release already exists", func() {
 			BeforeEach(func() {
-				fetcherClient.FetchReturns("an-existing-version")
-				pivnetClient.ReleasesForProductSlugReturns([]pivnet.Release{{Version: "an-existing-version"}}, nil)
-				pivnetClient.ProductVersionsReturns([]string{"an-existing-version"}, nil)
+				fetcherClient.FetchReturns(fetchReturnedProductVersion)
+				pivnetClient.ReleasesForProductSlugReturns([]pivnet.Release{{Version: fetchReturnedProductVersion}}, nil)
+				pivnetClient.ProductVersionsReturns([]string{fetchReturnedProductVersion}, nil)
 			})
 
 			It("returns a error", func() {
 				_, err := creator.Create()
-				Expect(err).To(MatchError(errors.New("release already exists with version: an-existing-version")))
+				Expect(err).To(MatchError(fmt.Errorf("release already exists with version: %s", fetchReturnedProductVersion)))
+			})
+		})
+
+		Context("when sorting by semver", func() {
+			BeforeEach(func() {
+				sortBy = concourse.SortBySemver
+			})
+
+			Context("when release is not valid semver", func() {
+				BeforeEach(func() {
+					fetchReturnedProductVersion = "not-valid-semver"
+				})
+
+				It("returns an error", func() {
+					_, err := creator.Create()
+					Expect(err).To(MatchError(errors.New("Failed to parse as semver: not-valid-semver")))
+				})
 			})
 		})
 	})
