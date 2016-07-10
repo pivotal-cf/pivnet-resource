@@ -197,6 +197,7 @@ var _ = Describe("PivnetClient - product files", func() {
 				Name:         "some-file-name",
 				FileVersion:  "some-file-version",
 				AWSObjectKey: "some-aws-object-key",
+				FileType:     "some-file-type",
 			}
 		})
 
@@ -204,10 +205,6 @@ var _ = Describe("PivnetClient - product files", func() {
 			type requestBody struct {
 				ProductFile pivnet.ProductFile `json:"product_file"`
 			}
-
-			const (
-				expectedFileType = "Software"
-			)
 
 			var (
 				expectedRequestBody requestBody
@@ -218,7 +215,7 @@ var _ = Describe("PivnetClient - product files", func() {
 			BeforeEach(func() {
 				expectedRequestBody = requestBody{
 					ProductFile: pivnet.ProductFile{
-						FileType:     expectedFileType,
+						FileType:     createProductFileConfig.FileType,
 						FileVersion:  createProductFileConfig.FileVersion,
 						Name:         createProductFileConfig.Name,
 						MD5:          createProductFileConfig.MD5,

@@ -103,6 +103,7 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		for _, glob := range exactGlobs {
 			if glob == f.File {
 				foundFile = true
+				continue
 			}
 		}
 

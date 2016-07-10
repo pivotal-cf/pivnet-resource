@@ -41,6 +41,7 @@ var _ = Describe("ReleaseUploader", func() {
 					File:        "some/file",
 					Description: "a description",
 					UploadAs:    "a file",
+					FileType:    "something",
 				},
 			},
 		}
@@ -80,6 +81,7 @@ var _ = Describe("ReleaseUploader", func() {
 					FileVersion:  "some-release-version",
 					MD5:          "madeupmd5",
 					Description:  "a description",
+					FileType:     "something",
 				}))
 
 				productID, releaseID, productFileID := uploadClient.AddProductFileArgsForCall(0)

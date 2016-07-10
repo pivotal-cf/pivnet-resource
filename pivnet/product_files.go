@@ -16,6 +16,7 @@ type CreateProductFileConfig struct {
 	Name         string
 	MD5          string
 	Description  string
+	FileType     string
 }
 
 func (c client) GetProductFiles(release Release) (ProductFiles, error) {
@@ -76,7 +77,7 @@ func (c client) CreateProductFile(config CreateProductFileConfig) (ProductFile, 
 	body := createProductFileBody{
 		ProductFile: ProductFile{
 			MD5:          config.MD5,
-			FileType:     "Software",
+			FileType:     config.FileType,
 			FileVersion:  config.FileVersion,
 			AWSObjectKey: config.AWSObjectKey,
 			Name:         config.Name,

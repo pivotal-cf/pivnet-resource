@@ -88,6 +88,8 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		var description string
 		uploadAs := filename
+		fileType := "software"
+
 		for _, f := range u.metadata.ProductFiles {
 			if f.File == exactGlob {
 				u.logger.Printf(
@@ -105,6 +107,9 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 						f.UploadAs,
 					)
 					uploadAs = f.UploadAs
+				}
+				if f.FileType != "" {
+					fileType = f.FileType
 				}
 			} else {
 				u.logger.Printf(
@@ -128,6 +133,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			FileVersion:  release.Version,
 			MD5:          fileContentsMD5,
 			Description:  description,
+			FileType:     fileType,
 		})
 		if err != nil {
 			return err
