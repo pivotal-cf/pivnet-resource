@@ -73,17 +73,20 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	if rc.source.SortBy == concourse.SortBySemver {
 		rc.logger.Println("Resource is configured to sort by semver - checking new version parses as semver")
-		_, err := rc.semverConverter.ToValidSemver(productVersion)
+		v, err := rc.semverConverter.ToValidSemver(productVersion)
 		if err != nil {
 			return pivnet.Release{}, err
 		}
+		rc.logger.Printf("Successfully parsed semver as: %s\n", v.String())
 	}
 
+	rc.logger.Printf("Getting existing releases for product slug: %s\n", rc.productSlug)
 	releases, err := rc.pivnet.ReleasesForProductSlug(rc.productSlug)
 	if err != nil {
 		return pivnet.Release{}, err
 	}
 
+	rc.logger.Println("Mapping existing releases to their versions")
 	existingVersions, err := rc.pivnet.ProductVersions(rc.productSlug, releases)
 	if err != nil {
 		return pivnet.Release{}, err
@@ -97,7 +100,6 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	}
 
 	rc.logger.Println("getting all valid eulas")
-
 	eulas, err := rc.pivnet.EULAs()
 	if err != nil {
 		return pivnet.Release{}, err
@@ -109,7 +111,6 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	}
 
 	rc.logger.Println("validating eula_slug")
-
 	eulaSlug := rc.metadataFetcher.Fetch(
 		"EULASlug",
 		rc.sourcesDir,
@@ -120,6 +121,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	for _, slug := range eulaSlugs {
 		if eulaSlug == slug {
 			containsSlug = true
+			break
 		}
 	}
 
@@ -134,7 +136,6 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	}
 
 	rc.logger.Println("getting all valid release types")
-
 	releaseTypes, err := rc.pivnet.ReleaseTypes()
 	if err != nil {
 		return pivnet.Release{}, err
@@ -146,7 +147,6 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	)
 
 	rc.logger.Println("validating release_type")
-
 	releaseType := rc.metadataFetcher.Fetch(
 		"ReleaseType",
 		rc.sourcesDir,
@@ -157,6 +157,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	for _, t := range releaseTypes {
 		if releaseType == t {
 			containsReleaseType = true
+			break
 		}
 	}
 
@@ -212,5 +213,6 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	rc.logger.Printf("config used to create pivnet release: %+v\n", config)
 
+	rc.logger.Printf("Creating new release")
 	return rc.pivnet.CreateRelease(config)
 }

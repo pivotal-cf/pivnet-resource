@@ -121,7 +121,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		}
 
 		u.logger.Printf(
-			"Creating product file with product_slug: %s and filename: %s",
+			"Creating product file with product_slug: %s and remote name: %s",
 			u.productSlug,
 			uploadAs,
 		)
@@ -140,9 +140,12 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		}
 
 		u.logger.Printf(
-			"Adding product file with product_slug: %s and filename: %s",
+			"Adding product file: '%s' with ID: %d to productID: %d, releaseID: %d",
 			u.productSlug,
+			productFile.ID,
 			filename,
+			product.ID,
+			release.ID,
 		)
 
 		err = u.pivnet.AddProductFile(product.ID, release.ID, productFile.ID)
