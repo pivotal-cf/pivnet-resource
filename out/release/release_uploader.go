@@ -141,9 +141,8 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		u.logger.Printf(
 			"Adding product file: '%s' with ID: %d to productID: %d, releaseID: %d",
-			u.productSlug,
-			productFile.ID,
 			filename,
+			productFile.ID,
 			product.ID,
 			release.ID,
 		)
