@@ -1,8 +1,13 @@
-FROM gliderlabs/alpine:3.2
+FROM concourse/buildroot:git
 
-RUN apk --update add \
-  ca-certificates \
-  jq
+RUN \
+  cd /usr/bin/ && \
+  curl \
+    -L \
+    -O \
+    https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && \
+  mv jq-linux64 jq && \
+  chmod +x jq
 
 ADD cmd/check/check /opt/resource/check
 ADD cmd/in/in /opt/resource/in
