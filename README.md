@@ -64,6 +64,11 @@ BOSH releases are available on
 
 * `product_version`: *Optional.* Regex to match product version e.g. `1\.2\..*`. Empty values match all product versions.
 
+* `sort_by`: *Optional.* Mechanism for sorting releases. Defaults to `none` which returns them in the order they come back from Pivotal Network.
+
+  Other permissible values for `sort_by` include:
+  - `semver` - this will order the releases by semantic version, returning the release with the highest-valued version.
+
 **Values for the `endpoint`, `bucket` and `region` must be consistent or downloads and uploads may fail.**
 
 For example, the default values of `endpoint: https://network.pivotal.io`,
@@ -154,7 +159,7 @@ See [Metadata file](#metadata-file) for more details.
   - Files are downloaded to the working directory (e.g. `/tmp/build/get`) and the
   file names will be the same as they are on Pivotal Network - e.g. a file with
   name `some-file.txt` will be downloaded to `/tmp/build/get/some-file.txt`.
-  - Downloaded files will be avaliable to tasks under the folder specified by the 
+  - Downloaded files will be available to tasks under the folder specified by the
   tasks inputs. File names will be preserved.
 
 ### `out`: Upload a product to Pivotal Network.
@@ -162,12 +167,12 @@ See [Metadata file](#metadata-file) for more details.
 Creates a new release on Pivotal Network with the provided version and metadata.
 
 Also optionally uploads one or more files to the Pivotal Network bucket under
-the provided `s3_filepath_prefix`, adding them both to the Pivotal Network as well as 
+the provided `s3_filepath_prefix`, adding them both to the Pivotal Network as well as
 to the newly-created release. The MD5 checksum of each file is taken locally, and
 added to the file metadata in Pivotal Network.
 
-If a product release already exists on Pivotal Network with the desired version, the 
-resource will exit with error without attempting to create the release or upload any 
+If a product release already exists on Pivotal Network with the desired version, the
+resource will exit with error without attempting to create the release or upload any
 files.
 
 #### Parameters
@@ -247,6 +252,13 @@ The top-level `release` key is optional at present but will be required in a
 later release, as it replaces the various files like `version_file`.
 
 * `version`: *Required.* Version of the new release.
+
+  Note, if sorting by
+  semantic version in `source` params (i.e. `sort_by: semver`)
+  then this version must be a valid semantic version.
+
+  This is to prevent inconsistencies that would occur when creating a new
+  version of a resource that cannot be discovered by the check for that resource.
 
 * `release_type`: *Required.* See the
 [official docs](https://network.pivotal.io/docs/api) for the supported types.
