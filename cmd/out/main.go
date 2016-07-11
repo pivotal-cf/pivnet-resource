@@ -17,6 +17,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
 	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
+	"github.com/pivotal-cf-experimental/pivnet-resource/semver"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
@@ -146,11 +147,14 @@ func main() {
 
 	metadataFetcher := release.NewMetadataFetcher(m, skipFileCheck)
 
+	semverConverter := semver.NewSemverConverter(logger)
+
 	md5summer := md5sum.NewFileSummer()
 
 	releaseCreator := release.NewReleaseCreator(
 		pivnetClient,
 		metadataFetcher,
+		semverConverter,
 		logger,
 		m,
 		skipFileCheck,

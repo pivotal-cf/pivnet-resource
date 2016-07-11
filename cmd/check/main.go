@@ -12,6 +12,7 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/lagershim"
+	"github.com/pivotal-cf-experimental/pivnet-resource/semver"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sorter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
 	"github.com/pivotal-cf-experimental/pivnet-resource/validator"
@@ -78,7 +79,8 @@ func main() {
 
 	extendedClient := gp.NewExtendedClient(client, sp)
 
-	s := sorter.NewSorter(logger)
+	semverConverter := semver.NewSemverConverter(logger)
+	s := sorter.NewSorter(logger, semverConverter)
 
 	response, err := check.NewCheckCommand(
 		logger,

@@ -1,7 +1,6 @@
 package release
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -15,6 +14,7 @@ import (
 type ReleaseCreator struct {
 	pivnet          releaseClient
 	metadataFetcher fetcher
+	semverConverter semverConverter
 	logger          *log.Logger
 	metadata        metadata.Metadata
 	skipFileCheck   bool
@@ -33,9 +33,15 @@ type releaseClient interface {
 	ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error)
 }
 
+//go:generate counterfeiter --fake-name FakeSemverConverter . semverConverter
+type semverConverter interface {
+	ToValidSemver(string) (semver.Version, error)
+}
+
 func NewReleaseCreator(
 	pivnet releaseClient,
 	metadataFetcher fetcher,
+	semverConverter semverConverter,
 	logger *log.Logger,
 	metadata metadata.Metadata,
 	skipFileCheck bool,
@@ -47,6 +53,7 @@ func NewReleaseCreator(
 	return ReleaseCreator{
 		pivnet:          pivnet,
 		metadataFetcher: metadataFetcher,
+		semverConverter: semverConverter,
 		logger:          logger,
 		metadata:        metadata,
 		skipFileCheck:   skipFileCheck,
@@ -65,10 +72,10 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	)
 
 	if rc.source.SortBy == concourse.SortBySemver {
-		_, err := semver.Parse(productVersion)
+		rc.logger.Println("Resource is configured to sort by semver - checking new version parses as semver")
+		_, err := rc.semverConverter.ToValidSemver(productVersion)
 		if err != nil {
-			return pivnet.Release{},
-				errors.New(fmt.Sprintf("Failed to parse as semver: %s", productVersion))
+			return pivnet.Release{}, err
 		}
 	}
 

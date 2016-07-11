@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/blang/semver"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
@@ -18,9 +19,10 @@ import (
 
 var _ = Describe("ReleaseCreator", func() {
 	var (
-		fetcherClient *releasefakes.Fetcher
-		pivnetClient  *releasefakes.ReleaseClient
-		logging       *log.Logger
+		fetcherClient       *releasefakes.Fetcher
+		pivnetClient        *releasefakes.ReleaseClient
+		fakeSemverConverter *releasefakes.FakeSemverConverter
+		logging             *log.Logger
 
 		creator release.ReleaseCreator
 
@@ -35,6 +37,7 @@ var _ = Describe("ReleaseCreator", func() {
 		pivnetClient = &releasefakes.ReleaseClient{}
 		fetcherClient = &releasefakes.Fetcher{}
 		logging = log.New(ioutil.Discard, "it doesn't matter", 0)
+		fakeSemverConverter = &releasefakes.FakeSemverConverter{}
 
 		sortBy = concourse.SortByNone
 
@@ -79,6 +82,7 @@ var _ = Describe("ReleaseCreator", func() {
 			creator = release.NewReleaseCreator(
 				pivnetClient,
 				fetcherClient,
+				fakeSemverConverter,
 				logging,
 				meta,
 				false,
@@ -255,13 +259,18 @@ var _ = Describe("ReleaseCreator", func() {
 			})
 
 			Context("when release is not valid semver", func() {
+				var (
+					expectedErr error
+				)
+
 				BeforeEach(func() {
-					fetchReturnedProductVersion = "not-valid-semver"
+					expectedErr = fmt.Errorf("semver parse error")
+					fakeSemverConverter.ToValidSemverReturns(semver.Version{}, expectedErr)
 				})
 
 				It("returns an error", func() {
 					_, err := creator.Create()
-					Expect(err).To(MatchError(errors.New("Failed to parse as semver: not-valid-semver")))
+					Expect(err).To(Equal(expectedErr))
 				})
 			})
 		})
