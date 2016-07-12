@@ -362,10 +362,6 @@ Refer to the
 [official docs](https://network.pivotal.io/docs/api#how-to-authenticate)
 for more details on obtaining a Pivotal Network API token.
 
-The tests also require that you build the s3 resource out as a binary.
-The source for that can be found [here](https://github.com/concourse/s3-resource).
-`S3_OUT_LOCATION` should be set to the location of the compiled binary.
-
 For the AWS S3 configuration, as the tests will actually upload a few small test
 files to the specified S3 bucket, ensure the bucket is already created and
 permissions are set correctly such that the user associated with the provided
@@ -382,7 +378,6 @@ PRODUCT_SLUG=my-product-slug-eg-pivotal-diego-pcf \
 API_TOKEN=my-token \
 AWS_ACCESS_KEY_ID=my-aws-access-key-id \
 AWS_SECRET_ACCESS_KEY=my-aws-secret-access-key \
-S3_OUT_LOCATION=location-of-s3-out-binary \
 PIVNET_S3_REGION=region-of-pivnet-eg-us-east-1 \
 PIVNET_BUCKET_NAME=bucket-of-pivnet-eg-pivnet-bucket \
 PIVNET_ENDPOINT= some-pivnet-endpoint \

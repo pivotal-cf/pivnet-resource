@@ -26,9 +26,8 @@ import (
 )
 
 const (
-	s3OutBinaryName = "s3-out"
-	defaultBucket   = "pivotalnetwork"
-	defaultRegion   = "eu-west-1"
+	defaultBucket = "pivotalnetwork"
+	defaultRegion = "eu-west-1"
 )
 
 var (
@@ -102,9 +101,7 @@ func main() {
 		SecretAccessKey: input.Source.SecretAccessKey,
 		RegionName:      region,
 		Bucket:          bucket,
-		Stdout:          os.Stdout,
 		Stderr:          os.Stderr,
-		OutBinaryPath:   filepath.Join(outDir, s3OutBinaryName),
 	})
 
 	uploaderClient := uploader.NewClient(uploader.Config{

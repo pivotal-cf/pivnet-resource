@@ -2,8 +2,6 @@ package acceptance
 
 import (
 	"os"
-	"path"
-	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -82,19 +80,6 @@ var _ = BeforeSuite(func() {
 
 	By("Compiling in binary")
 	inPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/in", "-race")
-	Expect(err).NotTo(HaveOccurred())
-
-	By("Copying s3-out to compilation location")
-	originalS3OutPath := os.Getenv("S3_OUT_LOCATION")
-	Expect(originalS3OutPath).ToNot(BeEmpty(), "$S3_OUT_LOCATION must be provided")
-	_, err = os.Stat(originalS3OutPath)
-	Expect(err).NotTo(HaveOccurred())
-	s3OutPath := filepath.Join(path.Dir(outPath), "s3-out")
-	copyFileContents(originalS3OutPath, s3OutPath)
-	Expect(err).NotTo(HaveOccurred())
-
-	By("Ensuring copy of s3-out is executable")
-	err = os.Chmod(s3OutPath, os.ModePerm)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Sanitizing acceptance test output")

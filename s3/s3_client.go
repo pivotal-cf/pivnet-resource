@@ -1,10 +1,11 @@
 package s3
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
-	"os/exec"
+	"path/filepath"
+
+	"github.com/concourse/s3-resource"
 )
 
 type Client interface {
@@ -17,10 +18,9 @@ type client struct {
 	regionName      string
 	bucket          string
 
-	stdout io.Writer
 	stderr io.Writer
 
-	outBinaryPath string
+	s3client s3resource.S3Client
 }
 
 type NewClientConfig struct {
@@ -29,62 +29,67 @@ type NewClientConfig struct {
 	RegionName      string
 	Bucket          string
 
-	Stdout io.Writer
 	Stderr io.Writer
-
-	OutBinaryPath string
 }
 
 func NewClient(config NewClientConfig) Client {
+	endpoint := ""
+	disableSSL := false
+
+	awsConfig := s3resource.NewAwsConfig(
+		config.AccessKeyID,
+		config.SecretAccessKey,
+		config.RegionName,
+		endpoint,
+		disableSSL,
+	)
+
+	s3client := s3resource.NewS3Client(
+		config.Stderr,
+		awsConfig,
+	)
+
 	return &client{
 		accessKeyID:     config.AccessKeyID,
 		secretAccessKey: config.SecretAccessKey,
 		regionName:      config.RegionName,
 		bucket:          config.Bucket,
-		stdout:          config.Stdout,
 		stderr:          config.Stderr,
-		outBinaryPath:   config.OutBinaryPath,
+		s3client:        s3client,
 	}
 }
 
 func (c client) Upload(fileGlob string, to string, sourcesDir string) error {
-	s3Input := Request{
-		Source: Source{
-			AccessKeyID:     c.accessKeyID,
-			SecretAccessKey: c.secretAccessKey,
-			Bucket:          c.bucket,
-			RegionName:      c.regionName,
-		},
-		Params: Params{
-			File: fileGlob,
-			To:   to,
-		},
-	}
+	matches, err := filepath.Glob(filepath.Join(sourcesDir, fileGlob))
 
-	cmd := exec.Command(c.outBinaryPath, sourcesDir)
-
-	cmdIn, err := cmd.StdinPipe()
 	if err != nil {
 		return err
 	}
 
-	cmd.Stdout = c.stderr
-	cmd.Stderr = c.stderr
-
-	err = cmd.Start()
-	if err != nil {
-		return fmt.Errorf("Error starting %s: %s", c.outBinaryPath, err.Error())
+	if len(matches) == 0 {
+		return fmt.Errorf("no matches found for pattern: %s", fileGlob)
 	}
 
-	err = json.NewEncoder(cmdIn).Encode(s3Input)
+	if len(matches) > 1 {
+		return fmt.Errorf("more than one match found for pattern: %s\n%v", fileGlob, matches)
+	}
+
+	localPath := matches[0]
+	remotePath := filepath.Join(to, filepath.Base(localPath))
+
+	acl := "private"
+
+	fmt.Fprintf(c.stderr, "Uploading %s to s3://%s/%s\n", localPath, c.bucket, remotePath)
+	_, err = c.s3client.UploadFile(
+		c.bucket,
+		remotePath,
+		localPath,
+		acl,
+	)
 	if err != nil {
 		return err
 	}
-
-	err = cmd.Wait()
-	if err != nil {
-		return fmt.Errorf("Error running %s: %s", c.outBinaryPath, err.Error())
-	}
+	fmt.Fprintf(c.stderr, "Successfully uploaded %s to s3://%s/%s\n", localPath, c.bucket, remotePath)
 
 	return nil
 }
