@@ -7,20 +7,14 @@ import (
 	"os"
 )
 
-//go:generate counterfeiter . FileSummer
-
-type FileSummer interface {
-	SumFile(filepath string) (string, error)
+type FileSummer struct {
 }
 
-type filesummer struct {
+func NewFileSummer() *FileSummer {
+	return &FileSummer{}
 }
 
-func NewFileSummer() FileSummer {
-	return &filesummer{}
-}
-
-func (f filesummer) SumFile(filepath string) (string, error) {
+func (f FileSummer) SumFile(filepath string) (string, error) {
 	fileToSum, err := os.Open(filepath)
 	if err != nil {
 		return "", err

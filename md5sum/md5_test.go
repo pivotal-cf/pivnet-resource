@@ -17,7 +17,7 @@ var _ = Describe("MD5", func() {
 			tempDir      string
 			fileContents []byte
 
-			fileSummer md5sum.FileSummer
+			fileSummer *md5sum.FileSummer
 		)
 
 		BeforeEach(func() {
