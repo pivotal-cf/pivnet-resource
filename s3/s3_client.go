@@ -8,11 +8,7 @@ import (
 	"github.com/concourse/s3-resource"
 )
 
-type Client interface {
-	Upload(fileGlob string, to string, sourcesDir string) error
-}
-
-type client struct {
+type Client struct {
 	accessKeyID     string
 	secretAccessKey string
 	regionName      string
@@ -32,7 +28,7 @@ type NewClientConfig struct {
 	Stderr io.Writer
 }
 
-func NewClient(config NewClientConfig) Client {
+func NewClient(config NewClientConfig) *Client {
 	endpoint := ""
 	disableSSL := false
 
@@ -49,7 +45,7 @@ func NewClient(config NewClientConfig) Client {
 		awsConfig,
 	)
 
-	return &client{
+	return &Client{
 		accessKeyID:     config.AccessKeyID,
 		secretAccessKey: config.SecretAccessKey,
 		regionName:      config.RegionName,
@@ -59,7 +55,7 @@ func NewClient(config NewClientConfig) Client {
 	}
 }
 
-func (c client) Upload(fileGlob string, to string, sourcesDir string) error {
+func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 	matches, err := filepath.Glob(filepath.Join(sourcesDir, fileGlob))
 
 	if err != nil {

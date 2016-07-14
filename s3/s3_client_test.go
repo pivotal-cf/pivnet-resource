@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("S3 Client", func() {
 	var (
-		client s3.Client
+		client *s3.Client
 	)
 
 	BeforeEach(func() {
