@@ -11,27 +11,19 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-//go:generate counterfeiter . FileWriter
-
-type FileWriter interface {
-	WriteMetadataJSONFile(mdata metadata.Metadata) error
-	WriteMetadataYAMLFile(mdata metadata.Metadata) error
-	WriteVersionFile(versionWithETag string) error
-}
-
-type fileWriter struct {
+type FileWriter struct {
 	downloadDir string
 	logger      *log.Logger
 }
 
-func NewFileWriter(downloadDir string, logger *log.Logger) FileWriter {
-	return &fileWriter{
+func NewFileWriter(downloadDir string, logger *log.Logger) *FileWriter {
+	return &FileWriter{
 		downloadDir: downloadDir,
 		logger:      logger,
 	}
 }
 
-func (w fileWriter) WriteMetadataYAMLFile(mdata metadata.Metadata) error {
+func (w FileWriter) WriteMetadataYAMLFile(mdata metadata.Metadata) error {
 	yamlMetadataFilepath := filepath.Join(w.downloadDir, "metadata.yaml")
 	w.logger.Println("Writing metadata to json file")
 
@@ -50,7 +42,7 @@ func (w fileWriter) WriteMetadataYAMLFile(mdata metadata.Metadata) error {
 	return nil
 }
 
-func (w fileWriter) WriteMetadataJSONFile(mdata metadata.Metadata) error {
+func (w FileWriter) WriteMetadataJSONFile(mdata metadata.Metadata) error {
 	jsonMetadataFilepath := filepath.Join(w.downloadDir, "metadata.json")
 	w.logger.Println("Writing metadata to json file")
 
@@ -69,7 +61,7 @@ func (w fileWriter) WriteMetadataJSONFile(mdata metadata.Metadata) error {
 	return nil
 }
 
-func (w fileWriter) WriteVersionFile(versionWithETag string) error {
+func (w FileWriter) WriteVersionFile(versionWithETag string) error {
 	versionFilepath := filepath.Join(w.downloadDir, "version")
 
 	w.logger.Println("Writing version to file")

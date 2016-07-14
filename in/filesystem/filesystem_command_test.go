@@ -18,7 +18,7 @@ import (
 
 var _ = Describe("FileWriter", func() {
 	var (
-		fileWriter  filesystem.FileWriter
+		fileWriter  *filesystem.FileWriter
 		downloadDir string
 	)
 

@@ -12,7 +12,6 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
-	"github.com/pivotal-cf-experimental/pivnet-resource/in/filesystem/filesystemfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in/infakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
@@ -28,7 +27,7 @@ var _ = Describe("In", func() {
 		fakeDownloader   *infakes.FakeDownloader
 		fakePivnetClient *gpfakes.FakeClient
 		fakeFileSummer   *infakes.FakeFileSummer
-		fakeFileWriter   *filesystemfakes.FakeFileWriter
+		fakeFileWriter   *infakes.FakeFileWriter
 
 		productFiles []pivnet.ProductFile
 		productFile1 pivnet.ProductFile
@@ -62,7 +61,7 @@ var _ = Describe("In", func() {
 		fakeDownloader = &infakes.FakeDownloader{}
 		fakePivnetClient = &gpfakes.FakeClient{}
 		fakeFileSummer = &infakes.FakeFileSummer{}
-		fakeFileWriter = &filesystemfakes.FakeFileWriter{}
+		fakeFileWriter = &infakes.FakeFileWriter{}
 
 		getReleaseErr = nil
 		acceptEULAErr = nil

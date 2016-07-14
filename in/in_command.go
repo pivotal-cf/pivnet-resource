@@ -10,7 +10,6 @@ import (
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
-	"github.com/pivotal-cf-experimental/pivnet-resource/in/filesystem"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
@@ -31,6 +30,13 @@ type FileSummer interface {
 	SumFile(filepath string) (string, error)
 }
 
+//go:generate counterfeiter . FileWriter
+type FileWriter interface {
+	WriteMetadataJSONFile(mdata metadata.Metadata) error
+	WriteMetadataYAMLFile(mdata metadata.Metadata) error
+	WriteVersionFile(versionWithETag string) error
+}
+
 type InCommand struct {
 	logger       *log.Logger
 	downloadDir  string
@@ -38,7 +44,7 @@ type InCommand struct {
 	filter       Filter
 	downloader   Downloader
 	fileSummer   FileSummer
-	fileWriter   filesystem.FileWriter
+	fileWriter   FileWriter
 }
 
 func NewInCommand(
@@ -47,7 +53,7 @@ func NewInCommand(
 	filter Filter,
 	downloader Downloader,
 	fileSummer FileSummer,
-	fileWriter filesystem.FileWriter,
+	fileWriter FileWriter,
 ) *InCommand {
 	return &InCommand{
 		logger:       logger,
