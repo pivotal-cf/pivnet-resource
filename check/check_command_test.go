@@ -8,8 +8,8 @@ import (
 
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/check"
+	"github.com/pivotal-cf-experimental/pivnet-resource/check/checkfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sorter/sorterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
@@ -20,7 +20,7 @@ import (
 
 var _ = Describe("Check", func() {
 	var (
-		fakeFilter         *filterfakes.FakeFilter
+		fakeFilter         *checkfakes.FakeFilter
 		fakePivnetClient   *gpfakes.FakeClient
 		fakeExtendedClient *gpfakes.FakeExtendedClient
 		fakeSorter         *sorterfakes.FakeSorter
@@ -42,7 +42,7 @@ var _ = Describe("Check", func() {
 	)
 
 	BeforeEach(func() {
-		fakeFilter = &filterfakes.FakeFilter{}
+		fakeFilter = &checkfakes.FakeFilter{}
 		fakePivnetClient = &gpfakes.FakeClient{}
 		fakeExtendedClient = &gpfakes.FakeExtendedClient{}
 		fakeSorter = &sorterfakes.FakeSorter{}

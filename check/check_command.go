@@ -5,17 +5,23 @@ import (
 	"log"
 	"strings"
 
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sorter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
+//go:generate counterfeiter . Filter
+type Filter interface {
+	ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error)
+	ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error)
+}
+
 type CheckCommand struct {
 	logger         *log.Logger
 	binaryVersion  string
-	filter         filter.Filter
+	filter         Filter
 	pivnetClient   gp.Client
 	extendedClient gp.ExtendedClient
 	semverSorter   sorter.Sorter
@@ -24,7 +30,7 @@ type CheckCommand struct {
 func NewCheckCommand(
 	logger *log.Logger,
 	binaryVersion string,
-	filter filter.Filter,
+	filter Filter,
 	pivnetClient gp.Client,
 	extendedClient gp.ExtendedClient,
 	semverSorter sorter.Sorter,

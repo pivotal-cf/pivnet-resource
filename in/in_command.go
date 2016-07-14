@@ -10,7 +10,6 @@ import (
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
-	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in/filesystem"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
@@ -18,11 +17,17 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
+//go:generate counterfeiter . Filter
+type Filter interface {
+	DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error)
+	DownloadLinks(p []pivnet.ProductFile) map[string]string
+}
+
 type InCommand struct {
 	logger       *log.Logger
 	downloadDir  string
 	pivnetClient gp.Client
-	filter       filter.Filter
+	filter       Filter
 	downloader   downloader.Downloader
 	fileSummer   md5sum.FileSummer
 	fileWriter   filesystem.FileWriter
@@ -31,7 +36,7 @@ type InCommand struct {
 func NewInCommand(
 	logger *log.Logger,
 	pivnetClient gp.Client,
-	filter filter.Filter,
+	filter Filter,
 	downloader downloader.Downloader,
 	fileSummer md5sum.FileSummer,
 	fileWriter filesystem.FileWriter,

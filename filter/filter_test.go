@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("Filter", func() {
 	var (
-		f filter.Filter
+		f *filter.Filter
 
 		releases []pivnet.Release
 	)

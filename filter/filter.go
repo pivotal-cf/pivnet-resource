@@ -9,23 +9,14 @@ import (
 	"github.com/pivotal-cf-experimental/go-pivnet"
 )
 
-//go:generate counterfeiter . Filter
-
-type Filter interface {
-	ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error)
-	ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error)
-	DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error)
-	DownloadLinks(p []pivnet.ProductFile) map[string]string
+type Filter struct {
 }
 
-type filter struct {
+func NewFilter() *Filter {
+	return &Filter{}
 }
 
-func NewFilter() Filter {
-	return &filter{}
-}
-
-func (f filter) ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error) {
+func (f Filter) ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error) {
 	filteredReleases := make([]pivnet.Release, 0)
 
 	for _, release := range releases {
@@ -38,7 +29,7 @@ func (f filter) ReleasesByReleaseType(releases []pivnet.Release, releaseType str
 }
 
 // ReleasesByVersion returns all releases that match the provided version regex
-func (f filter) ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error) {
+func (f Filter) ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error) {
 	filteredReleases := make([]pivnet.Release, 0)
 
 	for _, release := range releases {
@@ -55,7 +46,7 @@ func (f filter) ReleasesByVersion(releases []pivnet.Release, version string) ([]
 	return filteredReleases, nil
 }
 
-func (f filter) DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error) {
+func (f Filter) DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error) {
 	filtered := make(map[string]string)
 
 	for _, pattern := range glob {
@@ -79,7 +70,7 @@ func (f filter) DownloadLinksByGlob(downloadLinks map[string]string, glob []stri
 	return filtered, nil
 }
 
-func (f filter) DownloadLinks(p []pivnet.ProductFile) map[string]string {
+func (f Filter) DownloadLinks(p []pivnet.ProductFile) map[string]string {
 	links := make(map[string]string)
 
 	for _, productFile := range p {

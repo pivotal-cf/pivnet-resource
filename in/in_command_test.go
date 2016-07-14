@@ -11,10 +11,10 @@ import (
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/downloader/downloaderfakes"
-	"github.com/pivotal-cf-experimental/pivnet-resource/filter/filterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in/filesystem/filesystemfakes"
+	"github.com/pivotal-cf-experimental/pivnet-resource/in/infakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum/md5sumfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
@@ -26,7 +26,7 @@ var _ = Describe("In", func() {
 	)
 
 	var (
-		fakeFilter       *filterfakes.FakeFilter
+		fakeFilter       *infakes.FakeFilter
 		fakeDownloader   *downloaderfakes.FakeDownloader
 		fakePivnetClient *gpfakes.FakeClient
 		fakeFileSummer   *md5sumfakes.FakeFileSummer
@@ -60,7 +60,7 @@ var _ = Describe("In", func() {
 	)
 
 	BeforeEach(func() {
-		fakeFilter = &filterfakes.FakeFilter{}
+		fakeFilter = &infakes.FakeFilter{}
 		fakeDownloader = &downloaderfakes.FakeDownloader{}
 		fakePivnetClient = &gpfakes.FakeClient{}
 		fakeFileSummer = &md5sumfakes.FakeFileSummer{}
