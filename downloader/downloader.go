@@ -9,27 +9,21 @@ import (
 	"path/filepath"
 )
 
-//go:generate counterfeiter . Downloader
-
-type Downloader interface {
-	Download(downloadLinks map[string]string) ([]string, error)
-}
-
-type downloader struct {
+type Downloader struct {
 	apiToken    string
 	downloadDir string
 	logger      *log.Logger
 }
 
-func NewDownloader(apiToken string, downloadDir string, logger *log.Logger) Downloader {
-	return &downloader{
+func NewDownloader(apiToken string, downloadDir string, logger *log.Logger) *Downloader {
+	return &Downloader{
 		apiToken:    apiToken,
 		downloadDir: downloadDir,
 		logger:      logger,
 	}
 }
 
-func (d downloader) Download(downloadLinks map[string]string) ([]string, error) {
+func (d Downloader) Download(downloadLinks map[string]string) ([]string, error) {
 	d.logger.Println("Ensuring download directory exists")
 
 	err := os.MkdirAll(d.downloadDir, os.ModePerm)
@@ -51,7 +45,7 @@ func (d downloader) Download(downloadLinks map[string]string) ([]string, error) 
 	return fileNames, nil
 }
 
-func (d downloader) download(fileName string, downloadLink string) (string, error) {
+func (d Downloader) download(fileName string, downloadLink string) (string, error) {
 	downloadPath := filepath.Join(d.downloadDir, fileName)
 
 	req, err := http.NewRequest("POST", downloadLink, nil)

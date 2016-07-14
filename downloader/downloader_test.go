@@ -18,7 +18,7 @@ import (
 
 var _ = Describe("Downloader", func() {
 	var (
-		d          downloader.Downloader
+		d          *downloader.Downloader
 		server     *ghttp.Server
 		apiAddress string
 		dir        string
