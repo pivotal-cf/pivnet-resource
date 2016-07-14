@@ -11,7 +11,6 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/check/checkfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
-	"github.com/pivotal-cf-experimental/pivnet-resource/sorter/sorterfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 
 	. "github.com/onsi/ginkgo"
@@ -23,7 +22,7 @@ var _ = Describe("Check", func() {
 		fakeFilter         *checkfakes.FakeFilter
 		fakePivnetClient   *gpfakes.FakeClient
 		fakeExtendedClient *gpfakes.FakeExtendedClient
-		fakeSorter         *sorterfakes.FakeSorter
+		fakeSorter         *checkfakes.FakeSorter
 
 		checkRequest concourse.CheckRequest
 		checkCommand *check.CheckCommand
@@ -45,7 +44,7 @@ var _ = Describe("Check", func() {
 		fakeFilter = &checkfakes.FakeFilter{}
 		fakePivnetClient = &gpfakes.FakeClient{}
 		fakeExtendedClient = &gpfakes.FakeExtendedClient{}
-		fakeSorter = &sorterfakes.FakeSorter{}
+		fakeSorter = &checkfakes.FakeSorter{}
 		logging = log.New(ioutil.Discard, "doesn't matter", 0)
 
 		releasesByReleaseTypeErr = nil

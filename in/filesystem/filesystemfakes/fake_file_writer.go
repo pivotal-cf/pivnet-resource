@@ -33,7 +33,8 @@ type FakeFileWriter struct {
 	writeVersionFileReturns struct {
 		result1 error
 	}
-	invocations map[string][][]interface{}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeFileWriter) WriteMetadataJSONFile(mdata metadata.Metadata) error {
@@ -41,8 +42,7 @@ func (fake *FakeFileWriter) WriteMetadataJSONFile(mdata metadata.Metadata) error
 	fake.writeMetadataJSONFileArgsForCall = append(fake.writeMetadataJSONFileArgsForCall, struct {
 		mdata metadata.Metadata
 	}{mdata})
-	fake.guard("WriteMetadataJSONFile")
-	fake.invocations["WriteMetadataJSONFile"] = append(fake.invocations["WriteMetadataJSONFile"], []interface{}{mdata})
+	fake.recordInvocation("WriteMetadataJSONFile", []interface{}{mdata})
 	fake.writeMetadataJSONFileMutex.Unlock()
 	if fake.WriteMetadataJSONFileStub != nil {
 		return fake.WriteMetadataJSONFileStub(mdata)
@@ -75,8 +75,7 @@ func (fake *FakeFileWriter) WriteMetadataYAMLFile(mdata metadata.Metadata) error
 	fake.writeMetadataYAMLFileArgsForCall = append(fake.writeMetadataYAMLFileArgsForCall, struct {
 		mdata metadata.Metadata
 	}{mdata})
-	fake.guard("WriteMetadataYAMLFile")
-	fake.invocations["WriteMetadataYAMLFile"] = append(fake.invocations["WriteMetadataYAMLFile"], []interface{}{mdata})
+	fake.recordInvocation("WriteMetadataYAMLFile", []interface{}{mdata})
 	fake.writeMetadataYAMLFileMutex.Unlock()
 	if fake.WriteMetadataYAMLFileStub != nil {
 		return fake.WriteMetadataYAMLFileStub(mdata)
@@ -109,8 +108,7 @@ func (fake *FakeFileWriter) WriteVersionFile(versionWithETag string) error {
 	fake.writeVersionFileArgsForCall = append(fake.writeVersionFileArgsForCall, struct {
 		versionWithETag string
 	}{versionWithETag})
-	fake.guard("WriteVersionFile")
-	fake.invocations["WriteVersionFile"] = append(fake.invocations["WriteVersionFile"], []interface{}{versionWithETag})
+	fake.recordInvocation("WriteVersionFile", []interface{}{versionWithETag})
 	fake.writeVersionFileMutex.Unlock()
 	if fake.WriteVersionFileStub != nil {
 		return fake.WriteVersionFileStub(versionWithETag)
@@ -139,16 +137,27 @@ func (fake *FakeFileWriter) WriteVersionFileReturns(result1 error) {
 }
 
 func (fake *FakeFileWriter) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.writeMetadataJSONFileMutex.RLock()
+	defer fake.writeMetadataJSONFileMutex.RUnlock()
+	fake.writeMetadataYAMLFileMutex.RLock()
+	defer fake.writeMetadataYAMLFileMutex.RUnlock()
+	fake.writeVersionFileMutex.RLock()
+	defer fake.writeVersionFileMutex.RUnlock()
 	return fake.invocations
 }
 
-func (fake *FakeFileWriter) guard(key string) {
+func (fake *FakeFileWriter) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
 		fake.invocations = map[string][][]interface{}{}
 	}
 	if fake.invocations[key] == nil {
 		fake.invocations[key] = [][]interface{}{}
 	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ filesystem.FileWriter = new(FakeFileWriter)

@@ -27,7 +27,8 @@ type FakeFilter struct {
 	downloadLinksReturns struct {
 		result1 map[string]string
 	}
-	invocations map[string][][]interface{}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeFilter) DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error) {
@@ -41,8 +42,7 @@ func (fake *FakeFilter) DownloadLinksByGlob(downloadLinks map[string]string, glo
 		downloadLinks map[string]string
 		glob          []string
 	}{downloadLinks, globCopy})
-	fake.guard("DownloadLinksByGlob")
-	fake.invocations["DownloadLinksByGlob"] = append(fake.invocations["DownloadLinksByGlob"], []interface{}{downloadLinks, globCopy})
+	fake.recordInvocation("DownloadLinksByGlob", []interface{}{downloadLinks, globCopy})
 	fake.downloadLinksByGlobMutex.Unlock()
 	if fake.DownloadLinksByGlobStub != nil {
 		return fake.DownloadLinksByGlobStub(downloadLinks, glob)
@@ -81,8 +81,7 @@ func (fake *FakeFilter) DownloadLinks(p []pivnet.ProductFile) map[string]string 
 	fake.downloadLinksArgsForCall = append(fake.downloadLinksArgsForCall, struct {
 		p []pivnet.ProductFile
 	}{pCopy})
-	fake.guard("DownloadLinks")
-	fake.invocations["DownloadLinks"] = append(fake.invocations["DownloadLinks"], []interface{}{pCopy})
+	fake.recordInvocation("DownloadLinks", []interface{}{pCopy})
 	fake.downloadLinksMutex.Unlock()
 	if fake.DownloadLinksStub != nil {
 		return fake.DownloadLinksStub(p)
@@ -111,16 +110,25 @@ func (fake *FakeFilter) DownloadLinksReturns(result1 map[string]string) {
 }
 
 func (fake *FakeFilter) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.downloadLinksByGlobMutex.RLock()
+	defer fake.downloadLinksByGlobMutex.RUnlock()
+	fake.downloadLinksMutex.RLock()
+	defer fake.downloadLinksMutex.RUnlock()
 	return fake.invocations
 }
 
-func (fake *FakeFilter) guard(key string) {
+func (fake *FakeFilter) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
 		fake.invocations = map[string][][]interface{}{}
 	}
 	if fake.invocations[key] == nil {
 		fake.invocations[key] = [][]interface{}{}
 	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ in.Filter = new(FakeFilter)

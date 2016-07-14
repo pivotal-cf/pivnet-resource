@@ -8,7 +8,6 @@ import (
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
-	"github.com/pivotal-cf-experimental/pivnet-resource/sorter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
@@ -18,13 +17,18 @@ type Filter interface {
 	ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error)
 }
 
+//go:generate counterfeiter . Sorter
+type Sorter interface {
+	SortBySemver([]pivnet.Release) ([]pivnet.Release, error)
+}
+
 type CheckCommand struct {
 	logger         *log.Logger
 	binaryVersion  string
 	filter         Filter
 	pivnetClient   gp.Client
 	extendedClient gp.ExtendedClient
-	semverSorter   sorter.Sorter
+	semverSorter   Sorter
 }
 
 func NewCheckCommand(
@@ -33,7 +37,7 @@ func NewCheckCommand(
 	filter Filter,
 	pivnetClient gp.Client,
 	extendedClient gp.ExtendedClient,
-	semverSorter sorter.Sorter,
+	semverSorter Sorter,
 ) *CheckCommand {
 	return &CheckCommand{
 		logger:         logger,

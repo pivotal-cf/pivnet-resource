@@ -17,7 +17,8 @@ type FakeDownloader struct {
 		result1 []string
 		result2 error
 	}
-	invocations map[string][][]interface{}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeDownloader) Download(downloadLinks map[string]string) ([]string, error) {
@@ -25,8 +26,7 @@ func (fake *FakeDownloader) Download(downloadLinks map[string]string) ([]string,
 	fake.downloadArgsForCall = append(fake.downloadArgsForCall, struct {
 		downloadLinks map[string]string
 	}{downloadLinks})
-	fake.guard("Download")
-	fake.invocations["Download"] = append(fake.invocations["Download"], []interface{}{downloadLinks})
+	fake.recordInvocation("Download", []interface{}{downloadLinks})
 	fake.downloadMutex.Unlock()
 	if fake.DownloadStub != nil {
 		return fake.DownloadStub(downloadLinks)
@@ -56,16 +56,23 @@ func (fake *FakeDownloader) DownloadReturns(result1 []string, result2 error) {
 }
 
 func (fake *FakeDownloader) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.downloadMutex.RLock()
+	defer fake.downloadMutex.RUnlock()
 	return fake.invocations
 }
 
-func (fake *FakeDownloader) guard(key string) {
+func (fake *FakeDownloader) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
 		fake.invocations = map[string][][]interface{}{}
 	}
 	if fake.invocations[key] == nil {
 		fake.invocations[key] = [][]interface{}{}
 	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ in.Downloader = new(FakeDownloader)

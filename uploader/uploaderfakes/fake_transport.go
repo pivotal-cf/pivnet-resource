@@ -18,7 +18,8 @@ type FakeTransport struct {
 	uploadReturns struct {
 		result1 error
 	}
-	invocations map[string][][]interface{}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeTransport) Upload(fileGlob string, filepathPrefix string, sourcesDir string) error {
@@ -28,8 +29,7 @@ func (fake *FakeTransport) Upload(fileGlob string, filepathPrefix string, source
 		filepathPrefix string
 		sourcesDir     string
 	}{fileGlob, filepathPrefix, sourcesDir})
-	fake.guard("Upload")
-	fake.invocations["Upload"] = append(fake.invocations["Upload"], []interface{}{fileGlob, filepathPrefix, sourcesDir})
+	fake.recordInvocation("Upload", []interface{}{fileGlob, filepathPrefix, sourcesDir})
 	fake.uploadMutex.Unlock()
 	if fake.UploadStub != nil {
 		return fake.UploadStub(fileGlob, filepathPrefix, sourcesDir)
@@ -58,16 +58,23 @@ func (fake *FakeTransport) UploadReturns(result1 error) {
 }
 
 func (fake *FakeTransport) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.uploadMutex.RLock()
+	defer fake.uploadMutex.RUnlock()
 	return fake.invocations
 }
 
-func (fake *FakeTransport) guard(key string) {
+func (fake *FakeTransport) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
 		fake.invocations = map[string][][]interface{}{}
 	}
 	if fake.invocations[key] == nil {
 		fake.invocations[key] = [][]interface{}{}
 	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ uploader.Transport = new(FakeTransport)

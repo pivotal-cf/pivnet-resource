@@ -18,7 +18,8 @@ type FakeExtendedClient struct {
 		result1 string
 		result2 error
 	}
-	invocations map[string][][]interface{}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeExtendedClient) ReleaseETag(productSlug string, releaseID int) (string, error) {
@@ -27,8 +28,7 @@ func (fake *FakeExtendedClient) ReleaseETag(productSlug string, releaseID int) (
 		productSlug string
 		releaseID   int
 	}{productSlug, releaseID})
-	fake.guard("ReleaseETag")
-	fake.invocations["ReleaseETag"] = append(fake.invocations["ReleaseETag"], []interface{}{productSlug, releaseID})
+	fake.recordInvocation("ReleaseETag", []interface{}{productSlug, releaseID})
 	fake.releaseETagMutex.Unlock()
 	if fake.ReleaseETagStub != nil {
 		return fake.ReleaseETagStub(productSlug, releaseID)
@@ -58,16 +58,23 @@ func (fake *FakeExtendedClient) ReleaseETagReturns(result1 string, result2 error
 }
 
 func (fake *FakeExtendedClient) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.releaseETagMutex.RLock()
+	defer fake.releaseETagMutex.RUnlock()
 	return fake.invocations
 }
 
-func (fake *FakeExtendedClient) guard(key string) {
+func (fake *FakeExtendedClient) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
 		fake.invocations = map[string][][]interface{}{}
 	}
 	if fake.invocations[key] == nil {
 		fake.invocations[key] = [][]interface{}{}
 	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ gp.ExtendedClient = new(FakeExtendedClient)

@@ -90,14 +90,14 @@ type FakeClient struct {
 		result1 *http.Response
 		result2 error
 	}
-	invocations map[string][][]interface{}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeClient) ReleaseTypes() ([]string, error) {
 	fake.releaseTypesMutex.Lock()
 	fake.releaseTypesArgsForCall = append(fake.releaseTypesArgsForCall, struct{}{})
-	fake.guard("ReleaseTypes")
-	fake.invocations["ReleaseTypes"] = append(fake.invocations["ReleaseTypes"], []interface{}{})
+	fake.recordInvocation("ReleaseTypes", []interface{}{})
 	fake.releaseTypesMutex.Unlock()
 	if fake.ReleaseTypesStub != nil {
 		return fake.ReleaseTypesStub()
@@ -126,8 +126,7 @@ func (fake *FakeClient) GetRelease(productSlug string, productVersion string) (p
 		productSlug    string
 		productVersion string
 	}{productSlug, productVersion})
-	fake.guard("GetRelease")
-	fake.invocations["GetRelease"] = append(fake.invocations["GetRelease"], []interface{}{productSlug, productVersion})
+	fake.recordInvocation("GetRelease", []interface{}{productSlug, productVersion})
 	fake.getReleaseMutex.Unlock()
 	if fake.GetReleaseStub != nil {
 		return fake.GetReleaseStub(productSlug, productVersion)
@@ -161,8 +160,7 @@ func (fake *FakeClient) ReleasesForProductSlug(arg1 string) ([]pivnet.Release, e
 	fake.releasesForProductSlugArgsForCall = append(fake.releasesForProductSlugArgsForCall, struct {
 		arg1 string
 	}{arg1})
-	fake.guard("ReleasesForProductSlug")
-	fake.invocations["ReleasesForProductSlug"] = append(fake.invocations["ReleasesForProductSlug"], []interface{}{arg1})
+	fake.recordInvocation("ReleasesForProductSlug", []interface{}{arg1})
 	fake.releasesForProductSlugMutex.Unlock()
 	if fake.ReleasesForProductSlugStub != nil {
 		return fake.ReleasesForProductSlugStub(arg1)
@@ -197,8 +195,7 @@ func (fake *FakeClient) AcceptEULA(productSlug string, releaseID int) error {
 		productSlug string
 		releaseID   int
 	}{productSlug, releaseID})
-	fake.guard("AcceptEULA")
-	fake.invocations["AcceptEULA"] = append(fake.invocations["AcceptEULA"], []interface{}{productSlug, releaseID})
+	fake.recordInvocation("AcceptEULA", []interface{}{productSlug, releaseID})
 	fake.acceptEULAMutex.Unlock()
 	if fake.AcceptEULAStub != nil {
 		return fake.AcceptEULAStub(productSlug, releaseID)
@@ -232,8 +229,7 @@ func (fake *FakeClient) GetProductFiles(productSlug string, releaseID int) ([]pi
 		productSlug string
 		releaseID   int
 	}{productSlug, releaseID})
-	fake.guard("GetProductFiles")
-	fake.invocations["GetProductFiles"] = append(fake.invocations["GetProductFiles"], []interface{}{productSlug, releaseID})
+	fake.recordInvocation("GetProductFiles", []interface{}{productSlug, releaseID})
 	fake.getProductFilesMutex.Unlock()
 	if fake.GetProductFilesStub != nil {
 		return fake.GetProductFilesStub(productSlug, releaseID)
@@ -269,8 +265,7 @@ func (fake *FakeClient) GetProductFile(productSlug string, releaseID int, produc
 		releaseID     int
 		productFileID int
 	}{productSlug, releaseID, productFileID})
-	fake.guard("GetProductFile")
-	fake.invocations["GetProductFile"] = append(fake.invocations["GetProductFile"], []interface{}{productSlug, releaseID, productFileID})
+	fake.recordInvocation("GetProductFile", []interface{}{productSlug, releaseID, productFileID})
 	fake.getProductFileMutex.Unlock()
 	if fake.GetProductFileStub != nil {
 		return fake.GetProductFileStub(productSlug, releaseID, productFileID)
@@ -305,8 +300,7 @@ func (fake *FakeClient) ReleaseDependencies(productSlug string, releaseID int) (
 		productSlug string
 		releaseID   int
 	}{productSlug, releaseID})
-	fake.guard("ReleaseDependencies")
-	fake.invocations["ReleaseDependencies"] = append(fake.invocations["ReleaseDependencies"], []interface{}{productSlug, releaseID})
+	fake.recordInvocation("ReleaseDependencies", []interface{}{productSlug, releaseID})
 	fake.releaseDependenciesMutex.Unlock()
 	if fake.ReleaseDependenciesStub != nil {
 		return fake.ReleaseDependenciesStub(productSlug, releaseID)
@@ -344,8 +338,7 @@ func (fake *FakeClient) MakeRequest(method string, url string, expectedResponseC
 		body                 io.Reader
 		data                 interface{}
 	}{method, url, expectedResponseCode, body, data})
-	fake.guard("MakeRequest")
-	fake.invocations["MakeRequest"] = append(fake.invocations["MakeRequest"], []interface{}{method, url, expectedResponseCode, body, data})
+	fake.recordInvocation("MakeRequest", []interface{}{method, url, expectedResponseCode, body, data})
 	fake.makeRequestMutex.Unlock()
 	if fake.MakeRequestStub != nil {
 		return fake.MakeRequestStub(method, url, expectedResponseCode, body, data)
@@ -375,16 +368,37 @@ func (fake *FakeClient) MakeRequestReturns(result1 *http.Response, result2 error
 }
 
 func (fake *FakeClient) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.releaseTypesMutex.RLock()
+	defer fake.releaseTypesMutex.RUnlock()
+	fake.getReleaseMutex.RLock()
+	defer fake.getReleaseMutex.RUnlock()
+	fake.releasesForProductSlugMutex.RLock()
+	defer fake.releasesForProductSlugMutex.RUnlock()
+	fake.acceptEULAMutex.RLock()
+	defer fake.acceptEULAMutex.RUnlock()
+	fake.getProductFilesMutex.RLock()
+	defer fake.getProductFilesMutex.RUnlock()
+	fake.getProductFileMutex.RLock()
+	defer fake.getProductFileMutex.RUnlock()
+	fake.releaseDependenciesMutex.RLock()
+	defer fake.releaseDependenciesMutex.RUnlock()
+	fake.makeRequestMutex.RLock()
+	defer fake.makeRequestMutex.RUnlock()
 	return fake.invocations
 }
 
-func (fake *FakeClient) guard(key string) {
+func (fake *FakeClient) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
 		fake.invocations = map[string][][]interface{}{}
 	}
 	if fake.invocations[key] == nil {
 		fake.invocations[key] = [][]interface{}{}
 	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ gp.Client = new(FakeClient)

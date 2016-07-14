@@ -18,7 +18,8 @@ type FakeSemverConverter struct {
 		result1 semver.Version
 		result2 error
 	}
-	invocations map[string][][]interface{}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeSemverConverter) ToValidSemver(arg1 string) (semver.Version, error) {
@@ -26,8 +27,7 @@ func (fake *FakeSemverConverter) ToValidSemver(arg1 string) (semver.Version, err
 	fake.toValidSemverArgsForCall = append(fake.toValidSemverArgsForCall, struct {
 		arg1 string
 	}{arg1})
-	fake.guard("ToValidSemver")
-	fake.invocations["ToValidSemver"] = append(fake.invocations["ToValidSemver"], []interface{}{arg1})
+	fake.recordInvocation("ToValidSemver", []interface{}{arg1})
 	fake.toValidSemverMutex.Unlock()
 	if fake.ToValidSemverStub != nil {
 		return fake.ToValidSemverStub(arg1)
@@ -57,16 +57,23 @@ func (fake *FakeSemverConverter) ToValidSemverReturns(result1 semver.Version, re
 }
 
 func (fake *FakeSemverConverter) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.toValidSemverMutex.RLock()
+	defer fake.toValidSemverMutex.RUnlock()
 	return fake.invocations
 }
 
-func (fake *FakeSemverConverter) guard(key string) {
+func (fake *FakeSemverConverter) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
 		fake.invocations = map[string][][]interface{}{}
 	}
 	if fake.invocations[key] == nil {
 		fake.invocations[key] = [][]interface{}{}
 	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ sorter.SemverConverter = new(FakeSemverConverter)
