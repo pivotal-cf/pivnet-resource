@@ -6,17 +6,17 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 )
 
-type inValidator struct {
+type InValidator struct {
 	input concourse.InRequest
 }
 
-func NewInValidator(input concourse.InRequest) Validator {
-	return &inValidator{
+func NewInValidator(input concourse.InRequest) *InValidator {
+	return &InValidator{
 		input: input,
 	}
 }
 
-func (v inValidator) Validate() error {
+func (v InValidator) Validate() error {
 	if v.input.Source.APIToken == "" {
 		return fmt.Errorf("%s must be provided", "api_token")
 	}

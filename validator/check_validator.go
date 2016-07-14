@@ -6,17 +6,17 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 )
 
-type checkValidator struct {
+type CheckValidator struct {
 	input concourse.CheckRequest
 }
 
-func NewCheckValidator(input concourse.CheckRequest) Validator {
-	return &checkValidator{
+func NewCheckValidator(input concourse.CheckRequest) *CheckValidator {
+	return &CheckValidator{
 		input: input,
 	}
 }
 
-func (v checkValidator) Validate() error {
+func (v CheckValidator) Validate() error {
 	if v.input.Source.APIToken == "" {
 		return fmt.Errorf("%s must be provided", "api_token")
 	}

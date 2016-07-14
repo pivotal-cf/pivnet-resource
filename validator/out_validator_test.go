@@ -21,7 +21,7 @@ var _ = Describe("Out Validator", func() {
 		eulaSlugFile     string
 
 		outRequest concourse.OutRequest
-		v          validator.OutValidator
+		v          *validator.OutValidator
 	)
 
 	BeforeEach(func() {

@@ -11,7 +11,7 @@ import (
 var _ = Describe("In Validator", func() {
 	var (
 		inRequest concourse.InRequest
-		v         validator.Validator
+		v         *validator.InValidator
 
 		apiToken       string
 		productSlug    string

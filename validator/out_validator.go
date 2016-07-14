@@ -10,8 +10,8 @@ type OutValidator struct {
 	input concourse.OutRequest
 }
 
-func NewOutValidator(input concourse.OutRequest) OutValidator {
-	return OutValidator{
+func NewOutValidator(input concourse.OutRequest) *OutValidator {
+	return &OutValidator{
 		input: input,
 	}
 }
