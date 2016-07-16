@@ -4,25 +4,25 @@ package releasefakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/go-pivnet"
 )
 
 type UpdateClient struct {
-	UpdateReleaseStub        func(string, pivnet.Release) (pivnet.Release, error)
+	UpdateReleaseStub        func(productSlug string, release pivnet.Release) (pivnet.Release, error)
 	updateReleaseMutex       sync.RWMutex
 	updateReleaseArgsForCall []struct {
-		arg1 string
-		arg2 pivnet.Release
+		productSlug string
+		release     pivnet.Release
 	}
 	updateReleaseReturns struct {
 		result1 pivnet.Release
 		result2 error
 	}
-	ReleaseETagStub        func(string, pivnet.Release) (string, error)
+	ReleaseETagStub        func(productSlug string, releaseID int) (string, error)
 	releaseETagMutex       sync.RWMutex
 	releaseETagArgsForCall []struct {
-		arg1 string
-		arg2 pivnet.Release
+		productSlug string
+		releaseID   int
 	}
 	releaseETagReturns struct {
 		result1 string
@@ -42,16 +42,16 @@ type UpdateClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *UpdateClient) UpdateRelease(arg1 string, arg2 pivnet.Release) (pivnet.Release, error) {
+func (fake *UpdateClient) UpdateRelease(productSlug string, release pivnet.Release) (pivnet.Release, error) {
 	fake.updateReleaseMutex.Lock()
 	fake.updateReleaseArgsForCall = append(fake.updateReleaseArgsForCall, struct {
-		arg1 string
-		arg2 pivnet.Release
-	}{arg1, arg2})
-	fake.recordInvocation("UpdateRelease", []interface{}{arg1, arg2})
+		productSlug string
+		release     pivnet.Release
+	}{productSlug, release})
+	fake.recordInvocation("UpdateRelease", []interface{}{productSlug, release})
 	fake.updateReleaseMutex.Unlock()
 	if fake.UpdateReleaseStub != nil {
-		return fake.UpdateReleaseStub(arg1, arg2)
+		return fake.UpdateReleaseStub(productSlug, release)
 	} else {
 		return fake.updateReleaseReturns.result1, fake.updateReleaseReturns.result2
 	}
@@ -66,7 +66,7 @@ func (fake *UpdateClient) UpdateReleaseCallCount() int {
 func (fake *UpdateClient) UpdateReleaseArgsForCall(i int) (string, pivnet.Release) {
 	fake.updateReleaseMutex.RLock()
 	defer fake.updateReleaseMutex.RUnlock()
-	return fake.updateReleaseArgsForCall[i].arg1, fake.updateReleaseArgsForCall[i].arg2
+	return fake.updateReleaseArgsForCall[i].productSlug, fake.updateReleaseArgsForCall[i].release
 }
 
 func (fake *UpdateClient) UpdateReleaseReturns(result1 pivnet.Release, result2 error) {
@@ -77,16 +77,16 @@ func (fake *UpdateClient) UpdateReleaseReturns(result1 pivnet.Release, result2 e
 	}{result1, result2}
 }
 
-func (fake *UpdateClient) ReleaseETag(arg1 string, arg2 pivnet.Release) (string, error) {
+func (fake *UpdateClient) ReleaseETag(productSlug string, releaseID int) (string, error) {
 	fake.releaseETagMutex.Lock()
 	fake.releaseETagArgsForCall = append(fake.releaseETagArgsForCall, struct {
-		arg1 string
-		arg2 pivnet.Release
-	}{arg1, arg2})
-	fake.recordInvocation("ReleaseETag", []interface{}{arg1, arg2})
+		productSlug string
+		releaseID   int
+	}{productSlug, releaseID})
+	fake.recordInvocation("ReleaseETag", []interface{}{productSlug, releaseID})
 	fake.releaseETagMutex.Unlock()
 	if fake.ReleaseETagStub != nil {
-		return fake.ReleaseETagStub(arg1, arg2)
+		return fake.ReleaseETagStub(productSlug, releaseID)
 	} else {
 		return fake.releaseETagReturns.result1, fake.releaseETagReturns.result2
 	}
@@ -98,10 +98,10 @@ func (fake *UpdateClient) ReleaseETagCallCount() int {
 	return len(fake.releaseETagArgsForCall)
 }
 
-func (fake *UpdateClient) ReleaseETagArgsForCall(i int) (string, pivnet.Release) {
+func (fake *UpdateClient) ReleaseETagArgsForCall(i int) (string, int) {
 	fake.releaseETagMutex.RLock()
 	defer fake.releaseETagMutex.RUnlock()
-	return fake.releaseETagArgsForCall[i].arg1, fake.releaseETagArgsForCall[i].arg2
+	return fake.releaseETagArgsForCall[i].productSlug, fake.releaseETagArgsForCall[i].releaseID
 }
 
 func (fake *UpdateClient) ReleaseETagReturns(result1 string, result2 error) {

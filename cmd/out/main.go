@@ -9,13 +9,15 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/globs"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp/lagershim"
 	"github.com/pivotal-cf-experimental/pivnet-resource/md5sum"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
 	"github.com/pivotal-cf-experimental/pivnet-resource/semver"
 	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
@@ -67,24 +69,27 @@ func main() {
 
 	l := lager.NewLogger("pivnet-resource")
 	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
+	ls := lagershim.NewLagerShim(l)
 
 	var endpoint string
 	if input.Source.Endpoint != "" {
 		endpoint = input.Source.Endpoint
 	} else {
-		endpoint = pivnet.Endpoint
+		endpoint = pivnet.DefaultHost
 	}
 
-	clientConfig := pivnet.NewClientConfig{
-		Endpoint:  endpoint,
+	clientConfig := pivnet.ClientConfig{
+		Host:      endpoint,
 		Token:     input.Source.APIToken,
 		UserAgent: useragent.UserAgent(version, "put", input.Source.ProductSlug),
 	}
 
-	pivnetClient := pivnet.NewClient(
+	pivnetClient := gp.NewClient(
 		clientConfig,
-		l,
+		ls,
 	)
+
+	extendedClient := gp.NewExtendedClient(pivnetClient, ls)
 
 	bucket := input.Source.Bucket
 	if bucket == "" {
@@ -148,8 +153,16 @@ func main() {
 
 	md5summer := md5sum.NewFileSummer()
 
-	releaseCreator := release.NewReleaseCreator(
+	combinedClient := struct {
+		gp.Client
+		gp.ExtendedClient
+	}{
 		pivnetClient,
+		extendedClient,
+	}
+
+	releaseCreator := release.NewReleaseCreator(
+		combinedClient,
 		metadataFetcher,
 		semverConverter,
 		logger,
@@ -173,7 +186,7 @@ func main() {
 	)
 
 	releaseFinalizer := release.NewFinalizer(
-		pivnetClient,
+		combinedClient,
 		metadataFetcher,
 		input.Params,
 		sourcesDir,

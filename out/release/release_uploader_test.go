@@ -5,10 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release/releasefakes"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -84,8 +84,8 @@ var _ = Describe("ReleaseUploader", func() {
 					FileType:     "something",
 				}))
 
-				productID, releaseID, productFileID := uploadClient.AddProductFileArgsForCall(0)
-				Expect(productID).To(Equal(7777))
+				productSlug, releaseID, productFileID := uploadClient.AddProductFileArgsForCall(0)
+				Expect(productSlug).To(Equal("some-product-slug"))
 				Expect(releaseID).To(Equal(1111))
 				Expect(productFileID).To(Equal(13367))
 			})

@@ -4,7 +4,7 @@ package outfakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/go-pivnet"
 )
 
 type Uploader struct {

@@ -4,8 +4,8 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 )
 
 type ReleaseUploader struct {
@@ -23,7 +23,7 @@ type ReleaseUploader struct {
 type uploadClient interface {
 	FindProductForSlug(slug string) (pivnet.Product, error)
 	CreateProductFile(pivnet.CreateProductFileConfig) (pivnet.ProductFile, error)
-	AddProductFile(productID int, releaseID int, productFileID int) error
+	AddProductFile(productSlug string, releaseID int, productFileID int) error
 }
 
 //go:generate counterfeiter --fake-name S3Client . s3Client
@@ -147,7 +147,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			release.ID,
 		)
 
-		err = u.pivnet.AddProductFile(product.ID, release.ID, productFile.ID)
+		err = u.pivnet.AddProductFile(u.productSlug, release.ID, productFile.ID)
 		if err != nil {
 			return err
 		}

@@ -7,11 +7,11 @@ import (
 	"log"
 
 	"github.com/blang/semver"
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release/releasefakes"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

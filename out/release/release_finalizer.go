@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
@@ -36,8 +36,8 @@ func NewFinalizer(
 
 //go:generate counterfeiter --fake-name UpdateClient . updateClient
 type updateClient interface {
-	UpdateRelease(string, pivnet.Release) (pivnet.Release, error)
-	ReleaseETag(string, pivnet.Release) (string, error)
+	UpdateRelease(productSlug string, release pivnet.Release) (pivnet.Release, error)
+	ReleaseETag(productSlug string, releaseID int) (string, error)
 	AddUserGroup(productSlug string, releaseID int, userGroupID int) error
 }
 
@@ -89,7 +89,7 @@ func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutRespon
 		}
 	}
 
-	releaseETag, err := rf.pivnet.ReleaseETag(rf.productSlug, release)
+	releaseETag, err := rf.pivnet.ReleaseETag(rf.productSlug, release.ID)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}

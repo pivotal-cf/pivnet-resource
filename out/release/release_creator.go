@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 )
 
 type ReleaseCreator struct {

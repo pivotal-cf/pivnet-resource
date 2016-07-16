@@ -4,7 +4,7 @@ package releasefakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/go-pivnet"
 )
 
 type UploadClient struct {
@@ -26,10 +26,10 @@ type UploadClient struct {
 		result1 pivnet.ProductFile
 		result2 error
 	}
-	AddProductFileStub        func(productID int, releaseID int, productFileID int) error
+	AddProductFileStub        func(productSlug string, releaseID int, productFileID int) error
 	addProductFileMutex       sync.RWMutex
 	addProductFileArgsForCall []struct {
-		productID     int
+		productSlug   string
 		releaseID     int
 		productFileID int
 	}
@@ -108,17 +108,17 @@ func (fake *UploadClient) CreateProductFileReturns(result1 pivnet.ProductFile, r
 	}{result1, result2}
 }
 
-func (fake *UploadClient) AddProductFile(productID int, releaseID int, productFileID int) error {
+func (fake *UploadClient) AddProductFile(productSlug string, releaseID int, productFileID int) error {
 	fake.addProductFileMutex.Lock()
 	fake.addProductFileArgsForCall = append(fake.addProductFileArgsForCall, struct {
-		productID     int
+		productSlug   string
 		releaseID     int
 		productFileID int
-	}{productID, releaseID, productFileID})
-	fake.recordInvocation("AddProductFile", []interface{}{productID, releaseID, productFileID})
+	}{productSlug, releaseID, productFileID})
+	fake.recordInvocation("AddProductFile", []interface{}{productSlug, releaseID, productFileID})
 	fake.addProductFileMutex.Unlock()
 	if fake.AddProductFileStub != nil {
-		return fake.AddProductFileStub(productID, releaseID, productFileID)
+		return fake.AddProductFileStub(productSlug, releaseID, productFileID)
 	} else {
 		return fake.addProductFileReturns.result1
 	}
@@ -130,10 +130,10 @@ func (fake *UploadClient) AddProductFileCallCount() int {
 	return len(fake.addProductFileArgsForCall)
 }
 
-func (fake *UploadClient) AddProductFileArgsForCall(i int) (int, int, int) {
+func (fake *UploadClient) AddProductFileArgsForCall(i int) (string, int, int) {
 	fake.addProductFileMutex.RLock()
 	defer fake.addProductFileMutex.RUnlock()
-	return fake.addProductFileArgsForCall[i].productID, fake.addProductFileArgsForCall[i].releaseID, fake.addProductFileArgsForCall[i].productFileID
+	return fake.addProductFileArgsForCall[i].productSlug, fake.addProductFileArgsForCall[i].releaseID, fake.addProductFileArgsForCall[i].productFileID
 }
 
 func (fake *UploadClient) AddProductFileReturns(result1 error) {

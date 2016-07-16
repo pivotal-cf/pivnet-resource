@@ -4,8 +4,8 @@ package outfakes
 import (
 	"sync"
 
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 )
 
 type Finalizer struct {
