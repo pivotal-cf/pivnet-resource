@@ -4,6 +4,7 @@ package gpfakes
 import (
 	"sync"
 
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
 )
 
@@ -16,6 +17,16 @@ type FakeExtendedClient struct {
 	}
 	releaseETagReturns struct {
 		result1 string
+		result2 error
+	}
+	ProductVersionsStub        func(productSlug string, releases []pivnet.Release) ([]string, error)
+	productVersionsMutex       sync.RWMutex
+	productVersionsArgsForCall []struct {
+		productSlug string
+		releases    []pivnet.Release
+	}
+	productVersionsReturns struct {
+		result1 []string
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -57,11 +68,53 @@ func (fake *FakeExtendedClient) ReleaseETagReturns(result1 string, result2 error
 	}{result1, result2}
 }
 
+func (fake *FakeExtendedClient) ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error) {
+	var releasesCopy []pivnet.Release
+	if releases != nil {
+		releasesCopy = make([]pivnet.Release, len(releases))
+		copy(releasesCopy, releases)
+	}
+	fake.productVersionsMutex.Lock()
+	fake.productVersionsArgsForCall = append(fake.productVersionsArgsForCall, struct {
+		productSlug string
+		releases    []pivnet.Release
+	}{productSlug, releasesCopy})
+	fake.recordInvocation("ProductVersions", []interface{}{productSlug, releasesCopy})
+	fake.productVersionsMutex.Unlock()
+	if fake.ProductVersionsStub != nil {
+		return fake.ProductVersionsStub(productSlug, releases)
+	} else {
+		return fake.productVersionsReturns.result1, fake.productVersionsReturns.result2
+	}
+}
+
+func (fake *FakeExtendedClient) ProductVersionsCallCount() int {
+	fake.productVersionsMutex.RLock()
+	defer fake.productVersionsMutex.RUnlock()
+	return len(fake.productVersionsArgsForCall)
+}
+
+func (fake *FakeExtendedClient) ProductVersionsArgsForCall(i int) (string, []pivnet.Release) {
+	fake.productVersionsMutex.RLock()
+	defer fake.productVersionsMutex.RUnlock()
+	return fake.productVersionsArgsForCall[i].productSlug, fake.productVersionsArgsForCall[i].releases
+}
+
+func (fake *FakeExtendedClient) ProductVersionsReturns(result1 []string, result2 error) {
+	fake.ProductVersionsStub = nil
+	fake.productVersionsReturns = struct {
+		result1 []string
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeExtendedClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.releaseETagMutex.RLock()
 	defer fake.releaseETagMutex.RUnlock()
+	fake.productVersionsMutex.RLock()
+	defer fake.productVersionsMutex.RUnlock()
 	return fake.invocations
 }
 
