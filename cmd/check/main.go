@@ -77,7 +77,7 @@ func main() {
 
 	f := filter.NewFilter()
 
-	extendedClient := gp.NewExtendedClient(client, sp)
+	extendedClient := gp.NewExtendedClient(*client, sp)
 
 	semverConverter := semver.NewSemverConverter(logger)
 	s := sorter.NewSorter(logger, semverConverter)

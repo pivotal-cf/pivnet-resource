@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/gp/gpfakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in"
 	"github.com/pivotal-cf-experimental/pivnet-resource/in/infakes"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
@@ -25,7 +24,7 @@ var _ = Describe("In", func() {
 	var (
 		fakeFilter       *infakes.FakeFilter
 		fakeDownloader   *infakes.FakeDownloader
-		fakePivnetClient *gpfakes.FakeClient
+		fakePivnetClient *infakes.FakePivnetClient
 		fakeFileSummer   *infakes.FakeFileSummer
 		fakeFileWriter   *infakes.FakeFileWriter
 
@@ -59,7 +58,7 @@ var _ = Describe("In", func() {
 	BeforeEach(func() {
 		fakeFilter = &infakes.FakeFilter{}
 		fakeDownloader = &infakes.FakeDownloader{}
-		fakePivnetClient = &gpfakes.FakeClient{}
+		fakePivnetClient = &infakes.FakePivnetClient{}
 		fakeFileSummer = &infakes.FakeFileSummer{}
 		fakeFileWriter = &infakes.FakeFileWriter{}
 

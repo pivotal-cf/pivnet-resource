@@ -89,7 +89,7 @@ func main() {
 		ls,
 	)
 
-	extendedClient := gp.NewExtendedClient(pivnetClient, ls)
+	extendedClient := gp.NewExtendedClient(*pivnetClient, ls)
 
 	bucket := input.Source.Bucket
 	if bucket == "" {
@@ -154,8 +154,8 @@ func main() {
 	md5summer := md5sum.NewFileSummer()
 
 	combinedClient := struct {
-		gp.Client
-		gp.ExtendedClient
+		*gp.Client
+		*gp.ExtendedClient
 	}{
 		pivnetClient,
 		extendedClient,

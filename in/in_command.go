@@ -9,7 +9,6 @@ import (
 
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
@@ -37,10 +36,19 @@ type FileWriter interface {
 	WriteVersionFile(versionWithETag string) error
 }
 
+//go:generate counterfeiter . PivnetClient
+type PivnetClient interface {
+	GetRelease(productSlug string, productVersion string) (pivnet.Release, error)
+	AcceptEULA(productSlug string, releaseID int) error
+	GetProductFiles(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
+	GetProductFile(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
+	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
+}
+
 type InCommand struct {
 	logger       *log.Logger
 	downloadDir  string
-	pivnetClient gp.Client
+	pivnetClient PivnetClient
 	filter       Filter
 	downloader   Downloader
 	fileSummer   FileSummer
@@ -49,7 +57,7 @@ type InCommand struct {
 
 func NewInCommand(
 	logger *log.Logger,
-	pivnetClient gp.Client,
+	pivnetClient PivnetClient,
 	filter Filter,
 	downloader Downloader,
 	fileSummer FileSummer,
