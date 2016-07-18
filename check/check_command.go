@@ -25,21 +25,16 @@ type Sorter interface {
 type PivnetClient interface {
 	ReleaseTypes() ([]string, error)
 	ReleasesForProductSlug(string) ([]pivnet.Release, error)
-}
-
-//go:generate counterfeiter . ExtendedPivnetClient
-type ExtendedPivnetClient interface {
 	ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error)
 	ReleaseETag(productSlug string, releaseID int) (string, error)
 }
 
 type CheckCommand struct {
-	logger         *log.Logger
-	binaryVersion  string
-	filter         Filter
-	pivnetClient   PivnetClient
-	extendedClient ExtendedPivnetClient
-	semverSorter   Sorter
+	logger        *log.Logger
+	binaryVersion string
+	filter        Filter
+	pivnetClient  PivnetClient
+	semverSorter  Sorter
 }
 
 func NewCheckCommand(
@@ -47,16 +42,14 @@ func NewCheckCommand(
 	binaryVersion string,
 	filter Filter,
 	pivnetClient PivnetClient,
-	extendedClient ExtendedPivnetClient,
 	semverSorter Sorter,
 ) *CheckCommand {
 	return &CheckCommand{
-		logger:         logger,
-		binaryVersion:  binaryVersion,
-		filter:         filter,
-		pivnetClient:   pivnetClient,
-		extendedClient: extendedClient,
-		semverSorter:   semverSorter,
+		logger:        logger,
+		binaryVersion: binaryVersion,
+		filter:        filter,
+		pivnetClient:  pivnetClient,
+		semverSorter:  semverSorter,
 	}
 }
 
@@ -113,7 +106,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	versionsWithETags, err := versions.ProductVersions(c.extendedClient, productSlug, releases)
+	versionsWithETags, err := versions.ProductVersions(c.pivnetClient, productSlug, releases)
 	if err != nil {
 		return nil, err
 	}

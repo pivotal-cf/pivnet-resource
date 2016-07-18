@@ -78,6 +78,13 @@ func main() {
 	f := filter.NewFilter()
 
 	extendedClient := gp.NewExtendedClient(*client, sp)
+	combinedClient := struct {
+		*gp.Client
+		*gp.ExtendedClient
+	}{
+		client,
+		extendedClient,
+	}
 
 	semverConverter := semver.NewSemverConverter(logger)
 	s := sorter.NewSorter(logger, semverConverter)
@@ -86,8 +93,7 @@ func main() {
 		logger,
 		version,
 		f,
-		client,
-		extendedClient,
+		combinedClient,
 		s,
 	).Run(input)
 	if err != nil {

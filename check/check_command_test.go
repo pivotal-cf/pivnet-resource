@@ -18,10 +18,9 @@ import (
 
 var _ = Describe("Check", func() {
 	var (
-		fakeFilter               *checkfakes.FakeFilter
-		fakePivnetClient         *checkfakes.FakePivnetClient
-		fakeExtendedPivnetClient *checkfakes.FakeExtendedPivnetClient
-		fakeSorter               *checkfakes.FakeSorter
+		fakeFilter       *checkfakes.FakeFilter
+		fakePivnetClient *checkfakes.FakePivnetClient
+		fakeSorter       *checkfakes.FakeSorter
 
 		checkRequest concourse.CheckRequest
 		checkCommand *check.CheckCommand
@@ -42,7 +41,6 @@ var _ = Describe("Check", func() {
 	BeforeEach(func() {
 		fakeFilter = &checkfakes.FakeFilter{}
 		fakePivnetClient = &checkfakes.FakePivnetClient{}
-		fakeExtendedPivnetClient = &checkfakes.FakeExtendedPivnetClient{}
 		fakeSorter = &checkfakes.FakeSorter{}
 		logging = log.New(ioutil.Discard, "doesn't matter", 0)
 
@@ -91,7 +89,7 @@ var _ = Describe("Check", func() {
 		fakePivnetClient.ReleaseTypesReturns(releaseTypes, releaseTypesErr)
 		fakePivnetClient.ReleasesForProductSlugReturns(allReleases, releasesErr)
 
-		fakeExtendedPivnetClient.ReleaseETagStub = func(productSlug string, releaseID int) (string, error) {
+		fakePivnetClient.ReleaseETagStub = func(productSlug string, releaseID int) (string, error) {
 			etag := fmt.Sprintf("etag-%d", releaseID)
 			return etag, etagErr
 		}
@@ -106,7 +104,6 @@ var _ = Describe("Check", func() {
 			binaryVersion,
 			fakeFilter,
 			fakePivnetClient,
-			fakeExtendedPivnetClient,
 			fakeSorter,
 		)
 	})
