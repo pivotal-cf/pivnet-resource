@@ -3,6 +3,8 @@ package check
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pivotal-cf-experimental/go-pivnet"
@@ -35,6 +37,7 @@ type CheckCommand struct {
 	filter        filter
 	pivnetClient  pivnetClient
 	semverSorter  sorter
+	logFilePath   string
 }
 
 func NewCheckCommand(
@@ -43,6 +46,7 @@ func NewCheckCommand(
 	filter filter,
 	pivnetClient pivnetClient,
 	semverSorter sorter,
+	logFilePath string,
 ) *CheckCommand {
 	return &CheckCommand{
 		logger:        logger,
@@ -50,11 +54,32 @@ func NewCheckCommand(
 		filter:        filter,
 		pivnetClient:  pivnetClient,
 		semverSorter:  semverSorter,
+		logFilePath:   logFilePath,
 	}
 }
 
 func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckResponse, error) {
 	c.logger.Println("Received input, starting Check CMD run")
+
+	logDir := filepath.Dir(c.logFilePath)
+	existingLogFiles, err := filepath.Glob(filepath.Join(logDir, "pivnet-resource-check.log*"))
+	if err != nil {
+		// This is untested because the only error returned by filepath.Glob is a
+		// malformed glob, and this glob is hard-coded to be correct.
+		return nil, err
+	}
+
+	for _, f := range existingLogFiles {
+		if filepath.Base(f) != filepath.Base(c.logFilePath) {
+			c.logger.Printf("Removing existing log file: %s\n", f)
+			err := os.Remove(f)
+			if err != nil {
+				// This is untested because it is too hard to force os.Remove to return
+				// an error.
+				return nil, err
+			}
+		}
+	}
 
 	c.logger.Println("Getting all valid release types")
 	releaseTypes, err := c.pivnetClient.ReleaseTypes()

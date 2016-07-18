@@ -95,6 +95,7 @@ func main() {
 		f,
 		combinedClient,
 		s,
+		logFile.Name(),
 	).Run(input)
 	if err != nil {
 		log.Fatalf("Exiting with error: %s", err)
