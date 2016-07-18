@@ -1,9 +1,14 @@
 package versions_test
 
 import (
+	"errors"
+	"fmt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	pivnet "github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
+	"github.com/pivotal-cf-experimental/pivnet-resource/versions/versionsfakes"
 )
 
 var _ = Describe("Versions", func() {
@@ -144,4 +149,77 @@ var _ = Describe("Versions", func() {
 		})
 	})
 
+	Describe("ProductVersions", func() {
+		var (
+			productSlug        string
+			releases           []pivnet.Release
+			fakeExtendedClient *versionsfakes.FakeExtendedClient
+			releaseETagErr     error
+
+			etags []string
+		)
+
+		BeforeEach(func() {
+			productSlug = "some-product-slug"
+			fakeExtendedClient = &versionsfakes.FakeExtendedClient{}
+			releases = []pivnet.Release{
+				{
+					ID:      1234,
+					Version: "version-0",
+				},
+				{
+					ID:      2345,
+					Version: "version-1",
+				},
+			}
+
+			etags = []string{
+				"etag-0",
+				"etag-1",
+			}
+
+			releaseETagErr = nil
+		})
+
+		JustBeforeEach(func() {
+			fakeExtendedClient.ReleaseETagStub = func(_ string, releaseID int) (string, error) {
+				switch releaseID {
+				case releases[0].ID:
+					return etags[0], releaseETagErr
+				case releases[1].ID:
+					return etags[1], releaseETagErr
+				default:
+					panic(fmt.Sprintf("Unexpected releaseID: %d", releaseID))
+				}
+			}
+		})
+
+		It("returns fetched etag to product version", func() {
+			versions, err := versions.ProductVersions(
+				fakeExtendedClient,
+				productSlug,
+				releases,
+			)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(len(versions)).To(Equal(len(releases)))
+			Expect(versions[0]).To(Equal("version-0#etag-0"))
+			Expect(versions[1]).To(Equal("version-1#etag-1"))
+		})
+
+		Context("when fetching etag returns an error", func() {
+			BeforeEach(func() {
+				releaseETagErr = errors.New("some etag error")
+			})
+
+			It("returns the error", func() {
+				_, err := versions.ProductVersions(
+					fakeExtendedClient,
+					productSlug,
+					releases,
+				)
+				Expect(err).To(Equal(releaseETagErr))
+			})
+		})
+	})
 })

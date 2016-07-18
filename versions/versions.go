@@ -42,8 +42,11 @@ func CombineVersionAndETag(version string, etag string) (string, error) {
 	if etag == "" {
 		return version, nil
 	}
+	return combineVersionAndETag(version, etag), nil
+}
 
-	return fmt.Sprintf("%s%s%s", version, etagDelimiter, etag), nil
+func combineVersionAndETag(version string, etag string) string {
+	return fmt.Sprintf("%s%s%s", version, etagDelimiter, etag)
 }
 
 //go:generate counterfeiter --fake-name FakeExtendedClient . extendedClient
@@ -64,7 +67,7 @@ func ProductVersions(
 			return nil, err
 		}
 
-		version := fmt.Sprintf("%s#%s", r.Version, etag)
+		version := combineVersionAndETag(r.Version, etag)
 		versions = append(versions, version)
 	}
 
