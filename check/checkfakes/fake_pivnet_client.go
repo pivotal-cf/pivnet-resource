@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/pivotal-cf-experimental/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/check"
 )
 
 type FakePivnetClient struct {
@@ -209,5 +208,3 @@ func (fake *FakePivnetClient) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
-
-var _ check.PivnetClient = new(FakePivnetClient)

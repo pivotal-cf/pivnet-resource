@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/pivotal-cf-experimental/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/check"
 )
 
 type FakeSorter struct {
@@ -80,5 +79,3 @@ func (fake *FakeSorter) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
-
-var _ check.Sorter = new(FakeSorter)

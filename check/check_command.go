@@ -10,19 +10,19 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
-//go:generate counterfeiter . Filter
-type Filter interface {
+//go:generate counterfeiter --fake-name FakeFilter . filter
+type filter interface {
 	ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error)
 	ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error)
 }
 
-//go:generate counterfeiter . Sorter
-type Sorter interface {
+//go:generate counterfeiter --fake-name FakeSorter . sorter
+type sorter interface {
 	SortBySemver([]pivnet.Release) ([]pivnet.Release, error)
 }
 
-//go:generate counterfeiter . PivnetClient
-type PivnetClient interface {
+//go:generate counterfeiter --fake-name FakePivnetClient . pivnetClient
+type pivnetClient interface {
 	ReleaseTypes() ([]string, error)
 	ReleasesForProductSlug(string) ([]pivnet.Release, error)
 	ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error)
@@ -32,17 +32,17 @@ type PivnetClient interface {
 type CheckCommand struct {
 	logger        *log.Logger
 	binaryVersion string
-	filter        Filter
-	pivnetClient  PivnetClient
-	semverSorter  Sorter
+	filter        filter
+	pivnetClient  pivnetClient
+	semverSorter  sorter
 }
 
 func NewCheckCommand(
 	logger *log.Logger,
 	binaryVersion string,
-	filter Filter,
-	pivnetClient PivnetClient,
-	semverSorter Sorter,
+	filter filter,
+	pivnetClient pivnetClient,
+	semverSorter sorter,
 ) *CheckCommand {
 	return &CheckCommand{
 		logger:        logger,
