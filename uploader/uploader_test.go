@@ -18,7 +18,7 @@ var _ = Describe("Uploader", func() {
 		var (
 			fakeTransport  *uploaderfakes.FakeTransport
 			uploaderConfig uploader.Config
-			uploaderClient uploader.Client
+			uploaderClient *uploader.Client
 
 			tempDir    string
 			myFilesDir string

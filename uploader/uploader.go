@@ -5,26 +5,27 @@ import (
 	"path/filepath"
 )
 
-type Client interface {
-	UploadFile(string) (string, error)
+//go:generate counterfeiter --fake-name FakeTransport . transport
+type transport interface {
+	Upload(fileGlob string, filepathPrefix string, sourcesDir string) error
 }
 
-type client struct {
+type Client struct {
 	filepathPrefix string
 	sourcesDir     string
 
-	transport Transport
+	transport transport
 }
 
 type Config struct {
 	FilepathPrefix string
 	SourcesDir     string
 
-	Transport Transport
+	Transport transport
 }
 
-func NewClient(config Config) Client {
-	return &client{
+func NewClient(config Config) *Client {
+	return &Client{
 		filepathPrefix: config.FilepathPrefix,
 		sourcesDir:     config.SourcesDir,
 
@@ -32,7 +33,7 @@ func NewClient(config Config) Client {
 	}
 }
 
-func (c client) UploadFile(exactGlob string) (string, error) {
+func (c Client) UploadFile(exactGlob string) (string, error) {
 	if exactGlob == "" {
 		return "", fmt.Errorf("glob must not be empty")
 	}

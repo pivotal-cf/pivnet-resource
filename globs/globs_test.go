@@ -15,7 +15,7 @@ var _ = Describe("Globber", func() {
 	Describe("ExactGlobs", func() {
 		var (
 			globberConfig globs.GlobberConfig
-			globber       globs.Globber
+			globber       *globs.Globber
 
 			tempDir    string
 			myFilesDir string

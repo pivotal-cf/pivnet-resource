@@ -13,31 +13,31 @@ import (
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
-//go:generate counterfeiter . Filter
-type Filter interface {
+//go:generate counterfeiter --fake-name FakeFilter . filter
+type filter interface {
 	DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error)
 	DownloadLinks(p []pivnet.ProductFile) map[string]string
 }
 
-//go:generate counterfeiter . Downloader
-type Downloader interface {
+//go:generate counterfeiter --fake-name FakeDownloader . downloader
+type downloader interface {
 	Download(downloadLinks map[string]string) ([]string, error)
 }
 
-//go:generate counterfeiter . FileSummer
-type FileSummer interface {
+//go:generate counterfeiter --fake-name FakeFileSummer . fileSummer
+type fileSummer interface {
 	SumFile(filepath string) (string, error)
 }
 
-//go:generate counterfeiter . FileWriter
-type FileWriter interface {
+//go:generate counterfeiter --fake-name FakeFileWriter . fileWriter
+type fileWriter interface {
 	WriteMetadataJSONFile(mdata metadata.Metadata) error
 	WriteMetadataYAMLFile(mdata metadata.Metadata) error
 	WriteVersionFile(versionWithETag string) error
 }
 
-//go:generate counterfeiter . PivnetClient
-type PivnetClient interface {
+//go:generate counterfeiter --fake-name FakePivnetClient . pivnetClient
+type pivnetClient interface {
 	GetRelease(productSlug string, productVersion string) (pivnet.Release, error)
 	AcceptEULA(productSlug string, releaseID int) error
 	GetProductFiles(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
@@ -48,20 +48,20 @@ type PivnetClient interface {
 type InCommand struct {
 	logger       *log.Logger
 	downloadDir  string
-	pivnetClient PivnetClient
-	filter       Filter
-	downloader   Downloader
-	fileSummer   FileSummer
-	fileWriter   FileWriter
+	pivnetClient pivnetClient
+	filter       filter
+	downloader   downloader
+	fileSummer   fileSummer
+	fileWriter   fileWriter
 }
 
 func NewInCommand(
 	logger *log.Logger,
-	pivnetClient PivnetClient,
-	filter Filter,
-	downloader Downloader,
-	fileSummer FileSummer,
-	fileWriter FileWriter,
+	pivnetClient pivnetClient,
+	filter filter,
+	downloader downloader,
+	fileSummer fileSummer,
+	fileWriter fileWriter,
 ) *InCommand {
 	return &InCommand{
 		logger:       logger,

@@ -7,23 +7,18 @@ import (
 	"github.com/pivotal-cf-experimental/go-pivnet"
 )
 
-//go:generate counterfeiter . SemverConverter
-type SemverConverter interface {
+//go:generate counterfeiter --fake-name FakeSemverConverter . semverConverter
+type semverConverter interface {
 	ToValidSemver(string) (semver.Version, error)
 }
 
-//go:generate counterfeiter . Sorter
-type Sorter interface {
-	SortBySemver([]pivnet.Release) ([]pivnet.Release, error)
-}
-
-type sorter struct {
+type Sorter struct {
 	logger          *log.Logger
-	semverConverter SemverConverter
+	semverConverter semverConverter
 }
 
-func NewSorter(logger *log.Logger, semverConverter SemverConverter) Sorter {
-	return &sorter{
+func NewSorter(logger *log.Logger, semverConverter semverConverter) *Sorter {
+	return &Sorter{
 		logger:          logger,
 		semverConverter: semverConverter,
 	}
@@ -35,7 +30,7 @@ func NewSorter(logger *log.Logger, semverConverter SemverConverter) Sorter {
 // and that release is not returned. No error is returned in this case.
 // Therefore the number of returned releases may be fewer than the number of
 // provided releases.
-func (s sorter) SortBySemver(input []pivnet.Release) ([]pivnet.Release, error) {
+func (s Sorter) SortBySemver(input []pivnet.Release) ([]pivnet.Release, error) {
 	var versions []semver.Version
 	versionsToReleases := make(map[string]pivnet.Release)
 

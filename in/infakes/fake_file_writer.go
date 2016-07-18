@@ -4,7 +4,6 @@ package infakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/in"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 )
 
@@ -159,5 +158,3 @@ func (fake *FakeFileWriter) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
-
-var _ in.FileWriter = new(FakeFileWriter)

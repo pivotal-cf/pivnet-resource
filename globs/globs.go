@@ -6,11 +6,7 @@ import (
 	"path/filepath"
 )
 
-type Globber interface {
-	ExactGlobs() ([]string, error)
-}
-
-type globber struct {
+type Globber struct {
 	fileGlob   string
 	sourcesDir string
 
@@ -24,8 +20,8 @@ type GlobberConfig struct {
 	Logger *log.Logger
 }
 
-func NewGlobber(config GlobberConfig) Globber {
-	return &globber{
+func NewGlobber(config GlobberConfig) *Globber {
+	return &Globber{
 		fileGlob:   config.FileGlob,
 		sourcesDir: config.SourcesDir,
 
@@ -33,7 +29,7 @@ func NewGlobber(config GlobberConfig) Globber {
 	}
 }
 
-func (g globber) ExactGlobs() ([]string, error) {
+func (g Globber) ExactGlobs() ([]string, error) {
 	matches, err := filepath.Glob(filepath.Join(g.sourcesDir, g.fileGlob))
 	if err != nil {
 		return nil, err

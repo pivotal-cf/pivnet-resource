@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/blang/semver"
-	"github.com/pivotal-cf-experimental/pivnet-resource/sorter"
 )
 
 type FakeSemverConverter struct {
@@ -75,5 +74,3 @@ func (fake *FakeSemverConverter) recordInvocation(key string, args []interface{}
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
-
-var _ sorter.SemverConverter = new(FakeSemverConverter)

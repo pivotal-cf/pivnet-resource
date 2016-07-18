@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/pivotal-cf-experimental/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/in"
 )
 
 type FakeFilter struct {
@@ -130,5 +129,3 @@ func (fake *FakeFilter) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
-
-var _ in.Filter = new(FakeFilter)

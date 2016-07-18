@@ -46,18 +46,24 @@ func CombineVersionAndETag(version string, etag string) (string, error) {
 	return fmt.Sprintf("%s%s%s", version, etagDelimiter, etag), nil
 }
 
-type ExtendedClient interface {
+//go:generate counterfeiter --fake-name FakeExtendedClient . extendedClient
+type extendedClient interface {
 	ReleaseETag(productSlug string, releaseID int) (string, error)
 }
 
 // ProductVersions adds the release ETags to the release versions
-func ProductVersions(c ExtendedClient, productSlug string, releases []pivnet.Release) ([]string, error) {
+func ProductVersions(
+	c extendedClient,
+	productSlug string,
+	releases []pivnet.Release,
+) ([]string, error) {
 	var versions []string
 	for _, r := range releases {
 		etag, err := c.ReleaseETag(productSlug, r.ID)
 		if err != nil {
 			return nil, err
 		}
+
 		version := fmt.Sprintf("%s#%s", r.Version, etag)
 		versions = append(versions, version)
 	}

@@ -18,7 +18,7 @@ var _ = Describe("Sorter", func() {
 	var (
 		fakeSemverConverter *sorterfakes.FakeSemverConverter
 
-		s sorter.Sorter
+		s *sorter.Sorter
 	)
 
 	BeforeEach(func() {
