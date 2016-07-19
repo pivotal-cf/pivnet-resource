@@ -73,57 +73,7 @@ are consistent with the production instance of Pivotal Network.
 
 ### Example Pipeline Configuration
 
-#### Check
-
-``` yaml
----
-resources:
-- name: stemcells
-  type: pivnet
-  source:
-    api_token: my-api-token
-    product_slug: stemcells
-```
-
-#### Get
-
-Resource configuration as above for Check, with the following job configuration.
-
-``` yaml
----
-jobs:
-- name: download-aws-and-vsphere-stemcells
-  plan:
-  - get: stemcells
-    params:
-      globs:
-      - "*aws*"
-      - "*vsphere*"
-```
-
-#### Put
-
-``` yaml
----
-resources:
-- name: p-gitlab-pivnet
-  type: pivnet
-  source:
-    api_token: my-api-token
-    product_slug: p-gitlab
-    access_key_id: my-aws-access-key-id
-    secret_access_key: my-aws-secret-access-key
-
-
-jobs:
-- name: create-p-gitlab-pivnet
-  plan:
-  - put: p-gitlab-pivnet
-    params:
-      metadata_file: some-metadata-file
-      file_glob: some-source-files/*
-      s3_filepath_prefix: P-Gitlab
-```
+See [example pipeline configurations](https://github.com/pivotal-cf-experimental/pivnet-resource/blob/master/examples/README.md).
 
 ## Behavior
 

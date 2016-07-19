@@ -1,0 +1,25 @@
+---
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+
+resources:
+- name: p-mysql
+  type: pivnet
+  source:
+    api_token: my-api-token
+    product_slug: p-mysql
+    access_key_id: my-aws-access-key-id
+    secret_access_key: my-aws-secret-access-key
+
+jobs:
+- name: create-p-mysql-pivnet
+  plan:
+  - put: p-mysql
+    params:
+      metadata_file: relative/path/to/some-metadata-file
+      file_glob: relative/path/to/some-source-files/*
+      s3_filepath_prefix: P-MySQL

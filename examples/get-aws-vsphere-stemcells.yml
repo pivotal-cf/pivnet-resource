@@ -1,0 +1,24 @@
+---
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+
+resources:
+- name: stemcells
+  type: pivnet
+  source:
+    api_token: my-api-token
+    product_slug: stemcells
+
+jobs:
+- name: download-aws-and-vsphere-stemcells
+  plan:
+  - get: stemcells
+    params:
+      globs:
+      - "*aws*"
+      - "*vsphere*"
+
