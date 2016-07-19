@@ -29,28 +29,41 @@ repository.
 
 ## Source Configuration
 
-* `api_token`: *Required.*  Token from your pivnet profile.
+* `api_token`: *Required.*
+  Token from your pivnet profile.
 
-* `product_slug`: *Required.*  Name of product on Pivotal Network.
+* `product_slug`: *Required.*
+  Name of product on Pivotal Network.
 
-* `release_type`: *Optional.*  Lock to a specific release type.
+* `release_type`: *Optional.*
+  Lock to a specific release type.
 
-* `access_key_id`: *Optional.*  AWS access key id. Required for uploading products via `out`.
+* `access_key_id`: *Optional.*
+  AWS access key id. Required for uploading products via `out`.
 
-* `secret_access_key`: *Optional.*  AWS secret access key. Required for uploading products via `out`.
+* `secret_access_key`: *Optional.*
+  AWS secret access key. Required for uploading products via `out`.
 
-* `endpoint`: *Optional.*  Endpoint of Pivotal Network. Defaults to `https://network.pivotal.io`.
+* `endpoint`: *Optional.*
+  Endpoint of Pivotal Network. Defaults to `https://network.pivotal.io`.
 
-* `bucket`: *Optional.*  AWS S3 bucket name used by Pivotal Network. Defaults to `pivotalnetwork`.
+* `bucket`: *Optional.*
+  AWS S3 bucket name used by Pivotal Network. Defaults to `pivotalnetwork`.
 
-* `region`: *Optional.* AWS S3 region where the bucket is located. Defaults to `eu-west-1`.
+* `region`: *Optional.*
+  AWS S3 region where the bucket is located. Defaults to `eu-west-1`.
 
-* `product_version`: *Optional.* Regex to match product version e.g. `1\.2\..*`. Empty values match all product versions.
+* `product_version`: *Optional.*
+  Regex to match product version e.g. `1\.2\..*`.
+  Empty values match all product versions.
 
-* `sort_by`: *Optional.* Mechanism for sorting releases. Defaults to `none` which returns them in the order they come back from Pivotal Network.
+* `sort_by`: *Optional.*
+  Mechanism for sorting releases.
+  Defaults to `none` which returns them in the order they come back from Pivotal Network.
 
   Other permissible values for `sort_by` include:
-  - `semver` - this will order the releases by semantic version, returning the release with the highest-valued version.
+  - `semver` - this will order the releases by semantic version,
+    returning the release with the highest-valued version.
 
 **Values for the `endpoint`, `bucket` and `region` must be consistent or downloads and uploads may fail.**
 
@@ -185,7 +198,9 @@ release creation will fail.
   a `product_slug` might be `pivotal-diego-pcf` (lower-case) but the
   `s3_filepath_prefix` could be `Pivotal-Diego-PCF` (mixed-case).
 
-* `metadata_file`: *Optional.* File containing metadata for releases and product files. See [Metadata file](#metadata-file) for more details.
+* `metadata_file`: *Optional.*
+  File containing metadata for releases and product files.
+  See [Metadata file](#metadata-file) for more details.
 
 ### Metadata file
 
