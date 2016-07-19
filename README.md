@@ -320,7 +320,8 @@ The top-level `dependencies` key is currently write-only.
 
 ## Integration Environment
 
-The Pivotal Network team maintain an integration environment at `https://pivnet-integration.cfapps.io/`
+The Pivotal Network team maintain an integration environment at
+`https://pivnet-integration.cfapps.io/`.
 The credentials for this environment are the same as for production, and the
 corresponding S3 bucket is `pivotal-network-staging`.
 
@@ -331,20 +332,14 @@ in this account are separated from the live account.
 
 ### Prerequisites
 
-A valid install of golang >= 1.5 is required.
+A valid install of golang >= 1.6 is required.
 
 ### Dependencies
 
 Dependencies are vendored in the `vendor` directory, according to the
 [golang 1.5 vendor experiment](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwi7puWg7ZrLAhUN1WMKHeT4A7oQFggdMAA&url=https%3A%2F%2Fgolang.org%2Fs%2Fgo15vendor&usg=AFQjCNEPCAjj1lnni5apHdA7rW0crWs7Zw).
 
-If using golang 1.6, no action is required.
-
-If using golang 1.5 run the following command:
-
-```
-export GO15VENDOREXPERIMENT=1
-```
+No action is require to fetch the vendored dependencies.
 
 ### Running the tests
 
