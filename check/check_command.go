@@ -62,12 +62,14 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	c.logger.Println("Received input, starting Check CMD run")
 
 	logDir := filepath.Dir(c.logFilePath)
-	existingLogFiles, err := filepath.Glob(filepath.Join(logDir, "pivnet-resource-check.log*"))
+	existingLogFiles, err := filepath.Glob(filepath.Join(logDir, "*.log*"))
 	if err != nil {
 		// This is untested because the only error returned by filepath.Glob is a
 		// malformed glob, and this glob is hard-coded to be correct.
 		return nil, err
 	}
+
+	c.logger.Printf("Located logfiles: %v\n", existingLogFiles)
 
 	for _, f := range existingLogFiles {
 		if filepath.Base(f) != filepath.Base(c.logFilePath) {
