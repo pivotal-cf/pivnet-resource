@@ -4,8 +4,9 @@ Interact with [Pivotal Network](https://network.pivotal.io) from concourse.
 
 ## Installing
 
-For Concourse versions 0.74.0 and higher, the recommended method to use this
-resource is with `resource_types` in the pipeline config as follows:
+The recommended method to use this resource is with
+[resource_types](http://concourse.ci/configuring-resource-types.html) in the
+pipeline config as follows:
 
 ```yaml
 ---
@@ -16,33 +17,15 @@ resource_types:
     repository: pivotalcf/pivnet-resource
     tag: latest-final
 ```
-See [concourse docs](http://concourse.ci/configuring-resource-types.html) for more details
-on adding `resource_types` to a pipeline config.
 
-**Using `tag: latest-final` will pull the latest final release, which can be
-found on the
+**Using `tag: latest-final` will automatically pull the latest final release,
+which can be found on the
 [releases page](https://github.com/pivotal-cf-experimental/pivnet-resource/releases)**
 
 **To avoid automatically upgrading, use a fixed tag instead e.g. `tag: v0.6.3`**
 
-The docker image is `pivotalcf/pivnet-resource`; the images are available on
-[dockerhub](https://hub.docker.com/r/pivotalcf/pivnet-resource).
-
-For Concourse versions 0.73.0 and earlier, the recommended way to add this
-resource to a Concourse instance is via the
-[BOSH release](https://github.com/pivotal-cf-experimental/pivnet-resource-boshrelease)
-
-The rootfs of the docker image is available with each release on the
-[releases page](https://github.com/pivotal-cf-experimental/pivnet-resource/releases).
-
-Both the docker images and the BOSH releases are semantically versioned;
-they have the same version. These versions correspond to the git tags in this
-repository and in the
-[BOSH release](https://github.com/pivotal-cf-experimental/pivnet-resource-boshrelease)
+Releases are semantically versioned; these correspond to the git tags in this
 repository.
-
-BOSH releases are available on
-[bosh.io](http://bosh.io/releases/github.com/pivotal-cf-experimental/pivnet-resource-boshrelease).
 
 ## Source Configuration
 
