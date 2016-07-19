@@ -73,7 +73,7 @@ are consistent with the production instance of Pivotal Network.
 
 ### Example Pipeline Configuration
 
-See [example pipeline configurations](https://github.com/pivotal-cf-experimental/pivnet-resource/blob/master/examples/README.md).
+See [example pipeline configurations](https://github.com/pivotal-cf-experimental/pivnet-resource/blob/master/examples).
 
 ## Behavior
 
