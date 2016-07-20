@@ -48,9 +48,8 @@ later release, as it replaces the various files like `version_file`.
 
 * `version`: *Required.* Version of the new release.
 
-  Note, if sorting by
-  semantic version in `source` params (i.e. `sort_by: semver`)
-  then this version must be a valid semantic version.
+  Note, if sorting by semantic version in the `source` config
+  (i.e. `sort_by: semver`) then this version must be a valid semantic version.
 
   This is to prevent inconsistencies that would occur when creating a new
   version of a resource that cannot be discovered by the check for that resource.
@@ -58,11 +57,21 @@ later release, as it replaces the various files like `version_file`.
 * `release_type`: *Required.* See the
 [official docs](https://network.pivotal.io/docs/api) for the supported types.
 
-* `eula_slug`: *Required.* The EULA slug e.g. `pivotal_software_eula`. See the
-[official docs](https://network.pivotal.io/docs/api#public/docs/api/v2/eulas.md)
-for the supported values.
+  Note, if filtering by `release_type` in the `source` config
+  then this release type must be the same.
 
-* `release_date`: *Optional.* Release date in the form of: `YYYY-MM-DD`.
+  This is to prevent inconsistencies that would occur when creating a new
+  version of a resource that cannot be discovered by the check for that resource.
+
+* `eula_slug`: *Required.* The EULA slug e.g. `pivotal_software_eula`.
+
+  See the
+  [official docs](https://network.pivotal.io/docs/api#public/docs/api/v2/eulas.md)
+  for the supported values.
+
+* `release_date`: *Optional.*
+  Release date in the form of: `YYYY-MM-DD`.
+
   If it is not present, the release date will be set to the current date.
 
 * `description`: *Optional.* Free-form description text.
@@ -82,7 +91,9 @@ for the supported values.
   - `Selected User Groups Only`
 
 * `user_group_ids`: *Optional.* Comma-separated list of user
-  group IDs. Each user group in the list will be added to the release.
+  group IDs.
+
+  Each user group in the list will be added to the release.
   Will be used only if the availability is set to `Selected User Groups Only`.
 
 * `controlled`: *Optional.* Boolean, defaults to `false`.
