@@ -3,6 +3,7 @@ package release
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/blang/semver"
@@ -78,6 +79,27 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 			return pivnet.Release{}, err
 		}
 		rc.logger.Printf("Successfully parsed semver as: %s\n", v.String())
+	}
+
+	if rc.source.ProductVersion != "" {
+		rc.logger.Printf(
+			"validating product_version: '%s' against regex: '%s'",
+			productVersion,
+			rc.source.ProductVersion,
+		)
+
+		match, err := regexp.MatchString(rc.source.ProductVersion, productVersion)
+		if err != nil {
+			return pivnet.Release{}, err
+		}
+
+		if !match {
+			return pivnet.Release{}, fmt.Errorf(
+				"provided product_version: '%s' does not match regex in source: '%s'",
+				productVersion,
+				rc.source.ProductVersion,
+			)
+		}
 	}
 
 	rc.logger.Printf("Getting existing releases for product slug: %s\n", rc.productSlug)

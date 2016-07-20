@@ -27,6 +27,7 @@ var _ = Describe("ReleaseCreator", func() {
 		creator release.ReleaseCreator
 
 		sourceReleaseType           string
+		sourceVersion               string
 		sortBy                      concourse.SortBy
 		fetchReturnedProductVersion string
 		existingProductVersion      string
@@ -43,10 +44,12 @@ var _ = Describe("ReleaseCreator", func() {
 		sortBy = concourse.SortByNone
 
 		existingProductVersion = "existing-product-version"
-		fetchReturnedProductVersion = "a-product-version"
+		fetchReturnedProductVersion = "1.8.3"
 		eulaSlug = "magic-slug"
 		releaseType = "some-release-type"
+
 		sourceReleaseType = releaseType
+		sourceVersion = `1\.8\..*`
 
 		pivnetClient.EULAsReturns([]pivnet.EULA{{Slug: eulaSlug}}, nil)
 		pivnetClient.ReleaseTypesReturns([]string{releaseType}, nil)
@@ -78,8 +81,9 @@ var _ = Describe("ReleaseCreator", func() {
 			}
 
 			source := concourse.Source{
-				ReleaseType: sourceReleaseType,
-				SortBy:      sortBy,
+				ReleaseType:    sourceReleaseType,
+				ProductVersion: sourceVersion,
+				SortBy:         sortBy,
 			}
 
 			creator = release.NewReleaseCreator(
@@ -282,6 +286,28 @@ var _ = Describe("ReleaseCreator", func() {
 			BeforeEach(func() {
 				sourceReleaseType = "different release type"
 				pivnetClient.ReleaseTypesReturns([]string{releaseType, sourceReleaseType}, nil)
+			})
+
+			It("returns an error", func() {
+				_, err := creator.Create()
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when source regex is invalid", func() {
+			BeforeEach(func() {
+				sourceVersion = `1\.[`
+			})
+
+			It("returns an error", func() {
+				_, err := creator.Create()
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when release version does not match source regex", func() {
+			BeforeEach(func() {
+				sourceVersion = `1\.7\..*`
 			})
 
 			It("returns an error", func() {
