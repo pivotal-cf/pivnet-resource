@@ -169,6 +169,14 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		)
 	}
 
+	if rc.source.ReleaseType != "" && rc.source.ReleaseType != releaseType {
+		return pivnet.Release{}, fmt.Errorf(
+			"provided release_type: '%s' must match '%s' from source configuration",
+			releaseType,
+			rc.source.ReleaseType,
+		)
+	}
+
 	eulaSlug = rc.metadataFetcher.Fetch(
 		"EULASlug",
 		rc.sourcesDir,

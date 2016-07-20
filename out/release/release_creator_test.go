@@ -26,6 +26,7 @@ var _ = Describe("ReleaseCreator", func() {
 
 		creator release.ReleaseCreator
 
+		sourceReleaseType           string
 		sortBy                      concourse.SortBy
 		fetchReturnedProductVersion string
 		existingProductVersion      string
@@ -45,6 +46,7 @@ var _ = Describe("ReleaseCreator", func() {
 		fetchReturnedProductVersion = "a-product-version"
 		eulaSlug = "magic-slug"
 		releaseType = "some-release-type"
+		sourceReleaseType = releaseType
 
 		pivnetClient.EULAsReturns([]pivnet.EULA{{Slug: eulaSlug}}, nil)
 		pivnetClient.ReleaseTypesReturns([]string{releaseType}, nil)
@@ -76,7 +78,8 @@ var _ = Describe("ReleaseCreator", func() {
 			}
 
 			source := concourse.Source{
-				SortBy: sortBy,
+				ReleaseType: sourceReleaseType,
+				SortBy:      sortBy,
 			}
 
 			creator = release.NewReleaseCreator(
@@ -272,6 +275,18 @@ var _ = Describe("ReleaseCreator", func() {
 					_, err := creator.Create()
 					Expect(err).To(Equal(expectedErr))
 				})
+			})
+		})
+
+		Context("when release type does not match source config", func() {
+			BeforeEach(func() {
+				sourceReleaseType = "different release type"
+				pivnetClient.ReleaseTypesReturns([]string{releaseType, sourceReleaseType}, nil)
+			})
+
+			It("returns an error", func() {
+				_, err := creator.Create()
+				Expect(err).To(HaveOccurred())
 			})
 		})
 	})
