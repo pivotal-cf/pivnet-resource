@@ -91,7 +91,7 @@ The metadata for the product is written to both `metadata.json` and
 `metadata.yaml` in the working directory (typically `/tmp/build/get`).
 Use this to programmatically determine metadata of the release.
 
-See [metadata](https://github.com/pivotal-cf-experimental/pivnet-resource/metadata)
+See [metadata](https://github.com/pivotal-cf-experimental/pivnet-resource/blob/master/metadata)
 for more details on the structure of the metadata file.
 
 #### Parameters
@@ -123,7 +123,7 @@ If a product release already exists on Pivotal Network with the desired version,
 resource will exit with error without attempting to create the release or upload any
 files.
 
-See [metadata](https://github.com/pivotal-cf-experimental/pivnet-resource/metadata)
+See [metadata](https://github.com/pivotal-cf-experimental/pivnet-resource/blob/master/metadata)
 for more details on the structure of the metadata file.
 
 #### Parameters
