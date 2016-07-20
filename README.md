@@ -18,9 +18,9 @@ resource_types:
     tag: latest-final
 ```
 
-**Using `tag: latest-final` will automatically pull the latest final release,
+Using `tag: latest-final` will automatically pull the latest final release,
 which can be found on the
-[releases page](https://github.com/pivotal-cf-experimental/pivnet-resource/releases)**
+[releases page](https://github.com/pivotal-cf-experimental/pivnet-resource/releases)
 
 **To avoid automatically upgrading, use a fixed tag instead e.g. `tag: v0.6.3`**
 
@@ -39,39 +39,52 @@ repository.
   Lock to a specific release type.
 
 * `access_key_id`: *Optional.*
-  AWS access key id. Required for uploading products via `out`.
+  AWS access key id.
+
+  Required for uploading products via `out`.
 
 * `secret_access_key`: *Optional.*
-  AWS secret access key. Required for uploading products via `out`.
+  AWS secret access key.
+
+  Required for uploading products via `out`.
 
 * `endpoint`: *Optional.*
-  Endpoint of Pivotal Network. Defaults to `https://network.pivotal.io`.
+  Endpoint of Pivotal Network.
+
+  Defaults to `https://network.pivotal.io`.
 
 * `bucket`: *Optional.*
-  AWS S3 bucket name used by Pivotal Network. Defaults to `pivotalnetwork`.
+  AWS S3 bucket name used by Pivotal Network.
+
+  Defaults to `pivotalnetwork`.
 
 * `region`: *Optional.*
-  AWS S3 region where the bucket is located. Defaults to `eu-west-1`.
+  AWS S3 region where the bucket is located.
+
+  Defaults to `eu-west-1`.
 
 * `product_version`: *Optional.*
   Regex to match product version e.g. `1\.2\..*`.
+
   Empty values match all product versions.
 
 * `sort_by`: *Optional.*
   Mechanism for sorting releases.
+
   Defaults to `none` which returns them in the order they come back from Pivotal Network.
 
   Other permissible values for `sort_by` include:
   - `semver` - this will order the releases by semantic version,
     returning the release with the highest-valued version.
 
-**Values for the `endpoint`, `bucket` and `region` must be consistent or downloads and uploads may fail.**
+**Values for the `endpoint`, `bucket` and `region` must be consistent
+or downloads and uploads may fail.**
 
 For example, the default values of `endpoint: https://network.pivotal.io`,
 `bucket: pivotalnetwork` and `region: eu-west-1`
 are consistent with the production instance of Pivotal Network.
 
-### Example Pipeline Configuration
+## Example Pipeline Configuration
 
 See [example pipeline configurations](https://github.com/pivotal-cf-experimental/pivnet-resource/blob/master/examples).
 
@@ -80,7 +93,7 @@ See [example pipeline configurations](https://github.com/pivotal-cf-experimental
 ### `check`: Check for new product versions on Pivotal Network.
 
 Discovers all versions of the provided product.
-Returned versions are filtered by the `source` configuration.
+Returned versions are optionally filtered and ordered by the `source` configuration.
 
 ### `in`: Download the product from Pivotal Network.
 
@@ -97,6 +110,7 @@ for more details on the structure of the metadata file.
 #### Parameters
 
 * `globs`: *Optional.* Array of globs matching files to download.
+
   If multiple files are matched, they are all downloaded.
   - The globs match on the actual *file names*, not the display names in Pivotal
   Network. This is to provide a more consistent experience between uploading and
@@ -114,14 +128,14 @@ for more details on the structure of the metadata file.
 
 Creates a new release on Pivotal Network with the provided version and metadata.
 
-Also optionally uploads one or more files to the Pivotal Network bucket under
-the provided `s3_filepath_prefix`, adding them both to the Pivotal Network as well as
-to the newly-created release. The MD5 checksum of each file is taken locally, and
-added to the file metadata in Pivotal Network.
+Also optionally uploads one or more files to Pivotal Network bucket under
+the provided `s3_filepath_prefix`, adding them both to Pivotal Network as well as
+to the newly-created release. The MD5 checksum of each file is taken locally,
+and added to the file metadata in Pivotal Network.
 
-If a product release already exists on Pivotal Network with the desired version, the
-resource will exit with error without attempting to create the release or upload any
-files.
+If a product release already exists on Pivotal Network with the desired version,
+the resource will exit with error without attempting to create the release or
+upload any files.
 
 See [metadata](https://github.com/pivotal-cf-experimental/pivnet-resource/blob/master/metadata)
 for more details on the structure of the metadata file.
@@ -143,19 +157,23 @@ If both `file_glob` and `s3_filepath_prefix` are present, then the source
 configuration must also have `access_key_id` and `secret_access_key` or
 release creation will fail.
 
-* `file_glob`: *Optional.* Glob matching files to upload. If multiple files are
-  matched by the glob, they are all uploaded. If no files are matched, release
-  creation fails with error.
+* `file_glob`: *Optional.* Glob matching files to upload.
+
+  If multiple files are matched by the glob, they are all uploaded.
+  If no files are matched, release creation fails with error.
 
 * `s3_filepath_prefix`: *Optional.* Case-sensitive prefix of the
   path in the S3 bucket.
+
   Generally similar to, but not the same as, `product_slug`. For example,
   a `product_slug` might be `pivotal-diego-pcf` (lower-case) but the
   `s3_filepath_prefix` could be `Pivotal-Diego-PCF` (mixed-case).
 
 * `metadata_file`: *Optional.*
   File containing metadata for releases and product files.
-  See [Metadata file](#metadata-file) for more details.
+
+  See [metadata](https://github.com/pivotal-cf-experimental/pivnet-resource/blob/master/metadata)
+  for more details on the structure of the metadata file.
 
 ## Integration Environment
 
