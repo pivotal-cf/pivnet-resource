@@ -51,7 +51,10 @@ later release, as it replaces the various files like `version_file`.
   Note, if sorting by semantic version in the `source` config
   (i.e. `sort_by: semver`) then this version must be a valid semantic version.
 
-  This is to prevent inconsistencies that would occur when creating a new
+  Also, if `product_version` is a regex in the `source` config
+  then this version must conform to that regex.
+
+  These constraints prevent inconsistencies that would occur when creating a new
   version of a resource that cannot be discovered by the check for that resource.
 
 * `release_type`: *Required.* See the
