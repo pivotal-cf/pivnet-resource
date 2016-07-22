@@ -11,13 +11,14 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Lifecycle test", func() {
@@ -180,7 +181,8 @@ var _ = Describe("Lifecycle test", func() {
 
 			It("uploads files to s3 and creates files on pivnet", func() {
 				By("Getting existing list of product files")
-				existingProductFiles := getProductFiles(productSlug)
+				existingProductFiles, err := pivnetClient.GetProductFiles(productSlug)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying existing product files does not yet contain new files")
 				var existingProductFileNames []string
@@ -204,21 +206,22 @@ var _ = Describe("Lifecycle test", func() {
 
 				By("Outputting a valid json response")
 				response := concourse.OutResponse{}
-				err := json.Unmarshal(session.Out.Contents(), &response)
+				err = json.Unmarshal(session.Out.Contents(), &response)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				By("Validating the release was created correctly")
 				release, err := pivnetClient.GetRelease(productSlug, productVersion)
 				Expect(err).NotTo(HaveOccurred())
 
-				releaseETag, err := pivnetClient.ReleaseETag(productSlug, release)
+				releaseETag, err := pivnetClient.ReleaseETag(productSlug, release.ID)
 				Expect(err).NotTo(HaveOccurred())
 
 				expectedVersion := fmt.Sprintf("%s#%s", productVersion, releaseETag)
 				Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
 
 				By("Getting updated list of product files")
-				updatedProductFiles := getProductFiles(productSlug)
+				updatedProductFiles, err := pivnetClient.GetProductFiles(productSlug)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying number of product files has increased by the expected amount")
 				newProductFileCount := len(updatedProductFiles) - len(existingProductFiles)
@@ -237,18 +240,18 @@ var _ = Describe("Lifecycle test", func() {
 				release, err = pivnetClient.GetRelease(productSlug, productVersion)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				releaseETag, err = pivnetClient.ReleaseETag(productSlug, release)
+				releaseETag, err = pivnetClient.ReleaseETag(productSlug, release.ID)
 				Expect(err).NotTo(HaveOccurred())
 
 				versionWithETag, err := versions.CombineVersionAndETag(productVersion, releaseETag)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying release contains new product files")
-				productFilesFromRelease, err := pivnetClient.GetProductFiles(release)
+				productFilesFromRelease, err := pivnetClient.GetProductFilesForRelease(productSlug, release.ID)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				Expect(len(productFilesFromRelease.ProductFiles)).To(Equal(totalFiles))
-				for _, p := range productFilesFromRelease.ProductFiles {
+				Expect(len(productFilesFromRelease)).To(Equal(totalFiles))
+				for _, p := range productFilesFromRelease {
 					Expect(sourceFileNames).To(ContainElement(p.Name))
 
 					productFile, err := pivnetClient.GetProductFile(

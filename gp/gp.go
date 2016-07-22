@@ -10,6 +10,11 @@ import (
 	"github.com/pivotal-cf-experimental/go-pivnet/logger"
 )
 
+type CombinedClient struct {
+	*Client
+	*ExtendedClient
+}
+
 type Client struct {
 	client pivnet.Client
 }
@@ -75,6 +80,10 @@ func (c Client) AddUserGroup(productSlug string, releaseID int, userGroupID int)
 	return c.client.UserGroups.AddToRelease(productSlug, releaseID, userGroupID)
 }
 
+func (c Client) UserGroups(productSlug string, releaseID int) ([]pivnet.UserGroup, error) {
+	return c.client.UserGroups.ListForRelease(productSlug, releaseID)
+}
+
 func (c Client) AcceptEULA(productSlug string, releaseID int) error {
 	return c.client.EULA.Accept(productSlug, releaseID)
 }
@@ -83,12 +92,20 @@ func (c Client) EULAs() ([]pivnet.EULA, error) {
 	return c.client.EULA.List()
 }
 
-func (c Client) GetProductFiles(productSlug string, releaseID int) ([]pivnet.ProductFile, error) {
+func (c Client) GetProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error) {
 	return c.client.ProductFiles.ListForRelease(productSlug, releaseID)
+}
+
+func (c Client) GetProductFiles(productSlug string) ([]pivnet.ProductFile, error) {
+	return c.client.ProductFiles.List(productSlug)
 }
 
 func (c Client) GetProductFile(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error) {
 	return c.client.ProductFiles.GetForRelease(productSlug, releaseID, productFileID)
+}
+
+func (c Client) DeleteProductFile(productSlug string, releaseID int) (pivnet.ProductFile, error) {
+	return c.client.ProductFiles.Delete(productSlug, releaseID)
 }
 
 func (c Client) FindProductForSlug(slug string) (pivnet.Product, error) {

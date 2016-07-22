@@ -153,10 +153,7 @@ func main() {
 
 	md5summer := md5sum.NewFileSummer()
 
-	combinedClient := struct {
-		*gp.Client
-		*gp.ExtendedClient
-	}{
+	combinedClient := gp.CombinedClient{
 		pivnetClient,
 		extendedClient,
 	}

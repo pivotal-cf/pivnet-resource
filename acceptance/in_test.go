@@ -9,13 +9,14 @@ import (
 	"path/filepath"
 	"time"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("In", func() {
@@ -46,7 +47,7 @@ var _ = Describe("In", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		etag, err = pivnetClient.ReleaseETag(productSlug, release)
+		etag, err = pivnetClient.ReleaseETag(productSlug, release.ID)
 		Expect(err).NotTo(HaveOccurred())
 
 		versionWithETag, err = versions.CombineVersionAndETag(productVersion, etag)

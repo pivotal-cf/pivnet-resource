@@ -1,10 +1,8 @@
 package acceptance
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -14,35 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
-
-func getProductFiles(productSlug string) []pivnet.ProductFile {
-	productURL := fmt.Sprintf(
-		"%s/api/v2/products/%s/product_files",
-		endpoint,
-		productSlug,
-	)
-
-	req, err := http.NewRequest("GET", productURL, nil)
-	Expect(err).NotTo(HaveOccurred())
-
-	req.Header.Add("Authorization", fmt.Sprintf("Token %s", pivnetAPIToken))
-
-	resp, err := http.DefaultClient.Do(req)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
-	response := pivnet.ProductFiles{}
-	err = json.NewDecoder(resp.Body).Decode(&response)
-	Expect(err).NotTo(HaveOccurred())
-
-	return response.ProductFiles
-}
 
 // copyFileContents copies the contents of the file named src to the file named
 // by dst. The file will be created if it does not already exist. If the

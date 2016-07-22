@@ -3,14 +3,17 @@ package acceptance
 import (
 	"os"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf-experimental/pivnet-resource/pivnet"
+	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
+	"github.com/pivotal-cf-experimental/pivnet-resource/gp/lagershim"
 	"github.com/pivotal-golang/lager"
 	"github.com/robdimsdale/sanitizer"
 
 	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var (
@@ -28,7 +31,7 @@ var (
 	pivnetBucketName   string
 	s3FilepathPrefix   string
 
-	pivnetClient pivnet.Client
+	pivnetClient gp.CombinedClient
 )
 
 func TestAcceptance(t *testing.T) {
@@ -94,13 +97,20 @@ var _ = BeforeSuite(func() {
 	By("Creating pivnet client (for out-of-band operations)")
 	testLogger := lager.NewLogger("acceptance-tests")
 	testLogger.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
+	ls := lagershim.NewLagerShim(testLogger)
 
-	clientConfig := pivnet.NewClientConfig{
-		Endpoint:  endpoint,
+	clientConfig := pivnet.ClientConfig{
+		Host:      endpoint,
 		Token:     pivnetAPIToken,
 		UserAgent: "pivnet-resource/integration-test",
 	}
-	pivnetClient = pivnet.NewClient(clientConfig, testLogger)
+
+	client := gp.NewClient(clientConfig, ls)
+	extendedClient := gp.NewExtendedClient(*client, ls)
+	pivnetClient = gp.CombinedClient{
+		client,
+		extendedClient,
+	}
 })
 
 var _ = AfterSuite(func() {

@@ -11,12 +11,13 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 const (
@@ -158,7 +159,7 @@ var _ = Describe("Out", func() {
 			release, err := pivnetClient.GetRelease(productSlug, productVersion)
 			Expect(err).NotTo(HaveOccurred())
 
-			releaseETag, err := pivnetClient.ReleaseETag(productSlug, release)
+			releaseETag, err := pivnetClient.ReleaseETag(productSlug, release.ID)
 			Expect(err).NotTo(HaveOccurred())
 
 			expectedVersion := fmt.Sprintf("%s#%s", productVersion, releaseETag)

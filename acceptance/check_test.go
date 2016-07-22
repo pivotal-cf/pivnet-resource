@@ -32,7 +32,7 @@ var _ = Describe("Check", func() {
 		By("Getting release ETags")
 		versions = make([]string, len(releases))
 		for i, r := range releases {
-			releaseETag, err := pivnetClient.ReleaseETag(productSlug, r)
+			releaseETag, err := pivnetClient.ReleaseETag(productSlug, r.ID)
 			Expect(err).NotTo(HaveOccurred())
 
 			versions[i] = fmt.Sprintf("%s#%s", r.Version, releaseETag)

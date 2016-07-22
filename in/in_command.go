@@ -40,7 +40,7 @@ type fileWriter interface {
 type pivnetClient interface {
 	GetRelease(productSlug string, productVersion string) (pivnet.Release, error)
 	AcceptEULA(productSlug string, releaseID int) error
-	GetProductFiles(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
+	GetProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
 	GetProductFile(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
 }
@@ -98,7 +98,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Println("Getting product files")
 
-	productFiles, err := c.pivnetClient.GetProductFiles(productSlug, release.ID)
+	productFiles, err := c.pivnetClient.GetProductFilesForRelease(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}

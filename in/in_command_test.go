@@ -179,7 +179,7 @@ var _ = Describe("In", func() {
 	JustBeforeEach(func() {
 		fakePivnetClient.GetReleaseReturns(release, getReleaseErr)
 		fakePivnetClient.AcceptEULAReturns(acceptEULAErr)
-		fakePivnetClient.GetProductFilesReturns(productFiles, getProductFilesErr)
+		fakePivnetClient.GetProductFilesForReleaseReturns(productFiles, getProductFilesErr)
 
 		fakePivnetClient.ReleaseDependenciesReturns(releaseDependencies, releaseDependenciesErr)
 
