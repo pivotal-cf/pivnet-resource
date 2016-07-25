@@ -6,6 +6,7 @@ type Metadata struct {
 	Release      *Release      `yaml:"release,omitempty"`
 	ProductFiles []ProductFile `yaml:"product_files,omitempty"`
 	Dependencies []Dependency  `yaml:"dependencies,omitempty"`
+	UpgradePaths []UpgradePath `yaml:"upgrade_paths,omitempty"`
 }
 
 type Release struct {
@@ -38,6 +39,11 @@ type ProductFile struct {
 
 type Dependency struct {
 	Release DependentRelease `yaml:"release,omitempty"`
+}
+
+type UpgradePath struct {
+	ID      int    `yaml:"id,omitempty"`
+	Version string `yaml:"version,omitempty"`
 }
 
 type DependentRelease struct {

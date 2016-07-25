@@ -43,6 +43,7 @@ type pivnetClient interface {
 	GetProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
 	GetProductFile(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
+	ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error)
 }
 
 type InCommand struct {
@@ -82,7 +83,11 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		productVersion = input.Version.ProductVersion
 	}
 
-	c.logger.Printf("Getting release for product_slug %s and product_version %s", productSlug, productVersion)
+	c.logger.Printf(
+		"Getting release for product_slug %s and product_version %s",
+		productSlug,
+		productVersion,
+	)
 
 	release, err := c.pivnetClient.GetRelease(productSlug, productVersion)
 	if err != nil {
@@ -98,18 +103,9 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Println("Getting product files")
 
-	productFiles, err := c.pivnetClient.GetProductFilesForRelease(productSlug, release.ID)
+	productFiles, err := c.getProductFiles(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
-	}
-
-	// Get individual product files to obtain metadata that isn't found
-	// in the endpoint for all product files.
-	for i, p := range productFiles {
-		productFiles[i], err = c.pivnetClient.GetProductFile(productSlug, release.ID, p.ID)
-		if err != nil {
-			return concourse.InResponse{}, err
-		}
 	}
 
 	c.logger.Println("Getting release dependencies")
@@ -119,10 +115,21 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
+	c.logger.Println("Getting release upgrade paths")
+
+	releaseUpgradePaths, err := c.pivnetClient.ReleaseUpgradePaths(productSlug, release.ID)
+	if err != nil {
+		return concourse.InResponse{}, err
+	}
+
+	c.logger.Println("Downloading files")
+
 	err = c.downloadFiles(input.Params.Globs, productFiles, productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
+
+	c.logger.Println("Creating metadata")
 
 	versionWithETag, err := versions.CombineVersionAndETag(productVersion, etag)
 
@@ -172,6 +179,15 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		})
 	}
 
+	for _, d := range releaseUpgradePaths {
+		mdata.UpgradePaths = append(mdata.UpgradePaths, metadata.UpgradePath{
+			ID:      d.Release.ID,
+			Version: d.Release.Version,
+		})
+	}
+
+	c.logger.Println("Writing metadata files")
+
 	err = c.fileWriter.WriteVersionFile(versionWithETag)
 	if err != nil {
 		return concourse.InResponse{}, err
@@ -199,7 +215,33 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	return out, nil
 }
 
-func (c InCommand) downloadFiles(globs []string, productFiles []pivnet.ProductFile, productSlug string, releaseID int) error {
+func (c InCommand) getProductFiles(
+	productSlug string,
+	releaseID int,
+) ([]pivnet.ProductFile, error) {
+	productFiles, err := c.pivnetClient.GetProductFilesForRelease(productSlug, releaseID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get individual product files to obtain metadata that isn't found
+	// in the endpoint for all product files.
+	for i, p := range productFiles {
+		productFiles[i], err = c.pivnetClient.GetProductFile(productSlug, releaseID, p.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return productFiles, nil
+}
+
+func (c InCommand) downloadFiles(
+	globs []string,
+	productFiles []pivnet.ProductFile,
+	productSlug string,
+	releaseID int,
+) error {
 	c.logger.Println("Getting download links")
 
 	downloadLinks := c.filter.DownloadLinks(productFiles)
@@ -213,7 +255,7 @@ func (c InCommand) downloadFiles(globs []string, productFiles []pivnet.ProductFi
 			return err
 		}
 
-		c.logger.Println("Downloading files")
+		c.logger.Println("Downloading filtered files")
 
 		files, err := c.downloader.Download(downloadLinks)
 		if err != nil {
@@ -246,7 +288,10 @@ func (c InCommand) downloadFiles(globs []string, productFiles []pivnet.ProductFi
 	return nil
 }
 
-func (c InCommand) addReleaseMetadata(concourseMetadata []concourse.Metadata, release pivnet.Release) []concourse.Metadata {
+func (c InCommand) addReleaseMetadata(
+	concourseMetadata []concourse.Metadata,
+	release pivnet.Release,
+) []concourse.Metadata {
 	cmdata := append(concourseMetadata,
 		concourse.Metadata{Name: "version", Value: release.Version},
 		concourse.Metadata{Name: "release_type", Value: release.ReleaseType},
@@ -284,7 +329,12 @@ func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]strin
 
 		expectedMD5 := expectedMD5s[f]
 		if md5 != expectedMD5 {
-			c.logger.Printf("Failed MD5 comparison for file: %s. Expected %s, got %s\n", f, expectedMD5, md5)
+			c.logger.Printf(
+				"Failed MD5 comparison for file: %s. Expected %s, got %s\n",
+				f,
+				expectedMD5,
+				md5,
+			)
 			return errors.New("failed comparison")
 		}
 

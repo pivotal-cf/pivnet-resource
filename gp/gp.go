@@ -124,6 +124,10 @@ func (c Client) ReleaseDependencies(productSlug string, releaseID int) ([]pivnet
 	return c.client.ReleaseDependencies.List(productSlug, releaseID)
 }
 
+func (c Client) ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error) {
+	return c.client.ReleaseUpgradePaths.Get(productSlug, releaseID)
+}
+
 func (c Client) MakeRequest(method string, url string, expectedResponseCode int, body io.Reader, data interface{}) (*http.Response, error) {
 	return c.client.MakeRequest(method, url, expectedResponseCode, body, data)
 }

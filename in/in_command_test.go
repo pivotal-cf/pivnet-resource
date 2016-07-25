@@ -33,6 +33,7 @@ var _ = Describe("In", func() {
 		productFile2 pivnet.ProductFile
 
 		releaseDependencies []pivnet.ReleaseDependency
+		releaseUpgradePaths []pivnet.ReleaseUpgradePath
 
 		productVersion  string
 		etag            string
@@ -53,6 +54,7 @@ var _ = Describe("In", func() {
 		downloadLinksByGlobErr error
 		md5sumErr              error
 		releaseDependenciesErr error
+		releaseUpgradePathsErr error
 	)
 
 	BeforeEach(func() {
@@ -70,6 +72,7 @@ var _ = Describe("In", func() {
 		downloadErr = nil
 		md5sumErr = nil
 		releaseDependenciesErr = nil
+		releaseUpgradePathsErr = nil
 
 		productVersion = "C"
 		etag = "etag-0"
@@ -165,6 +168,15 @@ var _ = Describe("In", func() {
 			},
 		}
 
+		releaseUpgradePaths = []pivnet.ReleaseUpgradePath{
+			{
+				Release: pivnet.UpgradePathRelease{
+					ID:      56,
+					Version: "upgrade release 56",
+				},
+			},
+		}
+
 		inRequest = concourse.InRequest{
 			Source: concourse.Source{
 				APIToken:    "some-api-token",
@@ -182,6 +194,7 @@ var _ = Describe("In", func() {
 		fakePivnetClient.GetProductFilesForReleaseReturns(productFiles, getProductFilesErr)
 
 		fakePivnetClient.ReleaseDependenciesReturns(releaseDependencies, releaseDependenciesErr)
+		fakePivnetClient.ReleaseUpgradePathsReturns(releaseUpgradePaths, releaseUpgradePathsErr)
 
 		fakePivnetClient.GetProductFileStub = func(
 			productSlug string,
@@ -270,6 +283,17 @@ var _ = Describe("In", func() {
 		}
 	}
 
+	var validateReleaseUpgradePathsMetadata = func(
+		writtenMetadata metadata.Metadata,
+		upgradePaths []pivnet.ReleaseUpgradePath,
+	) {
+		Expect(writtenMetadata.UpgradePaths).To(HaveLen(len(upgradePaths)))
+		for i, d := range upgradePaths {
+			Expect(writtenMetadata.UpgradePaths[i].ID).To(Equal(d.Release.ID))
+			Expect(writtenMetadata.UpgradePaths[i].Version).To(Equal(d.Release.Version))
+		}
+	}
+
 	It("invokes the json metadata file writer with correct metadata", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
@@ -288,6 +312,7 @@ var _ = Describe("In", func() {
 
 		validateProductFilesMetadata(invokedMetadata, pFiles)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
+		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
 	})
 
 	It("invokes the yaml metadata file writer with correct metadata", func() {
@@ -308,6 +333,7 @@ var _ = Describe("In", func() {
 
 		validateProductFilesMetadata(invokedMetadata, pFiles)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
+		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
 	})
 
 	It("does not download any of the files in the specified release", func() {
@@ -491,6 +517,19 @@ var _ = Describe("In", func() {
 			Expect(err).To(HaveOccurred())
 
 			Expect(err).To(Equal(releaseDependenciesErr))
+		})
+	})
+
+	Context("when getting release upgrade paths returns an error", func() {
+		BeforeEach(func() {
+			releaseUpgradePathsErr = fmt.Errorf("some release upgrade paths error")
+		})
+
+		It("returns the error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(releaseUpgradePathsErr))
 		})
 	})
 })
