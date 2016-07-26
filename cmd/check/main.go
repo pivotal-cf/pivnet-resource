@@ -37,7 +37,7 @@ func main() {
 		log.Printf("could not create log file")
 	}
 
-	logger := log.New(logFile, "pivnet check ", log.LstdFlags)
+	logger := log.New(logFile, "", log.LstdFlags)
 
 	logger.Printf("PivNet Resource version: %s", version)
 

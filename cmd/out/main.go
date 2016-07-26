@@ -42,7 +42,7 @@ func main() {
 		version = "dev"
 	}
 
-	logger := log.New(os.Stderr, "pivnet out ", log.LstdFlags)
+	logger := log.New(os.Stderr, "", log.LstdFlags)
 
 	logger.Printf("PivNet Resource version: %s", version)
 
