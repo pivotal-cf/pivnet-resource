@@ -123,6 +123,7 @@ func printProductFile(productFile pivnet.ProductFile) error {
 			"Description",
 			"MD5",
 			"AWS Object Key",
+			"Size (Bytes)",
 		})
 
 		productFileAsString := []string{
@@ -133,6 +134,7 @@ func printProductFile(productFile pivnet.ProductFile) error {
 			productFile.Description,
 			productFile.MD5,
 			productFile.AWSObjectKey,
+			fmt.Sprintf("%d", productFile.Size),
 		}
 		table.Append(productFileAsString)
 		table.Render()

@@ -66,9 +66,6 @@ func main() {
 		log.Fatalf("Exiting with error: %s", err)
 	}
 
-	d := downloader.NewDownloader(input.Source.APIToken, downloadDir, logger)
-	fs := md5sum.NewFileSummer()
-
 	var endpoint string
 	if input.Source.Endpoint != "" {
 		endpoint = input.Source.Endpoint
@@ -86,6 +83,11 @@ func main() {
 		clientConfig,
 		ls,
 	)
+
+	extendedClient := gp.NewExtendedClient(*client, ls)
+
+	d := downloader.NewDownloader(extendedClient, downloadDir, logger)
+	fs := md5sum.NewFileSummer()
 
 	f := filter.NewFilter()
 

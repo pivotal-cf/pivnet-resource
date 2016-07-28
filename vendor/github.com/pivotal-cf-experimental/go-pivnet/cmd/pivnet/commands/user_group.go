@@ -47,6 +47,17 @@ type DeleteUserGroupCommand struct {
 	UserGroupID int `long:"user-group-id" description:"User group ID e.g. 1234" required:"true"`
 }
 
+type AddUserGroupMemberCommand struct {
+	UserGroupID        int    `long:"user-group-id" description:"User group ID e.g. 1234" required:"true"`
+	MemberEmailAddress string `long:"member-email" description:"Member email address e.g. 1234" required:"true"`
+	Admin              bool   `long:"admin" description:"Whether the user should be an admin"`
+}
+
+type RemoveUserGroupMemberCommand struct {
+	UserGroupID        int    `long:"user-group-id" description:"User group ID e.g. 1234" required:"true"`
+	MemberEmailAddress string `long:"member-email" description:"Member email address e.g. 1234" required:"true"`
+}
+
 func (command *UserGroupCommand) Execute([]string) error {
 	client := NewClient()
 
@@ -286,4 +297,33 @@ func (command *RemoveUserGroupCommand) Execute([]string) error {
 	}
 
 	return nil
+}
+
+func (command *AddUserGroupMemberCommand) Execute([]string) error {
+	client := NewClient()
+
+	userGroup, err := client.UserGroups.AddMemberToGroup(
+		command.UserGroupID,
+		command.MemberEmailAddress,
+		command.Admin,
+	)
+	if err != nil {
+		return ErrorHandler.HandleError(err)
+	}
+
+	return printUserGroup(userGroup)
+}
+
+func (command *RemoveUserGroupMemberCommand) Execute([]string) error {
+	client := NewClient()
+
+	userGroup, err := client.UserGroups.RemoveMemberFromGroup(
+		command.UserGroupID,
+		command.MemberEmailAddress,
+	)
+	if err != nil {
+		return ErrorHandler.HandleError(err)
+	}
+
+	return printUserGroup(userGroup)
 }

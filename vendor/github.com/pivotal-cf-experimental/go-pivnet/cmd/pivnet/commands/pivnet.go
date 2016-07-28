@@ -53,6 +53,8 @@ type PivnetCommand struct {
 	RemoveProductFile RemoveProductFileCommand `command:"remove-product-file" description:"Remove product file from release"`
 	DeleteProductFile DeleteProductFileCommand `command:"delete-product-file" description:"Delete product file"`
 
+	DownloadProductFile DownloadProductFileCommand `command:"download-product-file" description:"Download product file"`
+
 	FileGroups      FileGroupsCommand      `command:"file-groups" description:"List file groups"`
 	FileGroup       FileGroupCommand       `command:"file-group" description:"Show file group"`
 	DeleteFileGroup DeleteFileGroupCommand `command:"delete-file-group" description:"Delete file group"`
@@ -68,6 +70,9 @@ type PivnetCommand struct {
 	CreateUserGroup CreateUserGroupCommand `command:"create-user-group" description:"Create user group"`
 	UpdateUserGroup UpdateUserGroupCommand `command:"update-user-group" description:"Update user group"`
 	DeleteUserGroup DeleteUserGroupCommand `command:"delete-user-group" description:"Delete user group"`
+
+	AddUserGroupMember    AddUserGroupMemberCommand    `command:"add-user-group-member" description:"Add user group member to group"`
+	RemoveUserGroupMember RemoveUserGroupMemberCommand `command:"remove-user-group-member" description:"Remove user group member from group"`
 
 	ReleaseDependencies ReleaseDependenciesCommand `command:"release-dependencies" description:"List user groups"`
 

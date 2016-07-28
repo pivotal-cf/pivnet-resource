@@ -132,6 +132,10 @@ func (c Client) MakeRequest(method string, url string, expectedResponseCode int,
 	return c.client.MakeRequest(method, url, expectedResponseCode, body, data)
 }
 
+func (c Client) CreateRequest(method string, url string, body io.Reader) (*http.Request, error) {
+	return c.client.CreateRequest(method, url, body)
+}
+
 func (c ExtendedClient) ReleaseETag(productSlug string, releaseID int) (string, error) {
 	return c.client.ReleaseETag(productSlug, releaseID)
 }
@@ -148,4 +152,8 @@ func (c ExtendedClient) ProductVersions(productSlug string, releases []pivnet.Re
 	}
 
 	return versions, nil
+}
+
+func (c ExtendedClient) DownloadFile(writer io.Writer, downloadLink string) error {
+	return c.client.DownloadFile(writer, downloadLink)
 }

@@ -119,14 +119,19 @@ func NewClient(config ClientConfig, logger logger.Logger) Client {
 	return client
 }
 
-func (c Client) makeRequestWithHTTPResponse(
+func (c Client) CreateRequest(
 	requestType string,
-	url string,
-	expectedStatusCode int,
+	endpoint string,
 	body io.Reader,
-	data interface{},
-) (*http.Response, error) {
-	req, err := http.NewRequest(requestType, url, body)
+) (*http.Request, error) {
+	u, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Path = u.Path + endpoint
+
+	req, err := http.NewRequest(requestType, u.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -134,6 +139,21 @@ func (c Client) makeRequestWithHTTPResponse(
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Token %s", c.token))
 	req.Header.Add("User-Agent", c.userAgent)
+
+	return req, nil
+}
+
+func (c Client) MakeRequest(
+	requestType string,
+	endpoint string,
+	expectedStatusCode int,
+	body io.Reader,
+	data interface{},
+) (*http.Response, error) {
+	req, err := c.CreateRequest(requestType, endpoint, body)
+	if err != nil {
+		return nil, err
+	}
 
 	reqBytes, err := httputil.DumpRequestOut(req, true)
 	if err != nil {
@@ -187,28 +207,4 @@ func (c Client) makeRequestWithHTTPResponse(
 	}
 
 	return resp, nil
-}
-
-func (c Client) MakeRequest(
-	requestType string,
-	endpoint string,
-	expectedStatusCode int,
-	body io.Reader,
-	data interface{},
-) (*http.Response, error) {
-	u, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, err
-	}
-
-	u.Path = u.Path + endpoint
-
-	resp, err := c.makeRequestWithHTTPResponse(
-		requestType,
-		u.String(),
-		expectedStatusCode,
-		body,
-		data,
-	)
-	return resp, err
 }

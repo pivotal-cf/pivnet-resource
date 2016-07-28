@@ -119,6 +119,8 @@ func (r ReleasesService) Create(config CreateReleaseConfig) (Release, error) {
 
 	b, err := json.Marshal(body)
 	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
 		return Release{}, err
 	}
 
@@ -152,6 +154,8 @@ func (r ReleasesService) Update(productSlug string, release Release) (Release, e
 
 	body, err := json.Marshal(updatedRelease)
 	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
 		return Release{}, err
 	}
 

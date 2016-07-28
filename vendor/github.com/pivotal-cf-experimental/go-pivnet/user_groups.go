@@ -23,6 +23,10 @@ type updateUserGroupBody struct {
 	UserGroup updateUserGroup `json:"user_group"`
 }
 
+type addRemoveMemberBody struct {
+	Member member `json:"member"`
+}
+
 type UserGroupsResponse struct {
 	UserGroups []UserGroup `json:"user_groups,omitempty"`
 }
@@ -50,6 +54,11 @@ type updateUserGroup struct {
 	Name        string   `json:"name,omitempty"`
 	Description string   `json:"description,omitempty"`
 	Members     []string `json:"members,omitempty"`
+}
+
+type member struct {
+	Email string `json:"email,omitempty"`
+	Admin bool   `json:"admin,omitempty"`
 }
 
 func (u UserGroupsService) List() ([]UserGroup, error) {
@@ -107,7 +116,9 @@ func (u UserGroupsService) AddToRelease(productSlug string, releaseID int, userG
 
 	b, err := json.Marshal(body)
 	if err != nil {
-		panic(err)
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return err
 	}
 
 	_, err = u.client.MakeRequest(
@@ -139,7 +150,9 @@ func (u UserGroupsService) RemoveFromRelease(productSlug string, releaseID int, 
 
 	b, err := json.Marshal(body)
 	if err != nil {
-		panic(err)
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return err
 	}
 
 	_, err = u.client.MakeRequest(
@@ -191,6 +204,8 @@ func (u UserGroupsService) Create(name string, description string, members []str
 
 	b, err := json.Marshal(createBody)
 	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
 		return UserGroup{}, err
 	}
 
@@ -223,6 +238,8 @@ func (u UserGroupsService) Update(userGroup UserGroup) (UserGroup, error) {
 
 	b, err := json.Marshal(createBody)
 	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
 		return UserGroup{}, err
 	}
 
@@ -258,4 +275,75 @@ func (r UserGroupsService) Delete(userGroupID int) error {
 	}
 
 	return nil
+}
+
+func (r UserGroupsService) AddMemberToGroup(
+	userGroupID int,
+	memberEmailAddress string,
+	admin bool,
+) (UserGroup, error) {
+	url := fmt.Sprintf("/user_groups/%d/add_member", userGroupID)
+
+	addRemoveMemberBody := addRemoveMemberBody{
+		member{
+			Email: memberEmailAddress,
+			Admin: admin,
+		},
+	}
+
+	b, err := json.Marshal(addRemoveMemberBody)
+	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return UserGroup{}, err
+	}
+
+	body := bytes.NewReader(b)
+
+	var response UpdateUserGroupResponse
+	_, err = r.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusOK,
+		body,
+		&response,
+	)
+	if err != nil {
+		return UserGroup{}, err
+	}
+
+	return response.UserGroup, nil
+}
+
+func (r UserGroupsService) RemoveMemberFromGroup(userGroupID int, memberEmailAddress string) (UserGroup, error) {
+	url := fmt.Sprintf("/user_groups/%d/remove_member", userGroupID)
+
+	addRemoveMemberBody := addRemoveMemberBody{
+		member{
+			Email: memberEmailAddress,
+		},
+	}
+
+	b, err := json.Marshal(addRemoveMemberBody)
+	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return UserGroup{}, err
+	}
+
+	body := bytes.NewReader(b)
+
+	var response UpdateUserGroupResponse
+	_, err = r.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusOK,
+		body,
+		&response,
+	)
+	if err != nil {
+		return UserGroup{}, err
+	}
+
+	return response.UserGroup, nil
 }

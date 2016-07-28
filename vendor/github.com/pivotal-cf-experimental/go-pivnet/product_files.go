@@ -38,6 +38,7 @@ type ProductFile struct {
 	Name         string `json:"name,omitempty" yaml:"name,omitempty"`
 	MD5          string `json:"md5,omitempty" yaml:"md5,omitempty"`
 	Description  string `json:"description,omitempty" yaml:"description,omitempty"`
+	Size         int    `json:"size,omitempty" yaml:"size,omitempty"`
 }
 
 func (p ProductFilesService) List(productSlug string) ([]ProductFile, error) {
@@ -145,6 +146,8 @@ func (p ProductFilesService) Create(config CreateProductFileConfig) (ProductFile
 
 	b, err := json.Marshal(body)
 	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
 		return ProductFile{}, err
 	}
 
@@ -208,6 +211,8 @@ func (p ProductFilesService) AddToRelease(
 
 	b, err := json.Marshal(body)
 	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
 		return err
 	}
 
@@ -244,6 +249,8 @@ func (p ProductFilesService) RemoveFromRelease(
 
 	b, err := json.Marshal(body)
 	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
 		return err
 	}
 
