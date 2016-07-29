@@ -4,27 +4,23 @@ package outfakes
 import "sync"
 
 type Validation struct {
-	ValidateStub        func(skipFileCheck bool) error
+	ValidateStub        func() error
 	validateMutex       sync.RWMutex
-	validateArgsForCall []struct {
-		skipFileCheck bool
-	}
-	validateReturns struct {
+	validateArgsForCall []struct{}
+	validateReturns     struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Validation) Validate(skipFileCheck bool) error {
+func (fake *Validation) Validate() error {
 	fake.validateMutex.Lock()
-	fake.validateArgsForCall = append(fake.validateArgsForCall, struct {
-		skipFileCheck bool
-	}{skipFileCheck})
-	fake.recordInvocation("Validate", []interface{}{skipFileCheck})
+	fake.validateArgsForCall = append(fake.validateArgsForCall, struct{}{})
+	fake.recordInvocation("Validate", []interface{}{})
 	fake.validateMutex.Unlock()
 	if fake.ValidateStub != nil {
-		return fake.ValidateStub(skipFileCheck)
+		return fake.ValidateStub()
 	} else {
 		return fake.validateReturns.result1
 	}
@@ -34,12 +30,6 @@ func (fake *Validation) ValidateCallCount() int {
 	fake.validateMutex.RLock()
 	defer fake.validateMutex.RUnlock()
 	return len(fake.validateArgsForCall)
-}
-
-func (fake *Validation) ValidateArgsForCall(i int) bool {
-	fake.validateMutex.RLock()
-	defer fake.validateMutex.RUnlock()
-	return fake.validateArgsForCall[i].skipFileCheck
 }
 
 func (fake *Validation) ValidateReturns(result1 error) {

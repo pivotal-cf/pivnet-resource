@@ -43,15 +43,11 @@ type updateClient interface {
 
 //go:generate counterfeiter --fake-name Fetcher . fetcher
 type fetcher interface {
-	Fetch(yamlKey, dir, file string) string
+	Fetch(yamlKey string) string
 }
 
 func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutResponse, error) {
-	availability := rf.metadataFetcher.Fetch(
-		"Availability",
-		rf.sourcesDir,
-		rf.params.AvailabilityFile,
-	)
+	availability := rf.metadataFetcher.Fetch("Availability")
 
 	if availability != "Admins Only" {
 		releaseUpdate := pivnet.Release{
@@ -67,11 +63,7 @@ func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutRespon
 
 		if availability == "Selected User Groups Only" {
 			userGroupIDs := strings.Split(
-				rf.metadataFetcher.Fetch(
-					"UserGroupIDs",
-					rf.sourcesDir,
-					rf.params.UserGroupIDsFile,
-				),
+				rf.metadataFetcher.Fetch("UserGroupIDs"),
 				",",
 			)
 

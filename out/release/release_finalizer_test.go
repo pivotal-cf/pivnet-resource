@@ -26,10 +26,7 @@ var _ = Describe("ReleaseFinalizer", func() {
 			pivnetClient = &releasefakes.UpdateClient{}
 			fetcherClient = &releasefakes.Fetcher{}
 
-			params = concourse.OutParams{
-				AvailabilityFile: "/some/availability/file",
-				UserGroupIDsFile: "/some/usergroupids/file",
-			}
+			params = concourse.OutParams{}
 
 			pivnetRelease = pivnet.Release{
 				ID:      1337,
@@ -55,10 +52,8 @@ var _ = Describe("ReleaseFinalizer", func() {
 				Expect(pivnetClient.UpdateReleaseCallCount()).To(BeZero())
 				Expect(pivnetClient.AddUserGroupCallCount()).To(BeZero())
 
-				valueToFetch, sourcesDir, availabilityFile := fetcherClient.FetchArgsForCall(0)
+				valueToFetch := fetcherClient.FetchArgsForCall(0)
 				Expect(valueToFetch).To(Equal("Availability"))
-				Expect(sourcesDir).To(Equal("/some/sources/dir"))
-				Expect(availabilityFile).To(Equal("/some/availability/file"))
 
 				Expect(response).To(Equal(concourse.OutResponse{
 					Version: concourse.Version{
@@ -98,8 +93,8 @@ var _ = Describe("ReleaseFinalizer", func() {
 
 		Context("when the release availability is Selected User Groups Only", func() {
 			BeforeEach(func() {
-				fetcherClient.FetchStub = func(name string, sourcesDir string, file string) string {
-					switch name {
+				fetcherClient.FetchStub = func(yamlKey string) string {
+					switch yamlKey {
 					case "Availability":
 						return "Selected User Groups Only"
 					case "UserGroupIDs":
@@ -117,10 +112,8 @@ var _ = Describe("ReleaseFinalizer", func() {
 				response, err := finalizer.Finalize(pivnetRelease)
 				Expect(err).NotTo(HaveOccurred())
 
-				metadataIdentifier, sourcesDir, groupIDsFile := fetcherClient.FetchArgsForCall(1)
+				metadataIdentifier := fetcherClient.FetchArgsForCall(1)
 				Expect(metadataIdentifier).To(Equal("UserGroupIDs"))
-				Expect(sourcesDir).To(Equal("/some/sources/dir"))
-				Expect(groupIDsFile).To(Equal("/some/usergroupids/file"))
 
 				slug, releaseID, userGroupID := pivnetClient.AddUserGroupArgsForCall(0)
 				Expect(slug).To(Equal("a-product-slug"))
@@ -140,8 +133,8 @@ var _ = Describe("ReleaseFinalizer", func() {
 			Context("when an error occurs", func() {
 				Context("when a user group ID cannpt be converted to a number", func() {
 					BeforeEach(func() {
-						fetcherClient.FetchStub = func(name string, sourcesDir string, file string) string {
-							switch name {
+						fetcherClient.FetchStub = func(yamlKey string) string {
+							switch yamlKey {
 							case "Availability":
 								return "Selected User Groups Only"
 							case "UserGroupIDs":

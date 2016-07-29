@@ -4,12 +4,10 @@ package releasefakes
 import "sync"
 
 type Fetcher struct {
-	FetchStub        func(yamlKey, dir, file string) string
+	FetchStub        func(yamlKey string) string
 	fetchMutex       sync.RWMutex
 	fetchArgsForCall []struct {
 		yamlKey string
-		dir     string
-		file    string
 	}
 	fetchReturns struct {
 		result1 string
@@ -18,17 +16,15 @@ type Fetcher struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Fetcher) Fetch(yamlKey string, dir string, file string) string {
+func (fake *Fetcher) Fetch(yamlKey string) string {
 	fake.fetchMutex.Lock()
 	fake.fetchArgsForCall = append(fake.fetchArgsForCall, struct {
 		yamlKey string
-		dir     string
-		file    string
-	}{yamlKey, dir, file})
-	fake.recordInvocation("Fetch", []interface{}{yamlKey, dir, file})
+	}{yamlKey})
+	fake.recordInvocation("Fetch", []interface{}{yamlKey})
 	fake.fetchMutex.Unlock()
 	if fake.FetchStub != nil {
-		return fake.FetchStub(yamlKey, dir, file)
+		return fake.FetchStub(yamlKey)
 	} else {
 		return fake.fetchReturns.result1
 	}
@@ -40,10 +36,10 @@ func (fake *Fetcher) FetchCallCount() int {
 	return len(fake.fetchArgsForCall)
 }
 
-func (fake *Fetcher) FetchArgsForCall(i int) (string, string, string) {
+func (fake *Fetcher) FetchArgsForCall(i int) string {
 	fake.fetchMutex.RLock()
 	defer fake.fetchMutex.RUnlock()
-	return fake.fetchArgsForCall[i].yamlKey, fake.fetchArgsForCall[i].dir, fake.fetchArgsForCall[i].file
+	return fake.fetchArgsForCall[i].yamlKey
 }
 
 func (fake *Fetcher) FetchReturns(result1 string) {

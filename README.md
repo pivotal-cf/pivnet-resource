@@ -142,13 +142,6 @@ for more details on the structure of the metadata file.
 
 #### Parameters
 
-**Deprecation Warning**
-
-**Parameters previously contained in separate files, like availability,
-should now be provided via the metadata file.
-Checking individual files for product metadata is now deprecated and will be
-removed in a future release**
-
 It is valid to provide both `file_glob` and `s3_filepath_prefix` or to provide
 neither. If only one is present, release creation will fail. If neither are
 present, file uploading is skipped.

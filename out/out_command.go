@@ -10,43 +10,40 @@ import (
 )
 
 type OutCommand struct {
-	skipFileCheck bool
-	logger        *log.Logger
-	outDir        string
-	sourcesDir    string
-	globClient    globber
-	validation    validation
-	creator       creator
-	finalizer     finalizer
-	uploader      uploader
-	m             metadata.Metadata
+	logger     *log.Logger
+	outDir     string
+	sourcesDir string
+	globClient globber
+	validation validation
+	creator    creator
+	finalizer  finalizer
+	uploader   uploader
+	m          metadata.Metadata
 }
 
 type OutCommandConfig struct {
-	SkipFileCheck bool
-	Logger        *log.Logger
-	OutDir        string
-	SourcesDir    string
-	GlobClient    globber
-	Validation    validation
-	Creator       creator
-	Finalizer     finalizer
-	Uploader      uploader
-	M             metadata.Metadata
+	Logger     *log.Logger
+	OutDir     string
+	SourcesDir string
+	GlobClient globber
+	Validation validation
+	Creator    creator
+	Finalizer  finalizer
+	Uploader   uploader
+	M          metadata.Metadata
 }
 
 func NewOutCommand(config OutCommandConfig) OutCommand {
 	return OutCommand{
-		skipFileCheck: config.SkipFileCheck,
-		logger:        config.Logger,
-		outDir:        config.OutDir,
-		sourcesDir:    config.SourcesDir,
-		globClient:    config.GlobClient,
-		validation:    config.Validation,
-		creator:       config.Creator,
-		finalizer:     config.Finalizer,
-		uploader:      config.Uploader,
-		m:             config.M,
+		logger:     config.Logger,
+		outDir:     config.OutDir,
+		sourcesDir: config.SourcesDir,
+		globClient: config.GlobClient,
+		validation: config.Validation,
+		creator:    config.Creator,
+		finalizer:  config.Finalizer,
+		uploader:   config.Uploader,
+		m:          config.M,
 	}
 }
 
@@ -67,7 +64,7 @@ type finalizer interface {
 
 //go:generate counterfeiter --fake-name Validation . validation
 type validation interface {
-	Validate(skipFileCheck bool) error
+	Validate() error
 }
 
 //go:generate counterfeiter --fake-name Globber . globber
@@ -84,10 +81,8 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		c.logger.Println("metadata release parsed")
 	}
 
-	warnIfDeprecatedFilesFound(input.Params, c.logger)
-
 	c.logger.Println("validating metadata")
-	err := c.validation.Validate(c.skipFileCheck)
+	err := c.validation.Validate()
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
@@ -137,24 +132,4 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 	}
 
 	return out, nil
-}
-
-func warnIfDeprecatedFilesFound(params concourse.OutParams, logger *log.Logger) {
-	files := map[string]string{
-		"version_file":        params.VersionFile,
-		"eula_slug_file":      params.EULASlugFile,
-		"release_date_file":   params.ReleaseDateFile,
-		"description_file":    params.DescriptionFile,
-		"release_type_file":   params.ReleaseTypeFile,
-		"user_group_ids_file": params.UserGroupIDsFile,
-		"availability_file":   params.AvailabilityFile,
-		"release_notes_file":  params.ReleaseNotesURLFile,
-	}
-	for key, value := range files {
-		if value == "" {
-			continue
-		}
-
-		logger.Printf("\x1b[31mDEPRECATION WARNING: %q is deprecated and will be removed in a future release\x1b[0m", key)
-	}
 }

@@ -50,16 +50,15 @@ var _ = Describe("Out", func() {
 			}
 
 			config := out.OutCommandConfig{
-				SkipFileCheck: false,
-				Logger:        logger,
-				OutDir:        "some/out/dir",
-				SourcesDir:    "some/sources/dir",
-				GlobClient:    globber,
-				Validation:    validator,
-				Creator:       creator,
-				Finalizer:     finalizer,
-				Uploader:      uploader,
-				M:             meta,
+				Logger:     logger,
+				OutDir:     "some/out/dir",
+				SourcesDir: "some/sources/dir",
+				GlobClient: globber,
+				Validation: validator,
+				Creator:    creator,
+				Finalizer:  finalizer,
+				Uploader:   uploader,
+				M:          meta,
 			}
 
 			cmd = out.NewOutCommand(config)
@@ -83,8 +82,6 @@ var _ = Describe("Out", func() {
 					ProductVersion: "some-returned-product-version",
 				},
 			}))
-
-			Expect(validator.ValidateArgsForCall(0)).To(Equal(false))
 
 			Expect(globber.ExactGlobsCallCount()).To(Equal(1))
 
@@ -148,16 +145,15 @@ var _ = Describe("Out", func() {
 					}
 
 					config := out.OutCommandConfig{
-						SkipFileCheck: false,
-						Logger:        logger,
-						OutDir:        "some/out/dir",
-						SourcesDir:    "some/sources/dir",
-						GlobClient:    globber,
-						Validation:    validator,
-						Creator:       nil,
-						Finalizer:     nil,
-						Uploader:      nil,
-						M:             meta,
+						Logger:     logger,
+						OutDir:     "some/out/dir",
+						SourcesDir: "some/sources/dir",
+						GlobClient: globber,
+						Validation: validator,
+						Creator:    nil,
+						Finalizer:  nil,
+						Uploader:   nil,
+						M:          meta,
 					}
 
 					cmd = out.NewOutCommand(config)

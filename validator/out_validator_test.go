@@ -12,13 +12,10 @@ var _ = Describe("Out Validator", func() {
 		accessKeyID     string
 		secretAccessKey string
 
-		versionFile      string
 		apiToken         string
 		productSlug      string
 		fileGlob         string
 		s3FilepathPrefix string
-		releaseTypeFile  string
-		eulaSlugFile     string
 
 		outRequest concourse.OutRequest
 		v          *validator.OutValidator
@@ -29,10 +26,6 @@ var _ = Describe("Out Validator", func() {
 		secretAccessKey = "some-secret-access-key"
 		apiToken = "some-api-token"
 		productSlug = "some-product"
-
-		versionFile = "some-version-file"
-		releaseTypeFile = "some-release-type-file"
-		eulaSlugFile = "some-eula-slug-file"
 
 		fileGlob = ""
 		s3FilepathPrefix = ""
@@ -47,11 +40,8 @@ var _ = Describe("Out Validator", func() {
 				SecretAccessKey: secretAccessKey,
 			},
 			Params: concourse.OutParams{
-				VersionFile:     versionFile,
-				FileGlob:        fileGlob,
-				FilepathPrefix:  s3FilepathPrefix,
-				ReleaseTypeFile: releaseTypeFile,
-				EULASlugFile:    eulaSlugFile,
+				FileGlob:       fileGlob,
+				FilepathPrefix: s3FilepathPrefix,
 			},
 		}
 
@@ -59,20 +49,7 @@ var _ = Describe("Out Validator", func() {
 	})
 
 	It("returns without error", func() {
-		Expect(v.Validate(false)).NotTo(HaveOccurred())
-	})
-
-	Context("when skipping file checks", func() {
-		BeforeEach(func() {
-			versionFile = ""
-			eulaSlugFile = ""
-			releaseTypeFile = ""
-		})
-
-		It("ignores the fact that files are not provided", func() {
-			v = validator.NewOutValidator(outRequest)
-			Expect(v.Validate(true)).NotTo(HaveOccurred())
-		})
+		Expect(v.Validate()).NotTo(HaveOccurred())
 	})
 
 	Context("when no api token is provided", func() {
@@ -81,7 +58,7 @@ var _ = Describe("Out Validator", func() {
 		})
 
 		It("returns an error", func() {
-			err := v.Validate(false)
+			err := v.Validate()
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(MatchRegexp(".*api_token.*provided"))
@@ -94,49 +71,10 @@ var _ = Describe("Out Validator", func() {
 		})
 
 		It("returns an error", func() {
-			err := v.Validate(false)
+			err := v.Validate()
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(MatchRegexp(".*product_slug.*provided"))
-		})
-	})
-
-	Context("when version file is not provided", func() {
-		BeforeEach(func() {
-			versionFile = ""
-		})
-
-		It("returns an error", func() {
-			err := v.Validate(false)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(MatchRegexp(".*version_file.*provided"))
-		})
-	})
-
-	Context("when release_type file is not provided", func() {
-		BeforeEach(func() {
-			releaseTypeFile = ""
-		})
-
-		It("returns an error", func() {
-			err := v.Validate(false)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(MatchRegexp(".*release_type_file.*provided"))
-		})
-	})
-
-	Context("when eula_slug file is not provided", func() {
-		BeforeEach(func() {
-			eulaSlugFile = ""
-		})
-
-		It("returns an error", func() {
-			err := v.Validate(false)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(MatchRegexp(".*eula_slug_file.*provided"))
 		})
 	})
 
@@ -146,7 +84,7 @@ var _ = Describe("Out Validator", func() {
 		})
 
 		It("returns without error", func() {
-			err := v.Validate(false)
+			err := v.Validate()
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
@@ -157,7 +95,7 @@ var _ = Describe("Out Validator", func() {
 		})
 
 		It("returns without error", func() {
-			err := v.Validate(false)
+			err := v.Validate()
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
@@ -173,7 +111,7 @@ var _ = Describe("Out Validator", func() {
 			})
 
 			It("returns an error", func() {
-				err := v.Validate(false)
+				err := v.Validate()
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*s3_filepath_prefix.*provided"))
@@ -186,7 +124,7 @@ var _ = Describe("Out Validator", func() {
 			})
 
 			It("returns an error", func() {
-				err := v.Validate(false)
+				err := v.Validate()
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*access_key_id.*provided"))
@@ -199,7 +137,7 @@ var _ = Describe("Out Validator", func() {
 			})
 
 			It("returns an error", func() {
-				err := v.Validate(false)
+				err := v.Validate()
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*secret_access_key.*provided"))
@@ -218,7 +156,7 @@ var _ = Describe("Out Validator", func() {
 			})
 
 			It("returns an error", func() {
-				err := v.Validate(false)
+				err := v.Validate()
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*file glob.*provided"))
@@ -231,7 +169,7 @@ var _ = Describe("Out Validator", func() {
 			})
 
 			It("returns an error", func() {
-				err := v.Validate(false)
+				err := v.Validate()
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*access_key_id.*provided"))
@@ -244,7 +182,7 @@ var _ = Describe("Out Validator", func() {
 			})
 
 			It("returns an error", func() {
-				err := v.Validate(false)
+				err := v.Validate()
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*secret_access_key.*provided"))

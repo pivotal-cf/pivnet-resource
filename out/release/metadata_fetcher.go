@@ -1,9 +1,6 @@
 package release
 
 import (
-	"io/ioutil"
-	"log"
-	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -11,19 +8,17 @@ import (
 )
 
 type metadataFetcher struct {
-	metadata      metadata.Metadata
-	skipFileCheck bool
+	metadata metadata.Metadata
 }
 
-func NewMetadataFetcher(metadata metadata.Metadata, skipFileCheck bool) metadataFetcher {
+func NewMetadataFetcher(metadata metadata.Metadata) metadataFetcher {
 	return metadataFetcher{
-		skipFileCheck: skipFileCheck,
-		metadata:      metadata,
+		metadata: metadata,
 	}
 }
 
-func (mf metadataFetcher) Fetch(yamlKey, dir, file string) string {
-	if mf.skipFileCheck && mf.metadata.Release != nil {
+func (mf metadataFetcher) Fetch(yamlKey string) string {
+	if mf.metadata.Release != nil {
 		metadataValue := reflect.ValueOf(mf.metadata.Release).Elem()
 		fieldValue := metadataValue.FieldByName(yamlKey)
 
@@ -39,17 +34,5 @@ func (mf metadataFetcher) Fetch(yamlKey, dir, file string) string {
 		return fieldValue.String()
 	}
 
-	return readStringContents(dir, file)
-}
-
-func readStringContents(sourcesDir, file string) string {
-	if file == "" {
-		return ""
-	}
-	fullPath := filepath.Join(sourcesDir, file)
-	contents, err := ioutil.ReadFile(fullPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return string(contents)
+	return ""
 }

@@ -124,7 +124,6 @@ func main() {
 	skipUpload := input.Params.FileGlob == "" && input.Params.FilepathPrefix == ""
 
 	var m metadata.Metadata
-	var skipFileCheck bool
 	if input.Params.MetadataFile != "" {
 		metadataFilepath := filepath.Join(sourcesDir, input.Params.MetadataFile)
 		metadataBytes, err := ioutil.ReadFile(metadataFilepath)
@@ -141,13 +140,11 @@ func main() {
 		if err != nil {
 			log.Fatalf("metadata_file is invalid: %s", err)
 		}
-
-		skipFileCheck = true
 	}
 
 	validation := validator.NewOutValidator(input)
 
-	metadataFetcher := release.NewMetadataFetcher(m, skipFileCheck)
+	metadataFetcher := release.NewMetadataFetcher(m)
 
 	semverConverter := semver.NewSemverConverter(logger)
 
@@ -164,7 +161,6 @@ func main() {
 		semverConverter,
 		logger,
 		m,
-		skipFileCheck,
 		input.Params,
 		input.Source,
 		sourcesDir,
@@ -191,16 +187,15 @@ func main() {
 	)
 
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
-		SkipFileCheck: skipFileCheck,
-		Logger:        logger,
-		OutDir:        outDir,
-		SourcesDir:    sourcesDir,
-		GlobClient:    globber,
-		Validation:    validation,
-		Creator:       releaseCreator,
-		Uploader:      releaseUploader,
-		Finalizer:     releaseFinalizer,
-		M:             m,
+		Logger:     logger,
+		OutDir:     outDir,
+		SourcesDir: sourcesDir,
+		GlobClient: globber,
+		Validation: validation,
+		Creator:    releaseCreator,
+		Uploader:   releaseUploader,
+		Finalizer:  releaseFinalizer,
+		M:          m,
 	})
 
 	response, err := outCmd.Run(input)

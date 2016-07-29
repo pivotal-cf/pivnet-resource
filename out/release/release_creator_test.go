@@ -72,13 +72,7 @@ var _ = Describe("ReleaseCreator", func() {
 				},
 			}
 
-			params := concourse.OutParams{
-				EULASlugFile:        "some-eula-slug-file",
-				ReleaseTypeFile:     "some-release-type-file",
-				VersionFile:         "some-version-file",
-				ReleaseNotesURLFile: "some-release-notes-url-file",
-				ReleaseDateFile:     "some-release-date-file",
-			}
+			params := concourse.OutParams{}
 
 			source := concourse.Source{
 				ReleaseType:    sourceReleaseType,
@@ -92,15 +86,14 @@ var _ = Describe("ReleaseCreator", func() {
 				fakeSemverConverter,
 				logging,
 				meta,
-				false,
 				params,
 				source,
 				"/some/sources/dir",
 				"some-product-slug",
 			)
 
-			fetcherClient.FetchStub = func(name string, sourcesDir string, file string) string {
-				switch name {
+			fetcherClient.FetchStub = func(yamlKey string) string {
+				switch yamlKey {
 				case "EULASlug":
 					return eulaSlug
 				case "ReleaseType":
@@ -132,22 +125,16 @@ var _ = Describe("ReleaseCreator", func() {
 
 				Expect(pivnetClient.EULAsCallCount()).To(Equal(1))
 
-				key, sourcesDir, fileName := fetcherClient.FetchArgsForCall(0)
+				key := fetcherClient.FetchArgsForCall(0)
 				Expect(key).To(Equal("Version"))
-				Expect(sourcesDir).To(Equal("/some/sources/dir"))
-				Expect(fileName).To(Equal("some-version-file"))
 
-				key, sourcesDir, fileName = fetcherClient.FetchArgsForCall(1)
+				key = fetcherClient.FetchArgsForCall(1)
 				Expect(key).To(Equal("EULASlug"))
-				Expect(sourcesDir).To(Equal("/some/sources/dir"))
-				Expect(fileName).To(Equal("some-eula-slug-file"))
 
 				Expect(pivnetClient.ReleaseTypesCallCount()).To(Equal(1))
 
-				key, sourcesDir, fileName = fetcherClient.FetchArgsForCall(2)
+				key = fetcherClient.FetchArgsForCall(2)
 				Expect(key).To(Equal("ReleaseType"))
-				Expect(sourcesDir).To(Equal("/some/sources/dir"))
-				Expect(fileName).To(Equal("some-release-type-file"))
 
 				Expect(pivnetClient.ReleasesForProductSlugArgsForCall(0)).To(Equal("some-product-slug"))
 

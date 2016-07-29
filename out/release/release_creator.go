@@ -18,7 +18,6 @@ type ReleaseCreator struct {
 	semverConverter semverConverter
 	logger          *log.Logger
 	metadata        metadata.Metadata
-	skipFileCheck   bool
 	sourcesDir      string
 	productSlug     string
 	params          concourse.OutParams
@@ -45,7 +44,6 @@ func NewReleaseCreator(
 	semverConverter semverConverter,
 	logger *log.Logger,
 	metadata metadata.Metadata,
-	skipFileCheck bool,
 	params concourse.OutParams,
 	source concourse.Source,
 	sourcesDir,
@@ -57,7 +55,6 @@ func NewReleaseCreator(
 		semverConverter: semverConverter,
 		logger:          logger,
 		metadata:        metadata,
-		skipFileCheck:   skipFileCheck,
 		sourcesDir:      sourcesDir,
 		params:          params,
 		source:          source,
@@ -66,11 +63,7 @@ func NewReleaseCreator(
 }
 
 func (rc ReleaseCreator) Create() (pivnet.Release, error) {
-	productVersion := rc.metadataFetcher.Fetch(
-		"Version",
-		rc.sourcesDir,
-		rc.params.VersionFile,
-	)
+	productVersion := rc.metadataFetcher.Fetch("Version")
 
 	if rc.source.SortBy == concourse.SortBySemver {
 		rc.logger.Println("Resource is configured to sort by semver - checking new version parses as semver")
@@ -133,11 +126,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	}
 
 	rc.logger.Println("validating eula_slug")
-	eulaSlug := rc.metadataFetcher.Fetch(
-		"EULASlug",
-		rc.sourcesDir,
-		rc.params.EULASlugFile,
-	)
+	eulaSlug := rc.metadataFetcher.Fetch("EULASlug")
 
 	var containsSlug bool
 	for _, slug := range eulaSlugs {
@@ -169,11 +158,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	)
 
 	rc.logger.Println("validating release_type")
-	releaseType := rc.metadataFetcher.Fetch(
-		"ReleaseType",
-		rc.sourcesDir,
-		rc.params.ReleaseTypeFile,
-	)
+	releaseType := rc.metadataFetcher.Fetch("ReleaseType")
 
 	var containsReleaseType bool
 	for _, t := range releaseTypes {
@@ -199,29 +184,13 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		)
 	}
 
-	eulaSlug = rc.metadataFetcher.Fetch(
-		"EULASlug",
-		rc.sourcesDir,
-		rc.params.EULASlugFile,
-	)
+	eulaSlug = rc.metadataFetcher.Fetch("EULASlug")
 
-	description := rc.metadataFetcher.Fetch(
-		"Description",
-		rc.sourcesDir,
-		rc.params.DescriptionFile,
-	)
+	description := rc.metadataFetcher.Fetch("Description")
 
-	releaseNotesURL := rc.metadataFetcher.Fetch(
-		"ReleaseNotesURL",
-		rc.sourcesDir,
-		rc.params.ReleaseNotesURLFile,
-	)
+	releaseNotesURL := rc.metadataFetcher.Fetch("ReleaseNotesURL")
 
-	releaseDate := rc.metadataFetcher.Fetch(
-		"ReleaseDate",
-		rc.sourcesDir,
-		rc.params.ReleaseDateFile,
-	)
+	releaseDate := rc.metadataFetcher.Fetch("ReleaseDate")
 
 	config := pivnet.CreateReleaseConfig{
 		ProductSlug:     rc.productSlug,
