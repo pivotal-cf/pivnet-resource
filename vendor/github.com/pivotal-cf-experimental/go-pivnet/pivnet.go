@@ -129,6 +129,8 @@ func (c Client) CreateRequest(
 		return nil, err
 	}
 
+	endpoint = c.stripHostPrefix(endpoint)
+
 	u.Path = u.Path + endpoint
 
 	req, err := http.NewRequest(requestType, u.String(), body)
@@ -207,4 +209,12 @@ func (c Client) MakeRequest(
 	}
 
 	return resp, nil
+}
+
+func (c Client) stripHostPrefix(downloadLink string) string {
+	if strings.HasPrefix(downloadLink, apiVersion) {
+		return downloadLink
+	}
+	sp := strings.Split(downloadLink, apiVersion)
+	return sp[len(sp)-1]
 }

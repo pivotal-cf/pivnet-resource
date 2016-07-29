@@ -7,10 +7,6 @@ import (
 	"testing"
 )
 
-const (
-	apiPrefix = "/api/v2"
-)
-
 func TestOut(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Out Suite")

@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	apiPrefix   = "/api/v2"
 	productSlug = "some-product-name"
 )
 
