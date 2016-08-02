@@ -3,34 +3,34 @@ package release
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
 )
 
 type ReleaseFinalizer struct {
-	pivnet          updateClient
-	metadataFetcher fetcher
-	sourcesDir      string
-	params          concourse.OutParams
-	productSlug     string
+	pivnet      updateClient
+	metadata    metadata.Metadata
+	params      concourse.OutParams
+	sourcesDir  string
+	productSlug string
 }
 
 func NewFinalizer(
 	pivnetClient updateClient,
-	metadataFetcher fetcher,
 	params concourse.OutParams,
+	metadata metadata.Metadata,
 	sourcesDir,
 	productSlug string,
 ) ReleaseFinalizer {
 	return ReleaseFinalizer{
-		pivnet:          pivnetClient,
-		metadataFetcher: metadataFetcher,
-		params:          params,
-		sourcesDir:      sourcesDir,
-		productSlug:     productSlug,
+		pivnet:      pivnetClient,
+		params:      params,
+		metadata:    metadata,
+		sourcesDir:  sourcesDir,
+		productSlug: productSlug,
 	}
 }
 
@@ -41,13 +41,8 @@ type updateClient interface {
 	AddUserGroup(productSlug string, releaseID int, userGroupID int) error
 }
 
-//go:generate counterfeiter --fake-name Fetcher . fetcher
-type fetcher interface {
-	Fetch(yamlKey string) string
-}
-
 func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutResponse, error) {
-	availability := rf.metadataFetcher.Fetch("Availability")
+	availability := rf.metadata.Release.Availability
 
 	if availability != "Admins Only" {
 		releaseUpdate := pivnet.Release{
@@ -62,10 +57,7 @@ func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutRespon
 		}
 
 		if availability == "Selected User Groups Only" {
-			userGroupIDs := strings.Split(
-				rf.metadataFetcher.Fetch("UserGroupIDs"),
-				",",
-			)
+			userGroupIDs := rf.metadata.Release.UserGroupIDs
 
 			for _, userGroupIDString := range userGroupIDs {
 				userGroupID, err := strconv.Atoi(userGroupIDString)

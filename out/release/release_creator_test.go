@@ -19,7 +19,6 @@ import (
 
 var _ = Describe("ReleaseCreator", func() {
 	var (
-		fetcherClient       *releasefakes.Fetcher
 		pivnetClient        *releasefakes.ReleaseClient
 		fakeSemverConverter *releasefakes.FakeSemverConverter
 		logging             *log.Logger
@@ -37,7 +36,6 @@ var _ = Describe("ReleaseCreator", func() {
 
 	BeforeEach(func() {
 		pivnetClient = &releasefakes.ReleaseClient{}
-		fetcherClient = &releasefakes.Fetcher{}
 		logging = log.New(ioutil.Discard, "it doesn't matter", 0)
 		fakeSemverConverter = &releasefakes.FakeSemverConverter{}
 
@@ -61,7 +59,13 @@ var _ = Describe("ReleaseCreator", func() {
 		JustBeforeEach(func() {
 			meta := metadata.Metadata{
 				Release: &metadata.Release{
-					Controlled: true,
+					Controlled:      true,
+					EULASlug:        eulaSlug,
+					ReleaseType:     releaseType,
+					Version:         fetchReturnedProductVersion,
+					Description:     "wow, a description",
+					ReleaseNotesURL: "some-url",
+					ReleaseDate:     "1/17/2016",
 				},
 				ProductFiles: []metadata.ProductFile{
 					{
@@ -82,7 +86,6 @@ var _ = Describe("ReleaseCreator", func() {
 
 			creator = release.NewReleaseCreator(
 				pivnetClient,
-				fetcherClient,
 				fakeSemverConverter,
 				logging,
 				meta,
@@ -91,25 +94,6 @@ var _ = Describe("ReleaseCreator", func() {
 				"/some/sources/dir",
 				"some-product-slug",
 			)
-
-			fetcherClient.FetchStub = func(yamlKey string) string {
-				switch yamlKey {
-				case "EULASlug":
-					return eulaSlug
-				case "ReleaseType":
-					return releaseType
-				case "Version":
-					return fetchReturnedProductVersion
-				case "Description":
-					return "wow, a description"
-				case "ReleaseNotesURL":
-					return "some-url"
-				case "ReleaseDate":
-					return "1/17/2016"
-				default:
-					panic("unexpected call")
-				}
-			}
 		})
 
 		Context("when the release does not exist", func() {
@@ -124,17 +108,6 @@ var _ = Describe("ReleaseCreator", func() {
 				Expect(r).To(Equal(pivnet.Release{ID: 1337}))
 
 				Expect(pivnetClient.EULAsCallCount()).To(Equal(1))
-
-				key := fetcherClient.FetchArgsForCall(0)
-				Expect(key).To(Equal("Version"))
-
-				key = fetcherClient.FetchArgsForCall(1)
-				Expect(key).To(Equal("EULASlug"))
-
-				Expect(pivnetClient.ReleaseTypesCallCount()).To(Equal(1))
-
-				key = fetcherClient.FetchArgsForCall(2)
-				Expect(key).To(Equal("ReleaseType"))
 
 				Expect(pivnetClient.ReleasesForProductSlugArgsForCall(0)).To(Equal("some-product-slug"))
 
@@ -236,7 +209,6 @@ var _ = Describe("ReleaseCreator", func() {
 
 		Context("when the release already exists", func() {
 			BeforeEach(func() {
-				fetcherClient.FetchReturns(fetchReturnedProductVersion)
 				pivnetClient.ReleasesForProductSlugReturns([]pivnet.Release{{Version: fetchReturnedProductVersion}}, nil)
 				pivnetClient.ProductVersionsReturns([]string{fetchReturnedProductVersion}, nil)
 			})

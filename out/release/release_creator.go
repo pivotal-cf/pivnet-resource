@@ -14,7 +14,6 @@ import (
 
 type ReleaseCreator struct {
 	pivnet          releaseClient
-	metadataFetcher fetcher
 	semverConverter semverConverter
 	logger          *log.Logger
 	metadata        metadata.Metadata
@@ -40,7 +39,6 @@ type semverConverter interface {
 
 func NewReleaseCreator(
 	pivnet releaseClient,
-	metadataFetcher fetcher,
 	semverConverter semverConverter,
 	logger *log.Logger,
 	metadata metadata.Metadata,
@@ -51,7 +49,6 @@ func NewReleaseCreator(
 ) ReleaseCreator {
 	return ReleaseCreator{
 		pivnet:          pivnet,
-		metadataFetcher: metadataFetcher,
 		semverConverter: semverConverter,
 		logger:          logger,
 		metadata:        metadata,
@@ -63,7 +60,7 @@ func NewReleaseCreator(
 }
 
 func (rc ReleaseCreator) Create() (pivnet.Release, error) {
-	productVersion := rc.metadataFetcher.Fetch("Version")
+	productVersion := rc.metadata.Release.Version
 
 	if rc.source.SortBy == concourse.SortBySemver {
 		rc.logger.Println("Resource is configured to sort by semver - checking new version parses as semver")
@@ -126,7 +123,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	}
 
 	rc.logger.Println("validating eula_slug")
-	eulaSlug := rc.metadataFetcher.Fetch("EULASlug")
+	eulaSlug := rc.metadata.Release.EULASlug
 
 	var containsSlug bool
 	for _, slug := range eulaSlugs {
@@ -158,7 +155,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	)
 
 	rc.logger.Println("validating release_type")
-	releaseType := rc.metadataFetcher.Fetch("ReleaseType")
+	releaseType := rc.metadata.Release.ReleaseType
 
 	var containsReleaseType bool
 	for _, t := range releaseTypes {
@@ -184,30 +181,20 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		)
 	}
 
-	eulaSlug = rc.metadataFetcher.Fetch("EULASlug")
-
-	description := rc.metadataFetcher.Fetch("Description")
-
-	releaseNotesURL := rc.metadataFetcher.Fetch("ReleaseNotesURL")
-
-	releaseDate := rc.metadataFetcher.Fetch("ReleaseDate")
-
 	config := pivnet.CreateReleaseConfig{
-		ProductSlug:     rc.productSlug,
-		ReleaseType:     releaseType,
-		EULASlug:        eulaSlug,
-		ProductVersion:  productVersion,
-		Description:     description,
-		ReleaseNotesURL: releaseNotesURL,
-		ReleaseDate:     releaseDate,
-	}
-	if rc.metadata.Release != nil {
-		config.Controlled = rc.metadata.Release.Controlled
-		config.ECCN = rc.metadata.Release.ECCN
-		config.LicenseException = rc.metadata.Release.LicenseException
-		config.EndOfSupportDate = rc.metadata.Release.EndOfSupportDate
-		config.EndOfGuidanceDate = rc.metadata.Release.EndOfGuidanceDate
-		config.EndOfAvailabilityDate = rc.metadata.Release.EndOfAvailabilityDate
+		ProductSlug:           rc.productSlug,
+		ReleaseType:           releaseType,
+		EULASlug:              eulaSlug,
+		ProductVersion:        productVersion,
+		Description:           rc.metadata.Release.Description,
+		ReleaseNotesURL:       rc.metadata.Release.ReleaseNotesURL,
+		ReleaseDate:           rc.metadata.Release.ReleaseDate,
+		Controlled:            rc.metadata.Release.Controlled,
+		ECCN:                  rc.metadata.Release.ECCN,
+		LicenseException:      rc.metadata.Release.LicenseException,
+		EndOfSupportDate:      rc.metadata.Release.EndOfSupportDate,
+		EndOfGuidanceDate:     rc.metadata.Release.EndOfGuidanceDate,
+		EndOfAvailabilityDate: rc.metadata.Release.EndOfAvailabilityDate,
 	}
 
 	rc.logger.Printf("config used to create pivnet release: %+v\n", config)

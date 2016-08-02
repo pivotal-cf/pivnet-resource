@@ -5,6 +5,7 @@ import (
 
 	"github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
 	"github.com/pivotal-cf-experimental/pivnet-resource/out/release/releasefakes"
 
@@ -16,7 +17,6 @@ var _ = Describe("ReleaseFinalizer", func() {
 	Describe("Finalize", func() {
 		var (
 			pivnetClient  *releasefakes.UpdateClient
-			fetcherClient *releasefakes.Fetcher
 			params        concourse.OutParams
 			pivnetRelease pivnet.Release
 			finalizer     release.ReleaseFinalizer
@@ -24,24 +24,32 @@ var _ = Describe("ReleaseFinalizer", func() {
 
 		BeforeEach(func() {
 			pivnetClient = &releasefakes.UpdateClient{}
-			fetcherClient = &releasefakes.Fetcher{}
 
 			params = concourse.OutParams{}
 
 			pivnetRelease = pivnet.Release{
-				ID:      1337,
-				Version: "some-version",
+				Availability: "Admins Only",
+				ID:           1337,
+				Version:      "some-version",
 				EULA: &pivnet.EULA{
 					Slug: "a_eula_slug",
 				},
 			}
 
-			finalizer = release.NewFinalizer(pivnetClient, fetcherClient, params, "/some/sources/dir", "a-product-slug")
+			meta := metadata.Metadata{
+				Release: &metadata.Release{
+					Availability: "Admins Only",
+					Version:      "some-version",
+					EULASlug:     "a_eula_slug",
+				},
+				ProductFiles: []metadata.ProductFile{},
+			}
+
+			finalizer = release.NewFinalizer(pivnetClient, params, meta, "/some/sources/dir", "a-product-slug")
 		})
 
 		Context("when the release availability is Admins Only", func() {
 			BeforeEach(func() {
-				fetcherClient.FetchReturns("Admins Only")
 				pivnetClient.ReleaseETagReturns("some-etag", nil)
 			})
 
@@ -51,9 +59,6 @@ var _ = Describe("ReleaseFinalizer", func() {
 
 				Expect(pivnetClient.UpdateReleaseCallCount()).To(BeZero())
 				Expect(pivnetClient.AddUserGroupCallCount()).To(BeZero())
-
-				valueToFetch := fetcherClient.FetchArgsForCall(0)
-				Expect(valueToFetch).To(Equal("Availability"))
 
 				Expect(response).To(Equal(concourse.OutResponse{
 					Version: concourse.Version{
@@ -65,7 +70,7 @@ var _ = Describe("ReleaseFinalizer", func() {
 						{Name: "release_date", Value: ""},
 						{Name: "description", Value: ""},
 						{Name: "release_notes_url", Value: ""},
-						{Name: "availability", Value: ""},
+						{Name: "availability", Value: "Admins Only"},
 						{Name: "controlled", Value: "false"},
 						{Name: "eccn", Value: ""},
 						{Name: "license_exception", Value: ""},
@@ -93,27 +98,23 @@ var _ = Describe("ReleaseFinalizer", func() {
 
 		Context("when the release availability is Selected User Groups Only", func() {
 			BeforeEach(func() {
-				fetcherClient.FetchStub = func(yamlKey string) string {
-					switch yamlKey {
-					case "Availability":
-						return "Selected User Groups Only"
-					case "UserGroupIDs":
-						return "111,222"
-					default:
-						panic("too many calls")
-					}
+				meta := metadata.Metadata{
+					Release: &metadata.Release{
+						Availability: "Selected User Groups Only",
+						EULASlug:     "eula_slug",
+						UserGroupIDs: []string{"111", "222"},
+					},
 				}
 
 				pivnetClient.UpdateReleaseReturns(pivnet.Release{ID: 2001, Version: "another-version", EULA: &pivnet.EULA{Slug: "eula_slug"}}, nil)
 				pivnetClient.ReleaseETagReturns("a-sep-etag", nil)
+
+				finalizer = release.NewFinalizer(pivnetClient, params, meta, "/some/sources/dir", "a-product-slug")
 			})
 
 			It("returns a final concourse out response", func() {
 				response, err := finalizer.Finalize(pivnetRelease)
 				Expect(err).NotTo(HaveOccurred())
-
-				metadataIdentifier := fetcherClient.FetchArgsForCall(1)
-				Expect(metadataIdentifier).To(Equal("UserGroupIDs"))
 
 				slug, releaseID, userGroupID := pivnetClient.AddUserGroupArgsForCall(0)
 				Expect(slug).To(Equal("a-product-slug"))
@@ -133,16 +134,15 @@ var _ = Describe("ReleaseFinalizer", func() {
 			Context("when an error occurs", func() {
 				Context("when a user group ID cannpt be converted to a number", func() {
 					BeforeEach(func() {
-						fetcherClient.FetchStub = func(yamlKey string) string {
-							switch yamlKey {
-							case "Availability":
-								return "Selected User Groups Only"
-							case "UserGroupIDs":
-								return "&&&"
-							default:
-								panic("too many calls")
-							}
+						meta := metadata.Metadata{
+							Release: &metadata.Release{
+								Availability: "Selected User Groups Only",
+								EULASlug:     "eula_slug",
+								UserGroupIDs: []string{"&&&"},
+							},
 						}
+
+						finalizer = release.NewFinalizer(pivnetClient, params, meta, "/some/sources/dir", "a-product-slug")
 					})
 
 					It("returns an error", func() {
@@ -166,9 +166,18 @@ var _ = Describe("ReleaseFinalizer", func() {
 
 		Context("when the release availability is any other value", func() {
 			BeforeEach(func() {
-				fetcherClient.FetchReturns("some other group")
+				meta := metadata.Metadata{
+					Release: &metadata.Release{
+						Availability: "some other group",
+						EULASlug:     "eula_slug",
+						UserGroupIDs: []string{"111", "222"},
+					},
+				}
+
 				pivnetClient.UpdateReleaseReturns(pivnet.Release{Version: "a-diff-version", EULA: &pivnet.EULA{Slug: "eula_slug"}}, nil)
 				pivnetClient.ReleaseETagReturns("a-diff-etag", nil)
+
+				finalizer = release.NewFinalizer(pivnetClient, params, meta, "/some/sources/dir", "a-product-slug")
 			})
 
 			It("returns a final concourse out response", func() {
@@ -193,8 +202,17 @@ var _ = Describe("ReleaseFinalizer", func() {
 			Context("when an errors occurs", func() {
 				Context("updating the release fails", func() {
 					BeforeEach(func() {
-						fetcherClient.FetchReturns("some other group")
+						meta := metadata.Metadata{
+							Release: &metadata.Release{
+								Availability: "some other group",
+								EULASlug:     "eula_slug",
+								UserGroupIDs: []string{"111", "222"},
+							},
+						}
+
 						pivnetClient.UpdateReleaseReturns(pivnet.Release{}, errors.New("there was a problem updating the release"))
+
+						finalizer = release.NewFinalizer(pivnetClient, params, meta, "/some/sources/dir", "a-product-slug")
 					})
 
 					It("returns an error", func() {

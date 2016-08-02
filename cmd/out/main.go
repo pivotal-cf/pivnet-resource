@@ -144,8 +144,6 @@ func main() {
 
 	validation := validator.NewOutValidator(input)
 
-	metadataFetcher := release.NewMetadataFetcher(m)
-
 	semverConverter := semver.NewSemverConverter(logger)
 
 	md5summer := md5sum.NewFileSummer()
@@ -157,7 +155,6 @@ func main() {
 
 	releaseCreator := release.NewReleaseCreator(
 		combinedClient,
-		metadataFetcher,
 		semverConverter,
 		logger,
 		m,
@@ -180,8 +177,8 @@ func main() {
 
 	releaseFinalizer := release.NewFinalizer(
 		combinedClient,
-		metadataFetcher,
 		input.Params,
+		m,
 		sourcesDir,
 		input.Source.ProductSlug,
 	)
