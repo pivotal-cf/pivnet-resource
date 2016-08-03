@@ -125,23 +125,23 @@ func main() {
 
 	var m metadata.Metadata
 	if input.Params.MetadataFile == "" {
-		log.Fatalf("metadata_file must be provided")
+		log.Fatalf("params.metadata_file must be provided")
 	}
 
 	metadataFilepath := filepath.Join(sourcesDir, input.Params.MetadataFile)
 	metadataBytes, err := ioutil.ReadFile(metadataFilepath)
 	if err != nil {
-		log.Fatalf("metadata_file could not be read: %s", err)
+		log.Fatalf("params.metadata_file could not be read: %s", err)
 	}
 
 	err = yaml.Unmarshal(metadataBytes, &m)
 	if err != nil {
-		log.Fatalf("metadata_file could not be parsed: %s", err)
+		log.Fatalf("params.metadata_file could not be parsed: %s", err)
 	}
 
 	err = m.Validate()
 	if err != nil {
-		log.Fatalf("metadata_file is invalid: %s", err)
+		log.Fatalf("params.metadata_file is invalid: %s", err)
 	}
 
 	validation := validator.NewOutValidator(input)
