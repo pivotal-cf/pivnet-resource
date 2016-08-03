@@ -124,22 +124,24 @@ func main() {
 	skipUpload := input.Params.FileGlob == "" && input.Params.FilepathPrefix == ""
 
 	var m metadata.Metadata
-	if input.Params.MetadataFile != "" {
-		metadataFilepath := filepath.Join(sourcesDir, input.Params.MetadataFile)
-		metadataBytes, err := ioutil.ReadFile(metadataFilepath)
-		if err != nil {
-			log.Fatalf("metadata_file could not be read: %s", err)
-		}
+	if input.Params.MetadataFile == "" {
+		log.Fatalf("metadata_file must be provided")
+	}
 
-		err = yaml.Unmarshal(metadataBytes, &m)
-		if err != nil {
-			log.Fatalf("metadata_file could not be parsed: %s", err)
-		}
+	metadataFilepath := filepath.Join(sourcesDir, input.Params.MetadataFile)
+	metadataBytes, err := ioutil.ReadFile(metadataFilepath)
+	if err != nil {
+		log.Fatalf("metadata_file could not be read: %s", err)
+	}
 
-		err = m.Validate()
-		if err != nil {
-			log.Fatalf("metadata_file is invalid: %s", err)
-		}
+	err = yaml.Unmarshal(metadataBytes, &m)
+	if err != nil {
+		log.Fatalf("metadata_file could not be parsed: %s", err)
+	}
+
+	err = m.Validate()
+	if err != nil {
+		log.Fatalf("metadata_file is invalid: %s", err)
 	}
 
 	validation := validator.NewOutValidator(input)

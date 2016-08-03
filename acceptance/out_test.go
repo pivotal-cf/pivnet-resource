@@ -96,7 +96,10 @@ var _ = Describe("Out", func() {
 				MetadataFile:   metadataFile,
 			},
 		}
+	})
 
+	JustBeforeEach(func() {
+		var err error
 		stdinContents, err = json.Marshal(outRequest)
 		Expect(err).ShouldNot(HaveOccurred())
 	})
@@ -112,10 +115,23 @@ var _ = Describe("Out", func() {
 			It("exits with error", func() {
 				command := exec.Command(outPath)
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
+				Expect(err).ShouldNot(HaveOccurred())
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Err).Should(gbytes.Say("usage"))
+			})
+		})
+
+		Context("when metadata file value is empty", func() {
+			BeforeEach(func() {
+				outRequest.Params.MetadataFile = ""
+			})
+
+			It("exits with error", func() {
+				session := run(command, stdinContents)
+
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("metadata_file"))
 			})
 		})
 	})
