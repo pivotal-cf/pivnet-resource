@@ -85,7 +85,7 @@ func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutRespon
 
 	metadata := []concourse.Metadata{
 		{Name: "version", Value: release.Version},
-		{Name: "release_type", Value: release.ReleaseType},
+		{Name: "release_type", Value: string(release.ReleaseType)},
 		{Name: "release_date", Value: release.ReleaseDate},
 		{Name: "description", Value: release.Description},
 		{Name: "release_notes_url", Value: release.ReleaseNotesURL},

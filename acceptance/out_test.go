@@ -13,6 +13,7 @@ import (
 
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	pivnet "github.com/pivotal-cf-experimental/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 
@@ -28,7 +29,7 @@ var _ = Describe("Out", func() {
 	var (
 		productVersion string
 
-		releaseType     = "Minor Release"
+		releaseType     = pivnet.ReleaseType("Minor Release")
 		releaseDate     = "2015-12-17"
 		eulaSlug        = "pivotal_beta_eula"
 		description     = "this release is for automated-testing only."
@@ -56,7 +57,7 @@ var _ = Describe("Out", func() {
 		By("Creating a metadata struct")
 		productMetadata = metadata.Metadata{
 			Release: &metadata.Release{
-				ReleaseType:     releaseType,
+				ReleaseType:     string(releaseType),
 				EULASlug:        eulaSlug,
 				ReleaseDate:     releaseDate,
 				Description:     description,
@@ -190,7 +191,7 @@ var _ = Describe("Out", func() {
 			By("Validing the returned metadata")
 			metadataReleaseType, err := metadataValueForKey(response.Metadata, "release_type")
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(metadataReleaseType).To(Equal(releaseType))
+			Expect(metadataReleaseType).To(Equal(string(releaseType)))
 
 			metadataReleaseDate, err := metadataValueForKey(response.Metadata, "release_date")
 			Expect(err).ShouldNot(HaveOccurred())

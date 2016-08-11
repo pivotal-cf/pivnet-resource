@@ -20,7 +20,8 @@ type FakeLogger struct {
 		action string
 		data   []logger.Data
 	}
-	invocations map[string][][]interface{}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeLogger) Debug(action string, data ...logger.Data) {
@@ -29,8 +30,7 @@ func (fake *FakeLogger) Debug(action string, data ...logger.Data) {
 		action string
 		data   []logger.Data
 	}{action, data})
-	fake.guard("Debug")
-	fake.invocations["Debug"] = append(fake.invocations["Debug"], []interface{}{action, data})
+	fake.recordInvocation("Debug", []interface{}{action, data})
 	fake.debugMutex.Unlock()
 	if fake.DebugStub != nil {
 		fake.DebugStub(action, data...)
@@ -55,8 +55,7 @@ func (fake *FakeLogger) Info(action string, data ...logger.Data) {
 		action string
 		data   []logger.Data
 	}{action, data})
-	fake.guard("Info")
-	fake.invocations["Info"] = append(fake.invocations["Info"], []interface{}{action, data})
+	fake.recordInvocation("Info", []interface{}{action, data})
 	fake.infoMutex.Unlock()
 	if fake.InfoStub != nil {
 		fake.InfoStub(action, data...)
@@ -76,16 +75,25 @@ func (fake *FakeLogger) InfoArgsForCall(i int) (string, []logger.Data) {
 }
 
 func (fake *FakeLogger) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.debugMutex.RLock()
+	defer fake.debugMutex.RUnlock()
+	fake.infoMutex.RLock()
+	defer fake.infoMutex.RUnlock()
 	return fake.invocations
 }
 
-func (fake *FakeLogger) guard(key string) {
+func (fake *FakeLogger) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
 		fake.invocations = map[string][][]interface{}{}
 	}
 	if fake.invocations[key] == nil {
 		fake.invocations[key] = [][]interface{}{}
 	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
 var _ logger.Logger = new(FakeLogger)

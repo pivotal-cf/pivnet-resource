@@ -22,7 +22,7 @@ import (
 var _ = Describe("In", func() {
 	var (
 		eulaSlug    = "pivotal_beta_eula"
-		releaseType = "Minor Release"
+		releaseType = pivnet.ReleaseType("Minor Release")
 
 		productVersion  string
 		etag            string
@@ -43,7 +43,7 @@ var _ = Describe("In", func() {
 			ProductSlug:    productSlug,
 			ProductVersion: productVersion,
 			EULASlug:       eulaSlug,
-			ReleaseType:    releaseType,
+			ReleaseType:    string(releaseType),
 		})
 		Expect(err).NotTo(HaveOccurred())
 

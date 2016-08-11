@@ -3,10 +3,12 @@ package commands
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 
 	"github.com/pivotal-cf-experimental/go-pivnet"
-	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/errors"
+	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/errorhandler"
+	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/gp"
 	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/lagershim"
 	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/printer"
 	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/version"
@@ -14,6 +16,52 @@ import (
 	"github.com/pivotal-golang/lager"
 	"github.com/robdimsdale/sanitizer"
 )
+
+type PivnetClient interface {
+	Products() ([]pivnet.Product, error)
+	FindProductForSlug(slug string) (pivnet.Product, error)
+
+	ReleaseTypes() ([]pivnet.ReleaseType, error)
+
+	ReleasesForProductSlug(productSlug string) ([]pivnet.Release, error)
+	Release(productSlug string, releaseID int) (pivnet.Release, error)
+	DeleteRelease(productSlug string, release pivnet.Release) error
+
+	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
+
+	ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error)
+
+	AcceptEULA(productSlug string, releaseID int) error
+	EULAs() ([]pivnet.EULA, error)
+	EULA(eulaSlug string) (pivnet.EULA, error)
+
+	GetProductFiles(productSlug string) ([]pivnet.ProductFile, error)
+	GetProductFile(productSlug string, productFileID int) (pivnet.ProductFile, error)
+	GetProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
+	GetProductFileForRelease(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
+	DeleteProductFile(productSlug string, releaseID int) (pivnet.ProductFile, error)
+	AddProductFile(productSlug string, releaseID int, productFileID int) error
+	RemoveProductFile(productSlug string, releaseID int, productFileID int) error
+
+	FileGroups(productSlug string) ([]pivnet.FileGroup, error)
+	FileGroupsForRelease(productSlug string, releaseID int) ([]pivnet.FileGroup, error)
+	FileGroup(productSlug string, fileGroupID int) (pivnet.FileGroup, error)
+	DeleteFileGroup(productSlug string, fileGroupID int) (pivnet.FileGroup, error)
+
+	UserGroups() ([]pivnet.UserGroup, error)
+	UserGroupsForRelease(productSlug string, releaseID int) ([]pivnet.UserGroup, error)
+	UserGroup(userGroupID int) (pivnet.UserGroup, error)
+	CreateUserGroup(name string, description string, members []string) (pivnet.UserGroup, error)
+	UpdateUserGroup(userGroup pivnet.UserGroup) (pivnet.UserGroup, error)
+	DeleteUserGroup(userGroupID int) error
+	AddUserGroup(productSlug string, releaseID int, userGroupID int) error
+	RemoveUserGroup(productSlug string, releaseID int, userGroupID int) error
+	AddMemberToGroup(userGroupID int, emailAddress string, admin bool) (pivnet.UserGroup, error)
+	RemoveMemberFromGroup(userGroupID int, emailAddress string) (pivnet.UserGroup, error)
+
+	CreateRequest(method string, url string, body io.Reader) (*http.Request, error)
+	MakeRequest(method string, url string, expectedResponseCode int, body io.Reader, data interface{}) (*http.Response, error)
+}
 
 const (
 	DefaultHost = "https://network.pivotal.io"
@@ -23,7 +71,7 @@ var (
 	OutputWriter io.Writer
 	LogWriter    io.Writer
 
-	ErrorHandler errors.ErrorHandler
+	ErrorHandler errorhandler.ErrorHandler
 	Printer      printer.Printer
 )
 
@@ -78,7 +126,8 @@ type PivnetCommand struct {
 
 	ReleaseUpgradePaths ReleaseUpgradePathsCommand `command:"release-upgrade-paths" description:"List release upgrade paths"`
 
-	Logger logger.Logger
+	Logger    logger.Logger
+	userAgent string
 }
 
 var Pivnet PivnetCommand
@@ -94,7 +143,18 @@ func init() {
 	}
 }
 
-func NewClient() pivnet.Client {
+func NewPivnetClient() *gp.CompositeClient {
+	return gp.NewCompositeClient(
+		pivnet.ClientConfig{
+			Token:     Pivnet.APIToken,
+			Host:      Pivnet.Host,
+			UserAgent: Pivnet.userAgent,
+		},
+		Pivnet.Logger,
+	)
+}
+
+func Init() {
 	if OutputWriter == nil {
 		OutputWriter = os.Stdout
 	}
@@ -110,7 +170,7 @@ func NewClient() pivnet.Client {
 	}
 
 	if ErrorHandler == nil {
-		ErrorHandler = errors.NewErrorHandler(Pivnet.Format, OutputWriter, LogWriter)
+		ErrorHandler = errorhandler.NewErrorHandler(Pivnet.Format, OutputWriter, LogWriter)
 	}
 
 	if Printer == nil {
@@ -132,21 +192,10 @@ func NewClient() pivnet.Client {
 		l.RegisterSink(lager.NewWriterSink(LogWriter, lager.INFO))
 	}
 
-	useragent := fmt.Sprintf(
+	Pivnet.userAgent = fmt.Sprintf(
 		"go-pivnet/%s",
 		version.Version,
 	)
 
 	Pivnet.Logger = lagershim.NewLagerShim(l)
-
-	pivnetClient := pivnet.NewClient(
-		pivnet.ClientConfig{
-			Token:     Pivnet.APIToken,
-			Host:      Pivnet.Host,
-			UserAgent: useragent,
-		},
-		Pivnet.Logger,
-	)
-
-	return pivnetClient
 }

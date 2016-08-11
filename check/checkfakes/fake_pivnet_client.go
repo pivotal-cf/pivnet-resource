@@ -8,11 +8,11 @@ import (
 )
 
 type FakePivnetClient struct {
-	ReleaseTypesStub        func() ([]string, error)
+	ReleaseTypesStub        func() ([]pivnet.ReleaseType, error)
 	releaseTypesMutex       sync.RWMutex
 	releaseTypesArgsForCall []struct{}
 	releaseTypesReturns     struct {
-		result1 []string
+		result1 []pivnet.ReleaseType
 		result2 error
 	}
 	ReleasesForProductSlugStub        func(string) ([]pivnet.Release, error)
@@ -48,7 +48,7 @@ type FakePivnetClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakePivnetClient) ReleaseTypes() ([]string, error) {
+func (fake *FakePivnetClient) ReleaseTypes() ([]pivnet.ReleaseType, error) {
 	fake.releaseTypesMutex.Lock()
 	fake.releaseTypesArgsForCall = append(fake.releaseTypesArgsForCall, struct{}{})
 	fake.recordInvocation("ReleaseTypes", []interface{}{})
@@ -66,10 +66,10 @@ func (fake *FakePivnetClient) ReleaseTypesCallCount() int {
 	return len(fake.releaseTypesArgsForCall)
 }
 
-func (fake *FakePivnetClient) ReleaseTypesReturns(result1 []string, result2 error) {
+func (fake *FakePivnetClient) ReleaseTypesReturns(result1 []pivnet.ReleaseType, result2 error) {
 	fake.ReleaseTypesStub = nil
 	fake.releaseTypesReturns = struct {
-		result1 []string
+		result1 []pivnet.ReleaseType
 		result2 error
 	}{result1, result2}
 }

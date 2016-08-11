@@ -27,7 +27,7 @@ var _ = Describe("Check", func() {
 		checkRequest concourse.CheckRequest
 		checkCommand *check.CheckCommand
 
-		releaseTypes    []string
+		releaseTypes    []pivnet.ReleaseType
 		releaseTypesErr error
 
 		allReleases      []pivnet.Release
@@ -55,10 +55,10 @@ var _ = Describe("Check", func() {
 		releasesErr = nil
 		etagErr = nil
 
-		releaseTypes = []string{
-			"foo release",
-			"bar",
-			"third release type",
+		releaseTypes = []pivnet.ReleaseType{
+			pivnet.ReleaseType("foo release"),
+			pivnet.ReleaseType("bar"),
+			pivnet.ReleaseType("third release type"),
 		}
 
 		allReleases = []pivnet.Release{
@@ -286,7 +286,7 @@ var _ = Describe("Check", func() {
 
 	Context("when the release type is specified", func() {
 		BeforeEach(func() {
-			checkRequest.Source.ReleaseType = releaseTypes[1]
+			checkRequest.Source.ReleaseType = string(releaseTypes[1])
 
 			filteredReleases = []pivnet.Release{allReleases[1]}
 		})
@@ -314,9 +314,9 @@ var _ = Describe("Check", func() {
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(MatchRegexp(".*release_type.*one of"))
-				Expect(err.Error()).To(ContainSubstring(releaseTypes[0]))
-				Expect(err.Error()).To(ContainSubstring(releaseTypes[1]))
-				Expect(err.Error()).To(ContainSubstring(releaseTypes[2]))
+				Expect(err.Error()).To(ContainSubstring(string(releaseTypes[0])))
+				Expect(err.Error()).To(ContainSubstring(string(releaseTypes[1])))
+				Expect(err.Error()).To(ContainSubstring(string(releaseTypes[2])))
 			})
 		})
 
@@ -336,7 +336,7 @@ var _ = Describe("Check", func() {
 
 	Context("when the product version is specified", func() {
 		BeforeEach(func() {
-			checkRequest.Source.ReleaseType = releaseTypes[1]
+			checkRequest.Source.ReleaseType = string(releaseTypes[1])
 
 			filteredReleases = []pivnet.Release{allReleases[1]}
 		})

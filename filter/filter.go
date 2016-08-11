@@ -16,7 +16,7 @@ func NewFilter() *Filter {
 	return &Filter{}
 }
 
-func (f Filter) ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error) {
+func (f Filter) ReleasesByReleaseType(releases []pivnet.Release, releaseType pivnet.ReleaseType) ([]pivnet.Release, error) {
 	filteredReleases := make([]pivnet.Release, 0)
 
 	for _, release := range releases {

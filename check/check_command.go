@@ -14,7 +14,7 @@ import (
 
 //go:generate counterfeiter --fake-name FakeFilter . filter
 type filter interface {
-	ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error)
+	ReleasesByReleaseType(releases []pivnet.Release, releaseType pivnet.ReleaseType) ([]pivnet.Release, error)
 	ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error)
 }
 
@@ -25,7 +25,7 @@ type sorter interface {
 
 //go:generate counterfeiter --fake-name FakePivnetClient . pivnetClient
 type pivnetClient interface {
-	ReleaseTypes() ([]string, error)
+	ReleaseTypes() ([]pivnet.ReleaseType, error)
 	ReleasesForProductSlug(string) ([]pivnet.Release, error)
 	ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error)
 	ReleaseETag(productSlug string, releaseID int) (string, error)
@@ -89,10 +89,15 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return nil, err
 	}
 
-	releaseTypesPrintable := fmt.Sprintf("['%s']", strings.Join(releaseTypes, "', '"))
+	releaseTypesAsStrings := make([]string, len(releaseTypes))
+	for i, r := range releaseTypes {
+		releaseTypesAsStrings[i] = string(r)
+	}
+
+	releaseTypesPrintable := fmt.Sprintf("['%s']", strings.Join(releaseTypesAsStrings, "', '"))
 
 	releaseType := input.Source.ReleaseType
-	if releaseType != "" && !containsString(releaseTypes, releaseType) {
+	if releaseType != "" && !containsString(releaseTypesAsStrings, releaseType) {
 		return nil, fmt.Errorf(
 			"provided release_type: '%s' must be one of: %s",
 			releaseType,
@@ -110,7 +115,10 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	if releaseType != "" {
 		c.logger.Println("Filtering all releases by release_type")
-		releases, err = c.filter.ReleasesByReleaseType(releases, releaseType)
+		releases, err = c.filter.ReleasesByReleaseType(
+			releases,
+			pivnet.ReleaseType(releaseType),
+		)
 		if err != nil {
 			return nil, err
 		}

@@ -35,7 +35,7 @@ func NewExtendedClient(c Client, logger logger.Logger) *ExtendedClient {
 	}
 }
 
-func (c Client) ReleaseTypes() ([]string, error) {
+func (c Client) ReleaseTypes() ([]pivnet.ReleaseType, error) {
 	return c.client.ReleaseTypes.Get()
 }
 

@@ -26,7 +26,7 @@ type ReleaseCreator struct {
 //go:generate counterfeiter --fake-name ReleaseClient . releaseClient
 type releaseClient interface {
 	EULAs() ([]pivnet.EULA, error)
-	ReleaseTypes() ([]string, error)
+	ReleaseTypes() ([]pivnet.ReleaseType, error)
 	ReleasesForProductSlug(string) ([]pivnet.Release, error)
 	CreateRelease(pivnet.CreateReleaseConfig) (pivnet.Release, error)
 	ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error)
@@ -149,13 +149,18 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		return pivnet.Release{}, err
 	}
 
+	releaseTypesAsStrings := make([]string, len(releaseTypes))
+	for i, r := range releaseTypes {
+		releaseTypesAsStrings[i] = string(r)
+	}
+
 	releaseTypesPrintable := fmt.Sprintf(
 		"['%s']",
-		strings.Join(releaseTypes, "', '"),
+		strings.Join(releaseTypesAsStrings, "', '"),
 	)
 
 	rc.logger.Println("validating release_type")
-	releaseType := rc.metadata.Release.ReleaseType
+	releaseType := pivnet.ReleaseType(rc.metadata.Release.ReleaseType)
 
 	var containsReleaseType bool
 	for _, t := range releaseTypes {
@@ -173,7 +178,8 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		)
 	}
 
-	if rc.source.ReleaseType != "" && rc.source.ReleaseType != releaseType {
+	if pivnet.ReleaseType(rc.source.ReleaseType) != "" &&
+		pivnet.ReleaseType(rc.source.ReleaseType) != releaseType {
 		return pivnet.Release{}, fmt.Errorf(
 			"provided release_type: '%s' must match '%s' from source configuration",
 			releaseType,
@@ -183,7 +189,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	config := pivnet.CreateReleaseConfig{
 		ProductSlug:           rc.productSlug,
-		ReleaseType:           releaseType,
+		ReleaseType:           string(releaseType),
 		EULASlug:              eulaSlug,
 		ProductVersion:        productVersion,
 		Description:           rc.metadata.Release.Description,

@@ -9,11 +9,13 @@ type ReleaseTypesService struct {
 	client Client
 }
 
+type ReleaseType string
+
 type ReleaseTypesResponse struct {
-	ReleaseTypes []string `json:"release_types" yaml:"release_types"`
+	ReleaseTypes []ReleaseType `json:"release_types" yaml:"release_types"`
 }
 
-func (r ReleaseTypesService) Get() ([]string, error) {
+func (r ReleaseTypesService) Get() ([]ReleaseType, error) {
 	url := fmt.Sprintf("/releases/release_types")
 
 	var response ReleaseTypesResponse

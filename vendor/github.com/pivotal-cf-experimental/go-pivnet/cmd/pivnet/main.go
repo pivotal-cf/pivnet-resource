@@ -6,7 +6,7 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/commands"
-	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/errors"
+	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/errorhandler"
 	"github.com/pivotal-cf-experimental/go-pivnet/cmd/pivnet/version"
 )
 
@@ -42,11 +42,11 @@ func main() {
 			}
 		}
 
-		if err == errors.ErrAlreadyHandled {
+		if err == errorhandler.ErrAlreadyHandled {
 			os.Exit(1)
 		}
 
-		coloredMessage := fmt.Sprintf(errors.RedFunc(err.Error()))
+		coloredMessage := fmt.Sprintf(errorhandler.RedFunc(err.Error()))
 		fmt.Fprintln(os.Stderr, coloredMessage)
 		os.Exit(1)
 	}

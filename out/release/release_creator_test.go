@@ -31,7 +31,7 @@ var _ = Describe("ReleaseCreator", func() {
 		fetchReturnedProductVersion string
 		existingProductVersion      string
 		eulaSlug                    string
-		releaseType                 string
+		releaseType                 pivnet.ReleaseType
 	)
 
 	BeforeEach(func() {
@@ -46,11 +46,11 @@ var _ = Describe("ReleaseCreator", func() {
 		eulaSlug = "magic-slug"
 		releaseType = "some-release-type"
 
-		sourceReleaseType = releaseType
+		sourceReleaseType = string(releaseType)
 		sourceVersion = `1\.8\..*`
 
 		pivnetClient.EULAsReturns([]pivnet.EULA{{Slug: eulaSlug}}, nil)
-		pivnetClient.ReleaseTypesReturns([]string{releaseType}, nil)
+		pivnetClient.ReleaseTypesReturns([]pivnet.ReleaseType{releaseType}, nil)
 		pivnetClient.ReleasesForProductSlugReturns([]pivnet.Release{{Version: existingProductVersion}}, nil)
 		pivnetClient.CreateReleaseReturns(pivnet.Release{ID: 1337}, nil)
 	})
@@ -61,7 +61,7 @@ var _ = Describe("ReleaseCreator", func() {
 				Release: &metadata.Release{
 					Controlled:      true,
 					EULASlug:        eulaSlug,
-					ReleaseType:     releaseType,
+					ReleaseType:     string(releaseType),
 					Version:         fetchReturnedProductVersion,
 					Description:     "wow, a description",
 					ReleaseNotesURL: "some-url",
@@ -117,7 +117,7 @@ var _ = Describe("ReleaseCreator", func() {
 
 				Expect(pivnetClient.CreateReleaseArgsForCall(0)).To(Equal(pivnet.CreateReleaseConfig{
 					ProductSlug:     "some-product-slug",
-					ReleaseType:     releaseType,
+					ReleaseType:     string(releaseType),
 					EULASlug:        eulaSlug,
 					ProductVersion:  fetchReturnedProductVersion,
 					Description:     "wow, a description",
@@ -174,7 +174,7 @@ var _ = Describe("ReleaseCreator", func() {
 
 				Context("when pivnet fails fetching release types", func() {
 					BeforeEach(func() {
-						pivnetClient.ReleaseTypesReturns([]string{""}, errors.New("failed fetching release types"))
+						pivnetClient.ReleaseTypesReturns([]pivnet.ReleaseType{}, errors.New("failed fetching release types"))
 					})
 
 					It("returns an error", func() {
@@ -185,7 +185,7 @@ var _ = Describe("ReleaseCreator", func() {
 
 				Context("when the metadata does not contain the release type", func() {
 					BeforeEach(func() {
-						pivnetClient.ReleaseTypesReturns([]string{"a-missing-release-type"}, nil)
+						pivnetClient.ReleaseTypesReturns([]pivnet.ReleaseType{pivnet.ReleaseType("a-missing-release-type")}, nil)
 					})
 
 					It("returns an error", func() {
@@ -244,7 +244,10 @@ var _ = Describe("ReleaseCreator", func() {
 		Context("when release type does not match source config", func() {
 			BeforeEach(func() {
 				sourceReleaseType = "different release type"
-				pivnetClient.ReleaseTypesReturns([]string{releaseType, sourceReleaseType}, nil)
+				pivnetClient.ReleaseTypesReturns(
+					[]pivnet.ReleaseType{releaseType, pivnet.ReleaseType(sourceReleaseType)},
+					nil,
+				)
 			})
 
 			It("returns an error", func() {

@@ -136,7 +136,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	mdata := metadata.Metadata{
 		Release: &metadata.Release{
 			Version:               release.Version,
-			ReleaseType:           release.ReleaseType,
+			ReleaseType:           string(release.ReleaseType),
 			ReleaseDate:           release.ReleaseDate,
 			Description:           release.Description,
 			ReleaseNotesURL:       release.ReleaseNotesURL,
@@ -294,7 +294,7 @@ func (c InCommand) addReleaseMetadata(
 ) []concourse.Metadata {
 	cmdata := append(concourseMetadata,
 		concourse.Metadata{Name: "version", Value: release.Version},
-		concourse.Metadata{Name: "release_type", Value: release.ReleaseType},
+		concourse.Metadata{Name: "release_type", Value: string(release.ReleaseType)},
 		concourse.Metadata{Name: "release_date", Value: release.ReleaseDate},
 		concourse.Metadata{Name: "description", Value: release.Description},
 		concourse.Metadata{Name: "release_notes_url", Value: release.ReleaseNotesURL},

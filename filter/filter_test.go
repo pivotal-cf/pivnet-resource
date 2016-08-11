@@ -23,45 +23,45 @@ var _ = Describe("Filter", func() {
 			{
 				ID:          1,
 				Version:     "version1",
-				ReleaseType: "foo",
+				ReleaseType: pivnet.ReleaseType("foo"),
 			},
 			{
 				ID:          2,
 				Version:     "version2",
-				ReleaseType: "bar",
+				ReleaseType: pivnet.ReleaseType("bar"),
 			},
 			{
 				ID:          3,
 				Version:     "version3",
-				ReleaseType: "foo",
+				ReleaseType: pivnet.ReleaseType("foo"),
 			},
 		}
 	})
 
 	Describe("ReleasesByReleaseType", func() {
 		var (
-			releaseType string
+			releaseType pivnet.ReleaseType
 			releases    []gp.Release
 		)
 
 		BeforeEach(func() {
-			releaseType = "foo"
+			releaseType = pivnet.ReleaseType("foo")
 
 			releases = []gp.Release{
 				{
 					ID:          1,
 					Version:     "version1",
-					ReleaseType: "foo",
+					ReleaseType: pivnet.ReleaseType("foo"),
 				},
 				{
 					ID:          2,
 					Version:     "version2",
-					ReleaseType: "bar",
+					ReleaseType: pivnet.ReleaseType("bar"),
 				},
 				{
 					ID:          3,
 					Version:     "version3",
-					ReleaseType: "foo",
+					ReleaseType: pivnet.ReleaseType("foo"),
 				},
 			}
 		})

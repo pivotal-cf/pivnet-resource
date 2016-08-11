@@ -28,22 +28,22 @@ type CreateReleaseResponse struct {
 }
 
 type Release struct {
-	ID                    int    `json:"id,omitempty" yaml:"id,omitempty"`
-	Availability          string `json:"availability,omitempty" yaml:"availability,omitempty"`
-	EULA                  *EULA  `json:"eula,omitempty" yaml:"eula,omitempty"`
-	OSSCompliant          string `json:"oss_compliant,omitempty" yaml:"oss_compliant,omitempty"`
-	ReleaseDate           string `json:"release_date,omitempty" yaml:"release_date,omitempty"`
-	ReleaseType           string `json:"release_type,omitempty" yaml:"release_type,omitempty"`
-	Version               string `json:"version,omitempty" yaml:"version,omitempty"`
-	Links                 *Links `json:"_links,omitempty" yaml:"_links,omitempty"`
-	Description           string `json:"description,omitempty" yaml:"description,omitempty"`
-	ReleaseNotesURL       string `json:"release_notes_url,omitempty" yaml:"release_notes_url,omitempty"`
-	Controlled            bool   `json:"controlled,omitempty" yaml:"controlled,omitempty"`
-	ECCN                  string `json:"eccn,omitempty" yaml:"eccn,omitempty"`
-	LicenseException      string `json:"license_exception,omitempty" yaml:"license_exception,omitempty"`
-	EndOfSupportDate      string `json:"end_of_support_date,omitempty" yaml:"end_of_support_date,omitempty"`
-	EndOfGuidanceDate     string `json:"end_of_guidance_date,omitempty" yaml:"end_of_guidance_date,omitempty"`
-	EndOfAvailabilityDate string `json:"end_of_availability_date,omitempty" yaml:"end_of_availability_date,omitempty"`
+	ID                    int         `json:"id,omitempty" yaml:"id,omitempty"`
+	Availability          string      `json:"availability,omitempty" yaml:"availability,omitempty"`
+	EULA                  *EULA       `json:"eula,omitempty" yaml:"eula,omitempty"`
+	OSSCompliant          string      `json:"oss_compliant,omitempty" yaml:"oss_compliant,omitempty"`
+	ReleaseDate           string      `json:"release_date,omitempty" yaml:"release_date,omitempty"`
+	ReleaseType           ReleaseType `json:"release_type,omitempty" yaml:"release_type,omitempty"`
+	Version               string      `json:"version,omitempty" yaml:"version,omitempty"`
+	Links                 *Links      `json:"_links,omitempty" yaml:"_links,omitempty"`
+	Description           string      `json:"description,omitempty" yaml:"description,omitempty"`
+	ReleaseNotesURL       string      `json:"release_notes_url,omitempty" yaml:"release_notes_url,omitempty"`
+	Controlled            bool        `json:"controlled,omitempty" yaml:"controlled,omitempty"`
+	ECCN                  string      `json:"eccn,omitempty" yaml:"eccn,omitempty"`
+	LicenseException      string      `json:"license_exception,omitempty" yaml:"license_exception,omitempty"`
+	EndOfSupportDate      string      `json:"end_of_support_date,omitempty" yaml:"end_of_support_date,omitempty"`
+	EndOfGuidanceDate     string      `json:"end_of_guidance_date,omitempty" yaml:"end_of_guidance_date,omitempty"`
+	EndOfAvailabilityDate string      `json:"end_of_availability_date,omitempty" yaml:"end_of_availability_date,omitempty"`
 }
 
 type CreateReleaseConfig struct {
@@ -97,7 +97,7 @@ func (r ReleasesService) Create(config CreateReleaseConfig) (Release, error) {
 			},
 			OSSCompliant:          "confirm",
 			ReleaseDate:           config.ReleaseDate,
-			ReleaseType:           config.ReleaseType,
+			ReleaseType:           ReleaseType(config.ReleaseType),
 			Version:               config.ProductVersion,
 			Description:           config.Description,
 			ReleaseNotesURL:       config.ReleaseNotesURL,

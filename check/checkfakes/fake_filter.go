@@ -8,11 +8,11 @@ import (
 )
 
 type FakeFilter struct {
-	ReleasesByReleaseTypeStub        func(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error)
+	ReleasesByReleaseTypeStub        func(releases []pivnet.Release, releaseType pivnet.ReleaseType) ([]pivnet.Release, error)
 	releasesByReleaseTypeMutex       sync.RWMutex
 	releasesByReleaseTypeArgsForCall []struct {
 		releases    []pivnet.Release
-		releaseType string
+		releaseType pivnet.ReleaseType
 	}
 	releasesByReleaseTypeReturns struct {
 		result1 []pivnet.Release
@@ -32,7 +32,7 @@ type FakeFilter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeFilter) ReleasesByReleaseType(releases []pivnet.Release, releaseType string) ([]pivnet.Release, error) {
+func (fake *FakeFilter) ReleasesByReleaseType(releases []pivnet.Release, releaseType pivnet.ReleaseType) ([]pivnet.Release, error) {
 	var releasesCopy []pivnet.Release
 	if releases != nil {
 		releasesCopy = make([]pivnet.Release, len(releases))
@@ -41,7 +41,7 @@ func (fake *FakeFilter) ReleasesByReleaseType(releases []pivnet.Release, release
 	fake.releasesByReleaseTypeMutex.Lock()
 	fake.releasesByReleaseTypeArgsForCall = append(fake.releasesByReleaseTypeArgsForCall, struct {
 		releases    []pivnet.Release
-		releaseType string
+		releaseType pivnet.ReleaseType
 	}{releasesCopy, releaseType})
 	fake.recordInvocation("ReleasesByReleaseType", []interface{}{releasesCopy, releaseType})
 	fake.releasesByReleaseTypeMutex.Unlock()
@@ -58,7 +58,7 @@ func (fake *FakeFilter) ReleasesByReleaseTypeCallCount() int {
 	return len(fake.releasesByReleaseTypeArgsForCall)
 }
 
-func (fake *FakeFilter) ReleasesByReleaseTypeArgsForCall(i int) ([]pivnet.Release, string) {
+func (fake *FakeFilter) ReleasesByReleaseTypeArgsForCall(i int) ([]pivnet.Release, pivnet.ReleaseType) {
 	fake.releasesByReleaseTypeMutex.RLock()
 	defer fake.releasesByReleaseTypeMutex.RUnlock()
 	return fake.releasesByReleaseTypeArgsForCall[i].releases, fake.releasesByReleaseTypeArgsForCall[i].releaseType
