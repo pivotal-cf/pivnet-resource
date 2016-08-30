@@ -159,7 +159,7 @@ var _ = Describe("Lifecycle test", func() {
 					Expect(err).ShouldNot(HaveOccurred())
 
 					remotePaths[i] = fmt.Sprintf(
-						"product_files/%s/%s",
+						"%s/%s",
 						s3FilepathPrefix,
 						sourceFileNames[i],
 					)

@@ -202,15 +202,16 @@ var _ = Describe("Filter", func() {
 
 	Describe("Download Links", func() {
 		It("returns the download links", func() {
+			// FIXME this default behaviour will need fixing
 			productFiles := []pivnet.ProductFile{
 				{
 					ID:           3,
-					AWSObjectKey: "product_files/banana/file-name-1.zip",
+					AWSObjectKey: "banana/file-name-1.zip",
 					Links:        &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/6/download"}},
 				},
 				{
 					ID:           4,
-					AWSObjectKey: "product_files/banana/file-name-2.zip",
+					AWSObjectKey: "banana/file-name-2.zip",
 					Links:        &pivnet.Links{Download: map[string]string{"href": "/products/banana/releases/666/product_files/8/download"}},
 				},
 			}
