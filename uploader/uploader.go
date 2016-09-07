@@ -40,7 +40,7 @@ func (c Client) UploadFile(exactGlob string) (string, error) {
 
 	filename := filepath.Base(exactGlob)
 
-	remoteDir := "product_files/" + c.filepathPrefix + "/"
+	remoteDir := c.filepathPrefix + "/"
 	remotePath := fmt.Sprintf("%s%s", remoteDir, filename)
 
 	err := c.transport.Upload(

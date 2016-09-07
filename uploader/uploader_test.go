@@ -75,7 +75,7 @@ var _ = Describe("Uploader", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(remotePath).To(Equal(
-					fmt.Sprintf("product_files/%s/file-0", filepathPrefix)))
+					fmt.Sprintf("%s/file-0", filepathPrefix)))
 			})
 		})
 
