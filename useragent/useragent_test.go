@@ -5,7 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf-experimental/pivnet-resource/useragent"
+	"github.com/pivotal-cf/pivnet-resource/useragent"
 )
 
 var _ = Describe("UserAgent", func() {

@@ -6,10 +6,10 @@ import (
 	"log"
 
 	"github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
-	"github.com/pivotal-cf-experimental/pivnet-resource/out"
-	"github.com/pivotal-cf-experimental/pivnet-resource/out/outfakes"
+	"github.com/pivotal-cf/pivnet-resource/concourse"
+	"github.com/pivotal-cf/pivnet-resource/metadata"
+	"github.com/pivotal-cf/pivnet-resource/out"
+	"github.com/pivotal-cf/pivnet-resource/out/outfakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -7,8 +7,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	pivnet "github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
-	"github.com/pivotal-cf-experimental/pivnet-resource/versions/versionsfakes"
+	"github.com/pivotal-cf/pivnet-resource/versions"
+	"github.com/pivotal-cf/pivnet-resource/versions/versionsfakes"
 )
 
 var _ = Describe("Versions", func() {

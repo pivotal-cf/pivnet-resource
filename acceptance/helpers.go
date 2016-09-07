@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf/pivnet-resource/concourse"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

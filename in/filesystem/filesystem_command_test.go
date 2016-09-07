@@ -9,8 +9,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/in/filesystem"
-	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
+	"github.com/pivotal-cf/pivnet-resource/in/filesystem"
+	"github.com/pivotal-cf/pivnet-resource/metadata"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -9,8 +9,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf-experimental/pivnet-resource/uploader"
-	"github.com/pivotal-cf-experimental/pivnet-resource/uploader/uploaderfakes"
+	"github.com/pivotal-cf/pivnet-resource/uploader"
+	"github.com/pivotal-cf/pivnet-resource/uploader/uploaderfakes"
 )
 
 var _ = Describe("Uploader", func() {

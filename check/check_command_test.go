@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 
 	"github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/check"
-	"github.com/pivotal-cf-experimental/pivnet-resource/check/checkfakes"
-	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/versions"
+	"github.com/pivotal-cf/pivnet-resource/check"
+	"github.com/pivotal-cf/pivnet-resource/check/checkfakes"
+	"github.com/pivotal-cf/pivnet-resource/concourse"
+	"github.com/pivotal-cf/pivnet-resource/versions"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

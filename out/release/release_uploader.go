@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
+	"github.com/pivotal-cf/pivnet-resource/metadata"
 )
 
 type ReleaseUploader struct {

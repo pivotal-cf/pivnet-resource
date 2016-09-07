@@ -3,7 +3,7 @@ package validator
 import (
 	"fmt"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
+	"github.com/pivotal-cf/pivnet-resource/concourse"
 )
 
 type InValidator struct {

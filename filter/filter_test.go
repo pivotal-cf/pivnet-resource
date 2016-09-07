@@ -3,7 +3,7 @@ package filter_test
 import (
 	"github.com/pivotal-cf/go-pivnet"
 	gp "github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
+	"github.com/pivotal-cf/pivnet-resource/filter"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

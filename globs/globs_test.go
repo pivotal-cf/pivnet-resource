@@ -8,7 +8,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf-experimental/pivnet-resource/globs"
+	"github.com/pivotal-cf/pivnet-resource/globs"
 )
 
 var _ = Describe("Globber", func() {

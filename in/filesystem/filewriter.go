@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
+	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"gopkg.in/yaml.v2"
 )
 

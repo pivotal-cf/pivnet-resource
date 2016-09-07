@@ -7,7 +7,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf-experimental/pivnet-resource/s3"
+	"github.com/pivotal-cf/pivnet-resource/s3"
 )
 
 var _ = Describe("S3 Client", func() {

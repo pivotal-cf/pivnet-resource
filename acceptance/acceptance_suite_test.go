@@ -5,8 +5,8 @@ import (
 
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
-	"github.com/pivotal-cf-experimental/pivnet-resource/gp/lagershim"
+	"github.com/pivotal-cf/pivnet-resource/gp"
+	"github.com/pivotal-cf/pivnet-resource/gp/lagershim"
 	"github.com/pivotal-golang/lager"
 	"github.com/robdimsdale/sanitizer"
 
@@ -74,15 +74,15 @@ var _ = BeforeSuite(func() {
 	Expect(endpoint).NotTo(BeEmpty(), "$PIVNET_ENDPOINT must be provided")
 
 	By("Compiling check binary")
-	checkPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/check", "-race")
+	checkPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/check", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Compiling out binary")
-	outPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/out", "-race")
+	outPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/out", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Compiling in binary")
-	inPath, err = gexec.Build("github.com/pivotal-cf-experimental/pivnet-resource/cmd/in", "-race")
+	inPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/in", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Sanitizing acceptance test output")

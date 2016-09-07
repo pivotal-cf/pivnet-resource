@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/gp"
+	"github.com/pivotal-cf/pivnet-resource/gp"
 )
 
 type FakeExtendedClient struct {

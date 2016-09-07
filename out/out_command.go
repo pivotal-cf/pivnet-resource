@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
+	"github.com/pivotal-cf/pivnet-resource/concourse"
+	"github.com/pivotal-cf/pivnet-resource/metadata"
 )
 
 type OutCommand struct {

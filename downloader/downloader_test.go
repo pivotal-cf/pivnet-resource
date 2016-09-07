@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pivotal-cf-experimental/pivnet-resource/downloader"
-	"github.com/pivotal-cf-experimental/pivnet-resource/downloader/downloaderfakes"
+	"github.com/pivotal-cf/pivnet-resource/downloader"
+	"github.com/pivotal-cf/pivnet-resource/downloader/downloaderfakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

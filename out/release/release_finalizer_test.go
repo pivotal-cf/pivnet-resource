@@ -4,10 +4,10 @@ import (
 	"errors"
 
 	"github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
-	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
-	"github.com/pivotal-cf-experimental/pivnet-resource/out/release"
-	"github.com/pivotal-cf-experimental/pivnet-resource/out/release/releasefakes"
+	"github.com/pivotal-cf/pivnet-resource/concourse"
+	"github.com/pivotal-cf/pivnet-resource/metadata"
+	"github.com/pivotal-cf/pivnet-resource/out/release"
+	"github.com/pivotal-cf/pivnet-resource/out/release/releasefakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
