@@ -4,7 +4,7 @@ package outfakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 )
 

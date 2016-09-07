@@ -6,7 +6,7 @@ import (
 	"log"
 
 	bsemver "github.com/blang/semver"
-	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sorter"
 	"github.com/pivotal-cf-experimental/pivnet-resource/sorter/sorterfakes"
 

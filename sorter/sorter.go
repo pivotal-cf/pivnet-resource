@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/blang/semver"
-	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet"
 )
 
 //go:generate counterfeiter --fake-name FakeSemverConverter . semverConverter

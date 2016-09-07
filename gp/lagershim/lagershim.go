@@ -1,7 +1,7 @@
 package lagershim
 
 import (
-	"github.com/pivotal-cf-experimental/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-golang/lager"
 )
 

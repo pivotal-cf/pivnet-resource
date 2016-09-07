@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/concourse"
 	"github.com/pivotal-cf-experimental/pivnet-resource/metadata"
 )

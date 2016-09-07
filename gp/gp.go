@@ -5,9 +5,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/pivotal-cf-experimental/go-pivnet"
-	"github.com/pivotal-cf-experimental/go-pivnet/extension"
-	"github.com/pivotal-cf-experimental/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/extension"
+	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
 type CombinedClient struct {

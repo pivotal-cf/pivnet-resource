@@ -1,8 +1,8 @@
 package filter_test
 
 import (
-	"github.com/pivotal-cf-experimental/go-pivnet"
-	gp "github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet"
+	gp "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf-experimental/pivnet-resource/filter"
 
 	. "github.com/onsi/ginkgo"

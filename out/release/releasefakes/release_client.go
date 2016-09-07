@@ -4,7 +4,7 @@ package releasefakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf-experimental/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet"
 )
 
 type ReleaseClient struct {
