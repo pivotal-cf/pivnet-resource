@@ -3,6 +3,7 @@ package uploader
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 )
 
 //go:generate counterfeiter --fake-name FakeTransport . transport
@@ -40,7 +41,14 @@ func (c Client) UploadFile(exactGlob string) (string, error) {
 
 	filename := filepath.Base(exactGlob)
 
-	remoteDir := "product_files/" + c.filepathPrefix + "/"
+	var remoteDir string
+	switch {
+	case strings.HasPrefix(c.filepathPrefix, "product_files"):
+		remoteDir = c.filepathPrefix + "/"
+	default:
+		remoteDir = "product_files/" + c.filepathPrefix + "/"
+	}
+
 	remotePath := fmt.Sprintf("%s%s", remoteDir, filename)
 
 	err := c.transport.Upload(

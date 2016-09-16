@@ -23,11 +23,13 @@ var _ = Describe("Uploader", func() {
 			tempDir    string
 			myFilesDir string
 
-			filepathPrefix = "Some-Filepath-Prefix"
+			filepathPrefix string
 		)
 
 		BeforeEach(func() {
 			fakeTransport = &uploaderfakes.FakeTransport{}
+
+			filepathPrefix = "Some-Filepath-Prefix"
 
 			var err error
 			tempDir, err = ioutil.TempDir("", "pivnet-resource")
@@ -39,7 +41,9 @@ var _ = Describe("Uploader", func() {
 
 			_, err = os.Create(filepath.Join(myFilesDir, "file-0"))
 			Expect(err).NotTo(HaveOccurred())
+		})
 
+		JustBeforeEach(func() {
 			uploaderConfig = uploader.Config{
 				FilepathPrefix: filepathPrefix,
 				Transport:      fakeTransport,
@@ -72,6 +76,29 @@ var _ = Describe("Uploader", func() {
 
 			Expect(remotePath).To(Equal(
 				fmt.Sprintf("product_files/%s/file-0", filepathPrefix)))
+		})
+
+		Context("when the filepathPrefix begins with 'product_files'", func() {
+			var (
+				oldFilepathPrefix string
+			)
+
+			BeforeEach(func() {
+				oldFilepathPrefix = filepathPrefix
+				filepathPrefix = fmt.Sprintf("product_files/%s", filepathPrefix)
+			})
+
+			It("invokes the transport", func() {
+				_, err := uploaderClient.UploadFile("my_files/file-0")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeTransport.UploadCallCount()).To(Equal(1))
+
+				glob0, remoteDir, sourcesDir := fakeTransport.UploadArgsForCall(0)
+				Expect(glob0).To(Equal("my_files/file-0"))
+				Expect(remoteDir).To(Equal(fmt.Sprintf("product_files/%s/", oldFilepathPrefix)))
+				Expect(sourcesDir).To(Equal(tempDir))
+			})
 		})
 
 		Context("when the transport exits with error", func() {
