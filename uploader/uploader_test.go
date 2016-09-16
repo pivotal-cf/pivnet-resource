@@ -54,29 +54,24 @@ var _ = Describe("Uploader", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		Context("when the file exists", func() {
-			BeforeEach(func() {
-				_, err := os.Create(filepath.Join(myFilesDir, "file-0"))
-				Expect(err).NotTo(HaveOccurred())
-			})
+		It("invokes the transport", func() {
+			_, err := uploaderClient.UploadFile("my_files/file-0")
+			Expect(err).NotTo(HaveOccurred())
 
-			It("invokes the transport", func() {
-				_, err := uploaderClient.UploadFile("my_files/file-0")
-				Expect(err).NotTo(HaveOccurred())
+			Expect(fakeTransport.UploadCallCount()).To(Equal(1))
 
-				Expect(fakeTransport.UploadCallCount()).To(Equal(1))
+			glob0, remoteDir, sourcesDir := fakeTransport.UploadArgsForCall(0)
+			Expect(glob0).To(Equal("my_files/file-0"))
+			Expect(remoteDir).To(Equal(fmt.Sprintf("product_files/%s/", filepathPrefix)))
+			Expect(sourcesDir).To(Equal(tempDir))
+		})
 
-				glob0, _, _ := fakeTransport.UploadArgsForCall(0)
-				Expect(glob0).To(Equal("my_files/file-0"))
-			})
+		It("returns a map of filenames to remote paths", func() {
+			remotePath, err := uploaderClient.UploadFile("my_files/file-0")
+			Expect(err).NotTo(HaveOccurred())
 
-			It("returns a map of filenames to remote paths", func() {
-				remotePath, err := uploaderClient.UploadFile("my_files/file-0")
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(remotePath).To(Equal(
-					fmt.Sprintf("product_files/%s/file-0", filepathPrefix)))
-			})
+			Expect(remotePath).To(Equal(
+				fmt.Sprintf("product_files/%s/file-0", filepathPrefix)))
 		})
 
 		Context("when the transport exits with error", func() {
