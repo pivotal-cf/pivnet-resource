@@ -43,6 +43,8 @@ func (c Client) UploadFile(exactGlob string) (string, error) {
 
 	var remoteDir string
 	switch {
+	case strings.HasPrefix(c.filepathPrefix, "product-files"):
+		remoteDir = c.filepathPrefix + "/"
 	case strings.HasPrefix(c.filepathPrefix, "product_files"):
 		remoteDir = c.filepathPrefix + "/"
 	default:

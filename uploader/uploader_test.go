@@ -88,7 +88,7 @@ var _ = Describe("Uploader", func() {
 				filepathPrefix = fmt.Sprintf("product_files/%s", filepathPrefix)
 			})
 
-			It("invokes the transport", func() {
+			It("invokes the transport with 'product_files'", func() {
 				_, err := uploaderClient.UploadFile("my_files/file-0")
 				Expect(err).NotTo(HaveOccurred())
 
@@ -97,6 +97,29 @@ var _ = Describe("Uploader", func() {
 				glob0, remoteDir, sourcesDir := fakeTransport.UploadArgsForCall(0)
 				Expect(glob0).To(Equal("my_files/file-0"))
 				Expect(remoteDir).To(Equal(fmt.Sprintf("product_files/%s/", oldFilepathPrefix)))
+				Expect(sourcesDir).To(Equal(tempDir))
+			})
+		})
+
+		Context("when the filepathPrefix begins with 'product-files'", func() {
+			var (
+				oldFilepathPrefix string
+			)
+
+			BeforeEach(func() {
+				oldFilepathPrefix = filepathPrefix
+				filepathPrefix = fmt.Sprintf("product-files/%s", filepathPrefix)
+			})
+
+			It("invokes the transport with 'product-files'", func() {
+				_, err := uploaderClient.UploadFile("my_files/file-0")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeTransport.UploadCallCount()).To(Equal(1))
+
+				glob0, remoteDir, sourcesDir := fakeTransport.UploadArgsForCall(0)
+				Expect(glob0).To(Equal("my_files/file-0"))
+				Expect(remoteDir).To(Equal(fmt.Sprintf("product-files/%s/", oldFilepathPrefix)))
 				Expect(sourcesDir).To(Equal(tempDir))
 			})
 		})
