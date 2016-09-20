@@ -124,9 +124,11 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Println("Downloading files")
 
-	err = c.downloadFiles(input.Params.Globs, productFiles, productSlug, release.ID)
-	if err != nil {
-		return concourse.InResponse{}, err
+	if len(input.Params.Globs) > 0 {
+		err = c.downloadFiles(input.Params.Globs, productFiles, productSlug, release.ID)
+		if err != nil {
+			return concourse.InResponse{}, err
+		}
 	}
 
 	c.logger.Println("Creating metadata")
@@ -246,43 +248,41 @@ func (c InCommand) downloadFiles(
 
 	downloadLinks := c.filter.DownloadLinks(productFiles)
 
-	if len(globs) > 0 {
-		c.logger.Println("Filtering download links by glob")
+	c.logger.Println("Filtering download links by glob")
 
-		var err error
-		downloadLinks, err = c.filter.DownloadLinksByGlob(downloadLinks, globs)
-		if err != nil {
-			return err
+	var err error
+	downloadLinks, err = c.filter.DownloadLinksByGlob(downloadLinks, globs)
+	if err != nil {
+		return err
+	}
+
+	c.logger.Println("Downloading filtered files")
+
+	files, err := c.downloader.Download(downloadLinks)
+	if err != nil {
+		return err
+	}
+
+	fileMD5s := map[string]string{}
+	for _, p := range productFiles {
+		parts := strings.Split(p.AWSObjectKey, "/")
+
+		if len(parts) < 1 {
+			panic("not enough components to form filename")
 		}
 
-		c.logger.Println("Downloading filtered files")
+		fileName := parts[len(parts)-1]
 
-		files, err := c.downloader.Download(downloadLinks)
-		if err != nil {
-			return err
+		if fileName == "" {
+			panic("empty file name")
 		}
 
-		fileMD5s := map[string]string{}
-		for _, p := range productFiles {
-			parts := strings.Split(p.AWSObjectKey, "/")
+		fileMD5s[fileName] = p.MD5
+	}
 
-			if len(parts) < 1 {
-				panic("not enough components to form filename")
-			}
-
-			fileName := parts[len(parts)-1]
-
-			if fileName == "" {
-				panic("empty file name")
-			}
-
-			fileMD5s[fileName] = p.MD5
-		}
-
-		err = c.compareMD5s(files, fileMD5s)
-		if err != nil {
-			return err
-		}
+	err = c.compareMD5s(files, fileMD5s)
+	if err != nil {
+		return err
 	}
 
 	return nil
