@@ -234,6 +234,7 @@ var _ = Describe("Filter", func() {
 
 			filteredDownloadLinks, err := f.DownloadLinksByGlob(
 				downloadLinks, []string{"*android*", "*ios*"})
+
 			Expect(err).NotTo(HaveOccurred())
 			Expect(filteredDownloadLinks).To(HaveLen(2))
 			Expect(filteredDownloadLinks).To(Equal(map[string]string{
@@ -276,6 +277,33 @@ var _ = Describe("Filter", func() {
 				_, err := f.DownloadLinksByGlob(downloadLinks, []string{"android-file.zip", "does-not-exist.txt"})
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("no files match glob: does-not-exist.txt"))
+			})
+		})
+
+		Context("when the glob is nil", func() {
+			It("matches all files", func() {
+				downloadLinks := map[string]string{
+					"android-file.zip": "/products/banana/releases/666/product_files/6/download",
+					"ios-file.zip":     "/products/banana/releases/666/product_files/8/download",
+				}
+
+				filteredDownloadLinks, err := f.DownloadLinksByGlob(downloadLinks, nil)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(filteredDownloadLinks).To(HaveLen(2))
+				Expect(filteredDownloadLinks).To(Equal(map[string]string{
+					"android-file.zip": "/products/banana/releases/666/product_files/6/download",
+					"ios-file.zip":     "/products/banana/releases/666/product_files/8/download",
+				}))
+			})
+
+			Context("when there are no files", func() {
+				It("does not return an error", func() {
+					downloadLinks := map[string]string{}
+
+					_, err := f.DownloadLinksByGlob(downloadLinks, nil)
+					Expect(err).NotTo(HaveOccurred())
+				})
 			})
 		})
 	})
