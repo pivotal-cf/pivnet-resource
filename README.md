@@ -117,7 +117,9 @@ for more details on the structure of the metadata file.
   downloading files.
   - If one or more globs fails to match any files the release download fails
   with error.
-  - If `globs` is not provided, **no files will be downloaded**.
+  - If `globs` is not provided (or is nil), **all matching files will be downloaded**.
+  - If `globs` is not provided (or is nil), and there are no files to download
+  **no error will be returned**.
   - Files are downloaded to the working directory (e.g. `/tmp/build/get`) and the
   file names will be the same as they are on Pivotal Network - e.g. a file with
   name `some-file.txt` will be downloaded to `/tmp/build/get/some-file.txt`.
