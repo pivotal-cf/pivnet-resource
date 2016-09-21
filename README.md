@@ -117,7 +117,7 @@ for more details on the structure of the metadata file.
   downloading files.
   - If one or more globs fails to match any files the release download fails
   with error.
-  - If `globs` is not provided (or is nil), **all matching files will be downloaded**.
+  - If `globs` is not provided (or is nil), **all files will be downloaded**.
   - If `globs` is not provided (or is nil), and there are no files to download
   **no error will be returned**.
   - Files are downloaded to the working directory (e.g. `/tmp/build/get`) and the
