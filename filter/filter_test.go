@@ -224,7 +224,15 @@ var _ = Describe("Filter", func() {
 		})
 	})
 
-	Describe("Download Links by Glob", func() {
+	Describe("Download Links by Globs", func() {
+		var (
+			failOnNoMatch bool
+		)
+
+		BeforeEach(func() {
+			failOnNoMatch = true
+		})
+
 		It("returns the download links that match the glob filters", func() {
 			downloadLinks := map[string]string{
 				"android-file.zip": "/products/banana/releases/666/product_files/6/download",
@@ -232,8 +240,11 @@ var _ = Describe("Filter", func() {
 				"random-file.zip":  "/products/banana/releases/666/product_files/8/download",
 			}
 
-			filteredDownloadLinks, err := f.DownloadLinksByGlob(
-				downloadLinks, []string{"*android*", "*ios*"})
+			filteredDownloadLinks, err := f.DownloadLinksByGlobs(
+				downloadLinks,
+				[]string{"*android*", "*ios*"},
+				failOnNoMatch,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(filteredDownloadLinks).To(HaveLen(2))
@@ -249,7 +260,11 @@ var _ = Describe("Filter", func() {
 					"android-file.zip": "/products/banana/releases/666/product_files/6/download",
 				}
 
-				_, err := f.DownloadLinksByGlob(downloadLinks, []string{"["})
+				_, err := f.DownloadLinksByGlobs(
+					downloadLinks,
+					[]string{"["},
+					failOnNoMatch,
+				)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("syntax error in pattern"))
 			})
@@ -261,10 +276,32 @@ var _ = Describe("Filter", func() {
 					"android-file.zip": "/products/banana/releases/666/product_files/6/download",
 				}
 
-				_, err := f.DownloadLinksByGlob(downloadLinks, []string{"*ios*"})
+				_, err := f.DownloadLinksByGlobs(
+					downloadLinks,
+					[]string{"*ios*"},
+					failOnNoMatch,
+				)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("no files match glob: *ios*"))
+			})
 
+			Context("when fail on no match is false", func() {
+				BeforeEach(func() {
+					failOnNoMatch = false
+				})
+
+				It("does not return an error", func() {
+					downloadLinks := map[string]string{
+						"android-file.zip": "/products/banana/releases/666/product_files/6/download",
+					}
+
+					_, err := f.DownloadLinksByGlobs(
+						downloadLinks,
+						[]string{"*ios*"},
+						failOnNoMatch,
+					)
+					Expect(err).NotTo(HaveOccurred())
+				})
 			})
 		})
 
@@ -274,7 +311,11 @@ var _ = Describe("Filter", func() {
 					"android-file.zip": "/products/banana/releases/666/product_files/6/download",
 				}
 
-				_, err := f.DownloadLinksByGlob(downloadLinks, []string{"android-file.zip", "does-not-exist.txt"})
+				_, err := f.DownloadLinksByGlobs(
+					downloadLinks,
+					[]string{"android-file.zip", "does-not-exist.txt"},
+					failOnNoMatch,
+				)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("no files match glob: does-not-exist.txt"))
 			})
@@ -287,7 +328,11 @@ var _ = Describe("Filter", func() {
 					"ios-file.zip":     "/products/banana/releases/666/product_files/8/download",
 				}
 
-				filteredDownloadLinks, err := f.DownloadLinksByGlob(downloadLinks, nil)
+				filteredDownloadLinks, err := f.DownloadLinksByGlobs(
+					downloadLinks,
+					nil,
+					failOnNoMatch,
+				)
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(filteredDownloadLinks).To(HaveLen(2))
@@ -295,15 +340,6 @@ var _ = Describe("Filter", func() {
 					"android-file.zip": "/products/banana/releases/666/product_files/6/download",
 					"ios-file.zip":     "/products/banana/releases/666/product_files/8/download",
 				}))
-			})
-
-			Context("when there are no files", func() {
-				It("does not return an error", func() {
-					downloadLinks := map[string]string{}
-
-					_, err := f.DownloadLinksByGlob(downloadLinks, nil)
-					Expect(err).NotTo(HaveOccurred())
-				})
 			})
 		})
 	})

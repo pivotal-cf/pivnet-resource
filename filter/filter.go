@@ -46,10 +46,12 @@ func (f Filter) ReleasesByVersion(releases []pivnet.Release, version string) ([]
 	return filteredReleases, nil
 }
 
-func (f Filter) DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error) {
+func (f Filter) DownloadLinksByGlobs(
+	downloadLinks map[string]string,
+	glob []string,
+	failOnNoMatch bool,
+) (map[string]string, error) {
 	filtered := make(map[string]string)
-
-	nilGlob := (glob == nil)
 
 	if glob == nil {
 		glob = []string{"*"}
@@ -68,9 +70,7 @@ func (f Filter) DownloadLinksByGlob(downloadLinks map[string]string, glob []stri
 			}
 		}
 
-		// do not return error if there are no files
-		// and the glob was never provided.
-		if len(filtered) == prevFilteredCount && !nilGlob {
+		if len(filtered) == prevFilteredCount && failOnNoMatch {
 			return nil, fmt.Errorf("no files match glob: %s", pattern)
 		}
 	}

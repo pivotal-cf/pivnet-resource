@@ -315,6 +315,9 @@ var _ = Describe("Lifecycle test", func() {
 					Version: concourse.Version{
 						ProductVersion: versionWithETag,
 					},
+					Params: concourse.InParams{
+						Globs: []string{},
+					},
 				}
 
 				destDirectory, err = ioutil.TempDir("", "pivnet-out-test")

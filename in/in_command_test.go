@@ -216,7 +216,7 @@ var _ = Describe("In", func() {
 			return pivnet.ProductFile{}, nil
 		}
 
-		fakeFilter.DownloadLinksByGlobReturns(map[string]string{}, downloadLinksByGlobErr)
+		fakeFilter.DownloadLinksByGlobsReturns(map[string]string{}, downloadLinksByGlobErr)
 		fakeDownloader.DownloadReturns(downloadFilepaths, downloadErr)
 		fakeFileSummer.SumFileStub = func(path string) (string, error) {
 			if md5sumErr != nil {
@@ -336,11 +336,17 @@ var _ = Describe("In", func() {
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
 	})
 
-	It("does not download any of the files in the specified release", func() {
+	It("downloads all files (nil globs acts like *)", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(fakeDownloader.DownloadCallCount()).To(Equal(0))
+		Expect(fakeFilter.DownloadLinksCallCount()).To(Equal(1))
+		Expect(fakeFilter.DownloadLinksByGlobsCallCount()).To(Equal(1))
+		Expect(fakePivnetClient.GetProductFileCallCount()).To(Equal(len(productFiles)))
+		Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
+
+		_, _, failOnNoMatch := fakeFilter.DownloadLinksByGlobsArgsForCall(0)
+		Expect(failOnNoMatch).To(BeFalse())
 	})
 
 	Context("when version is provided without etag", func() {
@@ -418,9 +424,12 @@ var _ = Describe("In", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeFilter.DownloadLinksCallCount()).To(Equal(1))
-			Expect(fakeFilter.DownloadLinksByGlobCallCount()).To(Equal(1))
+			Expect(fakeFilter.DownloadLinksByGlobsCallCount()).To(Equal(1))
 			Expect(fakePivnetClient.GetProductFileCallCount()).To(Equal(len(productFiles)))
 			Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
+
+			_, _, failOnNoMatch := fakeFilter.DownloadLinksByGlobsArgsForCall(0)
+			Expect(failOnNoMatch).To(BeTrue())
 		})
 
 		It("includes md5 when invoking metadata writer", func() {

@@ -15,7 +15,7 @@ import (
 
 //go:generate counterfeiter --fake-name FakeFilter . filter
 type filter interface {
-	DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error)
+	DownloadLinksByGlobs(downloadLinks map[string]string, glob []string, failOnNoMatch bool) (map[string]string, error)
 	DownloadLinks(p []pivnet.ProductFile) map[string]string
 }
 
@@ -124,11 +124,9 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Println("Downloading files")
 
-	if len(input.Params.Globs) > 0 {
-		err = c.downloadFiles(input.Params.Globs, productFiles, productSlug, release.ID)
-		if err != nil {
-			return concourse.InResponse{}, err
-		}
+	err = c.downloadFiles(input.Params.Globs, productFiles, productSlug, release.ID)
+	if err != nil {
+		return concourse.InResponse{}, err
 	}
 
 	c.logger.Println("Creating metadata")
@@ -250,8 +248,15 @@ func (c InCommand) downloadFiles(
 
 	c.logger.Println("Filtering download links by glob")
 
+	// if globs were not provided, do not fail if we do not match anything
+	failOnNoMatch := (globs != nil)
+
 	var err error
-	downloadLinks, err = c.filter.DownloadLinksByGlob(downloadLinks, globs)
+	downloadLinks, err = c.filter.DownloadLinksByGlobs(
+		downloadLinks,
+		globs,
+		failOnNoMatch,
+	)
 	if err != nil {
 		return err
 	}

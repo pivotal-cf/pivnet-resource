@@ -8,13 +8,14 @@ import (
 )
 
 type FakeFilter struct {
-	DownloadLinksByGlobStub        func(downloadLinks map[string]string, glob []string) (map[string]string, error)
-	downloadLinksByGlobMutex       sync.RWMutex
-	downloadLinksByGlobArgsForCall []struct {
+	DownloadLinksByGlobsStub        func(downloadLinks map[string]string, glob []string, failOnNoMatch bool) (map[string]string, error)
+	downloadLinksByGlobsMutex       sync.RWMutex
+	downloadLinksByGlobsArgsForCall []struct {
 		downloadLinks map[string]string
 		glob          []string
+		failOnNoMatch bool
 	}
-	downloadLinksByGlobReturns struct {
+	downloadLinksByGlobsReturns struct {
 		result1 map[string]string
 		result2 error
 	}
@@ -30,41 +31,42 @@ type FakeFilter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeFilter) DownloadLinksByGlob(downloadLinks map[string]string, glob []string) (map[string]string, error) {
+func (fake *FakeFilter) DownloadLinksByGlobs(downloadLinks map[string]string, glob []string, failOnNoMatch bool) (map[string]string, error) {
 	var globCopy []string
 	if glob != nil {
 		globCopy = make([]string, len(glob))
 		copy(globCopy, glob)
 	}
-	fake.downloadLinksByGlobMutex.Lock()
-	fake.downloadLinksByGlobArgsForCall = append(fake.downloadLinksByGlobArgsForCall, struct {
+	fake.downloadLinksByGlobsMutex.Lock()
+	fake.downloadLinksByGlobsArgsForCall = append(fake.downloadLinksByGlobsArgsForCall, struct {
 		downloadLinks map[string]string
 		glob          []string
-	}{downloadLinks, globCopy})
-	fake.recordInvocation("DownloadLinksByGlob", []interface{}{downloadLinks, globCopy})
-	fake.downloadLinksByGlobMutex.Unlock()
-	if fake.DownloadLinksByGlobStub != nil {
-		return fake.DownloadLinksByGlobStub(downloadLinks, glob)
+		failOnNoMatch bool
+	}{downloadLinks, globCopy, failOnNoMatch})
+	fake.recordInvocation("DownloadLinksByGlobs", []interface{}{downloadLinks, globCopy, failOnNoMatch})
+	fake.downloadLinksByGlobsMutex.Unlock()
+	if fake.DownloadLinksByGlobsStub != nil {
+		return fake.DownloadLinksByGlobsStub(downloadLinks, glob, failOnNoMatch)
 	} else {
-		return fake.downloadLinksByGlobReturns.result1, fake.downloadLinksByGlobReturns.result2
+		return fake.downloadLinksByGlobsReturns.result1, fake.downloadLinksByGlobsReturns.result2
 	}
 }
 
-func (fake *FakeFilter) DownloadLinksByGlobCallCount() int {
-	fake.downloadLinksByGlobMutex.RLock()
-	defer fake.downloadLinksByGlobMutex.RUnlock()
-	return len(fake.downloadLinksByGlobArgsForCall)
+func (fake *FakeFilter) DownloadLinksByGlobsCallCount() int {
+	fake.downloadLinksByGlobsMutex.RLock()
+	defer fake.downloadLinksByGlobsMutex.RUnlock()
+	return len(fake.downloadLinksByGlobsArgsForCall)
 }
 
-func (fake *FakeFilter) DownloadLinksByGlobArgsForCall(i int) (map[string]string, []string) {
-	fake.downloadLinksByGlobMutex.RLock()
-	defer fake.downloadLinksByGlobMutex.RUnlock()
-	return fake.downloadLinksByGlobArgsForCall[i].downloadLinks, fake.downloadLinksByGlobArgsForCall[i].glob
+func (fake *FakeFilter) DownloadLinksByGlobsArgsForCall(i int) (map[string]string, []string, bool) {
+	fake.downloadLinksByGlobsMutex.RLock()
+	defer fake.downloadLinksByGlobsMutex.RUnlock()
+	return fake.downloadLinksByGlobsArgsForCall[i].downloadLinks, fake.downloadLinksByGlobsArgsForCall[i].glob, fake.downloadLinksByGlobsArgsForCall[i].failOnNoMatch
 }
 
-func (fake *FakeFilter) DownloadLinksByGlobReturns(result1 map[string]string, result2 error) {
-	fake.DownloadLinksByGlobStub = nil
-	fake.downloadLinksByGlobReturns = struct {
+func (fake *FakeFilter) DownloadLinksByGlobsReturns(result1 map[string]string, result2 error) {
+	fake.DownloadLinksByGlobsStub = nil
+	fake.downloadLinksByGlobsReturns = struct {
 		result1 map[string]string
 		result2 error
 	}{result1, result2}
@@ -111,8 +113,8 @@ func (fake *FakeFilter) DownloadLinksReturns(result1 map[string]string) {
 func (fake *FakeFilter) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.downloadLinksByGlobMutex.RLock()
-	defer fake.downloadLinksByGlobMutex.RUnlock()
+	fake.downloadLinksByGlobsMutex.RLock()
+	defer fake.downloadLinksByGlobsMutex.RUnlock()
 	fake.downloadLinksMutex.RLock()
 	defer fake.downloadLinksMutex.RUnlock()
 	return fake.invocations
