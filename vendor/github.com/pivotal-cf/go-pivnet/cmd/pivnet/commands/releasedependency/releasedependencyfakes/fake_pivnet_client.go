@@ -29,6 +29,26 @@ type FakePivnetClient struct {
 		result1 []go_pivnet.ReleaseDependency
 		result2 error
 	}
+	AddReleaseDependencyStub        func(productSlug string, releaseID int, dependentReleaseID int) error
+	addReleaseDependencyMutex       sync.RWMutex
+	addReleaseDependencyArgsForCall []struct {
+		productSlug        string
+		releaseID          int
+		dependentReleaseID int
+	}
+	addReleaseDependencyReturns struct {
+		result1 error
+	}
+	RemoveReleaseDependencyStub        func(productSlug string, releaseID int, dependentReleaseID int) error
+	removeReleaseDependencyMutex       sync.RWMutex
+	removeReleaseDependencyArgsForCall []struct {
+		productSlug        string
+		releaseID          int
+		dependentReleaseID int
+	}
+	removeReleaseDependencyReturns struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -103,6 +123,76 @@ func (fake *FakePivnetClient) ReleaseDependenciesReturns(result1 []go_pivnet.Rel
 	}{result1, result2}
 }
 
+func (fake *FakePivnetClient) AddReleaseDependency(productSlug string, releaseID int, dependentReleaseID int) error {
+	fake.addReleaseDependencyMutex.Lock()
+	fake.addReleaseDependencyArgsForCall = append(fake.addReleaseDependencyArgsForCall, struct {
+		productSlug        string
+		releaseID          int
+		dependentReleaseID int
+	}{productSlug, releaseID, dependentReleaseID})
+	fake.recordInvocation("AddReleaseDependency", []interface{}{productSlug, releaseID, dependentReleaseID})
+	fake.addReleaseDependencyMutex.Unlock()
+	if fake.AddReleaseDependencyStub != nil {
+		return fake.AddReleaseDependencyStub(productSlug, releaseID, dependentReleaseID)
+	} else {
+		return fake.addReleaseDependencyReturns.result1
+	}
+}
+
+func (fake *FakePivnetClient) AddReleaseDependencyCallCount() int {
+	fake.addReleaseDependencyMutex.RLock()
+	defer fake.addReleaseDependencyMutex.RUnlock()
+	return len(fake.addReleaseDependencyArgsForCall)
+}
+
+func (fake *FakePivnetClient) AddReleaseDependencyArgsForCall(i int) (string, int, int) {
+	fake.addReleaseDependencyMutex.RLock()
+	defer fake.addReleaseDependencyMutex.RUnlock()
+	return fake.addReleaseDependencyArgsForCall[i].productSlug, fake.addReleaseDependencyArgsForCall[i].releaseID, fake.addReleaseDependencyArgsForCall[i].dependentReleaseID
+}
+
+func (fake *FakePivnetClient) AddReleaseDependencyReturns(result1 error) {
+	fake.AddReleaseDependencyStub = nil
+	fake.addReleaseDependencyReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakePivnetClient) RemoveReleaseDependency(productSlug string, releaseID int, dependentReleaseID int) error {
+	fake.removeReleaseDependencyMutex.Lock()
+	fake.removeReleaseDependencyArgsForCall = append(fake.removeReleaseDependencyArgsForCall, struct {
+		productSlug        string
+		releaseID          int
+		dependentReleaseID int
+	}{productSlug, releaseID, dependentReleaseID})
+	fake.recordInvocation("RemoveReleaseDependency", []interface{}{productSlug, releaseID, dependentReleaseID})
+	fake.removeReleaseDependencyMutex.Unlock()
+	if fake.RemoveReleaseDependencyStub != nil {
+		return fake.RemoveReleaseDependencyStub(productSlug, releaseID, dependentReleaseID)
+	} else {
+		return fake.removeReleaseDependencyReturns.result1
+	}
+}
+
+func (fake *FakePivnetClient) RemoveReleaseDependencyCallCount() int {
+	fake.removeReleaseDependencyMutex.RLock()
+	defer fake.removeReleaseDependencyMutex.RUnlock()
+	return len(fake.removeReleaseDependencyArgsForCall)
+}
+
+func (fake *FakePivnetClient) RemoveReleaseDependencyArgsForCall(i int) (string, int, int) {
+	fake.removeReleaseDependencyMutex.RLock()
+	defer fake.removeReleaseDependencyMutex.RUnlock()
+	return fake.removeReleaseDependencyArgsForCall[i].productSlug, fake.removeReleaseDependencyArgsForCall[i].releaseID, fake.removeReleaseDependencyArgsForCall[i].dependentReleaseID
+}
+
+func (fake *FakePivnetClient) RemoveReleaseDependencyReturns(result1 error) {
+	fake.RemoveReleaseDependencyStub = nil
+	fake.removeReleaseDependencyReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakePivnetClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -110,6 +200,10 @@ func (fake *FakePivnetClient) Invocations() map[string][][]interface{} {
 	defer fake.releaseForProductVersionMutex.RUnlock()
 	fake.releaseDependenciesMutex.RLock()
 	defer fake.releaseDependenciesMutex.RUnlock()
+	fake.addReleaseDependencyMutex.RLock()
+	defer fake.addReleaseDependencyMutex.RUnlock()
+	fake.removeReleaseDependencyMutex.RLock()
+	defer fake.removeReleaseDependencyMutex.RUnlock()
 	return fake.invocations
 }
 

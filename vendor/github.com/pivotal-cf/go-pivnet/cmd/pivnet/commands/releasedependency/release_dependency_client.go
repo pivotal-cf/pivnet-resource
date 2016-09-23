@@ -1,6 +1,7 @@
 package releasedependency
 
 import (
+	"fmt"
 	"io"
 	"strconv"
 
@@ -14,6 +15,8 @@ import (
 type PivnetClient interface {
 	ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
+	AddReleaseDependency(productSlug string, releaseID int, dependentReleaseID int) error
+	RemoveReleaseDependency(productSlug string, releaseID int, dependentReleaseID int) error
 }
 
 type ReleaseDependencyClient struct {
@@ -78,6 +81,80 @@ func (c *ReleaseDependencyClient) List(productSlug string, releaseVersion string
 		return c.printer.PrintJSON(releaseDependencies)
 	case printer.PrintAsYAML:
 		return c.printer.PrintYAML(releaseDependencies)
+	}
+
+	return nil
+}
+
+func (c *ReleaseDependencyClient) Add(
+	productSlug string,
+	releaseVersion string,
+	dependentProductSlug string,
+	dependentReleaseVersion string,
+) error {
+	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	dependentRelease, err := c.pivnetClient.ReleaseForProductVersion(dependentProductSlug, dependentReleaseVersion)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	err = c.pivnetClient.AddReleaseDependency(
+		productSlug,
+		release.ID,
+		dependentRelease.ID,
+	)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	if c.format == printer.PrintAsTable {
+		_, err = fmt.Fprintf(
+			c.outputWriter,
+			"release dependency added successfully to %s/%s\n",
+			productSlug,
+			releaseVersion,
+		)
+	}
+
+	return nil
+}
+
+func (c *ReleaseDependencyClient) Remove(
+	productSlug string,
+	releaseVersion string,
+	dependentProductSlug string,
+	dependentReleaseVersion string,
+) error {
+	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	dependentRelease, err := c.pivnetClient.ReleaseForProductVersion(dependentProductSlug, dependentReleaseVersion)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	err = c.pivnetClient.RemoveReleaseDependency(
+		productSlug,
+		release.ID,
+		dependentRelease.ID,
+	)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	if c.format == printer.PrintAsTable {
+		_, err = fmt.Fprintf(
+			c.outputWriter,
+			"release dependency removed successfully from %s/%s\n",
+			productSlug,
+			releaseVersion,
+		)
 	}
 
 	return nil

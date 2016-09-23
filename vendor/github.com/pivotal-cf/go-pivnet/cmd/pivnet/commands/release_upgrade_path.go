@@ -22,8 +22,8 @@ type RemoveReleaseUpgradePathCommand struct {
 //go:generate counterfeiter . ReleaseUpgradePathClient
 type ReleaseUpgradePathClient interface {
 	List(productSlug string, releaseVersion string) error
-	Add(productSlug string, releaseVersion string, upgradeFromReleaseVersion string) error
-	Remove(productSlug string, releaseVersion string, upgradeFromReleaseVersion string) error
+	Add(productSlug string, releaseVersion string, previousReleaseVersion string) error
+	Remove(productSlug string, releaseVersion string, previousReleaseVersion string) error
 }
 
 var NewReleaseUpgradePathClient = func() ReleaseUpgradePathClient {

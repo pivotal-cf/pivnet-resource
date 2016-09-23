@@ -1,6 +1,8 @@
 package pivnet
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -43,4 +45,88 @@ func (r ReleaseDependenciesService) List(productSlug string, releaseID int) ([]R
 	}
 
 	return response.ReleaseDependencies, nil
+}
+
+func (r ReleaseDependenciesService) Add(
+	productSlug string,
+	releaseID int,
+	dependentReleaseID int,
+) error {
+	url := fmt.Sprintf(
+		"/products/%s/releases/%d/add_dependency",
+		productSlug,
+		releaseID,
+	)
+
+	body := addRemoveDependencyBody{
+		Dependency: addRemoveDependencyBodyDependency{
+			ReleaseID: dependentReleaseID,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return err
+	}
+
+	_, err = r.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusNoContent,
+		bytes.NewReader(b),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r ReleaseDependenciesService) Remove(
+	productSlug string,
+	releaseID int,
+	dependentReleaseID int,
+) error {
+	url := fmt.Sprintf(
+		"/products/%s/releases/%d/remove_dependency",
+		productSlug,
+		releaseID,
+	)
+
+	body := addRemoveDependencyBody{
+		Dependency: addRemoveDependencyBodyDependency{
+			ReleaseID: dependentReleaseID,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return err
+	}
+
+	_, err = r.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusNoContent,
+		bytes.NewReader(b),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type addRemoveDependencyBody struct {
+	Dependency addRemoveDependencyBodyDependency `json:"dependency"`
+}
+
+type addRemoveDependencyBodyDependency struct {
+	ReleaseID int `json:"release_id"`
 }
