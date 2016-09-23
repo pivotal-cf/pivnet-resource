@@ -4,32 +4,32 @@ package productfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/cmd/pivnet/commands/product"
 )
 
 type FakePivnetClient struct {
-	ProductsStub        func() ([]pivnet.Product, error)
+	ProductsStub        func() ([]go_pivnet.Product, error)
 	productsMutex       sync.RWMutex
 	productsArgsForCall []struct{}
 	productsReturns     struct {
-		result1 []pivnet.Product
+		result1 []go_pivnet.Product
 		result2 error
 	}
-	FindProductForSlugStub        func(productSlug string) (pivnet.Product, error)
+	FindProductForSlugStub        func(productSlug string) (go_pivnet.Product, error)
 	findProductForSlugMutex       sync.RWMutex
 	findProductForSlugArgsForCall []struct {
 		productSlug string
 	}
 	findProductForSlugReturns struct {
-		result1 pivnet.Product
+		result1 go_pivnet.Product
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakePivnetClient) Products() ([]pivnet.Product, error) {
+func (fake *FakePivnetClient) Products() ([]go_pivnet.Product, error) {
 	fake.productsMutex.Lock()
 	fake.productsArgsForCall = append(fake.productsArgsForCall, struct{}{})
 	fake.recordInvocation("Products", []interface{}{})
@@ -47,15 +47,15 @@ func (fake *FakePivnetClient) ProductsCallCount() int {
 	return len(fake.productsArgsForCall)
 }
 
-func (fake *FakePivnetClient) ProductsReturns(result1 []pivnet.Product, result2 error) {
+func (fake *FakePivnetClient) ProductsReturns(result1 []go_pivnet.Product, result2 error) {
 	fake.ProductsStub = nil
 	fake.productsReturns = struct {
-		result1 []pivnet.Product
+		result1 []go_pivnet.Product
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) FindProductForSlug(productSlug string) (pivnet.Product, error) {
+func (fake *FakePivnetClient) FindProductForSlug(productSlug string) (go_pivnet.Product, error) {
 	fake.findProductForSlugMutex.Lock()
 	fake.findProductForSlugArgsForCall = append(fake.findProductForSlugArgsForCall, struct {
 		productSlug string
@@ -81,10 +81,10 @@ func (fake *FakePivnetClient) FindProductForSlugArgsForCall(i int) string {
 	return fake.findProductForSlugArgsForCall[i].productSlug
 }
 
-func (fake *FakePivnetClient) FindProductForSlugReturns(result1 pivnet.Product, result2 error) {
+func (fake *FakePivnetClient) FindProductForSlugReturns(result1 go_pivnet.Product, result2 error) {
 	fake.FindProductForSlugStub = nil
 	fake.findProductForSlugReturns = struct {
-		result1 pivnet.Product
+		result1 go_pivnet.Product
 		result2 error
 	}{result1, result2}
 }

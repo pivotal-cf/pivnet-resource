@@ -17,6 +17,26 @@ type FakeReleaseUpgradePathClient struct {
 	listReturns struct {
 		result1 error
 	}
+	AddStub        func(productSlug string, releaseVersion string, upgradeFromReleaseVersion string) error
+	addMutex       sync.RWMutex
+	addArgsForCall []struct {
+		productSlug               string
+		releaseVersion            string
+		upgradeFromReleaseVersion string
+	}
+	addReturns struct {
+		result1 error
+	}
+	RemoveStub        func(productSlug string, releaseVersion string, upgradeFromReleaseVersion string) error
+	removeMutex       sync.RWMutex
+	removeArgsForCall []struct {
+		productSlug               string
+		releaseVersion            string
+		upgradeFromReleaseVersion string
+	}
+	removeReturns struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -55,11 +75,85 @@ func (fake *FakeReleaseUpgradePathClient) ListReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *FakeReleaseUpgradePathClient) Add(productSlug string, releaseVersion string, upgradeFromReleaseVersion string) error {
+	fake.addMutex.Lock()
+	fake.addArgsForCall = append(fake.addArgsForCall, struct {
+		productSlug               string
+		releaseVersion            string
+		upgradeFromReleaseVersion string
+	}{productSlug, releaseVersion, upgradeFromReleaseVersion})
+	fake.recordInvocation("Add", []interface{}{productSlug, releaseVersion, upgradeFromReleaseVersion})
+	fake.addMutex.Unlock()
+	if fake.AddStub != nil {
+		return fake.AddStub(productSlug, releaseVersion, upgradeFromReleaseVersion)
+	} else {
+		return fake.addReturns.result1
+	}
+}
+
+func (fake *FakeReleaseUpgradePathClient) AddCallCount() int {
+	fake.addMutex.RLock()
+	defer fake.addMutex.RUnlock()
+	return len(fake.addArgsForCall)
+}
+
+func (fake *FakeReleaseUpgradePathClient) AddArgsForCall(i int) (string, string, string) {
+	fake.addMutex.RLock()
+	defer fake.addMutex.RUnlock()
+	return fake.addArgsForCall[i].productSlug, fake.addArgsForCall[i].releaseVersion, fake.addArgsForCall[i].upgradeFromReleaseVersion
+}
+
+func (fake *FakeReleaseUpgradePathClient) AddReturns(result1 error) {
+	fake.AddStub = nil
+	fake.addReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeReleaseUpgradePathClient) Remove(productSlug string, releaseVersion string, upgradeFromReleaseVersion string) error {
+	fake.removeMutex.Lock()
+	fake.removeArgsForCall = append(fake.removeArgsForCall, struct {
+		productSlug               string
+		releaseVersion            string
+		upgradeFromReleaseVersion string
+	}{productSlug, releaseVersion, upgradeFromReleaseVersion})
+	fake.recordInvocation("Remove", []interface{}{productSlug, releaseVersion, upgradeFromReleaseVersion})
+	fake.removeMutex.Unlock()
+	if fake.RemoveStub != nil {
+		return fake.RemoveStub(productSlug, releaseVersion, upgradeFromReleaseVersion)
+	} else {
+		return fake.removeReturns.result1
+	}
+}
+
+func (fake *FakeReleaseUpgradePathClient) RemoveCallCount() int {
+	fake.removeMutex.RLock()
+	defer fake.removeMutex.RUnlock()
+	return len(fake.removeArgsForCall)
+}
+
+func (fake *FakeReleaseUpgradePathClient) RemoveArgsForCall(i int) (string, string, string) {
+	fake.removeMutex.RLock()
+	defer fake.removeMutex.RUnlock()
+	return fake.removeArgsForCall[i].productSlug, fake.removeArgsForCall[i].releaseVersion, fake.removeArgsForCall[i].upgradeFromReleaseVersion
+}
+
+func (fake *FakeReleaseUpgradePathClient) RemoveReturns(result1 error) {
+	fake.RemoveStub = nil
+	fake.removeReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeReleaseUpgradePathClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.listMutex.RLock()
 	defer fake.listMutex.RUnlock()
+	fake.addMutex.RLock()
+	defer fake.addMutex.RUnlock()
+	fake.removeMutex.RLock()
+	defer fake.removeMutex.RUnlock()
 	return fake.invocations
 }
 

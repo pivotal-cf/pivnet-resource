@@ -4,48 +4,48 @@ package usergroupfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/cmd/pivnet/commands/usergroup"
 )
 
 type FakePivnetClient struct {
-	ReleaseForProductVersionStub        func(productSlug string, releaseVersion string) (pivnet.Release, error)
+	ReleaseForProductVersionStub        func(productSlug string, releaseVersion string) (go_pivnet.Release, error)
 	releaseForProductVersionMutex       sync.RWMutex
 	releaseForProductVersionArgsForCall []struct {
 		productSlug    string
 		releaseVersion string
 	}
 	releaseForProductVersionReturns struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}
-	UserGroupsStub        func() ([]pivnet.UserGroup, error)
+	UserGroupsStub        func() ([]go_pivnet.UserGroup, error)
 	userGroupsMutex       sync.RWMutex
 	userGroupsArgsForCall []struct{}
 	userGroupsReturns     struct {
-		result1 []pivnet.UserGroup
+		result1 []go_pivnet.UserGroup
 		result2 error
 	}
-	UserGroupsForReleaseStub        func(productSlug string, releaseID int) ([]pivnet.UserGroup, error)
+	UserGroupsForReleaseStub        func(productSlug string, releaseID int) ([]go_pivnet.UserGroup, error)
 	userGroupsForReleaseMutex       sync.RWMutex
 	userGroupsForReleaseArgsForCall []struct {
 		productSlug string
 		releaseID   int
 	}
 	userGroupsForReleaseReturns struct {
-		result1 []pivnet.UserGroup
+		result1 []go_pivnet.UserGroup
 		result2 error
 	}
-	UserGroupStub        func(userGroupID int) (pivnet.UserGroup, error)
+	UserGroupStub        func(userGroupID int) (go_pivnet.UserGroup, error)
 	userGroupMutex       sync.RWMutex
 	userGroupArgsForCall []struct {
 		userGroupID int
 	}
 	userGroupReturns struct {
-		result1 pivnet.UserGroup
+		result1 go_pivnet.UserGroup
 		result2 error
 	}
-	CreateUserGroupStub        func(name string, description string, members []string) (pivnet.UserGroup, error)
+	CreateUserGroupStub        func(name string, description string, members []string) (go_pivnet.UserGroup, error)
 	createUserGroupMutex       sync.RWMutex
 	createUserGroupArgsForCall []struct {
 		name        string
@@ -53,16 +53,16 @@ type FakePivnetClient struct {
 		members     []string
 	}
 	createUserGroupReturns struct {
-		result1 pivnet.UserGroup
+		result1 go_pivnet.UserGroup
 		result2 error
 	}
-	UpdateUserGroupStub        func(userGroup pivnet.UserGroup) (pivnet.UserGroup, error)
+	UpdateUserGroupStub        func(userGroup go_pivnet.UserGroup) (go_pivnet.UserGroup, error)
 	updateUserGroupMutex       sync.RWMutex
 	updateUserGroupArgsForCall []struct {
-		userGroup pivnet.UserGroup
+		userGroup go_pivnet.UserGroup
 	}
 	updateUserGroupReturns struct {
-		result1 pivnet.UserGroup
+		result1 go_pivnet.UserGroup
 		result2 error
 	}
 	DeleteUserGroupStub        func(userGroupID int) error
@@ -93,7 +93,7 @@ type FakePivnetClient struct {
 	removeUserGroupReturns struct {
 		result1 error
 	}
-	AddMemberToGroupStub        func(userGroupID int, emailAddress string, admin bool) (pivnet.UserGroup, error)
+	AddMemberToGroupStub        func(userGroupID int, emailAddress string, admin bool) (go_pivnet.UserGroup, error)
 	addMemberToGroupMutex       sync.RWMutex
 	addMemberToGroupArgsForCall []struct {
 		userGroupID  int
@@ -101,24 +101,24 @@ type FakePivnetClient struct {
 		admin        bool
 	}
 	addMemberToGroupReturns struct {
-		result1 pivnet.UserGroup
+		result1 go_pivnet.UserGroup
 		result2 error
 	}
-	RemoveMemberFromGroupStub        func(userGroupID int, emailAddress string) (pivnet.UserGroup, error)
+	RemoveMemberFromGroupStub        func(userGroupID int, emailAddress string) (go_pivnet.UserGroup, error)
 	removeMemberFromGroupMutex       sync.RWMutex
 	removeMemberFromGroupArgsForCall []struct {
 		userGroupID  int
 		emailAddress string
 	}
 	removeMemberFromGroupReturns struct {
-		result1 pivnet.UserGroup
+		result1 go_pivnet.UserGroup
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakePivnetClient) ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error) {
+func (fake *FakePivnetClient) ReleaseForProductVersion(productSlug string, releaseVersion string) (go_pivnet.Release, error) {
 	fake.releaseForProductVersionMutex.Lock()
 	fake.releaseForProductVersionArgsForCall = append(fake.releaseForProductVersionArgsForCall, struct {
 		productSlug    string
@@ -145,15 +145,15 @@ func (fake *FakePivnetClient) ReleaseForProductVersionArgsForCall(i int) (string
 	return fake.releaseForProductVersionArgsForCall[i].productSlug, fake.releaseForProductVersionArgsForCall[i].releaseVersion
 }
 
-func (fake *FakePivnetClient) ReleaseForProductVersionReturns(result1 pivnet.Release, result2 error) {
+func (fake *FakePivnetClient) ReleaseForProductVersionReturns(result1 go_pivnet.Release, result2 error) {
 	fake.ReleaseForProductVersionStub = nil
 	fake.releaseForProductVersionReturns = struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) UserGroups() ([]pivnet.UserGroup, error) {
+func (fake *FakePivnetClient) UserGroups() ([]go_pivnet.UserGroup, error) {
 	fake.userGroupsMutex.Lock()
 	fake.userGroupsArgsForCall = append(fake.userGroupsArgsForCall, struct{}{})
 	fake.recordInvocation("UserGroups", []interface{}{})
@@ -171,15 +171,15 @@ func (fake *FakePivnetClient) UserGroupsCallCount() int {
 	return len(fake.userGroupsArgsForCall)
 }
 
-func (fake *FakePivnetClient) UserGroupsReturns(result1 []pivnet.UserGroup, result2 error) {
+func (fake *FakePivnetClient) UserGroupsReturns(result1 []go_pivnet.UserGroup, result2 error) {
 	fake.UserGroupsStub = nil
 	fake.userGroupsReturns = struct {
-		result1 []pivnet.UserGroup
+		result1 []go_pivnet.UserGroup
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) UserGroupsForRelease(productSlug string, releaseID int) ([]pivnet.UserGroup, error) {
+func (fake *FakePivnetClient) UserGroupsForRelease(productSlug string, releaseID int) ([]go_pivnet.UserGroup, error) {
 	fake.userGroupsForReleaseMutex.Lock()
 	fake.userGroupsForReleaseArgsForCall = append(fake.userGroupsForReleaseArgsForCall, struct {
 		productSlug string
@@ -206,15 +206,15 @@ func (fake *FakePivnetClient) UserGroupsForReleaseArgsForCall(i int) (string, in
 	return fake.userGroupsForReleaseArgsForCall[i].productSlug, fake.userGroupsForReleaseArgsForCall[i].releaseID
 }
 
-func (fake *FakePivnetClient) UserGroupsForReleaseReturns(result1 []pivnet.UserGroup, result2 error) {
+func (fake *FakePivnetClient) UserGroupsForReleaseReturns(result1 []go_pivnet.UserGroup, result2 error) {
 	fake.UserGroupsForReleaseStub = nil
 	fake.userGroupsForReleaseReturns = struct {
-		result1 []pivnet.UserGroup
+		result1 []go_pivnet.UserGroup
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) UserGroup(userGroupID int) (pivnet.UserGroup, error) {
+func (fake *FakePivnetClient) UserGroup(userGroupID int) (go_pivnet.UserGroup, error) {
 	fake.userGroupMutex.Lock()
 	fake.userGroupArgsForCall = append(fake.userGroupArgsForCall, struct {
 		userGroupID int
@@ -240,15 +240,15 @@ func (fake *FakePivnetClient) UserGroupArgsForCall(i int) int {
 	return fake.userGroupArgsForCall[i].userGroupID
 }
 
-func (fake *FakePivnetClient) UserGroupReturns(result1 pivnet.UserGroup, result2 error) {
+func (fake *FakePivnetClient) UserGroupReturns(result1 go_pivnet.UserGroup, result2 error) {
 	fake.UserGroupStub = nil
 	fake.userGroupReturns = struct {
-		result1 pivnet.UserGroup
+		result1 go_pivnet.UserGroup
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) CreateUserGroup(name string, description string, members []string) (pivnet.UserGroup, error) {
+func (fake *FakePivnetClient) CreateUserGroup(name string, description string, members []string) (go_pivnet.UserGroup, error) {
 	var membersCopy []string
 	if members != nil {
 		membersCopy = make([]string, len(members))
@@ -281,18 +281,18 @@ func (fake *FakePivnetClient) CreateUserGroupArgsForCall(i int) (string, string,
 	return fake.createUserGroupArgsForCall[i].name, fake.createUserGroupArgsForCall[i].description, fake.createUserGroupArgsForCall[i].members
 }
 
-func (fake *FakePivnetClient) CreateUserGroupReturns(result1 pivnet.UserGroup, result2 error) {
+func (fake *FakePivnetClient) CreateUserGroupReturns(result1 go_pivnet.UserGroup, result2 error) {
 	fake.CreateUserGroupStub = nil
 	fake.createUserGroupReturns = struct {
-		result1 pivnet.UserGroup
+		result1 go_pivnet.UserGroup
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) UpdateUserGroup(userGroup pivnet.UserGroup) (pivnet.UserGroup, error) {
+func (fake *FakePivnetClient) UpdateUserGroup(userGroup go_pivnet.UserGroup) (go_pivnet.UserGroup, error) {
 	fake.updateUserGroupMutex.Lock()
 	fake.updateUserGroupArgsForCall = append(fake.updateUserGroupArgsForCall, struct {
-		userGroup pivnet.UserGroup
+		userGroup go_pivnet.UserGroup
 	}{userGroup})
 	fake.recordInvocation("UpdateUserGroup", []interface{}{userGroup})
 	fake.updateUserGroupMutex.Unlock()
@@ -309,16 +309,16 @@ func (fake *FakePivnetClient) UpdateUserGroupCallCount() int {
 	return len(fake.updateUserGroupArgsForCall)
 }
 
-func (fake *FakePivnetClient) UpdateUserGroupArgsForCall(i int) pivnet.UserGroup {
+func (fake *FakePivnetClient) UpdateUserGroupArgsForCall(i int) go_pivnet.UserGroup {
 	fake.updateUserGroupMutex.RLock()
 	defer fake.updateUserGroupMutex.RUnlock()
 	return fake.updateUserGroupArgsForCall[i].userGroup
 }
 
-func (fake *FakePivnetClient) UpdateUserGroupReturns(result1 pivnet.UserGroup, result2 error) {
+func (fake *FakePivnetClient) UpdateUserGroupReturns(result1 go_pivnet.UserGroup, result2 error) {
 	fake.UpdateUserGroupStub = nil
 	fake.updateUserGroupReturns = struct {
-		result1 pivnet.UserGroup
+		result1 go_pivnet.UserGroup
 		result2 error
 	}{result1, result2}
 }
@@ -426,7 +426,7 @@ func (fake *FakePivnetClient) RemoveUserGroupReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakePivnetClient) AddMemberToGroup(userGroupID int, emailAddress string, admin bool) (pivnet.UserGroup, error) {
+func (fake *FakePivnetClient) AddMemberToGroup(userGroupID int, emailAddress string, admin bool) (go_pivnet.UserGroup, error) {
 	fake.addMemberToGroupMutex.Lock()
 	fake.addMemberToGroupArgsForCall = append(fake.addMemberToGroupArgsForCall, struct {
 		userGroupID  int
@@ -454,15 +454,15 @@ func (fake *FakePivnetClient) AddMemberToGroupArgsForCall(i int) (int, string, b
 	return fake.addMemberToGroupArgsForCall[i].userGroupID, fake.addMemberToGroupArgsForCall[i].emailAddress, fake.addMemberToGroupArgsForCall[i].admin
 }
 
-func (fake *FakePivnetClient) AddMemberToGroupReturns(result1 pivnet.UserGroup, result2 error) {
+func (fake *FakePivnetClient) AddMemberToGroupReturns(result1 go_pivnet.UserGroup, result2 error) {
 	fake.AddMemberToGroupStub = nil
 	fake.addMemberToGroupReturns = struct {
-		result1 pivnet.UserGroup
+		result1 go_pivnet.UserGroup
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) RemoveMemberFromGroup(userGroupID int, emailAddress string) (pivnet.UserGroup, error) {
+func (fake *FakePivnetClient) RemoveMemberFromGroup(userGroupID int, emailAddress string) (go_pivnet.UserGroup, error) {
 	fake.removeMemberFromGroupMutex.Lock()
 	fake.removeMemberFromGroupArgsForCall = append(fake.removeMemberFromGroupArgsForCall, struct {
 		userGroupID  int
@@ -489,10 +489,10 @@ func (fake *FakePivnetClient) RemoveMemberFromGroupArgsForCall(i int) (int, stri
 	return fake.removeMemberFromGroupArgsForCall[i].userGroupID, fake.removeMemberFromGroupArgsForCall[i].emailAddress
 }
 
-func (fake *FakePivnetClient) RemoveMemberFromGroupReturns(result1 pivnet.UserGroup, result2 error) {
+func (fake *FakePivnetClient) RemoveMemberFromGroupReturns(result1 go_pivnet.UserGroup, result2 error) {
 	fake.RemoveMemberFromGroupStub = nil
 	fake.removeMemberFromGroupReturns = struct {
-		result1 pivnet.UserGroup
+		result1 go_pivnet.UserGroup
 		result2 error
 	}{result1, result2}
 }

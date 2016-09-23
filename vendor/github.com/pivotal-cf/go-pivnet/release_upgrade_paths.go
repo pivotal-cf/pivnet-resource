@@ -1,6 +1,8 @@
 package pivnet
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -42,4 +44,88 @@ func (r ReleaseUpgradePathsService) Get(productSlug string, releaseID int) ([]Re
 	}
 
 	return response.ReleaseUpgradePaths, nil
+}
+
+func (r ReleaseUpgradePathsService) Add(
+	productSlug string,
+	releaseID int,
+	previousReleaseID int,
+) error {
+	url := fmt.Sprintf(
+		"/products/%s/releases/%d/add_upgrade_path",
+		productSlug,
+		releaseID,
+	)
+
+	body := addRemoveUpgradePathBody{
+		UpgradePath: addRemoveUpgradePathBodyUpgradePath{
+			ReleaseID: previousReleaseID,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return err
+	}
+
+	_, err = r.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusNoContent,
+		bytes.NewReader(b),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r ReleaseUpgradePathsService) Remove(
+	productSlug string,
+	releaseID int,
+	previousReleaseID int,
+) error {
+	url := fmt.Sprintf(
+		"/products/%s/releases/%d/remove_upgrade_path",
+		productSlug,
+		releaseID,
+	)
+
+	body := addRemoveUpgradePathBody{
+		UpgradePath: addRemoveUpgradePathBodyUpgradePath{
+			ReleaseID: previousReleaseID,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return err
+	}
+
+	_, err = r.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusNoContent,
+		bytes.NewReader(b),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type addRemoveUpgradePathBody struct {
+	UpgradePath addRemoveUpgradePathBodyUpgradePath `json:"upgrade_path"`
+}
+
+type addRemoveUpgradePathBodyUpgradePath struct {
+	ReleaseID int `json:"release_id"`
 }

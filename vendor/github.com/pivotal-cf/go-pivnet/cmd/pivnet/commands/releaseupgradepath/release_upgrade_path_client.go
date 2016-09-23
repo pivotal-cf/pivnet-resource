@@ -1,6 +1,7 @@
 package releaseupgradepath
 
 import (
+	"fmt"
 	"io"
 	"strconv"
 
@@ -14,6 +15,8 @@ import (
 type PivnetClient interface {
 	ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
 	ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error)
+	AddReleaseUpgradePath(productSlug string, releaseID int, previousReleaseID int) error
+	RemoveReleaseUpgradePath(productSlug string, releaseID int, previousReleaseID int) error
 }
 
 type ReleaseUpgradePathClient struct {
@@ -54,6 +57,10 @@ func (c *ReleaseUpgradePathClient) List(productSlug string, releaseVersion strin
 		return c.eh.HandleError(err)
 	}
 
+	return c.printReleaseUpgradePaths(releaseUpgradePaths)
+}
+
+func (c *ReleaseUpgradePathClient) printReleaseUpgradePaths(releaseUpgradePaths []pivnet.ReleaseUpgradePath) error {
 	switch c.format {
 	case printer.PrintAsTable:
 		table := tablewriter.NewWriter(c.outputWriter)
@@ -74,6 +81,78 @@ func (c *ReleaseUpgradePathClient) List(productSlug string, releaseVersion strin
 		return c.printer.PrintJSON(releaseUpgradePaths)
 	case printer.PrintAsYAML:
 		return c.printer.PrintYAML(releaseUpgradePaths)
+	}
+
+	return nil
+}
+
+func (c *ReleaseUpgradePathClient) Add(
+	productSlug string,
+	releaseVersion string,
+	previousReleaseVersion string,
+) error {
+	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	previousRelease, err := c.pivnetClient.ReleaseForProductVersion(productSlug, previousReleaseVersion)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	err = c.pivnetClient.AddReleaseUpgradePath(
+		productSlug,
+		release.ID,
+		previousRelease.ID,
+	)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	if c.format == printer.PrintAsTable {
+		_, err = fmt.Fprintf(
+			c.outputWriter,
+			"release upgrade path added successfully to %s/%s\n",
+			productSlug,
+			releaseVersion,
+		)
+	}
+
+	return nil
+}
+
+func (c *ReleaseUpgradePathClient) Remove(
+	productSlug string,
+	releaseVersion string,
+	previousReleaseVersion string,
+) error {
+	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	previousRelease, err := c.pivnetClient.ReleaseForProductVersion(productSlug, previousReleaseVersion)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	err = c.pivnetClient.RemoveReleaseUpgradePath(
+		productSlug,
+		release.ID,
+		previousRelease.ID,
+	)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	if c.format == printer.PrintAsTable {
+		_, err = fmt.Fprintf(
+			c.outputWriter,
+			"release upgrade path removed successfully from %s/%s\n",
+			productSlug,
+			releaseVersion,
+		)
 	}
 
 	return nil

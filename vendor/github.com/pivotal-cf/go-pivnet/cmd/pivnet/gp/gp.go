@@ -195,6 +195,14 @@ func (c Client) ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet
 	return c.client.ReleaseUpgradePaths.Get(productSlug, releaseID)
 }
 
+func (c Client) AddReleaseUpgradePath(productSlug string, releaseID int, previousReleaseID int) error {
+	return c.client.ReleaseUpgradePaths.Add(productSlug, releaseID, previousReleaseID)
+}
+
+func (c Client) RemoveReleaseUpgradePath(productSlug string, releaseID int, previousReleaseID int) error {
+	return c.client.ReleaseUpgradePaths.Remove(productSlug, releaseID, previousReleaseID)
+}
+
 func (c Client) FileGroups(productSlug string) ([]pivnet.FileGroup, error) {
 	return c.client.FileGroups.List(productSlug)
 }
