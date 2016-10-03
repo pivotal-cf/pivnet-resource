@@ -282,7 +282,9 @@ func (c InCommand) downloadFiles(
 			panic("empty file name")
 		}
 
-		fileMD5s[fileName] = p.MD5
+		if p.FileType == "Software" {
+			fileMD5s[fileName] = p.MD5
+		}
 	}
 
 	err = c.compareMD5s(files, fileMD5s)
@@ -333,17 +335,19 @@ func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]strin
 		}
 
 		expectedMD5 := expectedMD5s[f]
-		if md5 != expectedMD5 {
-			c.logger.Printf(
-				"Failed MD5 comparison for file: %s. Expected %s, got %s\n",
-				f,
-				expectedMD5,
-				md5,
-			)
-			return errors.New("failed comparison")
-		}
+		if expectedMD5 != "" {
+			if md5 != expectedMD5 {
+				c.logger.Printf(
+					"Failed MD5 comparison for file: %s. Expected %s, got %s\n",
+					f,
+					expectedMD5,
+					md5,
+				)
+				return errors.New("failed comparison")
+			}
 
-		c.logger.Println("MD5 for downloaded file matched")
+			c.logger.Println("MD5 for downloaded file matched")
+		}
 	}
 
 	return nil

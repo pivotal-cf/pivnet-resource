@@ -113,8 +113,8 @@ var _ = Describe("In", func() {
 			Name:         productFiles[0].Name,
 			Description:  productFiles[0].Description,
 			AWSObjectKey: productFiles[0].AWSObjectKey,
+			FileType:     "Software",
 			FileVersion:  "some-file-version 1234",
-			FileType:     "some-file-type 1234",
 			MD5:          fileContentsMD5s[0],
 			Links: &pivnet.Links{
 				Download: map[string]string{
@@ -128,7 +128,7 @@ var _ = Describe("In", func() {
 			Name:         productFiles[1].Name,
 			Description:  productFiles[1].Description,
 			AWSObjectKey: productFiles[1].AWSObjectKey,
-			FileType:     "some-file-type 1234",
+			FileType:     "Software",
 			FileVersion:  "some-file-version 3456",
 			MD5:          fileContentsMD5s[1],
 			Links: &pivnet.Links{
@@ -450,6 +450,18 @@ var _ = Describe("In", func() {
 
 			validateProductFilesMetadata(invokedMetadata, pFiles)
 			validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
+		})
+
+		Context("when the file type is not 'Software'", func() {
+			BeforeEach(func() {
+				productFile2.FileType = "not software"
+				fileContentsMD5s[1] = "not interested"
+			})
+
+			It("ignores MD5", func() {
+				_, err := inCommand.Run(inRequest)
+				Expect(err).NotTo(HaveOccurred())
+			})
 		})
 
 		Context("when getting a product file returns error", func() {
