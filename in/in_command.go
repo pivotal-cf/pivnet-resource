@@ -248,7 +248,9 @@ func (c InCommand) downloadFiles(
 
 	c.logger.Println("Filtering download links by glob")
 
-	// if globs were not provided, do not fail if we do not match anything
+	// It is acceptable to match nothing if globs were not provided.
+	// This is the use-case when there are no files on pivnet and the pipeline
+	// does not specify anything.
 	failOnNoMatch := (globs != nil)
 
 	var err error
@@ -329,26 +331,26 @@ func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]strin
 	for _, downloadPath := range filepaths {
 		_, f := filepath.Split(downloadPath)
 
-		md5, err := c.fileSummer.SumFile(downloadPath)
+		actualMD5, err := c.fileSummer.SumFile(downloadPath)
 		if err != nil {
 			return err
 		}
 
 		expectedMD5 := expectedMD5s[f]
-		if expectedMD5 != "" {
-			if md5 != expectedMD5 {
-				c.logger.Printf(
-					"Failed MD5 comparison for file: %s. Expected %s, got %s\n",
-					f,
+		if expectedMD5 != "" && expectedMD5 != actualMD5 {
+			c.logger.Println(
+				fmt.Sprintf(
+					"MD5 comparison failed for downloaded file: '%s'. Expected (from pivnet): '%s' - actual (from file): '%s'\n",
+					downloadPath,
 					expectedMD5,
-					md5,
-				)
-				return errors.New("failed comparison")
-			}
-
-			c.logger.Println("MD5 for downloaded file matched")
+					actualMD5,
+				),
+			)
+			return errors.New("failed MD5 comparison")
 		}
 	}
+
+	c.logger.Println("MD5 matched for all downloaded files")
 
 	return nil
 }
