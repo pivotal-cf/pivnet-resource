@@ -41,6 +41,12 @@ type ProductFile struct {
 	Size         int    `json:"size,omitempty" yaml:"size,omitempty"`
 }
 
+const (
+	FileTypeSoftware          = "Software"
+	FileTypeDocumentation     = "Documentation"
+	FileTypeOpenSourceLicense = "Open Source License"
+)
+
 func (p ProductFilesService) List(productSlug string) ([]ProductFile, error) {
 	url := fmt.Sprintf("/products/%s/product_files", productSlug)
 
