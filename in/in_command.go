@@ -282,7 +282,7 @@ func (c InCommand) downloadFiles(
 			panic("empty file name")
 		}
 
-		if p.FileType == "Software" {
+		if p.FileType == pivnet.FileTypeSoftware {
 			fileMD5s[fileName] = p.MD5
 		}
 	}

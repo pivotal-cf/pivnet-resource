@@ -113,7 +113,7 @@ var _ = Describe("In", func() {
 			Name:         productFiles[0].Name,
 			Description:  productFiles[0].Description,
 			AWSObjectKey: productFiles[0].AWSObjectKey,
-			FileType:     "Software",
+			FileType:     pivnet.FileTypeSoftware,
 			FileVersion:  "some-file-version 1234",
 			MD5:          fileContentsMD5s[0],
 			Links: &pivnet.Links{
@@ -128,7 +128,7 @@ var _ = Describe("In", func() {
 			Name:         productFiles[1].Name,
 			Description:  productFiles[1].Description,
 			AWSObjectKey: productFiles[1].AWSObjectKey,
-			FileType:     "Software",
+			FileType:     pivnet.FileTypeSoftware,
 			FileVersion:  "some-file-version 3456",
 			MD5:          fileContentsMD5s[1],
 			Links: &pivnet.Links{
