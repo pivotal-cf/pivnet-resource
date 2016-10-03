@@ -4,7 +4,7 @@ package infakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet"
 )
 
 type FakeFilter struct {
@@ -19,10 +19,10 @@ type FakeFilter struct {
 		result1 map[string]string
 		result2 error
 	}
-	DownloadLinksStub        func(p []pivnet.ProductFile) map[string]string
+	DownloadLinksStub        func(p []go_pivnet.ProductFile) map[string]string
 	downloadLinksMutex       sync.RWMutex
 	downloadLinksArgsForCall []struct {
-		p []pivnet.ProductFile
+		p []go_pivnet.ProductFile
 	}
 	downloadLinksReturns struct {
 		result1 map[string]string
@@ -72,15 +72,15 @@ func (fake *FakeFilter) DownloadLinksByGlobsReturns(result1 map[string]string, r
 	}{result1, result2}
 }
 
-func (fake *FakeFilter) DownloadLinks(p []pivnet.ProductFile) map[string]string {
-	var pCopy []pivnet.ProductFile
+func (fake *FakeFilter) DownloadLinks(p []go_pivnet.ProductFile) map[string]string {
+	var pCopy []go_pivnet.ProductFile
 	if p != nil {
-		pCopy = make([]pivnet.ProductFile, len(p))
+		pCopy = make([]go_pivnet.ProductFile, len(p))
 		copy(pCopy, p)
 	}
 	fake.downloadLinksMutex.Lock()
 	fake.downloadLinksArgsForCall = append(fake.downloadLinksArgsForCall, struct {
-		p []pivnet.ProductFile
+		p []go_pivnet.ProductFile
 	}{pCopy})
 	fake.recordInvocation("DownloadLinks", []interface{}{pCopy})
 	fake.downloadLinksMutex.Unlock()
@@ -97,7 +97,7 @@ func (fake *FakeFilter) DownloadLinksCallCount() int {
 	return len(fake.downloadLinksArgsForCall)
 }
 
-func (fake *FakeFilter) DownloadLinksArgsForCall(i int) []pivnet.ProductFile {
+func (fake *FakeFilter) DownloadLinksArgsForCall(i int) []go_pivnet.ProductFile {
 	fake.downloadLinksMutex.RLock()
 	defer fake.downloadLinksMutex.RUnlock()
 	return fake.downloadLinksArgsForCall[i].p

@@ -13,7 +13,7 @@ import (
 
 //go:generate counterfeiter . Client
 type Client interface {
-	MakeRequest(method string, url string, expectedResponseCode int, body io.Reader, data interface{}) (*http.Response, error)
+	MakeRequest(method string, url string, expectedResponseCode int, body io.Reader, data interface{}) (*http.Response, []byte, error)
 	CreateRequest(method string, url string, body io.Reader) (*http.Request, error)
 }
 
@@ -32,7 +32,7 @@ func NewExtendedClient(client Client, logger logger.Logger) ExtendedClient {
 func (c ExtendedClient) ReleaseETag(productSlug string, releaseID int) (string, error) {
 	url := fmt.Sprintf("/products/%s/releases/%d", productSlug, releaseID)
 
-	resp, err := c.c.MakeRequest("GET", url, http.StatusOK, nil, nil)
+	resp, _, err := c.c.MakeRequest("GET", url, http.StatusOK, nil, nil)
 	if err != nil {
 		return "", err
 	}

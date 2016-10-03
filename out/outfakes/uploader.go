@@ -4,14 +4,14 @@ package outfakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet"
 )
 
 type Uploader struct {
-	UploadStub        func(release pivnet.Release, exactGlobs []string) error
+	UploadStub        func(release go_pivnet.Release, exactGlobs []string) error
 	uploadMutex       sync.RWMutex
 	uploadArgsForCall []struct {
-		release    pivnet.Release
+		release    go_pivnet.Release
 		exactGlobs []string
 	}
 	uploadReturns struct {
@@ -21,7 +21,7 @@ type Uploader struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Uploader) Upload(release pivnet.Release, exactGlobs []string) error {
+func (fake *Uploader) Upload(release go_pivnet.Release, exactGlobs []string) error {
 	var exactGlobsCopy []string
 	if exactGlobs != nil {
 		exactGlobsCopy = make([]string, len(exactGlobs))
@@ -29,7 +29,7 @@ func (fake *Uploader) Upload(release pivnet.Release, exactGlobs []string) error 
 	}
 	fake.uploadMutex.Lock()
 	fake.uploadArgsForCall = append(fake.uploadArgsForCall, struct {
-		release    pivnet.Release
+		release    go_pivnet.Release
 		exactGlobs []string
 	}{release, exactGlobsCopy})
 	fake.recordInvocation("Upload", []interface{}{release, exactGlobsCopy})
@@ -47,7 +47,7 @@ func (fake *Uploader) UploadCallCount() int {
 	return len(fake.uploadArgsForCall)
 }
 
-func (fake *Uploader) UploadArgsForCall(i int) (pivnet.Release, []string) {
+func (fake *Uploader) UploadArgsForCall(i int) (go_pivnet.Release, []string) {
 	fake.uploadMutex.RLock()
 	defer fake.uploadMutex.RUnlock()
 	return fake.uploadArgsForCall[i].release, fake.uploadArgsForCall[i].exactGlobs

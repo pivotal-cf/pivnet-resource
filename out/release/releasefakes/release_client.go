@@ -4,47 +4,47 @@ package releasefakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet"
 )
 
 type ReleaseClient struct {
-	EULAsStub        func() ([]pivnet.EULA, error)
+	EULAsStub        func() ([]go_pivnet.EULA, error)
 	eULAsMutex       sync.RWMutex
 	eULAsArgsForCall []struct{}
 	eULAsReturns     struct {
-		result1 []pivnet.EULA
+		result1 []go_pivnet.EULA
 		result2 error
 	}
-	ReleaseTypesStub        func() ([]pivnet.ReleaseType, error)
+	ReleaseTypesStub        func() ([]go_pivnet.ReleaseType, error)
 	releaseTypesMutex       sync.RWMutex
 	releaseTypesArgsForCall []struct{}
 	releaseTypesReturns     struct {
-		result1 []pivnet.ReleaseType
+		result1 []go_pivnet.ReleaseType
 		result2 error
 	}
-	ReleasesForProductSlugStub        func(string) ([]pivnet.Release, error)
+	ReleasesForProductSlugStub        func(string) ([]go_pivnet.Release, error)
 	releasesForProductSlugMutex       sync.RWMutex
 	releasesForProductSlugArgsForCall []struct {
 		arg1 string
 	}
 	releasesForProductSlugReturns struct {
-		result1 []pivnet.Release
+		result1 []go_pivnet.Release
 		result2 error
 	}
-	CreateReleaseStub        func(pivnet.CreateReleaseConfig) (pivnet.Release, error)
+	CreateReleaseStub        func(go_pivnet.CreateReleaseConfig) (go_pivnet.Release, error)
 	createReleaseMutex       sync.RWMutex
 	createReleaseArgsForCall []struct {
-		arg1 pivnet.CreateReleaseConfig
+		arg1 go_pivnet.CreateReleaseConfig
 	}
 	createReleaseReturns struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}
-	ProductVersionsStub        func(productSlug string, releases []pivnet.Release) ([]string, error)
+	ProductVersionsStub        func(productSlug string, releases []go_pivnet.Release) ([]string, error)
 	productVersionsMutex       sync.RWMutex
 	productVersionsArgsForCall []struct {
 		productSlug string
-		releases    []pivnet.Release
+		releases    []go_pivnet.Release
 	}
 	productVersionsReturns struct {
 		result1 []string
@@ -54,7 +54,7 @@ type ReleaseClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *ReleaseClient) EULAs() ([]pivnet.EULA, error) {
+func (fake *ReleaseClient) EULAs() ([]go_pivnet.EULA, error) {
 	fake.eULAsMutex.Lock()
 	fake.eULAsArgsForCall = append(fake.eULAsArgsForCall, struct{}{})
 	fake.recordInvocation("EULAs", []interface{}{})
@@ -72,15 +72,15 @@ func (fake *ReleaseClient) EULAsCallCount() int {
 	return len(fake.eULAsArgsForCall)
 }
 
-func (fake *ReleaseClient) EULAsReturns(result1 []pivnet.EULA, result2 error) {
+func (fake *ReleaseClient) EULAsReturns(result1 []go_pivnet.EULA, result2 error) {
 	fake.EULAsStub = nil
 	fake.eULAsReturns = struct {
-		result1 []pivnet.EULA
+		result1 []go_pivnet.EULA
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *ReleaseClient) ReleaseTypes() ([]pivnet.ReleaseType, error) {
+func (fake *ReleaseClient) ReleaseTypes() ([]go_pivnet.ReleaseType, error) {
 	fake.releaseTypesMutex.Lock()
 	fake.releaseTypesArgsForCall = append(fake.releaseTypesArgsForCall, struct{}{})
 	fake.recordInvocation("ReleaseTypes", []interface{}{})
@@ -98,15 +98,15 @@ func (fake *ReleaseClient) ReleaseTypesCallCount() int {
 	return len(fake.releaseTypesArgsForCall)
 }
 
-func (fake *ReleaseClient) ReleaseTypesReturns(result1 []pivnet.ReleaseType, result2 error) {
+func (fake *ReleaseClient) ReleaseTypesReturns(result1 []go_pivnet.ReleaseType, result2 error) {
 	fake.ReleaseTypesStub = nil
 	fake.releaseTypesReturns = struct {
-		result1 []pivnet.ReleaseType
+		result1 []go_pivnet.ReleaseType
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *ReleaseClient) ReleasesForProductSlug(arg1 string) ([]pivnet.Release, error) {
+func (fake *ReleaseClient) ReleasesForProductSlug(arg1 string) ([]go_pivnet.Release, error) {
 	fake.releasesForProductSlugMutex.Lock()
 	fake.releasesForProductSlugArgsForCall = append(fake.releasesForProductSlugArgsForCall, struct {
 		arg1 string
@@ -132,18 +132,18 @@ func (fake *ReleaseClient) ReleasesForProductSlugArgsForCall(i int) string {
 	return fake.releasesForProductSlugArgsForCall[i].arg1
 }
 
-func (fake *ReleaseClient) ReleasesForProductSlugReturns(result1 []pivnet.Release, result2 error) {
+func (fake *ReleaseClient) ReleasesForProductSlugReturns(result1 []go_pivnet.Release, result2 error) {
 	fake.ReleasesForProductSlugStub = nil
 	fake.releasesForProductSlugReturns = struct {
-		result1 []pivnet.Release
+		result1 []go_pivnet.Release
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *ReleaseClient) CreateRelease(arg1 pivnet.CreateReleaseConfig) (pivnet.Release, error) {
+func (fake *ReleaseClient) CreateRelease(arg1 go_pivnet.CreateReleaseConfig) (go_pivnet.Release, error) {
 	fake.createReleaseMutex.Lock()
 	fake.createReleaseArgsForCall = append(fake.createReleaseArgsForCall, struct {
-		arg1 pivnet.CreateReleaseConfig
+		arg1 go_pivnet.CreateReleaseConfig
 	}{arg1})
 	fake.recordInvocation("CreateRelease", []interface{}{arg1})
 	fake.createReleaseMutex.Unlock()
@@ -160,30 +160,30 @@ func (fake *ReleaseClient) CreateReleaseCallCount() int {
 	return len(fake.createReleaseArgsForCall)
 }
 
-func (fake *ReleaseClient) CreateReleaseArgsForCall(i int) pivnet.CreateReleaseConfig {
+func (fake *ReleaseClient) CreateReleaseArgsForCall(i int) go_pivnet.CreateReleaseConfig {
 	fake.createReleaseMutex.RLock()
 	defer fake.createReleaseMutex.RUnlock()
 	return fake.createReleaseArgsForCall[i].arg1
 }
 
-func (fake *ReleaseClient) CreateReleaseReturns(result1 pivnet.Release, result2 error) {
+func (fake *ReleaseClient) CreateReleaseReturns(result1 go_pivnet.Release, result2 error) {
 	fake.CreateReleaseStub = nil
 	fake.createReleaseReturns = struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *ReleaseClient) ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error) {
-	var releasesCopy []pivnet.Release
+func (fake *ReleaseClient) ProductVersions(productSlug string, releases []go_pivnet.Release) ([]string, error) {
+	var releasesCopy []go_pivnet.Release
 	if releases != nil {
-		releasesCopy = make([]pivnet.Release, len(releases))
+		releasesCopy = make([]go_pivnet.Release, len(releases))
 		copy(releasesCopy, releases)
 	}
 	fake.productVersionsMutex.Lock()
 	fake.productVersionsArgsForCall = append(fake.productVersionsArgsForCall, struct {
 		productSlug string
-		releases    []pivnet.Release
+		releases    []go_pivnet.Release
 	}{productSlug, releasesCopy})
 	fake.recordInvocation("ProductVersions", []interface{}{productSlug, releasesCopy})
 	fake.productVersionsMutex.Unlock()
@@ -200,7 +200,7 @@ func (fake *ReleaseClient) ProductVersionsCallCount() int {
 	return len(fake.productVersionsArgsForCall)
 }
 
-func (fake *ReleaseClient) ProductVersionsArgsForCall(i int) (string, []pivnet.Release) {
+func (fake *ReleaseClient) ProductVersionsArgsForCall(i int) (string, []go_pivnet.Release) {
 	fake.productVersionsMutex.RLock()
 	defer fake.productVersionsMutex.RUnlock()
 	return fake.productVersionsArgsForCall[i].productSlug, fake.productVersionsArgsForCall[i].releases

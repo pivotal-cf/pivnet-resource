@@ -28,6 +28,15 @@ type FakePivnetClient struct {
 		result1 go_pivnet.Release
 		result2 error
 	}
+	CreateReleaseStub        func(config go_pivnet.CreateReleaseConfig) (go_pivnet.Release, error)
+	createReleaseMutex       sync.RWMutex
+	createReleaseArgsForCall []struct {
+		config go_pivnet.CreateReleaseConfig
+	}
+	createReleaseReturns struct {
+		result1 go_pivnet.Release
+		result2 error
+	}
 	DeleteReleaseStub        func(productSlug string, release go_pivnet.Release) error
 	deleteReleaseMutex       sync.RWMutex
 	deleteReleaseArgsForCall []struct {
@@ -120,6 +129,40 @@ func (fake *FakePivnetClient) ReleaseForProductVersionReturns(result1 go_pivnet.
 	}{result1, result2}
 }
 
+func (fake *FakePivnetClient) CreateRelease(config go_pivnet.CreateReleaseConfig) (go_pivnet.Release, error) {
+	fake.createReleaseMutex.Lock()
+	fake.createReleaseArgsForCall = append(fake.createReleaseArgsForCall, struct {
+		config go_pivnet.CreateReleaseConfig
+	}{config})
+	fake.recordInvocation("CreateRelease", []interface{}{config})
+	fake.createReleaseMutex.Unlock()
+	if fake.CreateReleaseStub != nil {
+		return fake.CreateReleaseStub(config)
+	} else {
+		return fake.createReleaseReturns.result1, fake.createReleaseReturns.result2
+	}
+}
+
+func (fake *FakePivnetClient) CreateReleaseCallCount() int {
+	fake.createReleaseMutex.RLock()
+	defer fake.createReleaseMutex.RUnlock()
+	return len(fake.createReleaseArgsForCall)
+}
+
+func (fake *FakePivnetClient) CreateReleaseArgsForCall(i int) go_pivnet.CreateReleaseConfig {
+	fake.createReleaseMutex.RLock()
+	defer fake.createReleaseMutex.RUnlock()
+	return fake.createReleaseArgsForCall[i].config
+}
+
+func (fake *FakePivnetClient) CreateReleaseReturns(result1 go_pivnet.Release, result2 error) {
+	fake.CreateReleaseStub = nil
+	fake.createReleaseReturns = struct {
+		result1 go_pivnet.Release
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakePivnetClient) DeleteRelease(productSlug string, release go_pivnet.Release) error {
 	fake.deleteReleaseMutex.Lock()
 	fake.deleteReleaseArgsForCall = append(fake.deleteReleaseArgsForCall, struct {
@@ -196,6 +239,8 @@ func (fake *FakePivnetClient) Invocations() map[string][][]interface{} {
 	defer fake.releasesForProductSlugMutex.RUnlock()
 	fake.releaseForProductVersionMutex.RLock()
 	defer fake.releaseForProductVersionMutex.RUnlock()
+	fake.createReleaseMutex.RLock()
+	defer fake.createReleaseMutex.RUnlock()
 	fake.deleteReleaseMutex.RLock()
 	defer fake.deleteReleaseMutex.RUnlock()
 	fake.releaseETagMutex.RLock()

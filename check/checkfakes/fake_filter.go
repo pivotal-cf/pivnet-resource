@@ -4,44 +4,44 @@ package checkfakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet"
 )
 
 type FakeFilter struct {
-	ReleasesByReleaseTypeStub        func(releases []pivnet.Release, releaseType pivnet.ReleaseType) ([]pivnet.Release, error)
+	ReleasesByReleaseTypeStub        func(releases []go_pivnet.Release, releaseType go_pivnet.ReleaseType) ([]go_pivnet.Release, error)
 	releasesByReleaseTypeMutex       sync.RWMutex
 	releasesByReleaseTypeArgsForCall []struct {
-		releases    []pivnet.Release
-		releaseType pivnet.ReleaseType
+		releases    []go_pivnet.Release
+		releaseType go_pivnet.ReleaseType
 	}
 	releasesByReleaseTypeReturns struct {
-		result1 []pivnet.Release
+		result1 []go_pivnet.Release
 		result2 error
 	}
-	ReleasesByVersionStub        func(releases []pivnet.Release, version string) ([]pivnet.Release, error)
+	ReleasesByVersionStub        func(releases []go_pivnet.Release, version string) ([]go_pivnet.Release, error)
 	releasesByVersionMutex       sync.RWMutex
 	releasesByVersionArgsForCall []struct {
-		releases []pivnet.Release
+		releases []go_pivnet.Release
 		version  string
 	}
 	releasesByVersionReturns struct {
-		result1 []pivnet.Release
+		result1 []go_pivnet.Release
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeFilter) ReleasesByReleaseType(releases []pivnet.Release, releaseType pivnet.ReleaseType) ([]pivnet.Release, error) {
-	var releasesCopy []pivnet.Release
+func (fake *FakeFilter) ReleasesByReleaseType(releases []go_pivnet.Release, releaseType go_pivnet.ReleaseType) ([]go_pivnet.Release, error) {
+	var releasesCopy []go_pivnet.Release
 	if releases != nil {
-		releasesCopy = make([]pivnet.Release, len(releases))
+		releasesCopy = make([]go_pivnet.Release, len(releases))
 		copy(releasesCopy, releases)
 	}
 	fake.releasesByReleaseTypeMutex.Lock()
 	fake.releasesByReleaseTypeArgsForCall = append(fake.releasesByReleaseTypeArgsForCall, struct {
-		releases    []pivnet.Release
-		releaseType pivnet.ReleaseType
+		releases    []go_pivnet.Release
+		releaseType go_pivnet.ReleaseType
 	}{releasesCopy, releaseType})
 	fake.recordInvocation("ReleasesByReleaseType", []interface{}{releasesCopy, releaseType})
 	fake.releasesByReleaseTypeMutex.Unlock()
@@ -58,29 +58,29 @@ func (fake *FakeFilter) ReleasesByReleaseTypeCallCount() int {
 	return len(fake.releasesByReleaseTypeArgsForCall)
 }
 
-func (fake *FakeFilter) ReleasesByReleaseTypeArgsForCall(i int) ([]pivnet.Release, pivnet.ReleaseType) {
+func (fake *FakeFilter) ReleasesByReleaseTypeArgsForCall(i int) ([]go_pivnet.Release, go_pivnet.ReleaseType) {
 	fake.releasesByReleaseTypeMutex.RLock()
 	defer fake.releasesByReleaseTypeMutex.RUnlock()
 	return fake.releasesByReleaseTypeArgsForCall[i].releases, fake.releasesByReleaseTypeArgsForCall[i].releaseType
 }
 
-func (fake *FakeFilter) ReleasesByReleaseTypeReturns(result1 []pivnet.Release, result2 error) {
+func (fake *FakeFilter) ReleasesByReleaseTypeReturns(result1 []go_pivnet.Release, result2 error) {
 	fake.ReleasesByReleaseTypeStub = nil
 	fake.releasesByReleaseTypeReturns = struct {
-		result1 []pivnet.Release
+		result1 []go_pivnet.Release
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeFilter) ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error) {
-	var releasesCopy []pivnet.Release
+func (fake *FakeFilter) ReleasesByVersion(releases []go_pivnet.Release, version string) ([]go_pivnet.Release, error) {
+	var releasesCopy []go_pivnet.Release
 	if releases != nil {
-		releasesCopy = make([]pivnet.Release, len(releases))
+		releasesCopy = make([]go_pivnet.Release, len(releases))
 		copy(releasesCopy, releases)
 	}
 	fake.releasesByVersionMutex.Lock()
 	fake.releasesByVersionArgsForCall = append(fake.releasesByVersionArgsForCall, struct {
-		releases []pivnet.Release
+		releases []go_pivnet.Release
 		version  string
 	}{releasesCopy, version})
 	fake.recordInvocation("ReleasesByVersion", []interface{}{releasesCopy, version})
@@ -98,16 +98,16 @@ func (fake *FakeFilter) ReleasesByVersionCallCount() int {
 	return len(fake.releasesByVersionArgsForCall)
 }
 
-func (fake *FakeFilter) ReleasesByVersionArgsForCall(i int) ([]pivnet.Release, string) {
+func (fake *FakeFilter) ReleasesByVersionArgsForCall(i int) ([]go_pivnet.Release, string) {
 	fake.releasesByVersionMutex.RLock()
 	defer fake.releasesByVersionMutex.RUnlock()
 	return fake.releasesByVersionArgsForCall[i].releases, fake.releasesByVersionArgsForCall[i].version
 }
 
-func (fake *FakeFilter) ReleasesByVersionReturns(result1 []pivnet.Release, result2 error) {
+func (fake *FakeFilter) ReleasesByVersionReturns(result1 []go_pivnet.Release, result2 error) {
 	fake.ReleasesByVersionStub = nil
 	fake.releasesByVersionReturns = struct {
-		result1 []pivnet.Release
+		result1 []go_pivnet.Release
 		result2 error
 	}{result1, result2}
 }

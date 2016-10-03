@@ -33,7 +33,7 @@ func (r ReleaseDependenciesService) List(productSlug string, releaseID int) ([]R
 	)
 
 	var response ReleaseDependenciesResponse
-	_, err := r.client.MakeRequest(
+	_, _, err := r.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,
@@ -71,7 +71,7 @@ func (r ReleaseDependenciesService) Add(
 		return err
 	}
 
-	_, err = r.client.MakeRequest(
+	_, _, err = r.client.MakeRequest(
 		"PATCH",
 		url,
 		http.StatusNoContent,
@@ -109,7 +109,7 @@ func (r ReleaseDependenciesService) Remove(
 		return err
 	}
 
-	_, err = r.client.MakeRequest(
+	_, _, err = r.client.MakeRequest(
 		"PATCH",
 		url,
 		http.StatusNoContent,

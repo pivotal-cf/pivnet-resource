@@ -10,7 +10,7 @@ func (e AuthService) Check() error {
 	url := "/authentication"
 
 	var response EULAsResponse
-	_, err := e.client.MakeRequest(
+	_, _, err := e.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,

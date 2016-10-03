@@ -30,14 +30,14 @@ func main() {
 			helpParser := flags.NewParser(&commands.Pivnet, flags.HelpFlag)
 			helpParser.NamespaceDelimiter = "-"
 			helpParser.ParseArgs([]string{"-h"})
-			helpParser.WriteHelp(os.Stderr)
+			helpParser.WriteHelp(os.Stdout)
 			os.Exit(0)
 		}
 
 		// Do not consider the built-in help an error
 		if e, ok := err.(*flags.Error); ok {
 			if e.Type == flags.ErrHelp {
-				fmt.Fprintln(os.Stderr, err.Error())
+				fmt.Fprintln(os.Stdout, err.Error())
 				os.Exit(0)
 			}
 		}

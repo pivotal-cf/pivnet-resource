@@ -4,7 +4,7 @@ package eulafakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/cmd/pivnet/commands/eula"
 )
 
@@ -18,30 +18,30 @@ type FakePivnetClient struct {
 	acceptEULAReturns struct {
 		result1 error
 	}
-	EULAsStub        func() ([]pivnet.EULA, error)
+	EULAsStub        func() ([]go_pivnet.EULA, error)
 	eULAsMutex       sync.RWMutex
 	eULAsArgsForCall []struct{}
 	eULAsReturns     struct {
-		result1 []pivnet.EULA
+		result1 []go_pivnet.EULA
 		result2 error
 	}
-	EULAStub        func(eulaSlug string) (pivnet.EULA, error)
+	EULAStub        func(eulaSlug string) (go_pivnet.EULA, error)
 	eULAMutex       sync.RWMutex
 	eULAArgsForCall []struct {
 		eulaSlug string
 	}
 	eULAReturns struct {
-		result1 pivnet.EULA
+		result1 go_pivnet.EULA
 		result2 error
 	}
-	ReleaseForProductVersionStub        func(productSlug string, releaseVersion string) (pivnet.Release, error)
+	ReleaseForProductVersionStub        func(productSlug string, releaseVersion string) (go_pivnet.Release, error)
 	releaseForProductVersionMutex       sync.RWMutex
 	releaseForProductVersionArgsForCall []struct {
 		productSlug    string
 		releaseVersion string
 	}
 	releaseForProductVersionReturns struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -82,7 +82,7 @@ func (fake *FakePivnetClient) AcceptEULAReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakePivnetClient) EULAs() ([]pivnet.EULA, error) {
+func (fake *FakePivnetClient) EULAs() ([]go_pivnet.EULA, error) {
 	fake.eULAsMutex.Lock()
 	fake.eULAsArgsForCall = append(fake.eULAsArgsForCall, struct{}{})
 	fake.recordInvocation("EULAs", []interface{}{})
@@ -100,15 +100,15 @@ func (fake *FakePivnetClient) EULAsCallCount() int {
 	return len(fake.eULAsArgsForCall)
 }
 
-func (fake *FakePivnetClient) EULAsReturns(result1 []pivnet.EULA, result2 error) {
+func (fake *FakePivnetClient) EULAsReturns(result1 []go_pivnet.EULA, result2 error) {
 	fake.EULAsStub = nil
 	fake.eULAsReturns = struct {
-		result1 []pivnet.EULA
+		result1 []go_pivnet.EULA
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) EULA(eulaSlug string) (pivnet.EULA, error) {
+func (fake *FakePivnetClient) EULA(eulaSlug string) (go_pivnet.EULA, error) {
 	fake.eULAMutex.Lock()
 	fake.eULAArgsForCall = append(fake.eULAArgsForCall, struct {
 		eulaSlug string
@@ -134,15 +134,15 @@ func (fake *FakePivnetClient) EULAArgsForCall(i int) string {
 	return fake.eULAArgsForCall[i].eulaSlug
 }
 
-func (fake *FakePivnetClient) EULAReturns(result1 pivnet.EULA, result2 error) {
+func (fake *FakePivnetClient) EULAReturns(result1 go_pivnet.EULA, result2 error) {
 	fake.EULAStub = nil
 	fake.eULAReturns = struct {
-		result1 pivnet.EULA
+		result1 go_pivnet.EULA
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error) {
+func (fake *FakePivnetClient) ReleaseForProductVersion(productSlug string, releaseVersion string) (go_pivnet.Release, error) {
 	fake.releaseForProductVersionMutex.Lock()
 	fake.releaseForProductVersionArgsForCall = append(fake.releaseForProductVersionArgsForCall, struct {
 		productSlug    string
@@ -169,10 +169,10 @@ func (fake *FakePivnetClient) ReleaseForProductVersionArgsForCall(i int) (string
 	return fake.releaseForProductVersionArgsForCall[i].productSlug, fake.releaseForProductVersionArgsForCall[i].releaseVersion
 }
 
-func (fake *FakePivnetClient) ReleaseForProductVersionReturns(result1 pivnet.Release, result2 error) {
+func (fake *FakePivnetClient) ReleaseForProductVersionReturns(result1 go_pivnet.Release, result2 error) {
 	fake.ReleaseForProductVersionStub = nil
 	fake.releaseForProductVersionReturns = struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}{result1, result2}
 }

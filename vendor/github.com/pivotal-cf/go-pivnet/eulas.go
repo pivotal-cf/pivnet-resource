@@ -32,7 +32,7 @@ func (e EULAsService) List() ([]EULA, error) {
 	url := "/eulas"
 
 	var response EULAsResponse
-	_, err := e.client.MakeRequest(
+	_, _, err := e.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,
@@ -50,7 +50,7 @@ func (e EULAsService) Get(eulaSlug string) (EULA, error) {
 	url := fmt.Sprintf("/eulas/%s", eulaSlug)
 
 	var response EULA
-	_, err := e.client.MakeRequest(
+	_, _, err := e.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,
@@ -72,7 +72,7 @@ func (e EULAsService) Accept(productSlug string, releaseID int) error {
 	)
 
 	var response EULAAcceptanceResponse
-	_, err := e.client.MakeRequest(
+	_, _, err := e.client.MakeRequest(
 		"POST",
 		url,
 		http.StatusOK,

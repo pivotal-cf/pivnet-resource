@@ -47,7 +47,7 @@ func (e FileGroupsService) List(productSlug string) ([]FileGroup, error) {
 	url := fmt.Sprintf("/products/%s/file_groups", productSlug)
 
 	var response FileGroupsResponse
-	_, err := e.client.MakeRequest(
+	_, _, err := e.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,
@@ -68,7 +68,7 @@ func (p FileGroupsService) Get(productSlug string, fileGroupID int) (FileGroup, 
 	)
 
 	var response FileGroup
-	_, err := p.client.MakeRequest(
+	_, _, err := p.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,
@@ -104,7 +104,7 @@ func (p FileGroupsService) Create(productSlug string, name string) (FileGroup, e
 	body := bytes.NewReader(b)
 
 	var response FileGroup
-	_, err = p.client.MakeRequest(
+	_, _, err = p.client.MakeRequest(
 		"POST",
 		url,
 		http.StatusCreated,
@@ -141,7 +141,7 @@ func (p FileGroupsService) Update(productSlug string, fileGroup FileGroup) (File
 	body := bytes.NewReader(b)
 
 	var response FileGroup
-	_, err = p.client.MakeRequest(
+	_, _, err = p.client.MakeRequest(
 		"PATCH",
 		url,
 		http.StatusOK,
@@ -163,7 +163,7 @@ func (p FileGroupsService) Delete(productSlug string, id int) (FileGroup, error)
 	)
 
 	var response FileGroup
-	_, err := p.client.MakeRequest(
+	_, _, err := p.client.MakeRequest(
 		"DELETE",
 		url,
 		http.StatusOK,
@@ -184,7 +184,7 @@ func (p FileGroupsService) ListForRelease(productSlug string, releaseID int) ([]
 	)
 
 	var response FileGroupsResponse
-	_, err := p.client.MakeRequest(
+	_, _, err := p.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,
@@ -196,4 +196,88 @@ func (p FileGroupsService) ListForRelease(productSlug string, releaseID int) ([]
 	}
 
 	return response.FileGroups, nil
+}
+
+func (r FileGroupsService) AddToRelease(
+	productSlug string,
+	releaseID int,
+	fileGroupID int,
+) error {
+	url := fmt.Sprintf(
+		"/products/%s/releases/%d/add_file_group",
+		productSlug,
+		releaseID,
+	)
+
+	body := addRemoveFileGroupBody{
+		FileGroup: addRemoveFileGroupBodyFileGroup{
+			ID: fileGroupID,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return err
+	}
+
+	_, _, err = r.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusNoContent,
+		bytes.NewReader(b),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r FileGroupsService) RemoveFromRelease(
+	productSlug string,
+	releaseID int,
+	fileGroupID int,
+) error {
+	url := fmt.Sprintf(
+		"/products/%s/releases/%d/remove_file_group",
+		productSlug,
+		releaseID,
+	)
+
+	body := addRemoveFileGroupBody{
+		FileGroup: addRemoveFileGroupBodyFileGroup{
+			ID: fileGroupID,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return err
+	}
+
+	_, _, err = r.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusNoContent,
+		bytes.NewReader(b),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type addRemoveFileGroupBody struct {
+	FileGroup addRemoveFileGroupBodyFileGroup `json:"file_group"`
+}
+
+type addRemoveFileGroupBodyFileGroup struct {
+	ID int `json:"id"`
 }

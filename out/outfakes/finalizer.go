@@ -4,15 +4,15 @@ package outfakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 )
 
 type Finalizer struct {
-	FinalizeStub        func(release pivnet.Release) (concourse.OutResponse, error)
+	FinalizeStub        func(release go_pivnet.Release) (concourse.OutResponse, error)
 	finalizeMutex       sync.RWMutex
 	finalizeArgsForCall []struct {
-		release pivnet.Release
+		release go_pivnet.Release
 	}
 	finalizeReturns struct {
 		result1 concourse.OutResponse
@@ -22,10 +22,10 @@ type Finalizer struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Finalizer) Finalize(release pivnet.Release) (concourse.OutResponse, error) {
+func (fake *Finalizer) Finalize(release go_pivnet.Release) (concourse.OutResponse, error) {
 	fake.finalizeMutex.Lock()
 	fake.finalizeArgsForCall = append(fake.finalizeArgsForCall, struct {
-		release pivnet.Release
+		release go_pivnet.Release
 	}{release})
 	fake.recordInvocation("Finalize", []interface{}{release})
 	fake.finalizeMutex.Unlock()
@@ -42,7 +42,7 @@ func (fake *Finalizer) FinalizeCallCount() int {
 	return len(fake.finalizeArgsForCall)
 }
 
-func (fake *Finalizer) FinalizeArgsForCall(i int) pivnet.Release {
+func (fake *Finalizer) FinalizeArgsForCall(i int) go_pivnet.Release {
 	fake.finalizeMutex.RLock()
 	defer fake.finalizeMutex.RUnlock()
 	return fake.finalizeArgsForCall[i].release

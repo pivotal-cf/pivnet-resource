@@ -19,7 +19,7 @@ func (r ReleaseTypesService) Get() ([]ReleaseType, error) {
 	url := fmt.Sprintf("/releases/release_types")
 
 	var response ReleaseTypesResponse
-	_, err := r.client.MakeRequest(
+	_, _, err := r.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,

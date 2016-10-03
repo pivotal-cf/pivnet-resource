@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/pivotal-cf/go-pivnet"
+	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/extension"
 	"github.com/pivotal-cf/go-pivnet/logger"
 )
@@ -128,7 +128,7 @@ func (c Client) ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet
 	return c.client.ReleaseUpgradePaths.Get(productSlug, releaseID)
 }
 
-func (c Client) MakeRequest(method string, url string, expectedResponseCode int, body io.Reader, data interface{}) (*http.Response, error) {
+func (c Client) MakeRequest(method string, url string, expectedResponseCode int, body io.Reader, data interface{}) (*http.Response, []byte, error) {
 	return c.client.MakeRequest(method, url, expectedResponseCode, body, data)
 }
 

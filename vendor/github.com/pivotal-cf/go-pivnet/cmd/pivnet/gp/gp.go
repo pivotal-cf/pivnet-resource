@@ -179,12 +179,24 @@ func (c Client) CreateProductFile(config pivnet.CreateProductFileConfig) (pivnet
 	return c.client.ProductFiles.Create(config)
 }
 
-func (c Client) AddProductFile(productSlug string, releaseID int, productFileID int) error {
+func (c Client) UpdateProductFile(productSlug string, productFile pivnet.ProductFile) (pivnet.ProductFile, error) {
+	return c.client.ProductFiles.Update(productSlug, productFile)
+}
+
+func (c Client) AddProductFileToRelease(productSlug string, releaseID int, productFileID int) error {
 	return c.client.ProductFiles.AddToRelease(productSlug, releaseID, productFileID)
 }
 
-func (c Client) RemoveProductFile(productSlug string, releaseID int, productFileID int) error {
+func (c Client) RemoveProductFileFromRelease(productSlug string, releaseID int, productFileID int) error {
 	return c.client.ProductFiles.RemoveFromRelease(productSlug, releaseID, productFileID)
+}
+
+func (c Client) AddProductFileToFileGroup(productSlug string, fileGroupID int, productFileID int) error {
+	return c.client.ProductFiles.AddToFileGroup(productSlug, fileGroupID, productFileID)
+}
+
+func (c Client) RemoveProductFileFromFileGroup(productSlug string, fileGroupID int, productFileID int) error {
+	return c.client.ProductFiles.RemoveFromFileGroup(productSlug, fileGroupID, productFileID)
 }
 
 func (c Client) ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error) {
@@ -235,7 +247,15 @@ func (c Client) DeleteFileGroup(productSlug string, fileGroupID int) (pivnet.Fil
 	return c.client.FileGroups.Delete(productSlug, fileGroupID)
 }
 
-func (c Client) MakeRequest(method string, url string, expectedResponseCode int, body io.Reader, data interface{}) (*http.Response, error) {
+func (c Client) AddFileGroupToRelease(productSlug string, fileGroupID int, releaseID int) error {
+	return c.client.FileGroups.AddToRelease(productSlug, fileGroupID, releaseID)
+}
+
+func (c Client) RemoveFileGroupFromRelease(productSlug string, fileGroupID int, releaseID int) error {
+	return c.client.FileGroups.RemoveFromRelease(productSlug, fileGroupID, releaseID)
+}
+
+func (c Client) MakeRequest(method string, url string, expectedResponseCode int, body io.Reader, data interface{}) (*http.Response, []byte, error) {
 	return c.client.MakeRequest(method, url, expectedResponseCode, body, data)
 }
 

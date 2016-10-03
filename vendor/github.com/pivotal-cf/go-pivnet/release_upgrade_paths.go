@@ -32,7 +32,7 @@ func (r ReleaseUpgradePathsService) Get(productSlug string, releaseID int) ([]Re
 	)
 
 	var response ReleaseUpgradePathsResponse
-	_, err := r.client.MakeRequest(
+	_, _, err := r.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,
@@ -70,7 +70,7 @@ func (r ReleaseUpgradePathsService) Add(
 		return err
 	}
 
-	_, err = r.client.MakeRequest(
+	_, _, err = r.client.MakeRequest(
 		"PATCH",
 		url,
 		http.StatusNoContent,
@@ -108,7 +108,7 @@ func (r ReleaseUpgradePathsService) Remove(
 		return err
 	}
 
-	_, err = r.client.MakeRequest(
+	_, _, err = r.client.MakeRequest(
 		"PATCH",
 		url,
 		http.StatusNoContent,

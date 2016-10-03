@@ -21,8 +21,12 @@ type PivnetClient interface {
 	GetProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
 	GetProductFile(productSlug string, productFileID int) (pivnet.ProductFile, error)
 	GetProductFileForRelease(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
-	AddProductFile(productSlug string, releaseID int, productFileID int) error
-	RemoveProductFile(productSlug string, releaseID int, productFileID int) error
+	CreateProductFile(config pivnet.CreateProductFileConfig) (pivnet.ProductFile, error)
+	UpdateProductFile(productSlug string, productFile pivnet.ProductFile) (pivnet.ProductFile, error)
+	AddProductFileToRelease(productSlug string, releaseID int, productFileID int) error
+	RemoveProductFileFromRelease(productSlug string, releaseID int, productFileID int) error
+	AddProductFileToFileGroup(productSlug string, fileGroupID int, productFileID int) error
+	RemoveProductFileFromFileGroup(productSlug string, fileGroupID int, productFileID int) error
 	DeleteProductFile(productSlug string, releaseID int) (pivnet.ProductFile, error)
 	AcceptEULA(productSlug string, releaseID int) error
 	DownloadFile(writer io.Writer, downloadLink string) error
@@ -186,6 +190,60 @@ func (c *ProductFileClient) Get(
 	return c.printProductFile(productFile)
 }
 
+func (c *ProductFileClient) Create(config pivnet.CreateProductFileConfig) error {
+	productFile, err := c.pivnetClient.CreateProductFile(config)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	return c.printProductFile(productFile)
+}
+
+func (c *ProductFileClient) Update(
+	productFileID int,
+	productSlug string,
+	name *string,
+	fileType *string,
+	fileVersion *string,
+	md5 *string,
+	description *string,
+) error {
+	productFile, err := c.pivnetClient.GetProductFile(
+		productSlug,
+		productFileID,
+	)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	if name != nil {
+		productFile.Name = *name
+	}
+
+	if fileType != nil {
+		productFile.FileType = *fileType
+	}
+
+	if fileVersion != nil {
+		productFile.FileVersion = *fileVersion
+	}
+
+	if md5 != nil {
+		productFile.MD5 = *md5
+	}
+
+	if description != nil {
+		productFile.Description = *description
+	}
+
+	updatedProductFile, err := c.pivnetClient.UpdateProductFile(productSlug, productFile)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	return c.printProductFile(updatedProductFile)
+}
+
 func (c *ProductFileClient) AddToRelease(
 	productSlug string,
 	releaseVersion string,
@@ -196,7 +254,7 @@ func (c *ProductFileClient) AddToRelease(
 		return c.eh.HandleError(err)
 	}
 
-	err = c.pivnetClient.AddProductFile(
+	err = c.pivnetClient.AddProductFileToRelease(
 		productSlug,
 		release.ID,
 		productFileID,
@@ -228,7 +286,7 @@ func (c *ProductFileClient) RemoveFromRelease(
 		return c.eh.HandleError(err)
 	}
 
-	err = c.pivnetClient.RemoveProductFile(
+	err = c.pivnetClient.RemoveProductFileFromRelease(
 		productSlug,
 		release.ID,
 		productFileID,
@@ -244,6 +302,62 @@ func (c *ProductFileClient) RemoveFromRelease(
 			productFileID,
 			productSlug,
 			releaseVersion,
+		)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *ProductFileClient) AddToFileGroup(
+	productSlug string,
+	fileGroupID int,
+	productFileID int,
+) error {
+	err := c.pivnetClient.AddProductFileToFileGroup(
+		productSlug,
+		fileGroupID,
+		productFileID,
+	)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	if c.format == printer.PrintAsTable {
+		_, err = fmt.Fprintf(
+			c.outputWriter,
+			"product file %d successfully added to file group %d\n",
+			productFileID,
+			fileGroupID,
+		)
+	}
+
+	return nil
+}
+
+func (c *ProductFileClient) RemoveFromFileGroup(
+	productSlug string,
+	fileGroupID int,
+	productFileID int,
+) error {
+	err := c.pivnetClient.RemoveProductFileFromFileGroup(
+		productSlug,
+		fileGroupID,
+		productFileID,
+	)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	if c.format == printer.PrintAsTable {
+		_, err = fmt.Fprintf(
+			c.outputWriter,
+			"product file %d successfully removed from file group %d\n",
+			productFileID,
+			fileGroupID,
 		)
 
 		if err != nil {

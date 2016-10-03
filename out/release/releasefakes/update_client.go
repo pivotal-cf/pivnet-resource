@@ -4,18 +4,18 @@ package releasefakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet"
 )
 
 type UpdateClient struct {
-	UpdateReleaseStub        func(productSlug string, release pivnet.Release) (pivnet.Release, error)
+	UpdateReleaseStub        func(productSlug string, release go_pivnet.Release) (go_pivnet.Release, error)
 	updateReleaseMutex       sync.RWMutex
 	updateReleaseArgsForCall []struct {
 		productSlug string
-		release     pivnet.Release
+		release     go_pivnet.Release
 	}
 	updateReleaseReturns struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}
 	ReleaseETagStub        func(productSlug string, releaseID int) (string, error)
@@ -42,11 +42,11 @@ type UpdateClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *UpdateClient) UpdateRelease(productSlug string, release pivnet.Release) (pivnet.Release, error) {
+func (fake *UpdateClient) UpdateRelease(productSlug string, release go_pivnet.Release) (go_pivnet.Release, error) {
 	fake.updateReleaseMutex.Lock()
 	fake.updateReleaseArgsForCall = append(fake.updateReleaseArgsForCall, struct {
 		productSlug string
-		release     pivnet.Release
+		release     go_pivnet.Release
 	}{productSlug, release})
 	fake.recordInvocation("UpdateRelease", []interface{}{productSlug, release})
 	fake.updateReleaseMutex.Unlock()
@@ -63,16 +63,16 @@ func (fake *UpdateClient) UpdateReleaseCallCount() int {
 	return len(fake.updateReleaseArgsForCall)
 }
 
-func (fake *UpdateClient) UpdateReleaseArgsForCall(i int) (string, pivnet.Release) {
+func (fake *UpdateClient) UpdateReleaseArgsForCall(i int) (string, go_pivnet.Release) {
 	fake.updateReleaseMutex.RLock()
 	defer fake.updateReleaseMutex.RUnlock()
 	return fake.updateReleaseArgsForCall[i].productSlug, fake.updateReleaseArgsForCall[i].release
 }
 
-func (fake *UpdateClient) UpdateReleaseReturns(result1 pivnet.Release, result2 error) {
+func (fake *UpdateClient) UpdateReleaseReturns(result1 go_pivnet.Release, result2 error) {
 	fake.UpdateReleaseStub = nil
 	fake.updateReleaseReturns = struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}{result1, result2}
 }

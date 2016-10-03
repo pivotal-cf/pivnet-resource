@@ -4,18 +4,18 @@ package infakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet"
 )
 
 type FakePivnetClient struct {
-	GetReleaseStub        func(productSlug string, productVersion string) (pivnet.Release, error)
+	GetReleaseStub        func(productSlug string, productVersion string) (go_pivnet.Release, error)
 	getReleaseMutex       sync.RWMutex
 	getReleaseArgsForCall []struct {
 		productSlug    string
 		productVersion string
 	}
 	getReleaseReturns struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}
 	AcceptEULAStub        func(productSlug string, releaseID int) error
@@ -27,17 +27,17 @@ type FakePivnetClient struct {
 	acceptEULAReturns struct {
 		result1 error
 	}
-	GetProductFilesForReleaseStub        func(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
+	GetProductFilesForReleaseStub        func(productSlug string, releaseID int) ([]go_pivnet.ProductFile, error)
 	getProductFilesForReleaseMutex       sync.RWMutex
 	getProductFilesForReleaseArgsForCall []struct {
 		productSlug string
 		releaseID   int
 	}
 	getProductFilesForReleaseReturns struct {
-		result1 []pivnet.ProductFile
+		result1 []go_pivnet.ProductFile
 		result2 error
 	}
-	GetProductFileStub        func(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
+	GetProductFileStub        func(productSlug string, releaseID int, productFileID int) (go_pivnet.ProductFile, error)
 	getProductFileMutex       sync.RWMutex
 	getProductFileArgsForCall []struct {
 		productSlug   string
@@ -45,34 +45,34 @@ type FakePivnetClient struct {
 		productFileID int
 	}
 	getProductFileReturns struct {
-		result1 pivnet.ProductFile
+		result1 go_pivnet.ProductFile
 		result2 error
 	}
-	ReleaseDependenciesStub        func(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
+	ReleaseDependenciesStub        func(productSlug string, releaseID int) ([]go_pivnet.ReleaseDependency, error)
 	releaseDependenciesMutex       sync.RWMutex
 	releaseDependenciesArgsForCall []struct {
 		productSlug string
 		releaseID   int
 	}
 	releaseDependenciesReturns struct {
-		result1 []pivnet.ReleaseDependency
+		result1 []go_pivnet.ReleaseDependency
 		result2 error
 	}
-	ReleaseUpgradePathsStub        func(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error)
+	ReleaseUpgradePathsStub        func(productSlug string, releaseID int) ([]go_pivnet.ReleaseUpgradePath, error)
 	releaseUpgradePathsMutex       sync.RWMutex
 	releaseUpgradePathsArgsForCall []struct {
 		productSlug string
 		releaseID   int
 	}
 	releaseUpgradePathsReturns struct {
-		result1 []pivnet.ReleaseUpgradePath
+		result1 []go_pivnet.ReleaseUpgradePath
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakePivnetClient) GetRelease(productSlug string, productVersion string) (pivnet.Release, error) {
+func (fake *FakePivnetClient) GetRelease(productSlug string, productVersion string) (go_pivnet.Release, error) {
 	fake.getReleaseMutex.Lock()
 	fake.getReleaseArgsForCall = append(fake.getReleaseArgsForCall, struct {
 		productSlug    string
@@ -99,10 +99,10 @@ func (fake *FakePivnetClient) GetReleaseArgsForCall(i int) (string, string) {
 	return fake.getReleaseArgsForCall[i].productSlug, fake.getReleaseArgsForCall[i].productVersion
 }
 
-func (fake *FakePivnetClient) GetReleaseReturns(result1 pivnet.Release, result2 error) {
+func (fake *FakePivnetClient) GetReleaseReturns(result1 go_pivnet.Release, result2 error) {
 	fake.GetReleaseStub = nil
 	fake.getReleaseReturns = struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}{result1, result2}
 }
@@ -141,7 +141,7 @@ func (fake *FakePivnetClient) AcceptEULAReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakePivnetClient) GetProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error) {
+func (fake *FakePivnetClient) GetProductFilesForRelease(productSlug string, releaseID int) ([]go_pivnet.ProductFile, error) {
 	fake.getProductFilesForReleaseMutex.Lock()
 	fake.getProductFilesForReleaseArgsForCall = append(fake.getProductFilesForReleaseArgsForCall, struct {
 		productSlug string
@@ -168,15 +168,15 @@ func (fake *FakePivnetClient) GetProductFilesForReleaseArgsForCall(i int) (strin
 	return fake.getProductFilesForReleaseArgsForCall[i].productSlug, fake.getProductFilesForReleaseArgsForCall[i].releaseID
 }
 
-func (fake *FakePivnetClient) GetProductFilesForReleaseReturns(result1 []pivnet.ProductFile, result2 error) {
+func (fake *FakePivnetClient) GetProductFilesForReleaseReturns(result1 []go_pivnet.ProductFile, result2 error) {
 	fake.GetProductFilesForReleaseStub = nil
 	fake.getProductFilesForReleaseReturns = struct {
-		result1 []pivnet.ProductFile
+		result1 []go_pivnet.ProductFile
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) GetProductFile(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error) {
+func (fake *FakePivnetClient) GetProductFile(productSlug string, releaseID int, productFileID int) (go_pivnet.ProductFile, error) {
 	fake.getProductFileMutex.Lock()
 	fake.getProductFileArgsForCall = append(fake.getProductFileArgsForCall, struct {
 		productSlug   string
@@ -204,15 +204,15 @@ func (fake *FakePivnetClient) GetProductFileArgsForCall(i int) (string, int, int
 	return fake.getProductFileArgsForCall[i].productSlug, fake.getProductFileArgsForCall[i].releaseID, fake.getProductFileArgsForCall[i].productFileID
 }
 
-func (fake *FakePivnetClient) GetProductFileReturns(result1 pivnet.ProductFile, result2 error) {
+func (fake *FakePivnetClient) GetProductFileReturns(result1 go_pivnet.ProductFile, result2 error) {
 	fake.GetProductFileStub = nil
 	fake.getProductFileReturns = struct {
-		result1 pivnet.ProductFile
+		result1 go_pivnet.ProductFile
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error) {
+func (fake *FakePivnetClient) ReleaseDependencies(productSlug string, releaseID int) ([]go_pivnet.ReleaseDependency, error) {
 	fake.releaseDependenciesMutex.Lock()
 	fake.releaseDependenciesArgsForCall = append(fake.releaseDependenciesArgsForCall, struct {
 		productSlug string
@@ -239,15 +239,15 @@ func (fake *FakePivnetClient) ReleaseDependenciesArgsForCall(i int) (string, int
 	return fake.releaseDependenciesArgsForCall[i].productSlug, fake.releaseDependenciesArgsForCall[i].releaseID
 }
 
-func (fake *FakePivnetClient) ReleaseDependenciesReturns(result1 []pivnet.ReleaseDependency, result2 error) {
+func (fake *FakePivnetClient) ReleaseDependenciesReturns(result1 []go_pivnet.ReleaseDependency, result2 error) {
 	fake.ReleaseDependenciesStub = nil
 	fake.releaseDependenciesReturns = struct {
-		result1 []pivnet.ReleaseDependency
+		result1 []go_pivnet.ReleaseDependency
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error) {
+func (fake *FakePivnetClient) ReleaseUpgradePaths(productSlug string, releaseID int) ([]go_pivnet.ReleaseUpgradePath, error) {
 	fake.releaseUpgradePathsMutex.Lock()
 	fake.releaseUpgradePathsArgsForCall = append(fake.releaseUpgradePathsArgsForCall, struct {
 		productSlug string
@@ -274,10 +274,10 @@ func (fake *FakePivnetClient) ReleaseUpgradePathsArgsForCall(i int) (string, int
 	return fake.releaseUpgradePathsArgsForCall[i].productSlug, fake.releaseUpgradePathsArgsForCall[i].releaseID
 }
 
-func (fake *FakePivnetClient) ReleaseUpgradePathsReturns(result1 []pivnet.ReleaseUpgradePath, result2 error) {
+func (fake *FakePivnetClient) ReleaseUpgradePathsReturns(result1 []go_pivnet.ReleaseUpgradePath, result2 error) {
 	fake.ReleaseUpgradePathsStub = nil
 	fake.releaseUpgradePathsReturns = struct {
-		result1 []pivnet.ReleaseUpgradePath
+		result1 []go_pivnet.ReleaseUpgradePath
 		result2 error
 	}{result1, result2}
 }

@@ -151,21 +151,21 @@ func (c Client) MakeRequest(
 	expectedStatusCode int,
 	body io.Reader,
 	data interface{},
-) (*http.Response, error) {
+) (*http.Response, []byte, error) {
 	req, err := c.CreateRequest(requestType, endpoint, body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	reqBytes, err := httputil.DumpRequestOut(req, true)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	c.logger.Debug("Making request", logger.Data{"request": string(reqBytes)})
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 
@@ -173,28 +173,28 @@ func (c Client) MakeRequest(
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if len(b) > 0 {
 		c.logger.Debug("Response body", logger.Data{"response body": string(b)})
 	}
 
-	if resp.StatusCode != expectedStatusCode {
+	if expectedStatusCode > 0 && resp.StatusCode != expectedStatusCode {
 		var pErr pivnetErr
 		err = json.Unmarshal(b, &pErr)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		switch resp.StatusCode {
 		case http.StatusUnauthorized:
-			return nil, newErrUnauthorized(pErr.Message)
+			return nil, nil, newErrUnauthorized(pErr.Message)
 		case http.StatusNotFound:
-			return nil, newErrNotFound(pErr.Message)
+			return nil, nil, newErrNotFound(pErr.Message)
 		}
 
-		return nil, ErrPivnetOther{
+		return nil, nil, ErrPivnetOther{
 			ResponseCode: resp.StatusCode,
 			Message:      pErr.Message,
 			Errors:       pErr.Errors,
@@ -204,11 +204,11 @@ func (c Client) MakeRequest(
 	if len(b) > 0 && data != nil {
 		err = json.Unmarshal(b, data)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
-	return resp, nil
+	return resp, b, nil
 }
 
 func (c Client) stripHostPrefix(downloadLink string) string {

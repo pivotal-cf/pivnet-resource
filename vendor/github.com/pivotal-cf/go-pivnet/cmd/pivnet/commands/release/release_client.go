@@ -15,6 +15,7 @@ import (
 type PivnetClient interface {
 	ReleasesForProductSlug(productSlug string) ([]pivnet.Release, error)
 	ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
+	CreateRelease(config pivnet.CreateReleaseConfig) (pivnet.Release, error)
 	DeleteRelease(productSlug string, release pivnet.Release) error
 	ReleaseETag(productSlug string, releaseID int) (string, error)
 }
@@ -134,6 +135,37 @@ func (c *ReleaseClient) printRelease(release CLIRelease) error {
 	}
 
 	return nil
+}
+
+func (c *ReleaseClient) Create(
+	productSlug string,
+	releaseVersion string,
+	releaseType string,
+	eulaSlug string,
+) error {
+	newReleaseConfig := pivnet.CreateReleaseConfig{
+		ProductSlug:    productSlug,
+		ProductVersion: releaseVersion,
+		ReleaseType:    releaseType,
+		EULASlug:       eulaSlug,
+	}
+
+	release, err := c.pivnetClient.CreateRelease(newReleaseConfig)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	etag, err := c.pivnetClient.ReleaseETag(productSlug, release.ID)
+	if err != nil {
+		return c.eh.HandleError(err)
+	}
+
+	r := CLIRelease{
+		release,
+		etag,
+	}
+
+	return c.printRelease(r)
 }
 
 func (c *ReleaseClient) Delete(productSlug string, releaseVersion string) error {

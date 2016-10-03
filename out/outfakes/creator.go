@@ -4,22 +4,22 @@ package outfakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet"
 )
 
 type Creator struct {
-	CreateStub        func() (pivnet.Release, error)
+	CreateStub        func() (go_pivnet.Release, error)
 	createMutex       sync.RWMutex
 	createArgsForCall []struct{}
 	createReturns     struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Creator) Create() (pivnet.Release, error) {
+func (fake *Creator) Create() (go_pivnet.Release, error) {
 	fake.createMutex.Lock()
 	fake.createArgsForCall = append(fake.createArgsForCall, struct{}{})
 	fake.recordInvocation("Create", []interface{}{})
@@ -37,10 +37,10 @@ func (fake *Creator) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
-func (fake *Creator) CreateReturns(result1 pivnet.Release, result2 error) {
+func (fake *Creator) CreateReturns(result1 go_pivnet.Release, result2 error) {
 	fake.CreateStub = nil
 	fake.createReturns = struct {
-		result1 pivnet.Release
+		result1 go_pivnet.Release
 		result2 error
 	}{result1, result2}
 }

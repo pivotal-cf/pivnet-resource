@@ -45,7 +45,7 @@ func (p ProductFilesService) List(productSlug string) ([]ProductFile, error) {
 	url := fmt.Sprintf("/products/%s/product_files", productSlug)
 
 	var response ProductFilesResponse
-	_, err := p.client.MakeRequest(
+	_, _, err := p.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,
@@ -67,7 +67,7 @@ func (p ProductFilesService) ListForRelease(productSlug string, releaseID int) (
 	)
 
 	var response ProductFilesResponse
-	_, err := p.client.MakeRequest(
+	_, _, err := p.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,
@@ -89,7 +89,7 @@ func (p ProductFilesService) Get(productSlug string, productFileID int) (Product
 	)
 
 	var response ProductFileResponse
-	_, err := p.client.MakeRequest(
+	_, _, err := p.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,
@@ -112,7 +112,7 @@ func (p ProductFilesService) GetForRelease(productSlug string, releaseID int, pr
 	)
 
 	var response ProductFileResponse
-	_, err := p.client.MakeRequest(
+	_, _, err := p.client.MakeRequest(
 		"GET",
 		url,
 		http.StatusOK,
@@ -133,7 +133,7 @@ func (p ProductFilesService) Create(config CreateProductFileConfig) (ProductFile
 
 	url := fmt.Sprintf("/products/%s/product_files", config.ProductSlug)
 
-	body := createProductFileBody{
+	body := createUpdateProductFileBody{
 		ProductFile: ProductFile{
 			MD5:          config.MD5,
 			FileType:     config.FileType,
@@ -152,7 +152,7 @@ func (p ProductFilesService) Create(config CreateProductFileConfig) (ProductFile
 	}
 
 	var response ProductFileResponse
-	_, err = p.client.MakeRequest(
+	_, _, err = p.client.MakeRequest(
 		"POST",
 		url,
 		http.StatusCreated,
@@ -166,7 +166,42 @@ func (p ProductFilesService) Create(config CreateProductFileConfig) (ProductFile
 	return response.ProductFile, nil
 }
 
-type createProductFileBody struct {
+func (p ProductFilesService) Update(productSlug string, productFile ProductFile) (ProductFile, error) {
+	url := fmt.Sprintf("/products/%s/product_files/%d", productSlug, productFile.ID)
+
+	body := createUpdateProductFileBody{
+		ProductFile: ProductFile{
+			Description: productFile.Description,
+			FileType:    productFile.FileType,
+			FileVersion: productFile.FileVersion,
+			MD5:         productFile.MD5,
+			Name:        productFile.Name,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return ProductFile{}, err
+	}
+
+	var response ProductFileResponse
+	_, _, err = p.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusOK,
+		bytes.NewReader(b),
+		&response,
+	)
+	if err != nil {
+		return ProductFile{}, err
+	}
+
+	return response.ProductFile, nil
+}
+
+type createUpdateProductFileBody struct {
 	ProductFile ProductFile `json:"product_file"`
 }
 
@@ -178,7 +213,7 @@ func (p ProductFilesService) Delete(productSlug string, id int) (ProductFile, er
 	)
 
 	var response ProductFileResponse
-	_, err := p.client.MakeRequest(
+	_, _, err := p.client.MakeRequest(
 		"DELETE",
 		url,
 		http.StatusOK,
@@ -203,7 +238,7 @@ func (p ProductFilesService) AddToRelease(
 		releaseID,
 	)
 
-	body := createProductFileBody{
+	body := createUpdateProductFileBody{
 		ProductFile: ProductFile{
 			ID: productFileID,
 		},
@@ -216,7 +251,7 @@ func (p ProductFilesService) AddToRelease(
 		return err
 	}
 
-	_, err = p.client.MakeRequest(
+	_, _, err = p.client.MakeRequest(
 		"PATCH",
 		url,
 		http.StatusNoContent,
@@ -241,7 +276,7 @@ func (p ProductFilesService) RemoveFromRelease(
 		releaseID,
 	)
 
-	body := createProductFileBody{
+	body := createUpdateProductFileBody{
 		ProductFile: ProductFile{
 			ID: productFileID,
 		},
@@ -254,7 +289,83 @@ func (p ProductFilesService) RemoveFromRelease(
 		return err
 	}
 
-	_, err = p.client.MakeRequest(
+	_, _, err = p.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusNoContent,
+		bytes.NewReader(b),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p ProductFilesService) AddToFileGroup(
+	productSlug string,
+	fileGroupID int,
+	productFileID int,
+) error {
+	url := fmt.Sprintf(
+		"/products/%s/file_groups/%d/add_product_file",
+		productSlug,
+		fileGroupID,
+	)
+
+	body := createUpdateProductFileBody{
+		ProductFile: ProductFile{
+			ID: productFileID,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return err
+	}
+
+	_, _, err = p.client.MakeRequest(
+		"PATCH",
+		url,
+		http.StatusNoContent,
+		bytes.NewReader(b),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p ProductFilesService) RemoveFromFileGroup(
+	productSlug string,
+	fileGroupID int,
+	productFileID int,
+) error {
+	url := fmt.Sprintf(
+		"/products/%s/file_groups/%d/remove_product_file",
+		productSlug,
+		fileGroupID,
+	)
+
+	body := createUpdateProductFileBody{
+		ProductFile: ProductFile{
+			ID: productFileID,
+		},
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		// Untested as we cannot force an error because we are marshalling
+		// a known-good body
+		return err
+	}
+
+	_, _, err = p.client.MakeRequest(
 		"PATCH",
 		url,
 		http.StatusNoContent,

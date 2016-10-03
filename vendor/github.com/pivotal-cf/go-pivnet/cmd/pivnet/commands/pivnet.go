@@ -40,6 +40,8 @@ type PivnetCommand struct {
 	Help    HelpCommand    `command:"help" alias:"h" description:"Print this help message"`
 	Version VersionCommand `command:"version" alias:"v" description:"Print the version of this CLI and exit"`
 
+	Curl CurlCommand `command:"curl" alias:"c" description:"Curl an endpoint"`
+
 	ReleaseTypes ReleaseTypesCommand `command:"release-types" alias:"rts" description:"List release types"`
 
 	EULAs      EULAsCommand      `command:"eulas" alias:"es" description:"List EULAs"`
@@ -51,20 +53,25 @@ type PivnetCommand struct {
 
 	ProductFiles      ProductFilesCommand      `command:"product-files" alias:"pfs" description:"List product files"`
 	ProductFile       ProductFileCommand       `command:"product-file" alias:"pf" description:"Show product file"`
+	CreateProductFile CreateProductFileCommand `command:"create-product-file" alias:"cpf" description:"Create product file"`
+	UpdateProductFile UpdateProductFileCommand `command:"update-product-file" alias:"upf" description:"Update product file"`
 	AddProductFile    AddProductFileCommand    `command:"add-product-file" alias:"apf" description:"Add product file to release"`
 	RemoveProductFile RemoveProductFileCommand `command:"remove-product-file" alias:"rpf" description:"Remove product file from release"`
 	DeleteProductFile DeleteProductFileCommand `command:"delete-product-file" alias:"dpf" description:"Delete product file"`
 
 	DownloadProductFile DownloadProductFileCommand `command:"download-product-file" alias:"dlpf" description:"Download product file"`
 
-	FileGroups      FileGroupsCommand      `command:"file-groups" alias:"fgs" description:"List file groups"`
-	FileGroup       FileGroupCommand       `command:"file-group" alias:"fg" description:"Show file group"`
-	CreateFileGroup CreateFileGroupCommand `command:"create-file-group" alias:"cfg" description:"Create file group"`
-	UpdateFileGroup UpdateFileGroupCommand `command:"update-file-group" alias:"ufg" description:"Update file group"`
-	DeleteFileGroup DeleteFileGroupCommand `command:"delete-file-group" alias:"dfg" description:"Delete file group"`
+	FileGroups                 FileGroupsCommand                 `command:"file-groups" alias:"fgs" description:"List file groups"`
+	FileGroup                  FileGroupCommand                  `command:"file-group" alias:"fg" description:"Show file group"`
+	CreateFileGroup            CreateFileGroupCommand            `command:"create-file-group" alias:"cfg" description:"Create file group"`
+	UpdateFileGroup            UpdateFileGroupCommand            `command:"update-file-group" alias:"ufg" description:"Update file group"`
+	DeleteFileGroup            DeleteFileGroupCommand            `command:"delete-file-group" alias:"dfg" description:"Delete file group"`
+	AddFileGroupToRelease      AddFileGroupToReleaseCommand      `command:"add-file-group" alias:"afg" description:"Add file group to release"`
+	RemoveFileGroupFromRelease RemoveFileGroupFromReleaseCommand `command:"remove-file-group" alias:"rfg" description:"Remove file group from release"`
 
 	Releases      ReleasesCommand      `command:"releases" alias:"rs" description:"List releases"`
 	Release       ReleaseCommand       `command:"release" alias:"r" description:"Show release"`
+	CreateRelease CreateReleaseCommand `command:"create-release" alias:"cr" description:"Create release"`
 	DeleteRelease DeleteReleaseCommand `command:"delete-release" alias:"dr" description:"Delete release"`
 
 	UserGroups      UserGroupsCommand      `command:"user-groups" alias:"ugs" description:"List user groups"`
