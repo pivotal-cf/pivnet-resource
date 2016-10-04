@@ -25,7 +25,7 @@ func NewFileWriter(downloadDir string, logger *log.Logger) *FileWriter {
 
 func (w FileWriter) WriteMetadataYAMLFile(mdata metadata.Metadata) error {
 	yamlMetadataFilepath := filepath.Join(w.downloadDir, "metadata.yaml")
-	w.logger.Println("Writing metadata to json file")
+	w.logger.Println("Writing metadata to yaml file")
 
 	yamlMetadata, err := yaml.Marshal(mdata)
 	if err != nil {
