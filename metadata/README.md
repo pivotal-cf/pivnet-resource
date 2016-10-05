@@ -127,5 +127,5 @@ All other keys are optional. The purpose of the keys is as follows:
   This affects only the display name; the filename of the uploaded file remains
   the same as that of the local file.
 
-The top-level `dependencies` key is currently write-only.
+The top-level `dependencies` key is currently only written when getting existing releases via `in` - it is not yet supported when creating releases with `out`.
 
