@@ -63,11 +63,11 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 	}
 
 	if len(matches) == 0 {
-		return fmt.Errorf("no matches found for pattern: %s", fileGlob)
+		return fmt.Errorf("no matches found for pattern: '%s'", fileGlob)
 	}
 
 	if len(matches) > 1 {
-		return fmt.Errorf("more than one match found for pattern: %s\n%v", fileGlob, matches)
+		return fmt.Errorf("more than one match found for pattern: '%s': %v", fileGlob, matches)
 	}
 
 	localPath := matches[0]
@@ -75,7 +75,7 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 
 	acl := "private"
 
-	fmt.Fprintf(c.stderr, "Uploading %s to s3://%s/%s\n", localPath, c.bucket, remotePath)
+	fmt.Fprintln(c.stderr, fmt.Sprintf("Uploading %s to s3://%s/%s", localPath, c.bucket, remotePath))
 	_, err = c.s3client.UploadFile(
 		c.bucket,
 		remotePath,
@@ -85,7 +85,9 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(c.stderr, "Successfully uploaded %s to s3://%s/%s\n", localPath, c.bucket, remotePath)
+
+	fmt.Fprintln(c.stderr) // the s3client does not append a new-line to its output
+	fmt.Fprintln(c.stderr, fmt.Sprintf("Successfully uploaded '%s' to 's3://%s/%s'", localPath, c.bucket, remotePath))
 
 	return nil
 }

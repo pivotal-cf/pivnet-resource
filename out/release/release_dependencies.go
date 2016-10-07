@@ -36,12 +36,6 @@ type releaseDependenciesAdderClient interface {
 }
 
 func (rf ReleaseDependenciesAdder) AddReleaseDependencies(release pivnet.Release) error {
-	rf.logger.Println(fmt.Sprintf(
-		"Adding release dependencies",
-		rf.productSlug,
-		release.ID,
-	))
-
 	for i, d := range rf.metadata.Dependencies {
 		dependentReleaseID := d.Release.ID
 		if dependentReleaseID == 0 {
@@ -53,7 +47,7 @@ func (rf ReleaseDependenciesAdder) AddReleaseDependencies(release pivnet.Release
 			}
 
 			rf.logger.Println(fmt.Sprintf(
-				"Looking up dependent release ID for: %s/%s",
+				"Looking up dependent release ID for: '%s/%s'",
 				d.Release.Product.Slug,
 				d.Release.Version,
 			))

@@ -93,11 +93,6 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		return concourse.OutResponse{}, fmt.Errorf("out dir must be provided")
 	}
 
-	if c.m.Release != nil {
-		c.logger.Println("metadata release parsed")
-	}
-
-	c.logger.Println("validating metadata")
 	err := c.validation.Validate()
 	if err != nil {
 		return concourse.OutResponse{}, err
