@@ -348,5 +348,7 @@ func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]strin
 
 	c.logger.Println("MD5 matched for all downloaded files")
 
+	c.logger.Println("Get complete")
+
 	return nil
 }

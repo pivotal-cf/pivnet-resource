@@ -152,5 +152,7 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		return concourse.OutResponse{}, err
 	}
 
+	c.logger.Println("Put complete")
+
 	return out, nil
 }
