@@ -127,7 +127,7 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 	if len(missingFiles) > 0 {
 		return concourse.OutResponse{},
 			fmt.Errorf(
-				"product_files were provided in metadata that match no globs: %v",
+				"product files were provided in metadata that match no globs: %v",
 				missingFiles,
 			)
 	}

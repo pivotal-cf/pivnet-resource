@@ -36,7 +36,7 @@ func (g Globber) ExactGlobs() ([]string, error) {
 	}
 
 	if len(matches) == 0 {
-		return nil, fmt.Errorf("no matches found for pattern: %s", g.fileGlob)
+		return nil, fmt.Errorf("no matches found for pattern: '%s'", g.fileGlob)
 	}
 
 	absPathSourcesDir, err := filepath.Abs(g.sourcesDir)
@@ -44,12 +44,8 @@ func (g Globber) ExactGlobs() ([]string, error) {
 		panic(err)
 	}
 
-	g.logger.Printf("Absolute path to sourcesDir: %s", absPathSourcesDir)
-
 	exactGlobs := []string{}
 	for _, match := range matches {
-		g.logger.Printf("Matched file: %s", match)
-
 		absPath, err := filepath.Abs(match)
 		if err != nil {
 			panic(err)
@@ -59,8 +55,6 @@ func (g Globber) ExactGlobs() ([]string, error) {
 		if err != nil {
 			panic(err)
 		}
-
-		g.logger.Printf("Exact glob %s matched %s", exactGlob, "matches")
 
 		exactGlobs = append(exactGlobs, exactGlob)
 	}

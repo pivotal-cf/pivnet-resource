@@ -168,7 +168,7 @@ var _ = Describe("ReleaseCreator", func() {
 
 					It("returns an error", func() {
 						_, err := creator.Create()
-						Expect(err).To(MatchError(errors.New("provided eula_slug: 'magic-slug' must be one of: ['a-failing-slug']")))
+						Expect(err).To(MatchError(errors.New("provided EULA slug: 'magic-slug' must be one of: ['a-failing-slug']")))
 					})
 				})
 
@@ -190,7 +190,7 @@ var _ = Describe("ReleaseCreator", func() {
 
 					It("returns an error", func() {
 						_, err := creator.Create()
-						Expect(err).To(MatchError(errors.New("provided release_type: 'some-release-type' must be one of: ['a-missing-release-type']")))
+						Expect(err).To(MatchError(errors.New("provided release type: 'some-release-type' must be one of: ['a-missing-release-type']")))
 					})
 				})
 
@@ -215,7 +215,7 @@ var _ = Describe("ReleaseCreator", func() {
 
 			It("returns a error", func() {
 				_, err := creator.Create()
-				Expect(err).To(MatchError(fmt.Errorf("release already exists with version: %s", fetchReturnedProductVersion)))
+				Expect(err).To(MatchError(fmt.Errorf("release already exists with version: '%s'", fetchReturnedProductVersion)))
 			})
 		})
 

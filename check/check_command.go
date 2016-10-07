@@ -69,11 +69,11 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return nil, err
 	}
 
-	c.logger.Printf("Located logfiles: %v\n", existingLogFiles)
+	c.logger.Println(fmt.Sprintf("Located logfiles: %v", existingLogFiles))
 
 	for _, f := range existingLogFiles {
 		if filepath.Base(f) != filepath.Base(c.logFilePath) {
-			c.logger.Printf("Removing existing log file: %s\n", f)
+			c.logger.Println(fmt.Sprintf("Removing existing log file: %s", f))
 			err := os.Remove(f)
 			if err != nil {
 				// This is untested because it is too hard to force os.Remove to return
@@ -83,7 +83,9 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	c.logger.Println("Getting all valid release types")
+	releaseType := input.Source.ReleaseType
+
+	c.logger.Println(fmt.Sprintf("Validating release type: '%s'", releaseType))
 	releaseTypes, err := c.pivnetClient.ReleaseTypes()
 	if err != nil {
 		return nil, err
@@ -94,12 +96,10 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		releaseTypesAsStrings[i] = string(r)
 	}
 
-	releaseTypesPrintable := fmt.Sprintf("['%s']", strings.Join(releaseTypesAsStrings, "', '"))
-
-	releaseType := input.Source.ReleaseType
 	if releaseType != "" && !containsString(releaseTypesAsStrings, releaseType) {
+		releaseTypesPrintable := fmt.Sprintf("['%s']", strings.Join(releaseTypesAsStrings, "', '"))
 		return nil, fmt.Errorf(
-			"provided release_type: '%s' must be one of: %s",
+			"provided release type: '%s' must be one of: %s",
 			releaseType,
 			releaseTypesPrintable,
 		)
@@ -107,14 +107,14 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	productSlug := input.Source.ProductSlug
 
-	c.logger.Println("Getting all product versions")
+	c.logger.Println("Getting all releases")
 	releases, err := c.pivnetClient.ReleasesForProductSlug(productSlug)
 	if err != nil {
 		return nil, err
 	}
 
 	if releaseType != "" {
-		c.logger.Println("Filtering all releases by release_type")
+		c.logger.Println(fmt.Sprintf("Filtering all releases by release type: '%s'", releaseType))
 		releases, err = c.filter.ReleasesByReleaseType(
 			releases,
 			pivnet.ReleaseType(releaseType),
@@ -126,7 +126,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	productVersion := input.Source.ProductVersion
 	if productVersion != "" {
-		c.logger.Println("Filtering all releases by product_version")
+		c.logger.Println(fmt.Sprintf("Filtering all releases by product version: '%s'", productVersion))
 		releases, err = c.filter.ReleasesByVersion(releases, productVersion)
 		if err != nil {
 			return nil, err
@@ -158,15 +158,13 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return nil, err
 	}
 
-	c.logger.Printf("New versions contained: %s", newVersions)
-
 	reversedVersions, err := versions.Reverse(newVersions)
 	if err != nil {
 		// Untested because versions.Reverse cannot be forced to return an error.
 		return nil, err
 	}
 
-	c.logger.Printf("Reversed versions contained: %s", reversedVersions)
+	c.logger.Printf("New versions: %v", reversedVersions)
 
 	var out concourse.CheckResponse
 	for _, v := range reversedVersions {

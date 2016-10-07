@@ -43,13 +43,13 @@ func (d Downloader) Download(downloadLinks map[string]string) ([]string, error) 
 	for fileName, downloadLink := range downloadLinks {
 		downloadPath := filepath.Join(d.downloadDir, fileName)
 
-		d.logger.Println(fmt.Sprintf("Creating file: %s", downloadPath))
+		d.logger.Println(fmt.Sprintf("Creating file: '%s'", downloadPath))
 		file, err := os.Create(downloadPath)
 		if err != nil {
 			return nil, err
 		}
 
-		d.logger.Println(fmt.Sprintf("Downloading link: '%s' to file: %s", downloadLink, downloadPath))
+		d.logger.Println(fmt.Sprintf("Downloading link: '%s' to file: '%s'", downloadLink, downloadPath))
 		err = d.extendedClient.DownloadFile(file, downloadLink)
 		if err != nil {
 			return nil, err

@@ -63,7 +63,6 @@ var _ = Describe("ReleaseUploader", func() {
 				md5Summer.SumFileReturns("madeupmd5", nil)
 				s3Client.UploadFileReturns("s3-remote-path", nil)
 				uploadClient.CreateProductFileReturns(pivnet.ProductFile{ID: 13367}, nil)
-				uploadClient.FindProductForSlugReturns(pivnet.Product{ID: 7777}, nil)
 			})
 
 			It("uploads a release to s3 and adds metadata to pivnet", func() {
@@ -72,7 +71,6 @@ var _ = Describe("ReleaseUploader", func() {
 
 				Expect(md5Summer.SumFileArgsForCall(0)).To(Equal("/some/sources/dir/some/file"))
 				Expect(s3Client.UploadFileArgsForCall(0)).To(Equal("some/file"))
-				Expect(uploadClient.FindProductForSlugArgsForCall(0)).To(Equal("some-product-slug"))
 
 				Expect(uploadClient.CreateProductFileArgsForCall(0)).To(Equal(pivnet.CreateProductFileConfig{
 					ProductSlug:  "some-product-slug",
@@ -121,17 +119,6 @@ var _ = Describe("ReleaseUploader", func() {
 					It("returns an error", func() {
 						err := uploader.Upload(pivnetRelease, []string{""})
 						Expect(err).To(MatchError("pivnet product blew up"))
-					})
-				})
-
-				Context("when pivnet cannot create a product file", func() {
-					BeforeEach(func() {
-						uploadClient.FindProductForSlugReturns(pivnet.Product{}, errors.New("cannot create product file"))
-					})
-
-					It("returns an error", func() {
-						err := uploader.Upload(pivnetRelease, []string{""})
-						Expect(err).To(MatchError(errors.New("cannot create product file")))
 					})
 				})
 

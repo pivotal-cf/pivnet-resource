@@ -1,6 +1,7 @@
 package release
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 
@@ -45,10 +46,10 @@ func (rf UserGroupsUpdater) UpdateUserGroups(release pivnet.Release) (pivnet.Rel
 			Availability: availability,
 		}
 
-		rf.logger.Printf(
-			"Updating availability for release to: '%s'",
+		rf.logger.Println(fmt.Sprintf(
+			"Updating availability to: '%s'",
 			availability,
-		)
+		))
 
 		var err error
 		release, err = rf.pivnet.UpdateRelease(rf.productSlug, releaseUpdate)
@@ -65,10 +66,10 @@ func (rf UserGroupsUpdater) UpdateUserGroups(release pivnet.Release) (pivnet.Rel
 					return pivnet.Release{}, err
 				}
 
-				rf.logger.Printf(
-					"Adding user group with ID: %d to release",
+				rf.logger.Println(fmt.Sprintf(
+					"Adding user group with ID: %d",
 					userGroupID,
-				)
+				))
 				err = rf.pivnet.AddUserGroup(rf.productSlug, release.ID, userGroupID)
 				if err != nil {
 					return pivnet.Release{}, err

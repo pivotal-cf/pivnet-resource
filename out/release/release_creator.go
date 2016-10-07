@@ -63,20 +63,19 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	productVersion := rc.metadata.Release.Version
 
 	if rc.source.SortBy == concourse.SortBySemver {
-		rc.logger.Println("Resource is configured to sort by semver - checking new version parses as semver")
 		v, err := rc.semverConverter.ToValidSemver(productVersion)
 		if err != nil {
 			return pivnet.Release{}, err
 		}
-		rc.logger.Printf("Successfully parsed semver as: %s\n", v.String())
+		rc.logger.Println(fmt.Sprintf("Successfully parsed semver as: '%s'", v.String()))
 	}
 
 	if rc.source.ProductVersion != "" {
-		rc.logger.Printf(
-			"validating product_version: '%s' against regex: '%s'",
+		rc.logger.Println(fmt.Sprintf(
+			"Validating product version: '%s' against regex: '%s'",
 			productVersion,
 			rc.source.ProductVersion,
-		)
+		))
 
 		match, err := regexp.MatchString(rc.source.ProductVersion, productVersion)
 		if err != nil {
@@ -85,20 +84,19 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 		if !match {
 			return pivnet.Release{}, fmt.Errorf(
-				"provided product_version: '%s' does not match regex in source: '%s'",
+				"provided product version: '%s' does not match regex in source: '%s'",
 				productVersion,
 				rc.source.ProductVersion,
 			)
 		}
 	}
 
-	rc.logger.Printf("Getting existing releases for product slug: %s\n", rc.productSlug)
+	rc.logger.Println(fmt.Sprintf("Getting existing releases for product slug: '%s'", rc.productSlug))
 	releases, err := rc.pivnet.ReleasesForProductSlug(rc.productSlug)
 	if err != nil {
 		return pivnet.Release{}, err
 	}
 
-	rc.logger.Println("Mapping existing releases to their versions")
 	existingVersions, err := rc.pivnet.ProductVersions(rc.productSlug, releases)
 	if err != nil {
 		return pivnet.Release{}, err
@@ -107,11 +105,14 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	for _, v := range existingVersions {
 		if v == productVersion {
 			return pivnet.Release{},
-				fmt.Errorf("release already exists with version: %s", productVersion)
+				fmt.Errorf("release already exists with version: '%s'", productVersion)
 		}
 	}
 
-	rc.logger.Println("getting all valid eulas")
+	eulaSlug := rc.metadata.Release.EULASlug
+
+	rc.logger.Println(fmt.Sprintf("Validating EULA: '%s'", eulaSlug))
+
 	eulas, err := rc.pivnet.EULAs()
 	if err != nil {
 		return pivnet.Release{}, err
@@ -122,9 +123,6 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		eulaSlugs[i] = e.Slug
 	}
 
-	rc.logger.Println("validating eula_slug")
-	eulaSlug := rc.metadata.Release.EULASlug
-
 	var containsSlug bool
 	for _, slug := range eulaSlugs {
 		if eulaSlug == slug {
@@ -133,17 +131,19 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		}
 	}
 
-	eulaSlugsPrintable := fmt.Sprintf("['%s']", strings.Join(eulaSlugs, "', '"))
-
 	if !containsSlug {
+		eulaSlugsPrintable := fmt.Sprintf("['%s']", strings.Join(eulaSlugs, "', '"))
 		return pivnet.Release{}, fmt.Errorf(
-			"provided eula_slug: '%s' must be one of: %s",
+			"provided EULA slug: '%s' must be one of: %s",
 			eulaSlug,
 			eulaSlugsPrintable,
 		)
 	}
 
-	rc.logger.Println("getting all valid release types")
+	releaseType := pivnet.ReleaseType(rc.metadata.Release.ReleaseType)
+
+	rc.logger.Println(fmt.Sprintf("Validating release type: '%s'", releaseType))
+
 	releaseTypes, err := rc.pivnet.ReleaseTypes()
 	if err != nil {
 		return pivnet.Release{}, err
@@ -154,14 +154,6 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		releaseTypesAsStrings[i] = string(r)
 	}
 
-	releaseTypesPrintable := fmt.Sprintf(
-		"['%s']",
-		strings.Join(releaseTypesAsStrings, "', '"),
-	)
-
-	rc.logger.Println("validating release_type")
-	releaseType := pivnet.ReleaseType(rc.metadata.Release.ReleaseType)
-
 	var containsReleaseType bool
 	for _, t := range releaseTypes {
 		if releaseType == t {
@@ -171,8 +163,12 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	}
 
 	if !containsReleaseType {
+		releaseTypesPrintable := fmt.Sprintf(
+			"['%s']",
+			strings.Join(releaseTypesAsStrings, "', '"),
+		)
 		return pivnet.Release{}, fmt.Errorf(
-			"provided release_type: '%s' must be one of: %s",
+			"provided release type: '%s' must be one of: %s",
 			releaseType,
 			releaseTypesPrintable,
 		)
@@ -181,7 +177,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	if pivnet.ReleaseType(rc.source.ReleaseType) != "" &&
 		pivnet.ReleaseType(rc.source.ReleaseType) != releaseType {
 		return pivnet.Release{}, fmt.Errorf(
-			"provided release_type: '%s' must match '%s' from source configuration",
+			"provided release type: '%s' must match '%s' from source configuration",
 			releaseType,
 			rc.source.ReleaseType,
 		)
@@ -203,8 +199,12 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		EndOfAvailabilityDate: rc.metadata.Release.EndOfAvailabilityDate,
 	}
 
-	rc.logger.Printf("config used to create pivnet release: %+v\n", config)
+	rc.logger.Println(fmt.Sprintf("Creating new release with config: %+v", config))
+	release, err := rc.pivnet.CreateRelease(config)
+	if err != nil {
+		return pivnet.Release{}, err
+	}
 
-	rc.logger.Printf("Creating new release")
-	return rc.pivnet.CreateRelease(config)
+	rc.logger.Println(fmt.Sprintf("Created new release with ID: %d", release.ID))
+	return release, nil
 }

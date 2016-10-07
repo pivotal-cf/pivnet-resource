@@ -196,7 +196,7 @@ var _ = Describe("Out", func() {
 					request := concourse.OutRequest{}
 
 					_, err := cmd.Run(request)
-					Expect(err).To(MatchError(errors.New(`product_files were provided in metadata that match no globs: [some-glob-1]`)))
+					Expect(err).To(MatchError(errors.New(`product files were provided in metadata that match no globs: [some-glob-1]`)))
 				})
 			})
 

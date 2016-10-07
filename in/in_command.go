@@ -1,7 +1,6 @@
 package in
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -83,18 +82,18 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		productVersion = input.Version.ProductVersion
 	}
 
-	c.logger.Printf(
-		"Getting release for product_slug %s and product_version %s",
+	c.logger.Println(fmt.Sprintf(
+		"Getting release for product slug: '%s' and product version: '%s'",
 		productSlug,
 		productVersion,
-	)
+	))
 
 	release, err := c.pivnetClient.GetRelease(productSlug, productVersion)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Printf("Accepting EULA for release_id %d", release.ID)
+	c.logger.Println(fmt.Sprintf("Accepting EULA for release with ID: %d", release.ID))
 
 	err = c.pivnetClient.AcceptEULA(productSlug, release.ID)
 	if err != nil {
@@ -338,15 +337,12 @@ func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]strin
 
 		expectedMD5 := expectedMD5s[f]
 		if expectedMD5 != "" && expectedMD5 != actualMD5 {
-			c.logger.Println(
-				fmt.Sprintf(
-					"MD5 comparison failed for downloaded file: '%s'. Expected (from pivnet): '%s' - actual (from file): '%s'\n",
-					downloadPath,
-					expectedMD5,
-					actualMD5,
-				),
+			return fmt.Errorf(
+				"MD5 comparison failed for downloaded file: '%s'. Expected (from pivnet): '%s' - actual (from file): '%s'",
+				downloadPath,
+				expectedMD5,
+				actualMD5,
 			)
-			return errors.New("failed MD5 comparison")
 		}
 	}
 

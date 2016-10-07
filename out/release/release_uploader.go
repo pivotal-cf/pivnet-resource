@@ -1,6 +1,7 @@
 package release
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 
@@ -72,14 +73,9 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			return err
 		}
 
-		u.logger.Printf("uploading file to s3: %s\n", exactGlob)
+		u.logger.Println(fmt.Sprintf("uploading to s3: '%s'", exactGlob))
 
 		remotePath, err := u.s3.UploadFile(exactGlob)
-		if err != nil {
-			return err
-		}
-
-		product, err := u.pivnet.FindProductForSlug(u.productSlug)
 		if err != nil {
 			return err
 		}
@@ -92,39 +88,38 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		for _, f := range u.metadata.ProductFiles {
 			if f.File == exactGlob {
-				u.logger.Printf(
-					"exact glob '%s' matches metadata file: '%s'\n",
+				u.logger.Println(fmt.Sprintf(
+					"exact glob '%s' matches metadata file: '%s'",
 					exactGlob,
 					f.File,
-				)
-
-				description = f.Description
+				))
 
 				if f.UploadAs != "" {
-					u.logger.Printf(
-						"upload_as provided for exact glob: '%s' - uploading to remote filename: '%s' instead\n",
+					u.logger.Println(fmt.Sprintf(
+						"uploading '%s' to remote filename: '%s' instead",
 						exactGlob,
 						f.UploadAs,
-					)
+					))
 					uploadAs = f.UploadAs
 				}
+
+				description = f.Description
 				if f.FileType != "" {
 					fileType = f.FileType
 				}
 			} else {
-				u.logger.Printf(
-					"exact glob %s does not match metadata file: %s\n",
+				u.logger.Println(fmt.Sprintf(
+					"exact glob '%s' does not match metadata file: '%s'",
 					exactGlob,
 					f.File,
-				)
+				))
 			}
 		}
 
-		u.logger.Printf(
-			"Creating product file with product_slug: %s and remote name: %s",
-			u.productSlug,
+		u.logger.Println(fmt.Sprintf(
+			"Creating product file with remote name: '%s'",
 			uploadAs,
-		)
+		))
 
 		productFile, err := u.pivnet.CreateProductFile(pivnet.CreateProductFileConfig{
 			ProductSlug:  u.productSlug,
@@ -139,13 +134,11 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			return err
 		}
 
-		u.logger.Printf(
-			"Adding product file: '%s' with ID: %d to productID: %d, releaseID: %d",
+		u.logger.Println(fmt.Sprintf(
+			"Adding product file: '%s' with ID: %d",
 			filename,
 			productFile.ID,
-			product.ID,
-			release.ID,
-		)
+		))
 
 		err = u.pivnet.AddProductFile(u.productSlug, release.ID, productFile.ID)
 		if err != nil {

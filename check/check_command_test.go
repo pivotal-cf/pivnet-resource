@@ -313,7 +313,7 @@ var _ = Describe("Check", func() {
 				_, err := checkCommand.Run(checkRequest)
 				Expect(err).To(HaveOccurred())
 
-				Expect(err.Error()).To(MatchRegexp(".*release_type.*one of"))
+				Expect(err.Error()).To(MatchRegexp(".*release type.*one of"))
 				Expect(err.Error()).To(ContainSubstring(string(releaseTypes[0])))
 				Expect(err.Error()).To(ContainSubstring(string(releaseTypes[1])))
 				Expect(err.Error()).To(ContainSubstring(string(releaseTypes[2])))
