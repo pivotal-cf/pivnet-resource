@@ -2,6 +2,8 @@ package release_test
 
 import (
 	"errors"
+	"io/ioutil"
+	"log"
 
 	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
@@ -16,6 +18,7 @@ var _ = Describe("UserGroupsUpdater", func() {
 	Describe("UpdateUserGroups", func() {
 		var (
 			pivnetClient *releasefakes.UserGroupsUpdaterClient
+			l            *log.Logger
 
 			mdata metadata.Metadata
 
@@ -27,6 +30,7 @@ var _ = Describe("UserGroupsUpdater", func() {
 
 		BeforeEach(func() {
 			pivnetClient = &releasefakes.UserGroupsUpdaterClient{}
+			l = log.New(ioutil.Discard, "it doesn't matter", 0)
 
 			productSlug = "some-product-slug"
 
@@ -53,6 +57,7 @@ var _ = Describe("UserGroupsUpdater", func() {
 
 		JustBeforeEach(func() {
 			userGroupsUpdater = release.NewUserGroupsUpdater(
+				l,
 				pivnetClient,
 				mdata,
 				productSlug,

@@ -1,6 +1,7 @@
 package release
 
 import (
+	"log"
 	"strconv"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
@@ -8,17 +9,20 @@ import (
 )
 
 type UserGroupsUpdater struct {
+	logger      *log.Logger
 	pivnet      userGroupsUpdaterClient
 	metadata    metadata.Metadata
 	productSlug string
 }
 
 func NewUserGroupsUpdater(
+	logger *log.Logger,
 	pivnetClient userGroupsUpdaterClient,
 	metadata metadata.Metadata,
 	productSlug string,
 ) UserGroupsUpdater {
 	return UserGroupsUpdater{
+		logger:      logger,
 		pivnet:      pivnetClient,
 		metadata:    metadata,
 		productSlug: productSlug,
@@ -32,6 +36,7 @@ type userGroupsUpdaterClient interface {
 }
 
 func (rf UserGroupsUpdater) UpdateUserGroups(release pivnet.Release) (pivnet.Release, error) {
+
 	availability := rf.metadata.Release.Availability
 
 	if availability != "Admins Only" {
@@ -39,6 +44,11 @@ func (rf UserGroupsUpdater) UpdateUserGroups(release pivnet.Release) (pivnet.Rel
 			ID:           release.ID,
 			Availability: availability,
 		}
+
+		rf.logger.Printf(
+			"Updating availability for release to: '%s'",
+			availability,
+		)
 
 		var err error
 		release, err = rf.pivnet.UpdateRelease(rf.productSlug, releaseUpdate)
@@ -55,6 +65,10 @@ func (rf UserGroupsUpdater) UpdateUserGroups(release pivnet.Release) (pivnet.Rel
 					return pivnet.Release{}, err
 				}
 
+				rf.logger.Printf(
+					"Adding user group with ID: %d to release",
+					userGroupID,
+				)
 				err = rf.pivnet.AddUserGroup(rf.productSlug, release.ID, userGroupID)
 				if err != nil {
 					return pivnet.Release{}, err

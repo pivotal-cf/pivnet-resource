@@ -178,12 +178,14 @@ func main() {
 	)
 
 	releaseUserGroupsUpdater := release.NewUserGroupsUpdater(
+		logger,
 		combinedClient,
 		m,
 		input.Source.ProductSlug,
 	)
 
 	releaseDependenciesAdder := release.NewReleaseDependenciesAdder(
+		logger,
 		combinedClient,
 		m,
 		input.Source.ProductSlug,
