@@ -79,5 +79,17 @@ func (m Metadata) Validate() error {
 		}
 	}
 
+	for i, d := range m.Dependencies {
+		dependentReleaseID := d.Release.ID
+		if dependentReleaseID == 0 {
+			if d.Release.Version == "" || d.Release.Product.Slug == "" {
+				return fmt.Errorf(
+					"Either ReleaseID or release version and product slug must be provided for dependency[%d]",
+					i,
+				)
+			}
+		}
+	}
+
 	return nil
 }

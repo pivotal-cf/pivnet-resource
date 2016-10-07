@@ -55,5 +55,51 @@ var _ = Describe("Metadata", func() {
 				Expect(data.Validate()).NotTo(HaveOccurred())
 			})
 		})
+
+		Context("when dependencies exist with id 0", func() {
+			BeforeEach(func() {
+				data.Dependencies = []metadata.Dependency{
+					{
+						Release: metadata.DependentRelease{
+							ID:      0,
+							Version: "abcd",
+							Product: metadata.Product{
+								Slug: "some-product",
+							},
+						},
+					},
+				}
+			})
+
+			It("returns without error", func() {
+				Expect(data.Validate()).NotTo(HaveOccurred())
+			})
+
+			Context("when release version is empty", func() {
+				BeforeEach(func() {
+					data.Dependencies[0].Release.Version = ""
+				})
+
+				It("returns an error", func() {
+					err := data.Validate()
+					Expect(err).To(HaveOccurred())
+
+					Expect(err.Error()).To(MatchRegexp(".*dependency\\[0\\]"))
+				})
+			})
+
+			Context("when produc slug is empty", func() {
+				BeforeEach(func() {
+					data.Dependencies[0].Release.Product.Slug = ""
+				})
+
+				It("returns an error", func() {
+					err := data.Validate()
+					Expect(err).To(HaveOccurred())
+
+					Expect(err.Error()).To(MatchRegexp(".*dependency\\[0\\]"))
+				})
+			})
+		})
 	})
 })
