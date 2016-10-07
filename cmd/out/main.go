@@ -177,6 +177,18 @@ func main() {
 		input.Source.ProductSlug,
 	)
 
+	releaseUserGroupsUpdater := release.NewUserGroupsUpdater(
+		combinedClient,
+		m,
+		input.Source.ProductSlug,
+	)
+
+	releaseDependenciesAdder := release.NewReleaseDependenciesAdder(
+		combinedClient,
+		m,
+		input.Source.ProductSlug,
+	)
+
 	releaseFinalizer := release.NewFinalizer(
 		combinedClient,
 		input.Params,
@@ -186,15 +198,17 @@ func main() {
 	)
 
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
-		Logger:     logger,
-		OutDir:     outDir,
-		SourcesDir: sourcesDir,
-		GlobClient: globber,
-		Validation: validation,
-		Creator:    releaseCreator,
-		Uploader:   releaseUploader,
-		Finalizer:  releaseFinalizer,
-		M:          m,
+		Logger:                   logger,
+		OutDir:                   outDir,
+		SourcesDir:               sourcesDir,
+		GlobClient:               globber,
+		Validation:               validation,
+		Creator:                  releaseCreator,
+		Uploader:                 releaseUploader,
+		UserGroupsUpdater:        releaseUserGroupsUpdater,
+		ReleaseDependenciesAdder: releaseDependenciesAdder,
+		Finalizer:                releaseFinalizer,
+		M:                        m,
 	})
 
 	response, err := outCmd.Run(input)

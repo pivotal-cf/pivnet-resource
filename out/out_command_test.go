@@ -18,22 +18,30 @@ import (
 var _ = Describe("Out", func() {
 	Describe("Run", func() {
 		var (
-			logger    *log.Logger
-			finalizer *outfakes.Finalizer
-			creator   *outfakes.Creator
-			validator *outfakes.Validation
-			uploader  *outfakes.Uploader
-			globber   *outfakes.Globber
-			cmd       out.OutCommand
+			logger                   *log.Logger
+			finalizer                *outfakes.Finalizer
+			userGroupsUpdater        *outfakes.UserGroupsUpdater
+			releaseDependenciesAdder *outfakes.ReleaseDependenciesAdder
+			creator                  *outfakes.Creator
+			validator                *outfakes.Validation
+			uploader                 *outfakes.Uploader
+			globber                  *outfakes.Globber
+			cmd                      out.OutCommand
+
+			productSlug string
 		)
 
 		BeforeEach(func() {
 			logger = log.New(ioutil.Discard, "doesn't matter", 0)
 			finalizer = &outfakes.Finalizer{}
+			userGroupsUpdater = &outfakes.UserGroupsUpdater{}
+			releaseDependenciesAdder = &outfakes.ReleaseDependenciesAdder{}
 			creator = &outfakes.Creator{}
 			validator = &outfakes.Validation{}
 			uploader = &outfakes.Uploader{}
 			globber = &outfakes.Globber{}
+
+			productSlug = "some-product-slug"
 
 			meta := metadata.Metadata{
 				Release: &metadata.Release{
@@ -50,21 +58,29 @@ var _ = Describe("Out", func() {
 			}
 
 			config := out.OutCommandConfig{
-				Logger:     logger,
-				OutDir:     "some/out/dir",
-				SourcesDir: "some/sources/dir",
-				GlobClient: globber,
-				Validation: validator,
-				Creator:    creator,
-				Finalizer:  finalizer,
-				Uploader:   uploader,
-				M:          meta,
+				Logger:                   logger,
+				OutDir:                   "some/out/dir",
+				SourcesDir:               "some/sources/dir",
+				GlobClient:               globber,
+				Validation:               validator,
+				Creator:                  creator,
+				Finalizer:                finalizer,
+				UserGroupsUpdater:        userGroupsUpdater,
+				ReleaseDependenciesAdder: releaseDependenciesAdder,
+				Uploader:                 uploader,
+				M:                        meta,
 			}
 
 			cmd = out.NewOutCommand(config)
 
-			globber.ExactGlobsReturns([]string{"some-glob-1", "some-glob-2"}, nil)
 			creator.CreateReturns(pivnet.Release{ID: 1337, Availability: "none"}, nil)
+
+			globber.ExactGlobsReturns([]string{"some-glob-1", "some-glob-2"}, nil)
+
+			userGroupsUpdater.UpdateUserGroupsReturns(pivnet.Release{ID: 1337, Availability: "none"}, nil)
+
+			releaseDependenciesAdder.AddReleaseDependenciesReturns(nil)
+
 			finalizer.FinalizeReturns(concourse.OutResponse{
 				Version: concourse.Version{
 					ProductVersion: "some-returned-product-version",
@@ -73,7 +89,12 @@ var _ = Describe("Out", func() {
 		})
 
 		It("returns a concourse out response", func() {
-			request := concourse.OutRequest{}
+			request := concourse.OutRequest{
+				Source: concourse.Source{
+					ProductSlug: productSlug,
+				},
+			}
+
 			response, err := cmd.Run(request)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -83,15 +104,25 @@ var _ = Describe("Out", func() {
 				},
 			}))
 
+			Expect(creator.CreateCallCount()).To(Equal(1))
+
 			Expect(globber.ExactGlobsCallCount()).To(Equal(1))
 
-			Expect(creator.CreateCallCount()).To(Equal(1))
+			Expect(userGroupsUpdater.UpdateUserGroupsCallCount()).To(Equal(1))
+
+			Expect(releaseDependenciesAdder.AddReleaseDependenciesCallCount()).To(Equal(1))
+
+			Expect(finalizer.FinalizeCallCount()).To(Equal(1))
 
 			pivnetRelease, exactGlobs := uploader.UploadArgsForCall(0)
 			Expect(pivnetRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
 			Expect(exactGlobs).To(Equal([]string{"some-glob-1", "some-glob-2"}))
 
-			Expect(finalizer.FinalizeArgsForCall(0)).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
+			pivnetRelease = userGroupsUpdater.UpdateUserGroupsArgsForCall(0)
+			Expect(pivnetRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
+
+			invokedRelease := finalizer.FinalizeArgsForCall(0)
+			Expect(invokedRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
 		})
 
 		Context("when an error occurs", func() {
@@ -192,6 +223,42 @@ var _ = Describe("Out", func() {
 
 					_, err := cmd.Run(request)
 					Expect(err).To(MatchError(errors.New("some upload error")))
+				})
+			})
+
+			Context("when user groups cannot be updated", func() {
+				var (
+					expectedErr error
+				)
+
+				BeforeEach(func() {
+					expectedErr = errors.New("some user group error")
+					userGroupsUpdater.UpdateUserGroupsReturns(pivnet.Release{}, expectedErr)
+				})
+
+				It("returns an error", func() {
+					request := concourse.OutRequest{}
+
+					_, err := cmd.Run(request)
+					Expect(err).To(Equal(expectedErr))
+				})
+			})
+
+			Context("when dependencies cannot be added", func() {
+				var (
+					expectedErr error
+				)
+
+				BeforeEach(func() {
+					expectedErr = errors.New("some release dependency error")
+					releaseDependenciesAdder.AddReleaseDependenciesReturns(expectedErr)
+				})
+
+				It("returns an error", func() {
+					request := concourse.OutRequest{}
+
+					_, err := cmd.Run(request)
+					Expect(err).To(Equal(expectedErr))
 				})
 			})
 

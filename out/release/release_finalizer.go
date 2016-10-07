@@ -2,7 +2,6 @@ package release
 
 import (
 	"fmt"
-	"strconv"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
@@ -36,43 +35,10 @@ func NewFinalizer(
 
 //go:generate counterfeiter --fake-name UpdateClient . updateClient
 type updateClient interface {
-	UpdateRelease(productSlug string, release pivnet.Release) (pivnet.Release, error)
 	ReleaseETag(productSlug string, releaseID int) (string, error)
-	AddUserGroup(productSlug string, releaseID int, userGroupID int) error
 }
 
 func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutResponse, error) {
-	availability := rf.metadata.Release.Availability
-
-	if availability != "Admins Only" {
-		releaseUpdate := pivnet.Release{
-			ID:           release.ID,
-			Availability: availability,
-		}
-
-		var err error
-		release, err = rf.pivnet.UpdateRelease(rf.productSlug, releaseUpdate)
-		if err != nil {
-			return concourse.OutResponse{}, err
-		}
-
-		if availability == "Selected User Groups Only" {
-			userGroupIDs := rf.metadata.Release.UserGroupIDs
-
-			for _, userGroupIDString := range userGroupIDs {
-				userGroupID, err := strconv.Atoi(userGroupIDString)
-				if err != nil {
-					return concourse.OutResponse{}, err
-				}
-
-				err = rf.pivnet.AddUserGroup(rf.productSlug, release.ID, userGroupID)
-				if err != nil {
-					return concourse.OutResponse{}, err
-				}
-			}
-		}
-	}
-
 	releaseETag, err := rf.pivnet.ReleaseETag(rf.productSlug, release.ID)
 	if err != nil {
 		return concourse.OutResponse{}, err

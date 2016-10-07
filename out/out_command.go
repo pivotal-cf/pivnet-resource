@@ -10,40 +10,46 @@ import (
 )
 
 type OutCommand struct {
-	logger     *log.Logger
-	outDir     string
-	sourcesDir string
-	globClient globber
-	validation validation
-	creator    creator
-	finalizer  finalizer
-	uploader   uploader
-	m          metadata.Metadata
+	logger                   *log.Logger
+	outDir                   string
+	sourcesDir               string
+	globClient               globber
+	validation               validation
+	creator                  creator
+	userGroupsUpdater        userGroupsUpdater
+	releaseDependenciesAdder releaseDependenciesAdder
+	finalizer                finalizer
+	uploader                 uploader
+	m                        metadata.Metadata
 }
 
 type OutCommandConfig struct {
-	Logger     *log.Logger
-	OutDir     string
-	SourcesDir string
-	GlobClient globber
-	Validation validation
-	Creator    creator
-	Finalizer  finalizer
-	Uploader   uploader
-	M          metadata.Metadata
+	Logger                   *log.Logger
+	OutDir                   string
+	SourcesDir               string
+	GlobClient               globber
+	Validation               validation
+	Creator                  creator
+	UserGroupsUpdater        userGroupsUpdater
+	ReleaseDependenciesAdder releaseDependenciesAdder
+	Finalizer                finalizer
+	Uploader                 uploader
+	M                        metadata.Metadata
 }
 
 func NewOutCommand(config OutCommandConfig) OutCommand {
 	return OutCommand{
-		logger:     config.Logger,
-		outDir:     config.OutDir,
-		sourcesDir: config.SourcesDir,
-		globClient: config.GlobClient,
-		validation: config.Validation,
-		creator:    config.Creator,
-		finalizer:  config.Finalizer,
-		uploader:   config.Uploader,
-		m:          config.M,
+		logger:                   config.Logger,
+		outDir:                   config.OutDir,
+		sourcesDir:               config.SourcesDir,
+		globClient:               config.GlobClient,
+		validation:               config.Validation,
+		creator:                  config.Creator,
+		userGroupsUpdater:        config.UserGroupsUpdater,
+		releaseDependenciesAdder: config.ReleaseDependenciesAdder,
+		finalizer:                config.Finalizer,
+		uploader:                 config.Uploader,
+		m:                        config.M,
 	}
 }
 
@@ -55,6 +61,16 @@ type creator interface {
 //go:generate counterfeiter --fake-name Uploader . uploader
 type uploader interface {
 	Upload(release pivnet.Release, exactGlobs []string) error
+}
+
+//go:generate counterfeiter --fake-name UserGroupsUpdater . userGroupsUpdater
+type userGroupsUpdater interface {
+	UpdateUserGroups(release pivnet.Release) (pivnet.Release, error)
+}
+
+//go:generate counterfeiter --fake-name ReleaseDependenciesAdder . releaseDependenciesAdder
+type releaseDependenciesAdder interface {
+	AddReleaseDependencies(release pivnet.Release) error
 }
 
 //go:generate counterfeiter --fake-name Finalizer . finalizer
@@ -122,6 +138,16 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 	}
 
 	err = c.uploader.Upload(pivnetRelease, exactGlobs)
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+
+	pivnetRelease, err = c.userGroupsUpdater.UpdateUserGroups(pivnetRelease)
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+
+	err = c.releaseDependenciesAdder.AddReleaseDependencies(pivnetRelease)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}

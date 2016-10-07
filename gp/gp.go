@@ -124,6 +124,10 @@ func (c Client) ReleaseDependencies(productSlug string, releaseID int) ([]pivnet
 	return c.client.ReleaseDependencies.List(productSlug, releaseID)
 }
 
+func (c Client) AddReleaseDependency(productSlug string, releaseID int, dependentReleaseID int) error {
+	return c.client.ReleaseDependencies.Add(productSlug, releaseID, dependentReleaseID)
+}
+
 func (c Client) ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error) {
 	return c.client.ReleaseUpgradePaths.Get(productSlug, releaseID)
 }
