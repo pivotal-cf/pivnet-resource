@@ -91,7 +91,6 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		}
 	}
 
-	rc.logger.Println(fmt.Sprintf("Getting existing releases for product slug: '%s'", rc.productSlug))
 	releases, err := rc.pivnet.ReleasesForProductSlug(rc.productSlug)
 	if err != nil {
 		return pivnet.Release{}, err
