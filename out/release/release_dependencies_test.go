@@ -15,7 +15,7 @@ import (
 )
 
 var _ = Describe("ReleaseDependenciesAdder", func() {
-	Describe("UpdateUserGroups", func() {
+	Describe("AddReleaseDependencies", func() {
 		var (
 			l *log.Logger
 
@@ -142,7 +142,7 @@ var _ = Describe("ReleaseDependenciesAdder", func() {
 						err := releaseDependenciesAdder.AddReleaseDependencies(pivnetRelease)
 						Expect(err).To(HaveOccurred())
 
-						Expect(err.Error()).To(ContainSubstring("dependency[1]"))
+						Expect(err.Error()).To(ContainSubstring("dependencies[1]"))
 					})
 				})
 
@@ -155,7 +155,7 @@ var _ = Describe("ReleaseDependenciesAdder", func() {
 						err := releaseDependenciesAdder.AddReleaseDependencies(pivnetRelease)
 						Expect(err).To(HaveOccurred())
 
-						Expect(err.Error()).To(ContainSubstring("dependency[1]"))
+						Expect(err.Error()).To(ContainSubstring("dependencies[1]"))
 					})
 				})
 			})

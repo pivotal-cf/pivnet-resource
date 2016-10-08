@@ -22,6 +22,7 @@ var _ = Describe("Out", func() {
 			finalizer                *outfakes.Finalizer
 			userGroupsUpdater        *outfakes.UserGroupsUpdater
 			releaseDependenciesAdder *outfakes.ReleaseDependenciesAdder
+			releaseUpgradePathsAdder *outfakes.ReleaseUpgradePathsAdder
 			creator                  *outfakes.Creator
 			validator                *outfakes.Validation
 			uploader                 *outfakes.Uploader
@@ -36,6 +37,7 @@ var _ = Describe("Out", func() {
 			finalizer = &outfakes.Finalizer{}
 			userGroupsUpdater = &outfakes.UserGroupsUpdater{}
 			releaseDependenciesAdder = &outfakes.ReleaseDependenciesAdder{}
+			releaseUpgradePathsAdder = &outfakes.ReleaseUpgradePathsAdder{}
 			creator = &outfakes.Creator{}
 			validator = &outfakes.Validation{}
 			uploader = &outfakes.Uploader{}
@@ -67,6 +69,7 @@ var _ = Describe("Out", func() {
 				Finalizer:                finalizer,
 				UserGroupsUpdater:        userGroupsUpdater,
 				ReleaseDependenciesAdder: releaseDependenciesAdder,
+				ReleaseUpgradePathsAdder: releaseUpgradePathsAdder,
 				Uploader:                 uploader,
 				M:                        meta,
 			}
@@ -80,6 +83,8 @@ var _ = Describe("Out", func() {
 			userGroupsUpdater.UpdateUserGroupsReturns(pivnet.Release{ID: 1337, Availability: "none"}, nil)
 
 			releaseDependenciesAdder.AddReleaseDependenciesReturns(nil)
+
+			releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(nil)
 
 			finalizer.FinalizeReturns(concourse.OutResponse{
 				Version: concourse.Version{
@@ -111,6 +116,8 @@ var _ = Describe("Out", func() {
 			Expect(userGroupsUpdater.UpdateUserGroupsCallCount()).To(Equal(1))
 
 			Expect(releaseDependenciesAdder.AddReleaseDependenciesCallCount()).To(Equal(1))
+
+			Expect(releaseUpgradePathsAdder.AddReleaseUpgradePathsCallCount()).To(Equal(1))
 
 			Expect(finalizer.FinalizeCallCount()).To(Equal(1))
 
@@ -252,6 +259,24 @@ var _ = Describe("Out", func() {
 				BeforeEach(func() {
 					expectedErr = errors.New("some release dependency error")
 					releaseDependenciesAdder.AddReleaseDependenciesReturns(expectedErr)
+				})
+
+				It("returns an error", func() {
+					request := concourse.OutRequest{}
+
+					_, err := cmd.Run(request)
+					Expect(err).To(Equal(expectedErr))
+				})
+			})
+
+			Context("when upgrade paths cannot be added", func() {
+				var (
+					expectedErr error
+				)
+
+				BeforeEach(func() {
+					expectedErr = errors.New("some upgrade path error")
+					releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(expectedErr)
 				})
 
 				It("returns an error", func() {

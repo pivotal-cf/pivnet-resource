@@ -18,6 +18,7 @@ type OutCommand struct {
 	creator                  creator
 	userGroupsUpdater        userGroupsUpdater
 	releaseDependenciesAdder releaseDependenciesAdder
+	releaseUpgradePathsAdder releaseUpgradePathsAdder
 	finalizer                finalizer
 	uploader                 uploader
 	m                        metadata.Metadata
@@ -32,6 +33,7 @@ type OutCommandConfig struct {
 	Creator                  creator
 	UserGroupsUpdater        userGroupsUpdater
 	ReleaseDependenciesAdder releaseDependenciesAdder
+	ReleaseUpgradePathsAdder releaseUpgradePathsAdder
 	Finalizer                finalizer
 	Uploader                 uploader
 	M                        metadata.Metadata
@@ -47,6 +49,7 @@ func NewOutCommand(config OutCommandConfig) OutCommand {
 		creator:                  config.Creator,
 		userGroupsUpdater:        config.UserGroupsUpdater,
 		releaseDependenciesAdder: config.ReleaseDependenciesAdder,
+		releaseUpgradePathsAdder: config.ReleaseUpgradePathsAdder,
 		finalizer:                config.Finalizer,
 		uploader:                 config.Uploader,
 		m:                        config.M,
@@ -71,6 +74,11 @@ type userGroupsUpdater interface {
 //go:generate counterfeiter --fake-name ReleaseDependenciesAdder . releaseDependenciesAdder
 type releaseDependenciesAdder interface {
 	AddReleaseDependencies(release pivnet.Release) error
+}
+
+//go:generate counterfeiter --fake-name ReleaseUpgradePathsAdder . releaseUpgradePathsAdder
+type releaseUpgradePathsAdder interface {
+	AddReleaseUpgradePaths(release pivnet.Release) error
 }
 
 //go:generate counterfeiter --fake-name Finalizer . finalizer
@@ -138,6 +146,11 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 	}
 
 	pivnetRelease, err = c.userGroupsUpdater.UpdateUserGroups(pivnetRelease)
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+
+	err = c.releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}

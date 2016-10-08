@@ -42,6 +42,9 @@ dependencies:
       id: 45
       name: Some product
       slug: Some product
+upgrade_paths:
+- id: 2345
+  version: v3.1.2
 ```
 
 ## Release

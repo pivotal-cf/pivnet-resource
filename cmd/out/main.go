@@ -191,6 +191,13 @@ func main() {
 		input.Source.ProductSlug,
 	)
 
+	releaseUpgradePathsAdder := release.NewReleaseUpgradePathsAdder(
+		logger,
+		combinedClient,
+		m,
+		input.Source.ProductSlug,
+	)
+
 	releaseFinalizer := release.NewFinalizer(
 		combinedClient,
 		input.Params,
@@ -209,6 +216,7 @@ func main() {
 		Uploader:                 releaseUploader,
 		UserGroupsUpdater:        releaseUserGroupsUpdater,
 		ReleaseDependenciesAdder: releaseDependenciesAdder,
+		ReleaseUpgradePathsAdder: releaseUpgradePathsAdder,
 		Finalizer:                releaseFinalizer,
 		M:                        m,
 	})

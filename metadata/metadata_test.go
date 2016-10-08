@@ -88,7 +88,7 @@ var _ = Describe("Metadata", func() {
 				})
 			})
 
-			Context("when produc slug is empty", func() {
+			Context("when product slug is empty", func() {
 				BeforeEach(func() {
 					data.Dependencies[0].Release.Product.Slug = ""
 				})
@@ -98,6 +98,55 @@ var _ = Describe("Metadata", func() {
 					Expect(err).To(HaveOccurred())
 
 					Expect(err.Error()).To(MatchRegexp(".*dependency\\[0\\]"))
+				})
+			})
+		})
+
+		Context("when upgrade paths are provided", func() {
+			BeforeEach(func() {
+				data.UpgradePaths = []metadata.UpgradePath{
+					{
+						ID:      1234,
+						Version: "abcd",
+					},
+				}
+			})
+
+			It("returns without error", func() {
+				Expect(data.Validate()).NotTo(HaveOccurred())
+			})
+
+			Context("when id is non-zero and version is empty", func() {
+				BeforeEach(func() {
+					data.UpgradePaths[0].Version = ""
+				})
+
+				It("returns without error", func() {
+					Expect(data.Validate()).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when id is 0 and version is non-empty", func() {
+				BeforeEach(func() {
+					data.UpgradePaths[0].ID = 0
+				})
+
+				It("returns without error", func() {
+					Expect(data.Validate()).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when id is 0 and version is empty", func() {
+				BeforeEach(func() {
+					data.UpgradePaths[0].ID = 0
+					data.UpgradePaths[0].Version = ""
+				})
+
+				It("returns an error", func() {
+					err := data.Validate()
+					Expect(err).To(HaveOccurred())
+
+					Expect(err.Error()).To(MatchRegexp(".*upgrade_paths\\[0\\]"))
 				})
 			})
 		})

@@ -41,7 +41,7 @@ func (rf ReleaseDependenciesAdder) AddReleaseDependencies(release pivnet.Release
 		if dependentReleaseID == 0 {
 			if d.Release.Version == "" || d.Release.Product.Slug == "" {
 				return fmt.Errorf(
-					"Either ReleaseID or release version and product slug must be provided for dependency[%d]",
+					"Either ReleaseID or release version and product slug must be provided for dependencies[%d]",
 					i,
 				)
 			}

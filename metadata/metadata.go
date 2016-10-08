@@ -91,5 +91,14 @@ func (m Metadata) Validate() error {
 		}
 	}
 
+	for i, u := range m.UpgradePaths {
+		if u.ID == 0 && u.Version == "" {
+			return fmt.Errorf(
+				"Either id or version must be provided for upgrade_paths[%d]",
+				i,
+			)
+		}
+	}
+
 	return nil
 }
