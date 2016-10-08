@@ -41,10 +41,12 @@ dependencies:
     product:
       id: 45
       name: Some product
+      slug: Some product
 ```
 
-The top-level `release` key is optional at present but will be required in a
-later release, as it replaces the various files like `version_file`.
+## Release
+
+The top-level `release` key is required.
 
 * `version`: *Required.* Version of the new release.
 
@@ -111,6 +113,8 @@ later release, as it replaces the various files like `version_file`.
 
 * `end_of_availability_date`: *Optional.* Date in the form of: `YYYY-MM-DD`.
 
+## Product files
+
 The top-level `product_files` key is optional.
 If provided, it is permitted to be an empty array.
 
@@ -127,5 +131,16 @@ All other keys are optional. The purpose of the keys is as follows:
   This affects only the display name; the filename of the uploaded file remains
   the same as that of the local file.
 
-The top-level `dependencies` key is currently only written when getting existing releases via `in` - it is not yet supported when creating releases with `out`.
+## Dependencies
 
+The top-level `dependencies` key is optional.
+If provided, it is permitted to be an empty array.
+
+Each element in `dependencies` must have a non-empty value for the `release` key.
+Within each `release` element either:
+
+* `id` must be present and non-zero
+
+or:
+
+* `version` and `product.slug` must be present and non-empty.
