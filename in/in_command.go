@@ -43,6 +43,7 @@ type pivnetClient interface {
 	GetProductFile(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
 	ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error)
+	ReleaseETag(productSlug string, releaseID int) (string, error)
 }
 
 type InCommand struct {
@@ -80,6 +81,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	if err != nil {
 		c.logger.Println("Parsing of etag failed; continuing without it")
 		productVersion = input.Version.ProductVersion
+		etag = ""
 	}
 
 	c.logger.Println(fmt.Sprintf(
@@ -91,6 +93,21 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	release, err := c.pivnetClient.GetRelease(productSlug, productVersion)
 	if err != nil {
 		return concourse.InResponse{}, err
+	}
+
+	if etag != "" {
+		actualETag, err := c.pivnetClient.ReleaseETag(productSlug, release.ID)
+		if err != nil {
+			return concourse.InResponse{}, err
+		}
+		if actualETag != etag {
+			return concourse.InResponse{}, fmt.Errorf(
+				"provided etag: '%s' does not match actual etag (from pivnet): '%s' - %s",
+				etag,
+				actualETag,
+				"pivnet does not support downloading old versions of a release",
+			)
+		}
 	}
 
 	c.logger.Println(fmt.Sprintf("Accepting EULA for release with ID: %d", release.ID))

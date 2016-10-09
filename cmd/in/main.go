@@ -91,11 +91,19 @@ func main() {
 
 	f := filter.NewFilter()
 
+	combinedClient := struct {
+		*gp.Client
+		*gp.ExtendedClient
+	}{
+		client,
+		extendedClient,
+	}
+
 	fileWriter := filesystem.NewFileWriter(downloadDir, logger)
 
 	response, err := in.NewInCommand(
 		logger,
-		client,
+		combinedClient,
 		f,
 		d,
 		fs,

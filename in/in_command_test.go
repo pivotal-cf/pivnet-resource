@@ -37,6 +37,7 @@ var _ = Describe("In", func() {
 
 		productVersion  string
 		etag            string
+		actualETag      string
 		versionWithETag string
 
 		inRequest concourse.InRequest
@@ -47,6 +48,7 @@ var _ = Describe("In", func() {
 		fileContentsMD5s  []string
 
 		getReleaseErr          error
+		actualETagErr          error
 		acceptEULAErr          error
 		getProductFilesErr     error
 		getProductFileErr      error
@@ -65,6 +67,7 @@ var _ = Describe("In", func() {
 		fakeFileWriter = &infakes.FakeFileWriter{}
 
 		getReleaseErr = nil
+		actualETagErr = nil
 		acceptEULAErr = nil
 		getProductFilesErr = nil
 		getProductFileErr = nil
@@ -76,6 +79,7 @@ var _ = Describe("In", func() {
 
 		productVersion = "C"
 		etag = "etag-0"
+		actualETag = etag
 
 		fileContentsMD5s = []string{
 			"some-md5 1234",
@@ -190,6 +194,7 @@ var _ = Describe("In", func() {
 
 	JustBeforeEach(func() {
 		fakePivnetClient.GetReleaseReturns(release, getReleaseErr)
+		fakePivnetClient.ReleaseETagReturns(actualETag, actualETagErr)
 		fakePivnetClient.AcceptEULAReturns(acceptEULAErr)
 		fakePivnetClient.GetProductFilesForReleaseReturns(productFiles, getProductFilesErr)
 
@@ -360,6 +365,11 @@ var _ = Describe("In", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
 		})
+
+		It("does not attempt to discover acutal etag", func() {
+			_, _ = inCommand.Run(inRequest)
+			Expect(fakePivnetClient.ReleaseETagCallCount()).To(Equal(0))
+		})
 	})
 
 	Context("when getting release returns error", func() {
@@ -372,6 +382,36 @@ var _ = Describe("In", func() {
 			Expect(err).To(HaveOccurred())
 
 			Expect(err).To(Equal(getReleaseErr))
+		})
+	})
+
+	Context("when getting actual etag returns an error", func() {
+		BeforeEach(func() {
+			actualETagErr = fmt.Errorf("some etag error")
+		})
+
+		It("returns the error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(actualETagErr))
+		})
+	})
+
+	Context("when actual etag is different than provided", func() {
+		BeforeEach(func() {
+			actualETag = "different etag"
+		})
+
+		It("returns the error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err.Error()).To(MatchRegexp(
+				".*provided.*'%s'.*actual.*'%s'.*",
+				etag,
+				actualETag,
+			))
 		})
 	})
 

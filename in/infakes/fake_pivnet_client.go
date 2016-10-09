@@ -68,6 +68,16 @@ type FakePivnetClient struct {
 		result1 []go_pivnet.ReleaseUpgradePath
 		result2 error
 	}
+	ReleaseETagStub        func(productSlug string, releaseID int) (string, error)
+	releaseETagMutex       sync.RWMutex
+	releaseETagArgsForCall []struct {
+		productSlug string
+		releaseID   int
+	}
+	releaseETagReturns struct {
+		result1 string
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -282,6 +292,41 @@ func (fake *FakePivnetClient) ReleaseUpgradePathsReturns(result1 []go_pivnet.Rel
 	}{result1, result2}
 }
 
+func (fake *FakePivnetClient) ReleaseETag(productSlug string, releaseID int) (string, error) {
+	fake.releaseETagMutex.Lock()
+	fake.releaseETagArgsForCall = append(fake.releaseETagArgsForCall, struct {
+		productSlug string
+		releaseID   int
+	}{productSlug, releaseID})
+	fake.recordInvocation("ReleaseETag", []interface{}{productSlug, releaseID})
+	fake.releaseETagMutex.Unlock()
+	if fake.ReleaseETagStub != nil {
+		return fake.ReleaseETagStub(productSlug, releaseID)
+	} else {
+		return fake.releaseETagReturns.result1, fake.releaseETagReturns.result2
+	}
+}
+
+func (fake *FakePivnetClient) ReleaseETagCallCount() int {
+	fake.releaseETagMutex.RLock()
+	defer fake.releaseETagMutex.RUnlock()
+	return len(fake.releaseETagArgsForCall)
+}
+
+func (fake *FakePivnetClient) ReleaseETagArgsForCall(i int) (string, int) {
+	fake.releaseETagMutex.RLock()
+	defer fake.releaseETagMutex.RUnlock()
+	return fake.releaseETagArgsForCall[i].productSlug, fake.releaseETagArgsForCall[i].releaseID
+}
+
+func (fake *FakePivnetClient) ReleaseETagReturns(result1 string, result2 error) {
+	fake.ReleaseETagStub = nil
+	fake.releaseETagReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakePivnetClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -297,6 +342,8 @@ func (fake *FakePivnetClient) Invocations() map[string][][]interface{} {
 	defer fake.releaseDependenciesMutex.RUnlock()
 	fake.releaseUpgradePathsMutex.RLock()
 	defer fake.releaseUpgradePathsMutex.RUnlock()
+	fake.releaseETagMutex.RLock()
+	defer fake.releaseETagMutex.RUnlock()
 	return fake.invocations
 }
 
