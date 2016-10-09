@@ -65,18 +65,20 @@ func (m Metadata) Validate() error {
 		}
 	}
 
-	if m.Release != nil {
-		if m.Release.Version == "" {
-			return fmt.Errorf("missing required value %q", "version")
-		}
+	if m.Release == nil {
+		return fmt.Errorf("missing required value %q", "release")
+	}
 
-		if m.Release.ReleaseType == "" {
-			return fmt.Errorf("missing required value %q", "release_type")
-		}
+	if m.Release.Version == "" {
+		return fmt.Errorf("missing required value %q", "version")
+	}
 
-		if m.Release.EULASlug == "" {
-			return fmt.Errorf("missing required value %q", "eula_slug")
-		}
+	if m.Release.ReleaseType == "" {
+		return fmt.Errorf("missing required value %q", "release_type")
+	}
+
+	if m.Release.EULASlug == "" {
+		return fmt.Errorf("missing required value %q", "eula_slug")
 	}
 
 	for i, d := range m.Dependencies {

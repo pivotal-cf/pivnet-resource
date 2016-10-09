@@ -25,34 +25,53 @@ var _ = Describe("Metadata", func() {
 			}
 		})
 
-		It("returns an error when product files are missing", func() {
-			data.ProductFiles[0].File = ""
-			Expect(data.Validate()).To(MatchError("empty value for file"))
+		Context("when release is missing", func() {
+			BeforeEach(func() {
+				data.Release = nil
+			})
+
+			It("returns an error", func() {
+				Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "release")))
+			})
 		})
 
-		It("returns an error when eula slug is missing", func() {
-			data.Release.EULASlug = ""
-			Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "eula_slug")))
+		Context("when eula slug is missing", func() {
+			BeforeEach(func() {
+				data.Release.EULASlug = ""
+			})
+
+			It("returns an error", func() {
+				Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "eula_slug")))
+			})
 		})
 
-		It("returns an error when version is missing", func() {
-			data.Release.Version = ""
-			Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "version")))
+		Context("when version is missing", func() {
+			BeforeEach(func() {
+				data.Release.Version = ""
+			})
+
+			It("returns an error", func() {
+				Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "version")))
+			})
 		})
 
-		It("returns an error when release type is missing", func() {
-			data.Release.ReleaseType = ""
-			Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "release_type")))
+		Context("when release type is missing", func() {
+			BeforeEach(func() {
+				data.Release.ReleaseType = ""
+			})
+
+			It("returns an error", func() {
+				Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "release_type")))
+			})
 		})
 
-		Context("when no top-level release key is provided", func() {
-			It("does not perform any validations", func() {
-				data = metadata.Metadata{
-					ProductFiles: []metadata.ProductFile{
-						{File: "hello.txt", Description: "available"},
-					},
-				}
-				Expect(data.Validate()).NotTo(HaveOccurred())
+		Context("when product files are missing", func() {
+			BeforeEach(func() {
+				data.ProductFiles[0].File = ""
+			})
+
+			It("returns an error", func() {
+				Expect(data.Validate()).To(MatchError("empty value for file"))
 			})
 		})
 
