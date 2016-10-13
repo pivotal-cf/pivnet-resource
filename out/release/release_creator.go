@@ -29,7 +29,6 @@ type releaseClient interface {
 	ReleaseTypes() ([]pivnet.ReleaseType, error)
 	ReleasesForProductSlug(string) ([]pivnet.Release, error)
 	CreateRelease(pivnet.CreateReleaseConfig) (pivnet.Release, error)
-	ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error)
 }
 
 //go:generate counterfeiter --fake-name FakeSemverConverter . semverConverter
@@ -96,9 +95,9 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		return pivnet.Release{}, err
 	}
 
-	existingVersions, err := rc.pivnet.ProductVersions(rc.productSlug, releases)
-	if err != nil {
-		return pivnet.Release{}, err
+	existingVersions := make([]string, len(releases))
+	for i, r := range releases {
+		existingVersions[i] = r.Version
 	}
 
 	for _, v := range existingVersions {

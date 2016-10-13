@@ -40,16 +40,6 @@ type ReleaseClient struct {
 		result1 go_pivnet.Release
 		result2 error
 	}
-	ProductVersionsStub        func(productSlug string, releases []go_pivnet.Release) ([]string, error)
-	productVersionsMutex       sync.RWMutex
-	productVersionsArgsForCall []struct {
-		productSlug string
-		releases    []go_pivnet.Release
-	}
-	productVersionsReturns struct {
-		result1 []string
-		result2 error
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -174,46 +164,6 @@ func (fake *ReleaseClient) CreateReleaseReturns(result1 go_pivnet.Release, resul
 	}{result1, result2}
 }
 
-func (fake *ReleaseClient) ProductVersions(productSlug string, releases []go_pivnet.Release) ([]string, error) {
-	var releasesCopy []go_pivnet.Release
-	if releases != nil {
-		releasesCopy = make([]go_pivnet.Release, len(releases))
-		copy(releasesCopy, releases)
-	}
-	fake.productVersionsMutex.Lock()
-	fake.productVersionsArgsForCall = append(fake.productVersionsArgsForCall, struct {
-		productSlug string
-		releases    []go_pivnet.Release
-	}{productSlug, releasesCopy})
-	fake.recordInvocation("ProductVersions", []interface{}{productSlug, releasesCopy})
-	fake.productVersionsMutex.Unlock()
-	if fake.ProductVersionsStub != nil {
-		return fake.ProductVersionsStub(productSlug, releases)
-	} else {
-		return fake.productVersionsReturns.result1, fake.productVersionsReturns.result2
-	}
-}
-
-func (fake *ReleaseClient) ProductVersionsCallCount() int {
-	fake.productVersionsMutex.RLock()
-	defer fake.productVersionsMutex.RUnlock()
-	return len(fake.productVersionsArgsForCall)
-}
-
-func (fake *ReleaseClient) ProductVersionsArgsForCall(i int) (string, []go_pivnet.Release) {
-	fake.productVersionsMutex.RLock()
-	defer fake.productVersionsMutex.RUnlock()
-	return fake.productVersionsArgsForCall[i].productSlug, fake.productVersionsArgsForCall[i].releases
-}
-
-func (fake *ReleaseClient) ProductVersionsReturns(result1 []string, result2 error) {
-	fake.ProductVersionsStub = nil
-	fake.productVersionsReturns = struct {
-		result1 []string
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *ReleaseClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -225,8 +175,6 @@ func (fake *ReleaseClient) Invocations() map[string][][]interface{} {
 	defer fake.releasesForProductSlugMutex.RUnlock()
 	fake.createReleaseMutex.RLock()
 	defer fake.createReleaseMutex.RUnlock()
-	fake.productVersionsMutex.RLock()
-	defer fake.productVersionsMutex.RUnlock()
 	return fake.invocations
 }
 
