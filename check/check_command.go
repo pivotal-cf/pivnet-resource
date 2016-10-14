@@ -123,10 +123,10 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	productVersion := input.Source.ProductVersion
-	if productVersion != "" {
-		c.logger.Println(fmt.Sprintf("Filtering all releases by product version: '%s'", productVersion))
-		releases, err = c.filter.ReleasesByVersion(releases, productVersion)
+	version := input.Source.ProductVersion
+	if version != "" {
+		c.logger.Println(fmt.Sprintf("Filtering all releases by product version: '%s'", version))
+		releases, err = c.filter.ReleasesByVersion(releases, version)
 		if err != nil {
 			return nil, err
 		}
@@ -140,7 +140,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	versionsWithETags, err := versions.ProductVersions(c.pivnetClient, productSlug, releases)
+	versionsWithETags, err := versionsWithFingerprints(c.pivnetClient, productSlug, releases)
 	if err != nil {
 		return nil, err
 	}
@@ -186,4 +186,28 @@ func containsString(strings []string, str string) bool {
 		}
 	}
 	return false
+}
+
+// versionsWithFingerprints adds the release ETags to the release versions
+func versionsWithFingerprints(
+	c pivnetClient,
+	productSlug string,
+	releases []pivnet.Release,
+) ([]string, error) {
+	var allVersions []string
+	for _, r := range releases {
+		etag, err := c.ReleaseETag(productSlug, r.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		version, err := versions.CombineVersionAndETag(r.Version, etag)
+		if err != nil {
+			return nil, err
+		}
+
+		allVersions = append(allVersions, version)
+	}
+
+	return allVersions, nil
 }

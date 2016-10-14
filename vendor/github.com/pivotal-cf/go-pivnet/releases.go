@@ -48,7 +48,7 @@ type Release struct {
 
 type CreateReleaseConfig struct {
 	ProductSlug           string
-	ProductVersion        string
+	Version               string
 	ReleaseType           string
 	ReleaseDate           string
 	EULASlug              string
@@ -98,7 +98,7 @@ func (r ReleasesService) Create(config CreateReleaseConfig) (Release, error) {
 			OSSCompliant:          "confirm",
 			ReleaseDate:           config.ReleaseDate,
 			ReleaseType:           ReleaseType(config.ReleaseType),
-			Version:               config.ProductVersion,
+			Version:               config.Version,
 			Description:           config.Description,
 			ReleaseNotesURL:       config.ReleaseNotesURL,
 			Controlled:            config.Controlled,

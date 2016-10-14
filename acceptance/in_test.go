@@ -24,7 +24,7 @@ var _ = Describe("In", func() {
 		eulaSlug    = "pivotal_beta_eula"
 		releaseType = pivnet.ReleaseType("Minor Release")
 
-		productVersion  string
+		version         string
 		etag            string
 		versionWithETag string
 		destDirectory   string
@@ -36,21 +36,21 @@ var _ = Describe("In", func() {
 
 	BeforeEach(func() {
 		By("Generating 'random' product version")
-		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
+		version = fmt.Sprintf("%d", time.Now().Nanosecond())
 
 		By("Creating new release")
 		release, err := pivnetClient.CreateRelease(pivnet.CreateReleaseConfig{
-			ProductSlug:    productSlug,
-			ProductVersion: productVersion,
-			EULASlug:       eulaSlug,
-			ReleaseType:    string(releaseType),
+			ProductSlug: productSlug,
+			Version:     version,
+			EULASlug:    eulaSlug,
+			ReleaseType: string(releaseType),
 		})
 		Expect(err).NotTo(HaveOccurred())
 
 		etag, err = pivnetClient.ReleaseETag(productSlug, release.ID)
 		Expect(err).NotTo(HaveOccurred())
 
-		versionWithETag, err = versions.CombineVersionAndETag(productVersion, etag)
+		versionWithETag, err = versions.CombineVersionAndETag(version, etag)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Creating temp directory")

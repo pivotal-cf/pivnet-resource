@@ -14,7 +14,7 @@ import (
 //go:generate counterfeiter . PivnetClient
 type PivnetClient interface {
 	ReleasesForProductSlug(productSlug string) ([]pivnet.Release, error)
-	ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
+	ReleaseForVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
 	CreateRelease(config pivnet.CreateReleaseConfig) (pivnet.Release, error)
 	DeleteRelease(productSlug string, release pivnet.Release) error
 	ReleaseETag(productSlug string, releaseID int) (string, error)
@@ -87,7 +87,7 @@ func (c *ReleaseClient) Get(
 	productSlug string,
 	releaseVersion string,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(
+	release, err := c.pivnetClient.ReleaseForVersion(
 		productSlug,
 		releaseVersion,
 	)
@@ -144,10 +144,10 @@ func (c *ReleaseClient) Create(
 	eulaSlug string,
 ) error {
 	newReleaseConfig := pivnet.CreateReleaseConfig{
-		ProductSlug:    productSlug,
-		ProductVersion: releaseVersion,
-		ReleaseType:    releaseType,
-		EULASlug:       eulaSlug,
+		ProductSlug: productSlug,
+		Version:     releaseVersion,
+		ReleaseType: releaseType,
+		EULASlug:    eulaSlug,
 	}
 
 	release, err := c.pivnetClient.CreateRelease(newReleaseConfig)
@@ -169,7 +169,7 @@ func (c *ReleaseClient) Create(
 }
 
 func (c *ReleaseClient) Delete(productSlug string, releaseVersion string) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}

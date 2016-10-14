@@ -13,7 +13,7 @@ import (
 
 //go:generate counterfeiter . PivnetClient
 type PivnetClient interface {
-	ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
+	ReleaseForVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
 	ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error)
 	AddReleaseUpgradePath(productSlug string, releaseID int, previousReleaseID int) error
 	RemoveReleaseUpgradePath(productSlug string, releaseID int, previousReleaseID int) error
@@ -44,7 +44,7 @@ func NewReleaseUpgradePathClient(
 }
 
 func (c *ReleaseUpgradePathClient) List(productSlug string, releaseVersion string) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -91,12 +91,12 @@ func (c *ReleaseUpgradePathClient) Add(
 	releaseVersion string,
 	previousReleaseVersion string,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
 
-	previousRelease, err := c.pivnetClient.ReleaseForProductVersion(productSlug, previousReleaseVersion)
+	previousRelease, err := c.pivnetClient.ReleaseForVersion(productSlug, previousReleaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -127,12 +127,12 @@ func (c *ReleaseUpgradePathClient) Remove(
 	releaseVersion string,
 	previousReleaseVersion string,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
 
-	previousRelease, err := c.pivnetClient.ReleaseForProductVersion(productSlug, previousReleaseVersion)
+	previousRelease, err := c.pivnetClient.ReleaseForVersion(productSlug, previousReleaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}

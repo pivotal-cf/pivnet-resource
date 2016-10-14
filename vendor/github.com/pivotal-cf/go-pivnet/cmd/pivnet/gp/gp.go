@@ -56,7 +56,7 @@ func (c Client) Release(productSlug string, releaseID int) (pivnet.Release, erro
 	return c.client.Releases.Get(productSlug, releaseID)
 }
 
-func (c Client) ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error) {
+func (c Client) ReleaseForVersion(productSlug string, releaseVersion string) (pivnet.Release, error) {
 	releases, err := c.ReleasesForProductSlug(productSlug)
 	if err != nil {
 		return pivnet.Release{}, err

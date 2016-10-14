@@ -146,7 +146,7 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-func productVersionsWithoutETags(versionsWithETags []string) []string {
+func versionsWithoutETags(versionsWithETags []string) []string {
 	versionsWithoutETags := make([]string, len(versionsWithETags))
 	for i, v := range versionsWithETags {
 		split := strings.Split(v, "#")

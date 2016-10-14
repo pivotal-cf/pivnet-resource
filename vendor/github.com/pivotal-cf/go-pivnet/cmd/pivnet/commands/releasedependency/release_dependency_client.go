@@ -13,7 +13,7 @@ import (
 
 //go:generate counterfeiter . PivnetClient
 type PivnetClient interface {
-	ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
+	ReleaseForVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
 	AddReleaseDependency(productSlug string, releaseID int, dependentReleaseID int) error
 	RemoveReleaseDependency(productSlug string, releaseID int, dependentReleaseID int) error
@@ -44,7 +44,7 @@ func NewReleaseDependencyClient(
 }
 
 func (c *ReleaseDependencyClient) List(productSlug string, releaseVersion string) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -92,12 +92,12 @@ func (c *ReleaseDependencyClient) Add(
 	dependentProductSlug string,
 	dependentReleaseVersion string,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
 
-	dependentRelease, err := c.pivnetClient.ReleaseForProductVersion(dependentProductSlug, dependentReleaseVersion)
+	dependentRelease, err := c.pivnetClient.ReleaseForVersion(dependentProductSlug, dependentReleaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -129,12 +129,12 @@ func (c *ReleaseDependencyClient) Remove(
 	dependentProductSlug string,
 	dependentReleaseVersion string,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
 
-	dependentRelease, err := c.pivnetClient.ReleaseForProductVersion(dependentProductSlug, dependentReleaseVersion)
+	dependentRelease, err := c.pivnetClient.ReleaseForVersion(dependentProductSlug, dependentReleaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}

@@ -37,7 +37,7 @@ type fileWriter interface {
 
 //go:generate counterfeiter --fake-name FakePivnetClient . pivnetClient
 type pivnetClient interface {
-	GetRelease(productSlug string, productVersion string) (pivnet.Release, error)
+	GetRelease(productSlug string, version string) (pivnet.Release, error)
 	AcceptEULA(productSlug string, releaseID int) error
 	GetProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
 	GetProductFile(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
@@ -77,20 +77,20 @@ func NewInCommand(
 func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error) {
 	productSlug := input.Source.ProductSlug
 
-	productVersion, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
+	version, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
 	if err != nil {
 		c.logger.Println("Parsing of etag failed; continuing without it")
-		productVersion = input.Version.ProductVersion
+		version = input.Version.ProductVersion
 		etag = ""
 	}
 
 	c.logger.Println(fmt.Sprintf(
 		"Getting release for product slug: '%s' and product version: '%s'",
 		productSlug,
-		productVersion,
+		version,
 	))
 
-	release, err := c.pivnetClient.GetRelease(productSlug, productVersion)
+	release, err := c.pivnetClient.GetRelease(productSlug, version)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
@@ -147,7 +147,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Println("Creating metadata")
 
-	versionWithETag, err := versions.CombineVersionAndETag(productVersion, etag)
+	versionWithETag, err := versions.CombineVersionAndETag(version, etag)
 
 	mdata := metadata.Metadata{
 		Release: &metadata.Release{

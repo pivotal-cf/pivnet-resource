@@ -3,8 +3,6 @@ package versions
 import (
 	"fmt"
 	"strings"
-
-	"github.com/pivotal-cf/go-pivnet"
 )
 
 const (
@@ -52,24 +50,4 @@ func combineVersionAndETag(version string, etag string) string {
 //go:generate counterfeiter --fake-name FakeExtendedClient . extendedClient
 type extendedClient interface {
 	ReleaseETag(productSlug string, releaseID int) (string, error)
-}
-
-// ProductVersions adds the release ETags to the release versions
-func ProductVersions(
-	c extendedClient,
-	productSlug string,
-	releases []pivnet.Release,
-) ([]string, error) {
-	var versions []string
-	for _, r := range releases {
-		etag, err := c.ReleaseETag(productSlug, r.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		version := combineVersionAndETag(r.Version, etag)
-		versions = append(versions, version)
-	}
-
-	return versions, nil
 }

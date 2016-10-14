@@ -35,7 +35,7 @@ var _ = Describe("In", func() {
 		releaseDependencies []pivnet.ReleaseDependency
 		releaseUpgradePaths []pivnet.ReleaseUpgradePath
 
-		productVersion  string
+		version         string
 		etag            string
 		actualETag      string
 		versionWithETag string
@@ -77,7 +77,7 @@ var _ = Describe("In", func() {
 		releaseDependenciesErr = nil
 		releaseUpgradePathsErr = nil
 
-		productVersion = "C"
+		version = "C"
 		etag = "etag-0"
 		actualETag = etag
 
@@ -87,7 +87,7 @@ var _ = Describe("In", func() {
 		}
 
 		var err error
-		versionWithETag, err = versions.CombineVersionAndETag(productVersion, etag)
+		versionWithETag, err = versions.CombineVersionAndETag(version, etag)
 		Expect(err).NotTo(HaveOccurred())
 
 		downloadFilepaths = []string{
@@ -145,7 +145,7 @@ var _ = Describe("In", func() {
 		file1URL := "some-file-path"
 
 		release = pivnet.Release{
-			Version: productVersion,
+			Version: version,
 			ID:      1234,
 			Links: &pivnet.Links{
 				ProductFiles: map[string]string{
@@ -307,7 +307,7 @@ var _ = Describe("In", func() {
 		invokedMetadata := fakeFileWriter.WriteMetadataJSONFileArgsForCall(0)
 
 		Expect(invokedMetadata.Release).NotTo(BeNil())
-		Expect(invokedMetadata.Release.Version).To(Equal(productVersion))
+		Expect(invokedMetadata.Release.Version).To(Equal(version))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
 		pFiles := []pivnet.ProductFile{
@@ -328,7 +328,7 @@ var _ = Describe("In", func() {
 		invokedMetadata := fakeFileWriter.WriteMetadataYAMLFileArgsForCall(0)
 
 		Expect(invokedMetadata.Release).NotTo(BeNil())
-		Expect(invokedMetadata.Release.Version).To(Equal(productVersion))
+		Expect(invokedMetadata.Release.Version).To(Equal(version))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
 		pFiles := []pivnet.ProductFile{
@@ -357,7 +357,7 @@ var _ = Describe("In", func() {
 	Context("when version is provided without etag", func() {
 		BeforeEach(func() {
 			inRequest.Version = concourse.Version{
-				ProductVersion: productVersion,
+				ProductVersion: version,
 			}
 		})
 
@@ -480,7 +480,7 @@ var _ = Describe("In", func() {
 			invokedMetadata := fakeFileWriter.WriteMetadataYAMLFileArgsForCall(0)
 
 			Expect(invokedMetadata.Release).NotTo(BeNil())
-			Expect(invokedMetadata.Release.Version).To(Equal(productVersion))
+			Expect(invokedMetadata.Release.Version).To(Equal(version))
 			Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
 			pFiles := []pivnet.ProductFile{

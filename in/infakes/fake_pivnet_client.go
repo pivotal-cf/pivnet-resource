@@ -8,11 +8,11 @@ import (
 )
 
 type FakePivnetClient struct {
-	GetReleaseStub        func(productSlug string, productVersion string) (go_pivnet.Release, error)
+	GetReleaseStub        func(productSlug string, version string) (go_pivnet.Release, error)
 	getReleaseMutex       sync.RWMutex
 	getReleaseArgsForCall []struct {
-		productSlug    string
-		productVersion string
+		productSlug string
+		version     string
 	}
 	getReleaseReturns struct {
 		result1 go_pivnet.Release
@@ -82,16 +82,16 @@ type FakePivnetClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakePivnetClient) GetRelease(productSlug string, productVersion string) (go_pivnet.Release, error) {
+func (fake *FakePivnetClient) GetRelease(productSlug string, version string) (go_pivnet.Release, error) {
 	fake.getReleaseMutex.Lock()
 	fake.getReleaseArgsForCall = append(fake.getReleaseArgsForCall, struct {
-		productSlug    string
-		productVersion string
-	}{productSlug, productVersion})
-	fake.recordInvocation("GetRelease", []interface{}{productSlug, productVersion})
+		productSlug string
+		version     string
+	}{productSlug, version})
+	fake.recordInvocation("GetRelease", []interface{}{productSlug, version})
 	fake.getReleaseMutex.Unlock()
 	if fake.GetReleaseStub != nil {
-		return fake.GetReleaseStub(productSlug, productVersion)
+		return fake.GetReleaseStub(productSlug, version)
 	} else {
 		return fake.getReleaseReturns.result1, fake.getReleaseReturns.result2
 	}
@@ -106,7 +106,7 @@ func (fake *FakePivnetClient) GetReleaseCallCount() int {
 func (fake *FakePivnetClient) GetReleaseArgsForCall(i int) (string, string) {
 	fake.getReleaseMutex.RLock()
 	defer fake.getReleaseMutex.RUnlock()
-	return fake.getReleaseArgsForCall[i].productSlug, fake.getReleaseArgsForCall[i].productVersion
+	return fake.getReleaseArgsForCall[i].productSlug, fake.getReleaseArgsForCall[i].version
 }
 
 func (fake *FakePivnetClient) GetReleaseReturns(result1 go_pivnet.Release, result2 error) {

@@ -29,8 +29,8 @@ var _ = Describe("Lifecycle test", func() {
 		description     = "this release is for automated-testing only."
 		releaseNotesURL = "https://example.com"
 
-		metadataFile   = "metadata"
-		productVersion string
+		metadataFile = "metadata"
+		version      string
 
 		filePrefix = "pivnet-resource-test-file"
 
@@ -48,7 +48,7 @@ var _ = Describe("Lifecycle test", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Generating 'random' product version")
-		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
+		version = fmt.Sprintf("%d", time.Now().Nanosecond())
 
 		By("Creating a metadata struct")
 		productMetadata := metadata.Metadata{
@@ -58,7 +58,7 @@ var _ = Describe("Lifecycle test", func() {
 				ReleaseDate:     releaseDate,
 				Description:     description,
 				ReleaseNotesURL: releaseNotesURL,
-				Version:         productVersion,
+				Version:         version,
 			},
 		}
 
@@ -210,13 +210,13 @@ var _ = Describe("Lifecycle test", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 
 				By("Validating the release was created correctly")
-				release, err := pivnetClient.GetRelease(productSlug, productVersion)
+				release, err := pivnetClient.GetRelease(productSlug, version)
 				Expect(err).NotTo(HaveOccurred())
 
 				releaseETag, err := pivnetClient.ReleaseETag(productSlug, release.ID)
 				Expect(err).NotTo(HaveOccurred())
 
-				expectedVersion := fmt.Sprintf("%s#%s", productVersion, releaseETag)
+				expectedVersion := fmt.Sprintf("%s#%s", version, releaseETag)
 				Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
 
 				By("Getting updated list of product files")
@@ -237,13 +237,13 @@ var _ = Describe("Lifecycle test", func() {
 				Expect(len(newProductFiles)).To(Equal(totalFiles))
 
 				By("Getting newly-created release")
-				release, err = pivnetClient.GetRelease(productSlug, productVersion)
+				release, err = pivnetClient.GetRelease(productSlug, version)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				releaseETag, err = pivnetClient.ReleaseETag(productSlug, release.ID)
 				Expect(err).NotTo(HaveOccurred())
 
-				versionWithETag, err := versions.CombineVersionAndETag(productVersion, releaseETag)
+				versionWithETag, err := versions.CombineVersionAndETag(version, releaseETag)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying release contains new product files")

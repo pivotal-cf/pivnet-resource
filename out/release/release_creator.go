@@ -59,10 +59,10 @@ func NewReleaseCreator(
 }
 
 func (rc ReleaseCreator) Create() (pivnet.Release, error) {
-	productVersion := rc.metadata.Release.Version
+	version := rc.metadata.Release.Version
 
 	if rc.source.SortBy == concourse.SortBySemver {
-		v, err := rc.semverConverter.ToValidSemver(productVersion)
+		v, err := rc.semverConverter.ToValidSemver(version)
 		if err != nil {
 			return pivnet.Release{}, err
 		}
@@ -72,11 +72,11 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	if rc.source.ProductVersion != "" {
 		rc.logger.Println(fmt.Sprintf(
 			"Validating product version: '%s' against regex: '%s'",
-			productVersion,
+			version,
 			rc.source.ProductVersion,
 		))
 
-		match, err := regexp.MatchString(rc.source.ProductVersion, productVersion)
+		match, err := regexp.MatchString(rc.source.ProductVersion, version)
 		if err != nil {
 			return pivnet.Release{}, err
 		}
@@ -84,7 +84,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		if !match {
 			return pivnet.Release{}, fmt.Errorf(
 				"provided product version: '%s' does not match regex in source: '%s'",
-				productVersion,
+				version,
 				rc.source.ProductVersion,
 			)
 		}
@@ -101,9 +101,9 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 	}
 
 	for _, v := range existingVersions {
-		if v == productVersion {
+		if v == version {
 			return pivnet.Release{},
-				fmt.Errorf("release already exists with version: '%s'", productVersion)
+				fmt.Errorf("release already exists with version: '%s'", version)
 		}
 	}
 
@@ -185,7 +185,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		ProductSlug:           rc.productSlug,
 		ReleaseType:           string(releaseType),
 		EULASlug:              eulaSlug,
-		ProductVersion:        productVersion,
+		Version:               version,
 		Description:           rc.metadata.Release.Description,
 		ReleaseNotesURL:       rc.metadata.Release.ReleaseNotesURL,
 		ReleaseDate:           rc.metadata.Release.ReleaseDate,

@@ -16,7 +16,7 @@ import (
 
 //go:generate counterfeiter . PivnetClient
 type PivnetClient interface {
-	ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
+	ReleaseForVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
 	GetProductFiles(productSlug string) ([]pivnet.ProductFile, error)
 	GetProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
 	GetProductFile(productSlug string, productFileID int) (pivnet.ProductFile, error)
@@ -72,7 +72,7 @@ func (c *ProductFileClient) List(productSlug string, releaseVersion string) erro
 		return c.printProductFiles(productFiles)
 	}
 
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -173,7 +173,7 @@ func (c *ProductFileClient) Get(
 		return c.printProductFile(productFile)
 	}
 
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -249,7 +249,7 @@ func (c *ProductFileClient) AddToRelease(
 	releaseVersion string,
 	productFileID int,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -281,7 +281,7 @@ func (c *ProductFileClient) RemoveFromRelease(
 	releaseVersion string,
 	productFileID int,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -396,7 +396,7 @@ func (c *ProductFileClient) Download(
 	filepath string,
 	acceptEULA bool,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}

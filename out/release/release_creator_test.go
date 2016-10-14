@@ -116,7 +116,7 @@ var _ = Describe("ReleaseCreator", func() {
 				ProductSlug:     "some-product-slug",
 				ReleaseType:     string(releaseType),
 				EULASlug:        eulaSlug,
-				ProductVersion:  releaseVersion,
+				Version:         releaseVersion,
 				Description:     "wow, a description",
 				ReleaseNotesURL: "some-url",
 				ReleaseDate:     "1/17/2016",

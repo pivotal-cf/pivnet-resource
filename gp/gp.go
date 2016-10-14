@@ -43,7 +43,7 @@ func (c Client) ReleasesForProductSlug(productSlug string) ([]pivnet.Release, er
 	return c.client.Releases.List(productSlug)
 }
 
-func (c Client) GetRelease(productSlug string, productVersion string) (pivnet.Release, error) {
+func (c Client) GetRelease(productSlug string, version string) (pivnet.Release, error) {
 	releases, err := c.client.Releases.List(productSlug)
 	if err != nil {
 		return pivnet.Release{}, err
@@ -51,13 +51,13 @@ func (c Client) GetRelease(productSlug string, productVersion string) (pivnet.Re
 
 	var foundRelease pivnet.Release
 	for _, r := range releases {
-		if r.Version == productVersion {
+		if r.Version == version {
 			foundRelease = r
 			break
 		}
 	}
 
-	if foundRelease.Version != productVersion {
+	if foundRelease.Version != version {
 		return pivnet.Release{}, fmt.Errorf("release not found")
 	}
 

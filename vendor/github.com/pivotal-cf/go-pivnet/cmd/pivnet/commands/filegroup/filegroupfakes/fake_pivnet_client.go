@@ -28,13 +28,13 @@ type FakePivnetClient struct {
 		result1 []go_pivnet.FileGroup
 		result2 error
 	}
-	ReleaseForProductVersionStub        func(productSlug string, releaseVersion string) (go_pivnet.Release, error)
-	releaseForProductVersionMutex       sync.RWMutex
-	releaseForProductVersionArgsForCall []struct {
+	ReleaseForVersionStub        func(productSlug string, releaseVersion string) (go_pivnet.Release, error)
+	releaseForVersionMutex       sync.RWMutex
+	releaseForVersionArgsForCall []struct {
 		productSlug    string
 		releaseVersion string
 	}
-	releaseForProductVersionReturns struct {
+	releaseForVersionReturns struct {
 		result1 go_pivnet.Release
 		result2 error
 	}
@@ -171,36 +171,36 @@ func (fake *FakePivnetClient) FileGroupsForReleaseReturns(result1 []go_pivnet.Fi
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) ReleaseForProductVersion(productSlug string, releaseVersion string) (go_pivnet.Release, error) {
-	fake.releaseForProductVersionMutex.Lock()
-	fake.releaseForProductVersionArgsForCall = append(fake.releaseForProductVersionArgsForCall, struct {
+func (fake *FakePivnetClient) ReleaseForVersion(productSlug string, releaseVersion string) (go_pivnet.Release, error) {
+	fake.releaseForVersionMutex.Lock()
+	fake.releaseForVersionArgsForCall = append(fake.releaseForVersionArgsForCall, struct {
 		productSlug    string
 		releaseVersion string
 	}{productSlug, releaseVersion})
-	fake.recordInvocation("ReleaseForProductVersion", []interface{}{productSlug, releaseVersion})
-	fake.releaseForProductVersionMutex.Unlock()
-	if fake.ReleaseForProductVersionStub != nil {
-		return fake.ReleaseForProductVersionStub(productSlug, releaseVersion)
+	fake.recordInvocation("ReleaseForVersion", []interface{}{productSlug, releaseVersion})
+	fake.releaseForVersionMutex.Unlock()
+	if fake.ReleaseForVersionStub != nil {
+		return fake.ReleaseForVersionStub(productSlug, releaseVersion)
 	} else {
-		return fake.releaseForProductVersionReturns.result1, fake.releaseForProductVersionReturns.result2
+		return fake.releaseForVersionReturns.result1, fake.releaseForVersionReturns.result2
 	}
 }
 
-func (fake *FakePivnetClient) ReleaseForProductVersionCallCount() int {
-	fake.releaseForProductVersionMutex.RLock()
-	defer fake.releaseForProductVersionMutex.RUnlock()
-	return len(fake.releaseForProductVersionArgsForCall)
+func (fake *FakePivnetClient) ReleaseForVersionCallCount() int {
+	fake.releaseForVersionMutex.RLock()
+	defer fake.releaseForVersionMutex.RUnlock()
+	return len(fake.releaseForVersionArgsForCall)
 }
 
-func (fake *FakePivnetClient) ReleaseForProductVersionArgsForCall(i int) (string, string) {
-	fake.releaseForProductVersionMutex.RLock()
-	defer fake.releaseForProductVersionMutex.RUnlock()
-	return fake.releaseForProductVersionArgsForCall[i].productSlug, fake.releaseForProductVersionArgsForCall[i].releaseVersion
+func (fake *FakePivnetClient) ReleaseForVersionArgsForCall(i int) (string, string) {
+	fake.releaseForVersionMutex.RLock()
+	defer fake.releaseForVersionMutex.RUnlock()
+	return fake.releaseForVersionArgsForCall[i].productSlug, fake.releaseForVersionArgsForCall[i].releaseVersion
 }
 
-func (fake *FakePivnetClient) ReleaseForProductVersionReturns(result1 go_pivnet.Release, result2 error) {
-	fake.ReleaseForProductVersionStub = nil
-	fake.releaseForProductVersionReturns = struct {
+func (fake *FakePivnetClient) ReleaseForVersionReturns(result1 go_pivnet.Release, result2 error) {
+	fake.ReleaseForVersionStub = nil
+	fake.releaseForVersionReturns = struct {
 		result1 go_pivnet.Release
 		result2 error
 	}{result1, result2}
@@ -423,8 +423,8 @@ func (fake *FakePivnetClient) Invocations() map[string][][]interface{} {
 	defer fake.fileGroupsMutex.RUnlock()
 	fake.fileGroupsForReleaseMutex.RLock()
 	defer fake.fileGroupsForReleaseMutex.RUnlock()
-	fake.releaseForProductVersionMutex.RLock()
-	defer fake.releaseForProductVersionMutex.RUnlock()
+	fake.releaseForVersionMutex.RLock()
+	defer fake.releaseForVersionMutex.RUnlock()
 	fake.fileGroupMutex.RLock()
 	defer fake.fileGroupMutex.RUnlock()
 	fake.createFileGroupMutex.RLock()

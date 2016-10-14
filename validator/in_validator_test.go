@@ -13,15 +13,15 @@ var _ = Describe("In Validator", func() {
 		inRequest concourse.InRequest
 		v         *validator.InValidator
 
-		apiToken       string
-		productSlug    string
-		productVersion string
+		apiToken    string
+		productSlug string
+		version     string
 	)
 
 	BeforeEach(func() {
 		apiToken = "some-api-token"
 		productSlug = "some-productSlug"
-		productVersion = "some-product-version"
+		version = "some-product-version"
 	})
 
 	JustBeforeEach(func() {
@@ -32,7 +32,7 @@ var _ = Describe("In Validator", func() {
 			},
 			Params: concourse.InParams{},
 			Version: concourse.Version{
-				ProductVersion: productVersion,
+				ProductVersion: version,
 			},
 		}
 
@@ -70,7 +70,7 @@ var _ = Describe("In Validator", func() {
 
 	Context("when no product version is provided", func() {
 		BeforeEach(func() {
-			productVersion = ""
+			version = ""
 		})
 
 		It("returns an error", func() {

@@ -14,7 +14,7 @@ import (
 
 //go:generate counterfeiter . PivnetClient
 type PivnetClient interface {
-	ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
+	ReleaseForVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
 	UserGroups() ([]pivnet.UserGroup, error)
 	UserGroupsForRelease(productSlug string, releaseID int) ([]pivnet.UserGroup, error)
 	UserGroup(userGroupID int) (pivnet.UserGroup, error)
@@ -61,7 +61,7 @@ func (c *UserGroupClient) List(productSlug string, releaseVersion string) error 
 		return c.printUserGroups(userGroups)
 	}
 
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -141,7 +141,7 @@ func (c *UserGroupClient) AddToRelease(
 	releaseVersion string,
 	userGroupID int,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -173,7 +173,7 @@ func (c *UserGroupClient) RemoveFromRelease(
 	releaseVersion string,
 	userGroupID int,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}

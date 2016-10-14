@@ -15,6 +15,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
+	"github.com/pivotal-cf/pivnet-resource/gp"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/versions"
 
@@ -28,7 +29,7 @@ const (
 
 var _ = Describe("Out", func() {
 	var (
-		productVersion string
+		version string
 
 		releaseType     = pivnet.ReleaseType("Minor Release")
 		releaseDate     = "2015-12-17"
@@ -53,7 +54,7 @@ var _ = Describe("Out", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Generating 'random' product version")
-		productVersion = fmt.Sprintf("%d", time.Now().Nanosecond())
+		version = fmt.Sprintf("%d", time.Now().Nanosecond())
 
 		By("Creating a metadata struct")
 		productMetadata = metadata.Metadata{
@@ -63,7 +64,7 @@ var _ = Describe("Out", func() {
 				ReleaseDate:     releaseDate,
 				Description:     description,
 				ReleaseNotesURL: releaseNotesURL,
-				Version:         productVersion,
+				Version:         version,
 			},
 		}
 
@@ -150,10 +151,10 @@ var _ = Describe("Out", func() {
 			releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
 			Expect(err).NotTo(HaveOccurred())
 
-			productVersions, err := versions.ProductVersions(pivnetClient, productSlug, releases)
+			releaseVersions, err := versionsWithFingerprints(pivnetClient, productSlug, releases)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(productVersionsWithoutETags(productVersions)).NotTo(ContainElement(productVersion))
+			Expect(versionsWithoutETags(releaseVersions)).NotTo(ContainElement(version))
 
 			By("Running the command")
 			session := run(command, stdinContents)
@@ -163,10 +164,10 @@ var _ = Describe("Out", func() {
 			releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
 			Expect(err).NotTo(HaveOccurred())
 
-			productVersions, err = versions.ProductVersions(pivnetClient, productSlug, releases)
+			releaseVersions, err = versionsWithFingerprints(pivnetClient, productSlug, releases)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(productVersionsWithoutETags(productVersions)).To(ContainElement(productVersion))
+			Expect(versionsWithoutETags(releaseVersions)).To(ContainElement(version))
 
 			By("Outputting a valid json response")
 			response := concourse.OutResponse{}
@@ -174,13 +175,13 @@ var _ = Describe("Out", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			By("Validating the release was created correctly")
-			release, err := pivnetClient.GetRelease(productSlug, productVersion)
+			release, err := pivnetClient.GetRelease(productSlug, version)
 			Expect(err).NotTo(HaveOccurred())
 
 			releaseETag, err := pivnetClient.ReleaseETag(productSlug, release.ID)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedVersion := fmt.Sprintf("%s#%s", productVersion, releaseETag)
+			expectedVersion := fmt.Sprintf("%s#%s", version, releaseETag)
 			Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
 
 			Expect(release.ReleaseType).To(Equal(releaseType))
@@ -239,10 +240,10 @@ var _ = Describe("Out", func() {
 				releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
 				Expect(err).NotTo(HaveOccurred())
 
-				productVersions, err := versions.ProductVersions(pivnetClient, productSlug, releases)
+				releaseVersions, err := versionsWithFingerprints(pivnetClient, productSlug, releases)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(productVersionsWithoutETags(productVersions)).NotTo(ContainElement(productVersion))
+				Expect(versionsWithoutETags(releaseVersions)).NotTo(ContainElement(version))
 
 				By("Running the command")
 				session := run(command, stdinContents)
@@ -252,20 +253,20 @@ var _ = Describe("Out", func() {
 				releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
 				Expect(err).NotTo(HaveOccurred())
 
-				productVersions, err = versions.ProductVersions(pivnetClient, productSlug, releases)
+				releaseVersions, err = versionsWithFingerprints(pivnetClient, productSlug, releases)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(productVersionsWithoutETags(productVersions)).To(ContainElement(productVersion))
+				Expect(versionsWithoutETags(releaseVersions)).To(ContainElement(version))
 
 				By("Outputting a valid json response")
 				response := concourse.OutResponse{}
 				err = json.Unmarshal(session.Out.Contents(), &response)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				Expect(response.Version.ProductVersion).To(ContainSubstring(productVersion))
+				Expect(response.Version.ProductVersion).To(ContainSubstring(version))
 
 				By("Validating the release was created correctly")
-				release, err := pivnetClient.GetRelease(productSlug, productVersion)
+				release, err := pivnetClient.GetRelease(productSlug, version)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(release.Availability).To(Equal(availability))
@@ -288,3 +289,27 @@ var _ = Describe("Out", func() {
 		})
 	})
 })
+
+// versionsWithFingerprints adds the release ETags to the release versions
+func versionsWithFingerprints(
+	c gp.CombinedClient,
+	productSlug string,
+	releases []pivnet.Release,
+) ([]string, error) {
+	var allVersions []string
+	for _, r := range releases {
+		etag, err := c.ReleaseETag(productSlug, r.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		version, err := versions.CombineVersionAndETag(r.Version, etag)
+		if err != nil {
+			return nil, err
+		}
+
+		allVersions = append(allVersions, version)
+	}
+
+	return allVersions, nil
+}

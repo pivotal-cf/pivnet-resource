@@ -16,7 +16,7 @@ import (
 type PivnetClient interface {
 	FileGroups(productSlug string) ([]pivnet.FileGroup, error)
 	FileGroupsForRelease(productSlug string, releaseID int) ([]pivnet.FileGroup, error)
-	ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
+	ReleaseForVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
 	FileGroup(productSlug string, fileGroupID int) (pivnet.FileGroup, error)
 	CreateFileGroup(productSlug string, name string) (pivnet.FileGroup, error)
 	UpdateFileGroup(productSlug string, fileGroup pivnet.FileGroup) (pivnet.FileGroup, error)
@@ -59,7 +59,7 @@ func (c *FileGroupClient) List(productSlug string, releaseVersion string) error 
 		return c.printFileGroups(fileGroups)
 	}
 
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -208,7 +208,7 @@ func (c *FileGroupClient) AddToRelease(
 	fileGroupID int,
 	releaseVersion string,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
@@ -240,7 +240,7 @@ func (c *FileGroupClient) RemoveFromRelease(
 	fileGroupID int,
 	releaseVersion string,
 ) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}

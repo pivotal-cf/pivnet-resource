@@ -16,7 +16,7 @@ type PivnetClient interface {
 	AcceptEULA(productSlug string, releaseID int) error
 	EULAs() ([]pivnet.EULA, error)
 	EULA(eulaSlug string) (pivnet.EULA, error)
-	ReleaseForProductVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
+	ReleaseForVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
 }
 
 type EULAClient struct {
@@ -106,7 +106,7 @@ func (c *EULAClient) printEULAs(eulas []pivnet.EULA) error {
 }
 
 func (c *EULAClient) AcceptEULA(productSlug string, releaseVersion string) error {
-	release, err := c.pivnetClient.ReleaseForProductVersion(productSlug, releaseVersion)
+	release, err := c.pivnetClient.ReleaseForVersion(productSlug, releaseVersion)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
