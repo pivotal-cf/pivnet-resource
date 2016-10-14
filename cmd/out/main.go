@@ -13,7 +13,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/globs"
 	"github.com/pivotal-cf/pivnet-resource/gp"
-	"github.com/pivotal-cf/pivnet-resource/gp/lagershim"
+	"github.com/pivotal-cf/pivnet-resource/logshim"
 	"github.com/pivotal-cf/pivnet-resource/md5sum"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/out"
@@ -23,7 +23,6 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/uploader"
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
-	"github.com/pivotal-golang/lager"
 	"github.com/robdimsdale/sanitizer"
 )
 
@@ -65,11 +64,10 @@ func main() {
 	}
 
 	sanitized := concourse.SanitizedSource(input.Source)
-	sanitizer := sanitizer.NewSanitizer(sanitized, ioutil.Discard)
+	logger.SetOutput(sanitizer.NewSanitizer(sanitized, os.Stderr))
 
-	l := lager.NewLogger("pivnet-resource")
-	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
-	ls := lagershim.NewLagerShim(l)
+	verbose := false
+	ls := logshim.NewLogShim(logger, logger, verbose)
 
 	var endpoint string
 	if input.Source.Endpoint != "" {

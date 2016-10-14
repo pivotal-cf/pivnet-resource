@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -11,13 +10,12 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/downloader"
 	"github.com/pivotal-cf/pivnet-resource/filter"
 	"github.com/pivotal-cf/pivnet-resource/gp"
-	"github.com/pivotal-cf/pivnet-resource/gp/lagershim"
 	"github.com/pivotal-cf/pivnet-resource/in"
 	"github.com/pivotal-cf/pivnet-resource/in/filesystem"
+	"github.com/pivotal-cf/pivnet-resource/logshim"
 	"github.com/pivotal-cf/pivnet-resource/md5sum"
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
-	"github.com/pivotal-golang/lager"
 	"github.com/robdimsdale/sanitizer"
 )
 
@@ -48,11 +46,10 @@ func main() {
 	}
 
 	sanitized := concourse.SanitizedSource(input.Source)
-	sanitizer := sanitizer.NewSanitizer(sanitized, ioutil.Discard)
+	logger.SetOutput(sanitizer.NewSanitizer(sanitized, os.Stderr))
 
-	l := lager.NewLogger("pivnet-resource")
-	l.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
-	ls := lagershim.NewLagerShim(l)
+	verbose := false
+	ls := logshim.NewLogShim(logger, logger, verbose)
 
 	logger.Printf("Creating download directory: %s", downloadDir)
 

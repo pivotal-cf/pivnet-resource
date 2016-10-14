@@ -1,13 +1,13 @@
 package acceptance
 
 import (
+	"log"
 	"os"
 
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/gp"
-	"github.com/pivotal-cf/pivnet-resource/gp/lagershim"
-	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-cf/pivnet-resource/logshim"
 	"github.com/robdimsdale/sanitizer"
 
 	"testing"
@@ -91,13 +91,14 @@ var _ = BeforeSuite(func() {
 		awsAccessKeyID:     "***sanitized-aws-access-key-id***",
 		awsSecretAccessKey: "***sanitized-aws-secret-access-key***",
 	}
-	sanitizer := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
-	GinkgoWriter = sanitizer
+	sanitizedWriter := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
+	GinkgoWriter = sanitizedWriter
 
 	By("Creating pivnet client (for out-of-band operations)")
-	testLogger := lager.NewLogger("acceptance-tests")
-	testLogger.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
-	ls := lagershim.NewLagerShim(testLogger)
+
+	testLogger := log.New(sanitizedWriter, "", log.LstdFlags)
+	verbose := false
+	ls := logshim.NewLogShim(testLogger, testLogger, verbose)
 
 	clientConfig := pivnet.ClientConfig{
 		Host:      endpoint,

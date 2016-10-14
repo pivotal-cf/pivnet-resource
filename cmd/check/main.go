@@ -11,12 +11,11 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/filter"
 	"github.com/pivotal-cf/pivnet-resource/gp"
-	"github.com/pivotal-cf/pivnet-resource/gp/lagershim"
+	"github.com/pivotal-cf/pivnet-resource/logshim"
 	"github.com/pivotal-cf/pivnet-resource/semver"
 	"github.com/pivotal-cf/pivnet-resource/sorter"
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
-	"github.com/pivotal-golang/lager"
 	"github.com/robdimsdale/sanitizer"
 )
 
@@ -47,11 +46,10 @@ func main() {
 	}
 
 	sanitized := concourse.SanitizedSource(input.Source)
-	sanitizer := sanitizer.NewSanitizer(sanitized, logFile)
+	logger.SetOutput(sanitizer.NewSanitizer(sanitized, logFile))
 
-	pivnetClientLogger := lager.NewLogger("pivnet-resource")
-	pivnetClientLogger.RegisterSink(lager.NewWriterSink(sanitizer, lager.DEBUG))
-	sp := lagershim.NewLagerShim(pivnetClientLogger)
+	verbose := false
+	sp := logshim.NewLogShim(logger, logger, verbose)
 
 	err = validator.NewCheckValidator(input).Validate()
 	if err != nil {
