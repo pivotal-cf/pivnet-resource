@@ -16,6 +16,7 @@ import (
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
+	"github.com/pivotal-cf/pivnet-resource/versions"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -149,7 +150,7 @@ var _ = Describe("Out", func() {
 			releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
 			Expect(err).NotTo(HaveOccurred())
 
-			productVersions, err := pivnetClient.ProductVersions(productSlug, releases)
+			productVersions, err := versions.ProductVersions(pivnetClient, productSlug, releases)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(productVersionsWithoutETags(productVersions)).NotTo(ContainElement(productVersion))
@@ -162,7 +163,7 @@ var _ = Describe("Out", func() {
 			releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
 			Expect(err).NotTo(HaveOccurred())
 
-			productVersions, err = pivnetClient.ProductVersions(productSlug, releases)
+			productVersions, err = versions.ProductVersions(pivnetClient, productSlug, releases)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(productVersionsWithoutETags(productVersions)).To(ContainElement(productVersion))
@@ -238,7 +239,7 @@ var _ = Describe("Out", func() {
 				releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
 				Expect(err).NotTo(HaveOccurred())
 
-				productVersions, err := pivnetClient.ProductVersions(productSlug, releases)
+				productVersions, err := versions.ProductVersions(pivnetClient, productSlug, releases)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(productVersionsWithoutETags(productVersions)).NotTo(ContainElement(productVersion))
@@ -251,7 +252,7 @@ var _ = Describe("Out", func() {
 				releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
 				Expect(err).NotTo(HaveOccurred())
 
-				productVersions, err = pivnetClient.ProductVersions(productSlug, releases)
+				productVersions, err = versions.ProductVersions(pivnetClient, productSlug, releases)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(productVersionsWithoutETags(productVersions)).To(ContainElement(productVersion))

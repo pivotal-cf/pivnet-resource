@@ -148,20 +148,6 @@ func (c ExtendedClient) ReleaseETag(productSlug string, releaseID int) (string, 
 	return c.client.ReleaseETag(productSlug, releaseID)
 }
 
-func (c ExtendedClient) ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error) {
-	var versions []string
-	for _, r := range releases {
-		etag, err := c.client.ReleaseETag(productSlug, r.ID)
-		if err != nil {
-			return nil, err
-		}
-		version := fmt.Sprintf("%s#%s", r.Version, etag)
-		versions = append(versions, version)
-	}
-
-	return versions, nil
-}
-
 func (c ExtendedClient) DownloadFile(writer io.Writer, downloadLink string) error {
 	return c.client.DownloadFile(writer, downloadLink)
 }

@@ -27,7 +27,6 @@ type sorter interface {
 type pivnetClient interface {
 	ReleaseTypes() ([]pivnet.ReleaseType, error)
 	ReleasesForProductSlug(string) ([]pivnet.Release, error)
-	ProductVersions(productSlug string, releases []pivnet.Release) ([]string, error)
 	ReleaseETag(productSlug string, releaseID int) (string, error)
 }
 
