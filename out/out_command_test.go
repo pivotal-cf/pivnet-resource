@@ -29,7 +29,21 @@ var _ = Describe("Out", func() {
 			globber                  *outfakes.Globber
 			cmd                      out.OutCommand
 
+			skipUpload bool
+			request    concourse.OutRequest
+
 			productSlug string
+
+			returnedExactGlobs []string
+
+			validateErr               error
+			createErr                 error
+			exactGlobsErr             error
+			uploadErr                 error
+			updateUserGroupErr        error
+			addReleaseDependenciesErr error
+			addReleaseUpgradePathsErr error
+			finalizeErr               error
 		)
 
 		BeforeEach(func() {
@@ -43,8 +57,23 @@ var _ = Describe("Out", func() {
 			uploader = &outfakes.Uploader{}
 			globber = &outfakes.Globber{}
 
+			skipUpload = false
+
 			productSlug = "some-product-slug"
 
+			returnedExactGlobs = []string{"some-glob-1", "some-glob-2"}
+
+			validateErr = nil
+			createErr = nil
+			exactGlobsErr = nil
+			uploadErr = nil
+			updateUserGroupErr = nil
+			addReleaseDependenciesErr = nil
+			addReleaseUpgradePathsErr = nil
+			finalizeErr = nil
+		})
+
+		JustBeforeEach(func() {
 			meta := metadata.Metadata{
 				Release: &metadata.Release{
 					Version: "release-version",
@@ -72,34 +101,36 @@ var _ = Describe("Out", func() {
 				ReleaseUpgradePathsAdder: releaseUpgradePathsAdder,
 				Uploader:                 uploader,
 				M:                        meta,
+				SkipUpload:               skipUpload,
 			}
 
 			cmd = out.NewOutCommand(config)
 
-			creator.CreateReturns(pivnet.Release{ID: 1337, Availability: "none"}, nil)
+			validator.ValidateReturns(validateErr)
+			creator.CreateReturns(pivnet.Release{ID: 1337, Availability: "none"}, createErr)
 
-			globber.ExactGlobsReturns([]string{"some-glob-1", "some-glob-2"}, nil)
+			globber.ExactGlobsReturns(returnedExactGlobs, exactGlobsErr)
 
-			userGroupsUpdater.UpdateUserGroupsReturns(pivnet.Release{ID: 1337, Availability: "none"}, nil)
+			userGroupsUpdater.UpdateUserGroupsReturns(pivnet.Release{ID: 1337, Availability: "none"}, updateUserGroupErr)
 
-			releaseDependenciesAdder.AddReleaseDependenciesReturns(nil)
-
-			releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(nil)
+			uploader.UploadReturns(uploadErr)
+			releaseDependenciesAdder.AddReleaseDependenciesReturns(addReleaseDependenciesErr)
+			releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(addReleaseUpgradePathsErr)
 
 			finalizer.FinalizeReturns(concourse.OutResponse{
 				Version: concourse.Version{
 					ProductVersion: "some-returned-product-version",
 				},
-			}, nil)
-		})
+			}, finalizeErr)
 
-		It("returns a concourse out response", func() {
-			request := concourse.OutRequest{
+			request = concourse.OutRequest{
 				Source: concourse.Source{
 					ProductSlug: productSlug,
 				},
 			}
+		})
 
+		It("returns a concourse out response", func() {
 			response, err := cmd.Run(request)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -113,191 +144,142 @@ var _ = Describe("Out", func() {
 
 			Expect(globber.ExactGlobsCallCount()).To(Equal(1))
 
-			Expect(userGroupsUpdater.UpdateUserGroupsCallCount()).To(Equal(1))
-
 			Expect(releaseDependenciesAdder.AddReleaseDependenciesCallCount()).To(Equal(1))
-
 			Expect(releaseUpgradePathsAdder.AddReleaseUpgradePathsCallCount()).To(Equal(1))
 
+			Expect(uploader.UploadCallCount()).To(Equal(1))
+			invokedPivnetRelease, invokedExactGlobs := uploader.UploadArgsForCall(0)
+			Expect(invokedPivnetRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
+			Expect(invokedExactGlobs).To(Equal([]string{"some-glob-1", "some-glob-2"}))
+
+			Expect(userGroupsUpdater.UpdateUserGroupsCallCount()).To(Equal(1))
+			invokedPivnetRelease = userGroupsUpdater.UpdateUserGroupsArgsForCall(0)
+			Expect(invokedPivnetRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
+
 			Expect(finalizer.FinalizeCallCount()).To(Equal(1))
-
-			pivnetRelease, exactGlobs := uploader.UploadArgsForCall(0)
-			Expect(pivnetRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
-			Expect(exactGlobs).To(Equal([]string{"some-glob-1", "some-glob-2"}))
-
-			pivnetRelease = userGroupsUpdater.UpdateUserGroupsArgsForCall(0)
-			Expect(pivnetRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
-
 			invokedRelease := finalizer.FinalizeArgsForCall(0)
 			Expect(invokedRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
 		})
 
-		Context("when an error occurs", func() {
-			Context("when outdir is not provided", func() {
-				It("returns an error", func() {
-					cmd := out.NewOutCommand(out.OutCommandConfig{SourcesDir: ""})
-					request := concourse.OutRequest{}
-
-					_, err := cmd.Run(request)
-					Expect(err).To(MatchError(errors.New("out dir must be provided")))
-				})
+		Context("when skipUpload is true", func() {
+			BeforeEach(func() {
+				skipUpload = true
 			})
 
-			Context("when the validation fails", func() {
-				BeforeEach(func() {
-					validator.ValidateReturns(errors.New("some validation error"))
-				})
+			It("does not invoke the uploader", func() {
+				_, err := cmd.Run(request)
+				Expect(err).NotTo(HaveOccurred())
 
-				It("returns an error", func() {
-					request := concourse.OutRequest{}
+				Expect(uploader.UploadCallCount()).To(Equal(0))
+			})
+		})
 
-					_, err := cmd.Run(request)
-					Expect(err).To(MatchError(errors.New("some validation error")))
-				})
+		Context("when outdir is not provided", func() {
+			It("returns an error", func() {
+				cmd := out.NewOutCommand(out.OutCommandConfig{SourcesDir: ""})
+
+				_, err := cmd.Run(request)
+				Expect(err).To(MatchError(errors.New("out dir must be provided")))
+			})
+		})
+
+		Context("when the validation fails", func() {
+			BeforeEach(func() {
+				validateErr = errors.New("some validation error")
 			})
 
-			Context("when gathering the exact globs fails", func() {
-				BeforeEach(func() {
-					globber.ExactGlobsReturns([]string{}, errors.New("some exact globs error"))
-				})
+			It("returns an error", func() {
+				_, err := cmd.Run(request)
+				Expect(err).To(Equal(validateErr))
+			})
+		})
 
-				It("returns an error", func() {
-					request := concourse.OutRequest{}
-
-					_, err := cmd.Run(request)
-					Expect(err).To(MatchError(errors.New("some exact globs error")))
-				})
+		Context("when gathering the exact globs fails", func() {
+			BeforeEach(func() {
+				exactGlobsErr = errors.New("some exact globs error")
 			})
 
-			Context("when product files were provided that match no globs", func() {
-				BeforeEach(func() {
-					meta := metadata.Metadata{
-						Release: &metadata.Release{
-							Version: "release-version",
-						},
-						ProductFiles: []metadata.ProductFile{
-							{
-								File: "some-glob-1",
-							},
-						},
-					}
+			It("returns an error", func() {
+				_, err := cmd.Run(request)
+				Expect(err).To(Equal(exactGlobsErr))
+			})
+		})
 
-					config := out.OutCommandConfig{
-						Logger:     logger,
-						OutDir:     "some/out/dir",
-						SourcesDir: "some/sources/dir",
-						GlobClient: globber,
-						Validation: validator,
-						Creator:    nil,
-						Finalizer:  nil,
-						Uploader:   nil,
-						M:          meta,
-					}
-
-					cmd = out.NewOutCommand(config)
-
-					globber.ExactGlobsReturns([]string{"this-is-missing"}, nil)
-				})
-
-				It("returns an error", func() {
-					request := concourse.OutRequest{}
-
-					_, err := cmd.Run(request)
-					Expect(err).To(MatchError(errors.New(`product files were provided in metadata that match no globs: [some-glob-1]`)))
-				})
+		Context("when product files were provided that match no globs", func() {
+			BeforeEach(func() {
+				returnedExactGlobs = []string{"this-is-missing"}
 			})
 
-			Context("when a release cannot be created", func() {
-				BeforeEach(func() {
-					creator.CreateReturns(pivnet.Release{}, errors.New("some create error"))
-				})
+			It("returns an error", func() {
+				_, err := cmd.Run(request)
+				Expect(err.Error()).To(MatchRegexp(
+					`product files .* match no globs: \[some-glob-1 some-glob-2\]`))
+			})
+		})
 
-				It("returns an error", func() {
-					request := concourse.OutRequest{}
-
-					_, err := cmd.Run(request)
-					Expect(err).To(MatchError(errors.New("some create error")))
-				})
+		Context("when a release cannot be created", func() {
+			BeforeEach(func() {
+				createErr = errors.New("some create error")
 			})
 
-			Context("when a release cannot be uploaded", func() {
-				BeforeEach(func() {
-					uploader.UploadReturns(errors.New("some upload error"))
-				})
+			It("returns an error", func() {
+				_, err := cmd.Run(request)
+				Expect(err).To(Equal(createErr))
+			})
+		})
 
-				It("returns an error", func() {
-					request := concourse.OutRequest{}
-
-					_, err := cmd.Run(request)
-					Expect(err).To(MatchError(errors.New("some upload error")))
-				})
+		Context("when a release cannot be uploaded", func() {
+			BeforeEach(func() {
+				uploadErr = errors.New("upload error")
 			})
 
-			Context("when user groups cannot be updated", func() {
-				var (
-					expectedErr error
-				)
+			It("returns an error", func() {
+				_, err := cmd.Run(request)
+				Expect(err).To(Equal(uploadErr))
+			})
+		})
 
-				BeforeEach(func() {
-					expectedErr = errors.New("some user group error")
-					userGroupsUpdater.UpdateUserGroupsReturns(pivnet.Release{}, expectedErr)
-				})
-
-				It("returns an error", func() {
-					request := concourse.OutRequest{}
-
-					_, err := cmd.Run(request)
-					Expect(err).To(Equal(expectedErr))
-				})
+		Context("when user groups cannot be updated", func() {
+			BeforeEach(func() {
+				updateUserGroupErr = errors.New("some user group error")
 			})
 
-			Context("when dependencies cannot be added", func() {
-				var (
-					expectedErr error
-				)
+			It("returns an error", func() {
+				_, err := cmd.Run(request)
+				Expect(err).To(Equal(updateUserGroupErr))
+			})
+		})
 
-				BeforeEach(func() {
-					expectedErr = errors.New("some release dependency error")
-					releaseDependenciesAdder.AddReleaseDependenciesReturns(expectedErr)
-				})
-
-				It("returns an error", func() {
-					request := concourse.OutRequest{}
-
-					_, err := cmd.Run(request)
-					Expect(err).To(Equal(expectedErr))
-				})
+		Context("when dependencies cannot be added", func() {
+			BeforeEach(func() {
+				addReleaseDependenciesErr = errors.New("some release dependencies error")
 			})
 
-			Context("when upgrade paths cannot be added", func() {
-				var (
-					expectedErr error
-				)
+			It("returns an error", func() {
+				_, err := cmd.Run(request)
+				Expect(err).To(Equal(addReleaseDependenciesErr))
+			})
+		})
 
-				BeforeEach(func() {
-					expectedErr = errors.New("some upgrade path error")
-					releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(expectedErr)
-				})
-
-				It("returns an error", func() {
-					request := concourse.OutRequest{}
-
-					_, err := cmd.Run(request)
-					Expect(err).To(Equal(expectedErr))
-				})
+		Context("when upgrade paths cannot be added", func() {
+			BeforeEach(func() {
+				addReleaseUpgradePathsErr = errors.New("some release upgrade error")
 			})
 
-			Context("when a release cannot be finalized", func() {
-				BeforeEach(func() {
-					finalizer.FinalizeReturns(concourse.OutResponse{}, errors.New("some finalize error"))
-				})
+			It("returns an error", func() {
+				_, err := cmd.Run(request)
+				Expect(err).To(Equal(addReleaseUpgradePathsErr))
+			})
+		})
 
-				It("returns an error", func() {
-					request := concourse.OutRequest{}
+		Context("when a release cannot be finalized", func() {
+			BeforeEach(func() {
+				finalizeErr = errors.New("some finalize error")
+			})
 
-					_, err := cmd.Run(request)
-					Expect(err).To(MatchError(errors.New("some finalize error")))
-				})
+			It("returns an error", func() {
+				_, err := cmd.Run(request)
+				Expect(err).To(Equal(finalizeErr))
 			})
 		})
 	})

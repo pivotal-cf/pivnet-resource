@@ -171,7 +171,6 @@ func main() {
 		logger,
 		md5summer,
 		m,
-		skipUpload,
 		sourcesDir,
 		input.Source.ProductSlug,
 	)
@@ -218,6 +217,7 @@ func main() {
 		ReleaseUpgradePathsAdder: releaseUpgradePathsAdder,
 		Finalizer:                releaseFinalizer,
 		M:                        m,
+		SkipUpload:               skipUpload,
 	})
 
 	response, err := outCmd.Run(input)

@@ -78,14 +78,12 @@ var _ = Describe("ReleaseUploader", func() {
 	})
 
 	JustBeforeEach(func() {
-		skip := false
 		uploader = release.NewReleaseUploader(
 			s3Client,
 			uploadClient,
 			logging,
 			md5Summer,
 			mdata,
-			skip,
 			"/some/sources/dir",
 			productSlug,
 		)

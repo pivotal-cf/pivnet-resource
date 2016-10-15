@@ -22,6 +22,7 @@ type OutCommand struct {
 	finalizer                finalizer
 	uploader                 uploader
 	m                        metadata.Metadata
+	skipUpload               bool
 }
 
 type OutCommandConfig struct {
@@ -37,6 +38,7 @@ type OutCommandConfig struct {
 	Finalizer                finalizer
 	Uploader                 uploader
 	M                        metadata.Metadata
+	SkipUpload               bool
 }
 
 func NewOutCommand(config OutCommandConfig) OutCommand {
@@ -53,6 +55,7 @@ func NewOutCommand(config OutCommandConfig) OutCommand {
 		finalizer:                config.Finalizer,
 		uploader:                 config.Uploader,
 		m:                        config.M,
+		skipUpload:               config.SkipUpload,
 	}
 }
 
@@ -145,9 +148,14 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		return concourse.OutResponse{}, err
 	}
 
-	err = c.uploader.Upload(pivnetRelease, exactGlobs)
-	if err != nil {
-		return concourse.OutResponse{}, err
+	if c.skipUpload {
+		c.logger.Println(
+			"file glob and s3_filepath_prefix not provided - skipping upload to s3")
+	} else {
+		err = c.uploader.Upload(pivnetRelease, exactGlobs)
+		if err != nil {
+			return concourse.OutResponse{}, err
+		}
 	}
 
 	pivnetRelease, err = c.userGroupsUpdater.UpdateUserGroups(pivnetRelease)

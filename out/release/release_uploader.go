@@ -15,7 +15,6 @@ type ReleaseUploader struct {
 	logger      *log.Logger
 	md5Summer   md5Summer
 	metadata    metadata.Metadata
-	skipUpload  bool
 	sourcesDir  string
 	productSlug string
 }
@@ -45,7 +44,6 @@ func NewReleaseUploader(
 	logger *log.Logger,
 	md5Summer md5Summer,
 	metadata metadata.Metadata,
-	skip bool,
 	sourcesDir,
 	productSlug string,
 ) ReleaseUploader {
@@ -55,19 +53,12 @@ func NewReleaseUploader(
 		logger:      logger,
 		md5Summer:   md5Summer,
 		metadata:    metadata,
-		skipUpload:  skip,
 		sourcesDir:  sourcesDir,
 		productSlug: productSlug,
 	}
 }
 
 func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) error {
-	if u.skipUpload {
-		u.logger.Println(
-			"file glob and s3_filepath_prefix not provided - skipping upload to s3")
-		return nil
-	}
-
 	for _, exactGlob := range exactGlobs {
 		fullFilepath := filepath.Join(u.sourcesDir, exactGlob)
 		fileContentsMD5, err := u.md5Summer.SumFile(fullFilepath)
