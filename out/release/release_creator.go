@@ -91,22 +91,6 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		}
 	}
 
-	releases, err := rc.pivnet.ReleasesForProductSlug(rc.productSlug)
-	if err != nil {
-		return pivnet.Release{}, err
-	}
-
-	for _, r := range releases {
-		if r.Version == version {
-			rc.logger.Printf("Deleting existing release: '%s' - id: '%d'", r.Version, r.ID)
-
-			err := rc.pivnet.DeleteRelease(rc.productSlug, r)
-			if err != nil {
-				return pivnet.Release{}, err
-			}
-		}
-	}
-
 	eulaSlug := rc.metadata.Release.EULASlug
 
 	rc.logger.Println(fmt.Sprintf("Validating EULA: '%s'", eulaSlug))
@@ -179,6 +163,22 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 			releaseType,
 			rc.source.ReleaseType,
 		)
+	}
+
+	releases, err := rc.pivnet.ReleasesForProductSlug(rc.productSlug)
+	if err != nil {
+		return pivnet.Release{}, err
+	}
+
+	for _, r := range releases {
+		if r.Version == version {
+			rc.logger.Printf("Deleting existing release: '%s' - id: '%d'", r.Version, r.ID)
+
+			err := rc.pivnet.DeleteRelease(rc.productSlug, r)
+			if err != nil {
+				return pivnet.Release{}, err
+			}
+		}
 	}
 
 	config := pivnet.CreateReleaseConfig{
