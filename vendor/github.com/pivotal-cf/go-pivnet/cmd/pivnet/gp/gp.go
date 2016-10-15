@@ -92,7 +92,7 @@ func (c Client) CreateRelease(config pivnet.CreateReleaseConfig) (pivnet.Release
 }
 
 func (c Client) DeleteRelease(productSlug string, release pivnet.Release) error {
-	return c.client.Releases.Delete(release, productSlug)
+	return c.client.Releases.Delete(productSlug, release)
 }
 
 func (c Client) AddUserGroup(productSlug string, releaseID int, userGroupID int) error {

@@ -174,7 +174,7 @@ func (r ReleasesService) Update(productSlug string, release Release) (Release, e
 	return response.Release, nil
 }
 
-func (r ReleasesService) Delete(release Release, productSlug string) error {
+func (r ReleasesService) Delete(productSlug string, release Release) error {
 	url := fmt.Sprintf(
 		"/products/%s/releases/%d",
 		productSlug,
