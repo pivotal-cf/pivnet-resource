@@ -98,6 +98,8 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	for _, r := range releases {
 		if r.Version == version {
+			rc.logger.Printf("Deleting existing release: '%s' - id: '%d'", r.Version, r.ID)
+
 			err := rc.pivnet.DeleteRelease(rc.productSlug, r)
 			if err != nil {
 				return pivnet.Release{}, err
