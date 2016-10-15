@@ -22,6 +22,19 @@ var _ = Describe("ReleaseUploader", func() {
 		md5Summer     *releasefakes.Md5Summer
 		pivnetRelease pivnet.Release
 		uploader      release.ReleaseUploader
+
+		productSlug string
+
+		mdata metadata.Metadata
+
+		existingProductFiles []pivnet.ProductFile
+		actualMD5Sum         string
+		newAWSObjectKey      string
+
+		existingProductFilesErr error
+		createProductFileErr    error
+		uploadFileErr           error
+		sumFileErr              error
 	)
 
 	BeforeEach(func() {
@@ -30,12 +43,14 @@ var _ = Describe("ReleaseUploader", func() {
 		uploadClient = &releasefakes.UploadClient{}
 		md5Summer = &releasefakes.Md5Summer{}
 
+		productSlug = "some-product-slug"
+
 		pivnetRelease = pivnet.Release{
 			ID:      1111,
 			Version: "some-release-version",
 		}
 
-		meta := metadata.Metadata{
+		mdata = metadata.Metadata{
 			ProductFiles: []metadata.ProductFile{
 				{
 					File:        "some/file",
@@ -46,92 +61,153 @@ var _ = Describe("ReleaseUploader", func() {
 			},
 		}
 
-		uploader = release.NewReleaseUploader(s3Client,
+		existingProductFiles = []pivnet.ProductFile{
+			{
+				ID:           1234,
+				AWSObjectKey: "some-existing-aws-object-key",
+			},
+		}
+
+		actualMD5Sum = "madeupmd5"
+		newAWSObjectKey = "s3-remote-path"
+
+		existingProductFilesErr = nil
+		createProductFileErr = nil
+		uploadFileErr = nil
+		sumFileErr = nil
+	})
+
+	JustBeforeEach(func() {
+		skip := false
+		uploader = release.NewReleaseUploader(
+			s3Client,
 			uploadClient,
 			logging,
 			md5Summer,
-			meta,
-			false,
+			mdata,
+			skip,
 			"/some/sources/dir",
-			"some-product-slug",
+			productSlug,
 		)
+
+		md5Summer.SumFileReturns(actualMD5Sum, sumFileErr)
+		s3Client.UploadFileReturns(newAWSObjectKey, uploadFileErr)
+		uploadClient.CreateProductFileReturns(pivnet.ProductFile{ID: 13367}, createProductFileErr)
+		uploadClient.GetProductFilesReturns(existingProductFiles, existingProductFilesErr)
 	})
 
 	Describe("Upload", func() {
-		Context("when the upload is not skipped", func() {
+		It("uploads a release to s3 and adds metadata to pivnet", func() {
+			err := uploader.Upload(pivnetRelease, []string{"some/file"})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(md5Summer.SumFileArgsForCall(0)).To(Equal("/some/sources/dir/some/file"))
+			Expect(s3Client.UploadFileArgsForCall(0)).To(Equal("some/file"))
+
+			Expect(uploadClient.CreateProductFileArgsForCall(0)).To(Equal(pivnet.CreateProductFileConfig{
+				ProductSlug:  productSlug,
+				AWSObjectKey: newAWSObjectKey,
+				MD5:          actualMD5Sum,
+				FileVersion:  pivnetRelease.Version,
+				Name:         mdata.ProductFiles[0].UploadAs,
+				Description:  mdata.ProductFiles[0].Description,
+				FileType:     mdata.ProductFiles[0].FileType,
+			}))
+
+			invokedProductSlug, releaseID, productFileID := uploadClient.AddProductFileArgsForCall(0)
+			Expect(invokedProductSlug).To(Equal(productSlug))
+			Expect(releaseID).To(Equal(1111))
+			Expect(productFileID).To(Equal(13367))
+		})
+
+		Context("when a product file already exists with AWSObjectKey", func() {
 			BeforeEach(func() {
-				md5Summer.SumFileReturns("madeupmd5", nil)
-				s3Client.UploadFileReturns("s3-remote-path", nil)
-				uploadClient.CreateProductFileReturns(pivnet.ProductFile{ID: 13367}, nil)
+				newAWSObjectKey = existingProductFiles[0].AWSObjectKey
 			})
 
-			It("uploads a release to s3 and adds metadata to pivnet", func() {
-				err := uploader.Upload(pivnetRelease, []string{"some/file"})
+			It("Deletes the product file before recreating", func() {
+				err := uploader.Upload(pivnetRelease, []string{""})
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(md5Summer.SumFileArgsForCall(0)).To(Equal("/some/sources/dir/some/file"))
-				Expect(s3Client.UploadFileArgsForCall(0)).To(Equal("some/file"))
+				Expect(uploadClient.DeleteProductFileCallCount()).To(Equal(1))
 
-				Expect(uploadClient.CreateProductFileArgsForCall(0)).To(Equal(pivnet.CreateProductFileConfig{
-					ProductSlug:  "some-product-slug",
-					Name:         "a file",
-					AWSObjectKey: "s3-remote-path",
-					FileVersion:  "some-release-version",
-					MD5:          "madeupmd5",
-					Description:  "a description",
-					FileType:     "something",
-				}))
+				invokedProductSlug, invokedProductFileID := uploadClient.DeleteProductFileArgsForCall(0)
+				Expect(invokedProductSlug).To(Equal(productSlug))
+				Expect(invokedProductFileID).To(Equal(existingProductFiles[0].ID))
 
-				productSlug, releaseID, productFileID := uploadClient.AddProductFileArgsForCall(0)
-				Expect(productSlug).To(Equal("some-product-slug"))
-				Expect(releaseID).To(Equal(1111))
-				Expect(productFileID).To(Equal(13367))
+				Expect(uploadClient.CreateProductFileCallCount()).To(Equal(1))
+				Expect(uploadClient.AddProductFileCallCount()).To(Equal(1))
 			})
 
-			Context("when an error occurs", func() {
-				Context("when the file md5 cannot be computed", func() {
-					BeforeEach(func() {
-						md5Summer.SumFileReturns("", errors.New("md5 error"))
-					})
+			Context("when there is an error deleting the product file", func() {
+				var (
+					deleteProductFileErr error
+				)
 
-					It("returns an error", func() {
-						err := uploader.Upload(pivnetRelease, []string{""})
-						Expect(err).To(MatchError(errors.New("md5 error")))
-					})
+				BeforeEach(func() {
+					deleteProductFileErr = errors.New("delete product file error")
+					uploadClient.DeleteProductFileReturns(pivnet.ProductFile{}, deleteProductFileErr)
 				})
 
-				Context("when the s3 upload fails", func() {
-					BeforeEach(func() {
-						s3Client.UploadFileReturns("", errors.New("s3 failed"))
-					})
-
-					It("returns an error", func() {
-						err := uploader.Upload(pivnetRelease, []string{""})
-						Expect(err).To(MatchError(errors.New("s3 failed")))
-					})
+				It("returns the error", func() {
+					err := uploader.Upload(pivnetRelease, []string{""})
+					Expect(err).To(Equal(deleteProductFileErr))
 				})
+			})
+		})
 
-				Context("when pivnet fails to find a product", func() {
-					BeforeEach(func() {
-						uploadClient.CreateProductFileReturns(pivnet.ProductFile{}, errors.New("pivnet product blew up"))
-					})
+		Context("when the file md5 cannot be computed", func() {
+			BeforeEach(func() {
+				sumFileErr = errors.New("md5 error")
+			})
 
-					It("returns an error", func() {
-						err := uploader.Upload(pivnetRelease, []string{""})
-						Expect(err).To(MatchError("pivnet product blew up"))
-					})
-				})
+			It("returns an error", func() {
+				err := uploader.Upload(pivnetRelease, []string{""})
+				Expect(err).To(MatchError(errors.New("md5 error")))
+			})
+		})
 
-				Context("when pivnet cannot add a product file", func() {
-					BeforeEach(func() {
-						uploadClient.AddProductFileReturns(errors.New("error adding product"))
-					})
+		Context("when the s3 upload fails", func() {
+			BeforeEach(func() {
+				uploadFileErr = errors.New("s3 failed")
+			})
 
-					It("returns an error", func() {
-						err := uploader.Upload(pivnetRelease, []string{""})
-						Expect(err).To(MatchError(errors.New("error adding product")))
-					})
-				})
+			It("returns an error", func() {
+				err := uploader.Upload(pivnetRelease, []string{""})
+				Expect(err).To(Equal(uploadFileErr))
+			})
+		})
+
+		Context("when pivnet fails to find a product", func() {
+			BeforeEach(func() {
+				createProductFileErr = errors.New("some product files error")
+			})
+
+			It("returns an error", func() {
+				err := uploader.Upload(pivnetRelease, []string{""})
+				Expect(err).To(Equal(createProductFileErr))
+			})
+		})
+
+		Context("when pivnet fails to get existing product files", func() {
+			BeforeEach(func() {
+				existingProductFilesErr = errors.New("some product files error")
+			})
+
+			It("returns an error", func() {
+				err := uploader.Upload(pivnetRelease, []string{""})
+				Expect(err).To(Equal(existingProductFilesErr))
+			})
+		})
+
+		Context("when pivnet cannot add a product file", func() {
+			BeforeEach(func() {
+				uploadClient.AddProductFileReturns(errors.New("error adding product"))
+			})
+
+			It("returns an error", func() {
+				err := uploader.Upload(pivnetRelease, []string{""})
+				Expect(err).To(MatchError(errors.New("error adding product")))
 			})
 		})
 	})

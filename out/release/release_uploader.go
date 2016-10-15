@@ -25,6 +25,8 @@ type uploadClient interface {
 	FindProductForSlug(slug string) (pivnet.Product, error)
 	CreateProductFile(pivnet.CreateProductFileConfig) (pivnet.ProductFile, error)
 	AddProductFile(productSlug string, releaseID int, productFileID int) error
+	GetProductFiles(productSlug string) ([]pivnet.ProductFile, error)
+	DeleteProductFile(productSlug string, releaseID int) (pivnet.ProductFile, error)
 }
 
 //go:generate counterfeiter --fake-name S3Client . s3Client
@@ -75,7 +77,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		u.logger.Println(fmt.Sprintf("uploading to s3: '%s'", exactGlob))
 
-		remotePath, err := u.s3.UploadFile(exactGlob)
+		awsObjectKey, err := u.s3.UploadFile(exactGlob)
 		if err != nil {
 			return err
 		}
@@ -116,6 +118,26 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			}
 		}
 
+		u.logger.Println(fmt.Sprintf("Getting all existing product files"))
+
+		productFiles, err := u.pivnet.GetProductFiles(u.productSlug)
+		if err != nil {
+			return err
+		}
+
+		for _, pf := range productFiles {
+			if pf.AWSObjectKey == awsObjectKey {
+				u.logger.Println(fmt.Sprintf("Deleting existing product file with AWSObjectKey: '%s'", pf.AWSObjectKey))
+
+				_, err = u.pivnet.DeleteProductFile(u.productSlug, pf.ID)
+				if err != nil {
+					return err
+				}
+
+				break
+			}
+		}
+
 		u.logger.Println(fmt.Sprintf(
 			"Creating product file with remote name: '%s'",
 			uploadAs,
@@ -124,7 +146,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		productFile, err := u.pivnet.CreateProductFile(pivnet.CreateProductFileConfig{
 			ProductSlug:  u.productSlug,
 			Name:         uploadAs,
-			AWSObjectKey: remotePath,
+			AWSObjectKey: awsObjectKey,
 			FileVersion:  release.Version,
 			MD5:          fileContentsMD5,
 			Description:  description,
