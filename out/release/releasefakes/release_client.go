@@ -40,6 +40,15 @@ type ReleaseClient struct {
 		result1 go_pivnet.Release
 		result2 error
 	}
+	DeleteReleaseStub        func(productSlug string, release go_pivnet.Release) error
+	deleteReleaseMutex       sync.RWMutex
+	deleteReleaseArgsForCall []struct {
+		productSlug string
+		release     go_pivnet.Release
+	}
+	deleteReleaseReturns struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -164,6 +173,40 @@ func (fake *ReleaseClient) CreateReleaseReturns(result1 go_pivnet.Release, resul
 	}{result1, result2}
 }
 
+func (fake *ReleaseClient) DeleteRelease(productSlug string, release go_pivnet.Release) error {
+	fake.deleteReleaseMutex.Lock()
+	fake.deleteReleaseArgsForCall = append(fake.deleteReleaseArgsForCall, struct {
+		productSlug string
+		release     go_pivnet.Release
+	}{productSlug, release})
+	fake.recordInvocation("DeleteRelease", []interface{}{productSlug, release})
+	fake.deleteReleaseMutex.Unlock()
+	if fake.DeleteReleaseStub != nil {
+		return fake.DeleteReleaseStub(productSlug, release)
+	} else {
+		return fake.deleteReleaseReturns.result1
+	}
+}
+
+func (fake *ReleaseClient) DeleteReleaseCallCount() int {
+	fake.deleteReleaseMutex.RLock()
+	defer fake.deleteReleaseMutex.RUnlock()
+	return len(fake.deleteReleaseArgsForCall)
+}
+
+func (fake *ReleaseClient) DeleteReleaseArgsForCall(i int) (string, go_pivnet.Release) {
+	fake.deleteReleaseMutex.RLock()
+	defer fake.deleteReleaseMutex.RUnlock()
+	return fake.deleteReleaseArgsForCall[i].productSlug, fake.deleteReleaseArgsForCall[i].release
+}
+
+func (fake *ReleaseClient) DeleteReleaseReturns(result1 error) {
+	fake.DeleteReleaseStub = nil
+	fake.deleteReleaseReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *ReleaseClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -175,6 +218,8 @@ func (fake *ReleaseClient) Invocations() map[string][][]interface{} {
 	defer fake.releasesForProductSlugMutex.RUnlock()
 	fake.createReleaseMutex.RLock()
 	defer fake.createReleaseMutex.RUnlock()
+	fake.deleteReleaseMutex.RLock()
+	defer fake.deleteReleaseMutex.RUnlock()
 	return fake.invocations
 }
 

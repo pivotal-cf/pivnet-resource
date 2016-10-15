@@ -31,6 +31,7 @@ var _ = Describe("ReleaseCreator", func() {
 		releaseVersion    string
 		existingReleases  []pivnet.Release
 		eulaSlug          string
+		productSlug       string
 		releaseType       pivnet.ReleaseType
 	)
 
@@ -48,6 +49,7 @@ var _ = Describe("ReleaseCreator", func() {
 			},
 		}
 
+		productSlug = "some-product-slug"
 		releaseVersion = "1.8.3"
 		eulaSlug = "magic-slug"
 		releaseType = "some-release-type"
@@ -98,7 +100,7 @@ var _ = Describe("ReleaseCreator", func() {
 				params,
 				source,
 				"/some/sources/dir",
-				"some-product-slug",
+				productSlug,
 			)
 		})
 
@@ -110,10 +112,10 @@ var _ = Describe("ReleaseCreator", func() {
 
 			Expect(pivnetClient.EULAsCallCount()).To(Equal(1))
 
-			Expect(pivnetClient.ReleasesForProductSlugArgsForCall(0)).To(Equal("some-product-slug"))
+			Expect(pivnetClient.ReleasesForProductSlugArgsForCall(0)).To(Equal(productSlug))
 
 			Expect(pivnetClient.CreateReleaseArgsForCall(0)).To(Equal(pivnet.CreateReleaseConfig{
-				ProductSlug:     "some-product-slug",
+				ProductSlug:     productSlug,
 				ReleaseType:     string(releaseType),
 				EULASlug:        eulaSlug,
 				Version:         releaseVersion,
@@ -197,9 +199,33 @@ var _ = Describe("ReleaseCreator", func() {
 				releaseVersion = existingReleases[0].Version
 			})
 
-			It("returns a error", func() {
+			It("deletes the release", func() {
 				_, err := creator.Create()
-				Expect(err).To(MatchError(fmt.Errorf("release already exists with version: '%s'", releaseVersion)))
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(pivnetClient.DeleteReleaseCallCount()).To(Equal(1))
+
+				invokedProductSlug, invokedRelease := pivnetClient.DeleteReleaseArgsForCall(0)
+				Expect(invokedProductSlug).To(Equal(productSlug))
+				Expect(invokedRelease).To(Equal(existingReleases[0]))
+			})
+
+			Context("when deleting the release returns an error", func() {
+				var (
+					expectedErr error
+				)
+
+				BeforeEach(func() {
+					expectedErr = errors.New("some error")
+
+					pivnetClient.DeleteReleaseReturns(expectedErr)
+				})
+
+				It("returns the error", func() {
+					_, err := creator.Create()
+
+					Expect(err).To(Equal(expectedErr))
+				})
 			})
 		})
 

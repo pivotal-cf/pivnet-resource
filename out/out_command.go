@@ -56,6 +56,11 @@ func NewOutCommand(config OutCommandConfig) OutCommand {
 	}
 }
 
+//go:generate counterfeiter --fake-name PivnetClient . pivnetClient
+type pivnetClient interface {
+	DeleteRelease(productSlug string, release pivnet.Release) error
+}
+
 //go:generate counterfeiter --fake-name Creator . creator
 type creator interface {
 	Create() (pivnet.Release, error)
