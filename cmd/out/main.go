@@ -105,6 +105,7 @@ func main() {
 		RegionName:      region,
 		Bucket:          bucket,
 		Stderr:          os.Stderr,
+		Logger:          logger,
 	})
 
 	uploaderClient := uploader.NewClient(uploader.Config{

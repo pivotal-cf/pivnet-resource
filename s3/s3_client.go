@@ -3,6 +3,7 @@ package s3
 import (
 	"fmt"
 	"io"
+	"log"
 	"path/filepath"
 
 	"github.com/concourse/s3-resource"
@@ -14,6 +15,7 @@ type Client struct {
 	regionName      string
 	bucket          string
 
+	logger *log.Logger
 	stderr io.Writer
 
 	s3client s3resource.S3Client
@@ -25,6 +27,7 @@ type NewClientConfig struct {
 	RegionName      string
 	Bucket          string
 
+	Logger *log.Logger
 	Stderr io.Writer
 }
 
@@ -51,6 +54,7 @@ func NewClient(config NewClientConfig) *Client {
 		regionName:      config.RegionName,
 		bucket:          config.Bucket,
 		stderr:          config.Stderr,
+		logger:          config.Logger,
 		s3client:        s3client,
 	}
 }
@@ -75,7 +79,13 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 
 	acl := "private"
 
-	fmt.Fprintln(c.stderr, fmt.Sprintf("Uploading %s to s3://%s/%s", localPath, c.bucket, remotePath))
+	c.logger.Printf(
+		"Uploading %s to s3://%s/%s",
+		localPath,
+		c.bucket,
+		remotePath,
+	)
+
 	_, err = c.s3client.UploadFile(
 		c.bucket,
 		remotePath,
@@ -87,7 +97,13 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 	}
 
 	fmt.Fprintln(c.stderr) // the s3client does not append a new-line to its output
-	fmt.Fprintln(c.stderr, fmt.Sprintf("Successfully uploaded '%s' to 's3://%s/%s'", localPath, c.bucket, remotePath))
+
+	c.logger.Printf(
+		"Successfully uploaded '%s' to 's3://%s/%s'",
+		localPath,
+		c.bucket,
+		remotePath,
+	)
 
 	return nil
 }
