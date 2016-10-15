@@ -135,9 +135,9 @@ the provided `s3_filepath_prefix`, adding them both to Pivotal Network as well a
 to the newly-created release. The MD5 checksum of each file is taken locally,
 and added to the file metadata in Pivotal Network.
 
-If a product release already exists on Pivotal Network with the desired version,
-the resource will exit with error without attempting to create the release or
-upload any files.
+**Existing product files with the same AWS key will be deleted and recreated.**
+
+**Existing releases with the same version will be deleted and recreated.**
 
 See [metadata](https://github.com/pivotal-cf/pivnet-resource/blob/master/metadata)
 for more details on the structure of the metadata file.
