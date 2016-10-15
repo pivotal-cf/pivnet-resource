@@ -109,8 +109,6 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			}
 		}
 
-		u.logger.Println(fmt.Sprintf("Getting all existing product files"))
-
 		productFiles, err := u.pivnet.GetProductFiles(u.productSlug)
 		if err != nil {
 			return err
