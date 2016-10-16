@@ -158,11 +158,13 @@ release creation will fail.
   If no files are matched, release creation fails with error.
 
 * `s3_filepath_prefix`: *Optional.* Case-sensitive prefix of the
-  path in the S3 bucket.
+  path in the S3 bucket. If the value for `s3_filepath_prefix` starts with
+  anything other than `product_files` or `product-files`, it will be prefixed
+  with `product_files`.
 
-  Generally similar to, but not the same as, `product_slug`. For example,
-  a `product_slug` might be `pivotal-diego-pcf` (lower-case) but the
-  `s3_filepath_prefix` could be `Pivotal-Diego-PCF` (mixed-case).
+  Generally related to `product_slug`. For example, a `product_slug` might be
+  `pivotal-diego-pcf` (lower-case) but the corresponding `s3_filepath_prefix`
+  could be `product-files/Pivotal-Diego-PCF` (mixed-case).
 
 * `metadata_file`: *Optional.*
   File containing metadata for releases and product files.
