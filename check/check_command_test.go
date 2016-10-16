@@ -36,7 +36,7 @@ var _ = Describe("Check", func() {
 
 		releasesByReleaseTypeErr error
 		releasesByVersionErr     error
-		etagErr                  error
+		fingerprintErr           error
 		logging                  *log.Logger
 
 		tempDir     string
@@ -53,7 +53,7 @@ var _ = Describe("Check", func() {
 		releasesByVersionErr = nil
 		releaseTypesErr = nil
 		releasesErr = nil
-		etagErr = nil
+		fingerprintErr = nil
 
 		releaseTypes = []pivnet.ReleaseType{
 			pivnet.ReleaseType("foo release"),
@@ -101,9 +101,9 @@ var _ = Describe("Check", func() {
 		fakePivnetClient.ReleaseTypesReturns(releaseTypes, releaseTypesErr)
 		fakePivnetClient.ReleasesForProductSlugReturns(allReleases, releasesErr)
 
-		fakePivnetClient.ReleaseETagStub = func(productSlug string, releaseID int) (string, error) {
-			etag := fmt.Sprintf("etag-%d", releaseID)
-			return etag, etagErr
+		fakePivnetClient.ReleaseFingerprintStub = func(productSlug string, releaseID int) (string, error) {
+			fingerprint := fmt.Sprintf("fingerprint-%d", releaseID)
+			return fingerprint, fingerprintErr
 		}
 
 		fakeFilter.ReleasesByReleaseTypeReturns(filteredReleases, releasesByReleaseTypeErr)
@@ -130,13 +130,13 @@ var _ = Describe("Check", func() {
 		response, err := checkCommand.Run(checkRequest)
 		Expect(err).NotTo(HaveOccurred())
 
-		expectedVersionWithEtag, err := versions.CombineVersionAndETag(
-			allReleases[0].Version, fmt.Sprintf("etag-%d", allReleases[0].ID),
+		expectedVersionWithFingerprint, err := versions.CombineVersionAndFingerprint(
+			allReleases[0].Version, fmt.Sprintf("fingerprint-%d", allReleases[0].ID),
 		)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(response).To(HaveLen(1))
-		Expect(response[0].ProductVersion).To(Equal(expectedVersionWithEtag))
+		Expect(response[0].ProductVersion).To(Equal(expectedVersionWithFingerprint))
 	})
 
 	Context("when no releases are returned", func() {
@@ -211,9 +211,9 @@ var _ = Describe("Check", func() {
 		})
 	})
 
-	Context("when there is an error getting etag", func() {
+	Context("when there is an error getting fingerprint", func() {
 		BeforeEach(func() {
-			etagErr = fmt.Errorf("some error")
+			fingerprintErr = fmt.Errorf("some error")
 		})
 
 		It("returns an error", func() {
@@ -227,13 +227,13 @@ var _ = Describe("Check", func() {
 	Describe("when a version is provided", func() {
 		Context("when the version is the latest", func() {
 			BeforeEach(func() {
-				versionWithETag, err := versions.CombineVersionAndETag(
-					allReleases[0].Version, fmt.Sprintf("etag-%d", allReleases[0].ID),
+				versionWithFingerprint, err := versions.CombineVersionAndFingerprint(
+					allReleases[0].Version, fmt.Sprintf("fingerprint-%d", allReleases[0].ID),
 				)
 				Expect(err).NotTo(HaveOccurred())
 
 				checkRequest.Version = concourse.Version{
-					ProductVersion: versionWithETag,
+					ProductVersion: versionWithFingerprint,
 				}
 			})
 
@@ -241,25 +241,25 @@ var _ = Describe("Check", func() {
 				response, err := checkCommand.Run(checkRequest)
 				Expect(err).NotTo(HaveOccurred())
 
-				versionWithETagA, err := versions.CombineVersionAndETag(
-					allReleases[0].Version, fmt.Sprintf("etag-%d", allReleases[0].ID),
+				versionWithFingerprintA, err := versions.CombineVersionAndFingerprint(
+					allReleases[0].Version, fmt.Sprintf("fingerprint-%d", allReleases[0].ID),
 				)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response).To(HaveLen(1))
-				Expect(response[0].ProductVersion).To(Equal(versionWithETagA))
+				Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintA))
 			})
 		})
 
 		Context("when the version is not the latest", func() {
 			BeforeEach(func() {
-				versionWithETag, err := versions.CombineVersionAndETag(
-					allReleases[2].Version, fmt.Sprintf("etag-%d", allReleases[2].ID),
+				versionWithFingerprint, err := versions.CombineVersionAndFingerprint(
+					allReleases[2].Version, fmt.Sprintf("fingerprint-%d", allReleases[2].ID),
 				)
 				Expect(err).NotTo(HaveOccurred())
 
 				checkRequest.Version = concourse.Version{
-					ProductVersion: versionWithETag,
+					ProductVersion: versionWithFingerprint,
 				}
 			})
 
@@ -267,19 +267,19 @@ var _ = Describe("Check", func() {
 				response, err := checkCommand.Run(checkRequest)
 				Expect(err).NotTo(HaveOccurred())
 
-				versionWithETagC, err := versions.CombineVersionAndETag(
-					allReleases[1].Version, fmt.Sprintf("etag-%d", allReleases[1].ID),
+				versionWithFingerprintC, err := versions.CombineVersionAndFingerprint(
+					allReleases[1].Version, fmt.Sprintf("fingerprint-%d", allReleases[1].ID),
 				)
 				Expect(err).NotTo(HaveOccurred())
 
-				versionWithETagA, err := versions.CombineVersionAndETag(
-					allReleases[0].Version, fmt.Sprintf("etag-%d", allReleases[0].ID),
+				versionWithFingerprintA, err := versions.CombineVersionAndFingerprint(
+					allReleases[0].Version, fmt.Sprintf("fingerprint-%d", allReleases[0].ID),
 				)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response).To(HaveLen(2))
-				Expect(response[0].ProductVersion).To(Equal(versionWithETagC))
-				Expect(response[1].ProductVersion).To(Equal(versionWithETagA))
+				Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintC))
+				Expect(response[1].ProductVersion).To(Equal(versionWithFingerprintA))
 			})
 		})
 	})
@@ -295,13 +295,13 @@ var _ = Describe("Check", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			versionWithETagC, err := versions.CombineVersionAndETag(
-				allReleases[1].Version, fmt.Sprintf("etag-%d", allReleases[1].ID),
+			versionWithFingerprintC, err := versions.CombineVersionAndFingerprint(
+				allReleases[1].Version, fmt.Sprintf("fingerprint-%d", allReleases[1].ID),
 			)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(response).To(HaveLen(1))
-			Expect(response[0].ProductVersion).To(Equal(versionWithETagC))
+			Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintC))
 		})
 
 		Context("when the release type is invalid", func() {
@@ -349,13 +349,13 @@ var _ = Describe("Check", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			versionWithETagC, err := versions.CombineVersionAndETag(
-				allReleases[1].Version, fmt.Sprintf("etag-%d", allReleases[1].ID),
+			versionWithFingerprintC, err := versions.CombineVersionAndFingerprint(
+				allReleases[1].Version, fmt.Sprintf("fingerprint-%d", allReleases[1].ID),
 			)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(response).To(HaveLen(1))
-			Expect(response[0].ProductVersion).To(Equal(versionWithETagC))
+			Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintC))
 		})
 
 		Context("when filtering returns an error", func() {
@@ -380,7 +380,7 @@ var _ = Describe("Check", func() {
 		BeforeEach(func() {
 			checkRequest.Source.SortBy = concourse.SortBySemver
 			checkRequest.Version = concourse.Version{
-				ProductVersion: "1.2.3#etag-5432",
+				ProductVersion: "1.2.3#fingerprint-5432",
 			}
 
 			semverOrderedReleases = []pivnet.Release{
@@ -405,18 +405,18 @@ var _ = Describe("Check", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			versionsWithETags := make([]string, len(semverOrderedReleases))
+			versionsWithFingerprints := make([]string, len(semverOrderedReleases))
 
-			versionsWithETags[0], err = versions.CombineVersionAndETag(
-				"1.2.4", fmt.Sprintf("etag-%d", 6543),
+			versionsWithFingerprints[0], err = versions.CombineVersionAndFingerprint(
+				"1.2.4", fmt.Sprintf("fingerprint-%d", 6543),
 			)
-			versionsWithETags[1], err = versions.CombineVersionAndETag(
-				"2.3.4", fmt.Sprintf("etag-%d", 7654),
+			versionsWithFingerprints[1], err = versions.CombineVersionAndFingerprint(
+				"2.3.4", fmt.Sprintf("fingerprint-%d", 7654),
 			)
 
 			Expect(response).To(HaveLen(2))
-			Expect(response[0].ProductVersion).To(Equal(versionsWithETags[0]))
-			Expect(response[1].ProductVersion).To(Equal(versionsWithETags[1]))
+			Expect(response[0].ProductVersion).To(Equal(versionsWithFingerprints[0]))
+			Expect(response[1].ProductVersion).To(Equal(versionsWithFingerprints[1]))
 			Expect(fakeSorter.SortBySemverCallCount()).To(Equal(1))
 		})
 

@@ -213,10 +213,10 @@ var _ = Describe("Lifecycle test", func() {
 				release, err := pivnetClient.GetRelease(productSlug, version)
 				Expect(err).NotTo(HaveOccurred())
 
-				releaseETag, err := pivnetClient.ReleaseETag(productSlug, release.ID)
+				releaseFingerprint, err := pivnetClient.ReleaseFingerprint(productSlug, release.ID)
 				Expect(err).NotTo(HaveOccurred())
 
-				expectedVersion := fmt.Sprintf("%s#%s", version, releaseETag)
+				expectedVersion := fmt.Sprintf("%s#%s", version, releaseFingerprint)
 				Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
 
 				By("Getting updated list of product files")
@@ -240,10 +240,10 @@ var _ = Describe("Lifecycle test", func() {
 				release, err = pivnetClient.GetRelease(productSlug, version)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				releaseETag, err = pivnetClient.ReleaseETag(productSlug, release.ID)
+				releaseFingerprint, err = pivnetClient.ReleaseFingerprint(productSlug, release.ID)
 				Expect(err).NotTo(HaveOccurred())
 
-				versionWithETag, err := versions.CombineVersionAndETag(version, releaseETag)
+				versionWithFingerprint, err := versions.CombineVersionAndFingerprint(version, releaseFingerprint)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying release contains new product files")
@@ -275,7 +275,7 @@ var _ = Describe("Lifecycle test", func() {
 						Globs: []string{"*"},
 					},
 					Version: concourse.Version{
-						ProductVersion: versionWithETag,
+						ProductVersion: versionWithFingerprint,
 					},
 				}
 
@@ -313,7 +313,7 @@ var _ = Describe("Lifecycle test", func() {
 						Endpoint:    endpoint,
 					},
 					Version: concourse.Version{
-						ProductVersion: versionWithETag,
+						ProductVersion: versionWithFingerprint,
 					},
 					Params: concourse.InParams{
 						Globs: []string{},
@@ -356,7 +356,7 @@ var _ = Describe("Lifecycle test", func() {
 						Globs: []string{filePrefix + "*", "badglob"},
 					},
 					Version: concourse.Version{
-						ProductVersion: versionWithETag,
+						ProductVersion: versionWithFingerprint,
 					},
 				}
 

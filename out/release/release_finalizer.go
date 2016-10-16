@@ -35,16 +35,16 @@ func NewFinalizer(
 
 //go:generate counterfeiter --fake-name UpdateClient . updateClient
 type updateClient interface {
-	ReleaseETag(productSlug string, releaseID int) (string, error)
+	ReleaseFingerprint(productSlug string, releaseID int) (string, error)
 }
 
 func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutResponse, error) {
-	releaseETag, err := rf.pivnet.ReleaseETag(rf.productSlug, release.ID)
+	releaseFingerprint, err := rf.pivnet.ReleaseFingerprint(rf.productSlug, release.ID)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
 
-	outputVersion, err := versions.CombineVersionAndETag(release.Version, releaseETag)
+	outputVersion, err := versions.CombineVersionAndFingerprint(release.Version, releaseFingerprint)
 	if err != nil {
 		return concourse.OutResponse{}, err // this will never return an error
 	}

@@ -72,21 +72,21 @@ var _ = Describe("Versions", func() {
 		})
 	})
 
-	Describe("SplitIntoVersionAndETag", func() {
+	Describe("SplitIntoVersionAndFingerprint", func() {
 		var (
 			input string
 		)
 
 		BeforeEach(func() {
-			input = "some.version#my-etag"
+			input = "some.version#my-fingerprint"
 		})
 
 		It("splits without error", func() {
-			version, etag, err := versions.SplitIntoVersionAndETag(input)
+			version, fingerprint, err := versions.SplitIntoVersionAndFingerprint(input)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(version).To(Equal("some.version"))
-			Expect(etag).To(Equal("my-etag"))
+			Expect(fingerprint).To(Equal("my-fingerprint"))
 		})
 
 		Context("when the input does not contain enough delimiters", func() {
@@ -95,51 +95,51 @@ var _ = Describe("Versions", func() {
 			})
 
 			It("returns error", func() {
-				_, _, err := versions.SplitIntoVersionAndETag(input)
+				_, _, err := versions.SplitIntoVersionAndFingerprint(input)
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("when the input contains too many delimiters", func() {
 			BeforeEach(func() {
-				input = "some.version#etag-1#-etag-2"
+				input = "some.version#fingerprint-1#-fingerprint-2"
 			})
 
 			It("returns error", func() {
-				_, _, err := versions.SplitIntoVersionAndETag(input)
+				_, _, err := versions.SplitIntoVersionAndFingerprint(input)
 				Expect(err).To(HaveOccurred())
 			})
 		})
 	})
 
-	Describe("CombineVersionAndETag", func() {
+	Describe("CombineVersionAndFingerprint", func() {
 		var (
-			version string
-			etag    string
+			version     string
+			fingerprint string
 		)
 
 		BeforeEach(func() {
 			version = "some.version"
-			etag = "my-etag"
+			fingerprint = "my-fingerprint"
 		})
 
 		It("combines without error", func() {
-			versionWithETag, err := versions.CombineVersionAndETag(version, etag)
+			versionWithFingerprint, err := versions.CombineVersionAndFingerprint(version, fingerprint)
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(versionWithETag).To(Equal("some.version#my-etag"))
+			Expect(versionWithFingerprint).To(Equal("some.version#my-fingerprint"))
 		})
 
-		Context("when the etag is empty", func() {
+		Context("when the fingerprint is empty", func() {
 			BeforeEach(func() {
-				etag = ""
+				fingerprint = ""
 			})
 
 			It("does not include the #", func() {
-				versionWithETag, err := versions.CombineVersionAndETag(version, etag)
+				versionWithFingerprint, err := versions.CombineVersionAndFingerprint(version, fingerprint)
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(versionWithETag).To(Equal("some.version"))
+				Expect(versionWithFingerprint).To(Equal("some.version"))
 			})
 		})
 	})

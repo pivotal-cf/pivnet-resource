@@ -50,7 +50,7 @@ var _ = Describe("ReleaseFinalizer", func() {
 				ProductFiles: []metadata.ProductFile{},
 			}
 
-			pivnetClient.ReleaseETagReturns("a-diff-etag", nil)
+			pivnetClient.ReleaseFingerprintReturns("a-diff-fingerprint", nil)
 		})
 
 		JustBeforeEach(func() {
@@ -68,7 +68,7 @@ var _ = Describe("ReleaseFinalizer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(response.Version).To(Equal(concourse.Version{
-				ProductVersion: "some-version#a-diff-etag",
+				ProductVersion: "some-version#a-diff-fingerprint",
 			}))
 
 			Expect(response.Metadata).To(ContainElement(concourse.Metadata{Name: "version", Value: "some-version"}))

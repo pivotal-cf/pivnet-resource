@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	etagDelimiter = "#"
+	fingerprintDelimiter = "#"
 )
 
 func Since(versions []string, since string) ([]string, error) {
@@ -28,26 +28,26 @@ func Reverse(versions []string) ([]string, error) {
 	return reversed, nil
 }
 
-func SplitIntoVersionAndETag(versionWithETag string) (string, string, error) {
-	split := strings.Split(versionWithETag, etagDelimiter)
+func SplitIntoVersionAndFingerprint(versionWithFingerprint string) (string, string, error) {
+	split := strings.Split(versionWithFingerprint, fingerprintDelimiter)
 	if len(split) != 2 {
-		return "", "", fmt.Errorf("Invalid version and Etag: %s", versionWithETag)
+		return "", "", fmt.Errorf("Invalid version and Fingerprint: %s", versionWithFingerprint)
 	}
 	return split[0], split[1], nil
 }
 
-func CombineVersionAndETag(version string, etag string) (string, error) {
-	if etag == "" {
+func CombineVersionAndFingerprint(version string, fingerprint string) (string, error) {
+	if fingerprint == "" {
 		return version, nil
 	}
-	return combineVersionAndETag(version, etag), nil
+	return combineVersionAndFingerprint(version, fingerprint), nil
 }
 
-func combineVersionAndETag(version string, etag string) string {
-	return fmt.Sprintf("%s%s%s", version, etagDelimiter, etag)
+func combineVersionAndFingerprint(version string, fingerprint string) string {
+	return fmt.Sprintf("%s%s%s", version, fingerprintDelimiter, fingerprint)
 }
 
 //go:generate counterfeiter --fake-name FakeExtendedClient . extendedClient
 type extendedClient interface {
-	ReleaseETag(productSlug string, releaseID int) (string, error)
+	ReleaseFingerprint(productSlug string, releaseID int) (string, error)
 }

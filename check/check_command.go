@@ -27,7 +27,7 @@ type sorter interface {
 type pivnetClient interface {
 	ReleaseTypes() ([]pivnet.ReleaseType, error)
 	ReleasesForProductSlug(string) ([]pivnet.Release, error)
-	ReleaseETag(productSlug string, releaseID int) (string, error)
+	ReleaseFingerprint(productSlug string, releaseID int) (string, error)
 }
 
 type CheckCommand struct {
@@ -140,18 +140,18 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	versionsWithETags, err := versionsWithFingerprints(c.pivnetClient, productSlug, releases)
+	versionsWithFingerprints, err := versionsWithFingerprints(c.pivnetClient, productSlug, releases)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(versionsWithETags) == 0 {
+	if len(versionsWithFingerprints) == 0 {
 		return concourse.CheckResponse{}, nil
 	}
 
 	c.logger.Println("Gathering new versions")
 
-	newVersions, err := versions.Since(versionsWithETags, input.Version.ProductVersion)
+	newVersions, err := versions.Since(versionsWithFingerprints, input.Version.ProductVersion)
 	if err != nil {
 		// Untested because versions.Since cannot be forced to return an error.
 		return nil, err
@@ -171,7 +171,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	}
 
 	if len(out) == 0 {
-		out = append(out, concourse.Version{ProductVersion: versionsWithETags[0]})
+		out = append(out, concourse.Version{ProductVersion: versionsWithFingerprints[0]})
 	}
 
 	c.logger.Println("Finishing check and returning ouput")
@@ -188,7 +188,7 @@ func containsString(strings []string, str string) bool {
 	return false
 }
 
-// versionsWithFingerprints adds the release ETags to the release versions
+// versionsWithFingerprints adds the release Fingerprints to the release versions
 func versionsWithFingerprints(
 	c pivnetClient,
 	productSlug string,
@@ -196,12 +196,12 @@ func versionsWithFingerprints(
 ) ([]string, error) {
 	var allVersions []string
 	for _, r := range releases {
-		etag, err := c.ReleaseETag(productSlug, r.ID)
+		fingerprint, err := c.ReleaseFingerprint(productSlug, r.ID)
 		if err != nil {
 			return nil, err
 		}
 
-		version, err := versions.CombineVersionAndETag(r.Version, etag)
+		version, err := versions.CombineVersionAndFingerprint(r.Version, fingerprint)
 		if err != nil {
 			return nil, err
 		}

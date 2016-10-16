@@ -61,12 +61,12 @@ func (w FileWriter) WriteMetadataJSONFile(mdata metadata.Metadata) error {
 	return nil
 }
 
-func (w FileWriter) WriteVersionFile(versionWithETag string) error {
+func (w FileWriter) WriteVersionFile(version string) error {
 	versionFilepath := filepath.Join(w.downloadDir, "version")
 
 	w.logger.Println("Writing version to file")
 
-	err := ioutil.WriteFile(versionFilepath, []byte(versionWithETag), os.ModePerm)
+	err := ioutil.WriteFile(versionFilepath, []byte(version), os.ModePerm)
 	if err != nil {
 		// Untested as it is too hard to force io.WriteFile to return an error
 		return err

@@ -17,7 +17,7 @@ type PivnetClient interface {
 	ReleaseForVersion(productSlug string, releaseVersion string) (pivnet.Release, error)
 	CreateRelease(config pivnet.CreateReleaseConfig) (pivnet.Release, error)
 	DeleteRelease(productSlug string, release pivnet.Release) error
-	ReleaseETag(productSlug string, releaseID int) (string, error)
+	ReleaseFingerprint(productSlug string, releaseID int) (string, error)
 }
 
 type ReleaseClient struct {
@@ -95,14 +95,14 @@ func (c *ReleaseClient) Get(
 		return c.eh.HandleError(err)
 	}
 
-	etag, err := c.pivnetClient.ReleaseETag(productSlug, release.ID)
+	fingerprint, err := c.pivnetClient.ReleaseFingerprint(productSlug, release.ID)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
 
 	r := CLIRelease{
 		release,
-		etag,
+		fingerprint,
 	}
 
 	return c.printRelease(r)
@@ -116,14 +116,14 @@ func (c *ReleaseClient) printRelease(release CLIRelease) error {
 			"ID",
 			"Version",
 			"Description",
-			"ETag",
+			"Fingerprint",
 		})
 
 		releaseAsString := []string{
 			strconv.Itoa(release.ID),
 			release.Version,
 			release.Description,
-			release.ETag,
+			release.Fingerprint,
 		}
 		table.Append(releaseAsString)
 		table.Render()
@@ -155,14 +155,14 @@ func (c *ReleaseClient) Create(
 		return c.eh.HandleError(err)
 	}
 
-	etag, err := c.pivnetClient.ReleaseETag(productSlug, release.ID)
+	fingerprint, err := c.pivnetClient.ReleaseFingerprint(productSlug, release.ID)
 	if err != nil {
 		return c.eh.HandleError(err)
 	}
 
 	r := CLIRelease{
 		release,
-		etag,
+		fingerprint,
 	}
 
 	return c.printRelease(r)
@@ -196,5 +196,5 @@ func (c *ReleaseClient) Delete(productSlug string, releaseVersion string) error 
 
 type CLIRelease struct {
 	pivnet.Release `yaml:",inline"`
-	ETag           string `json:"etag,omitempty"`
+	Fingerprint    string `json:"fingerprint,omitempty"`
 }

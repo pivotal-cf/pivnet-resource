@@ -154,7 +154,7 @@ var _ = Describe("Out", func() {
 			releaseVersions, err := versionsWithFingerprints(pivnetClient, productSlug, releases)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(versionsWithoutETags(releaseVersions)).NotTo(ContainElement(version))
+			Expect(versionsWithoutFingerprints(releaseVersions)).NotTo(ContainElement(version))
 
 			By("Running the command")
 			session := run(command, stdinContents)
@@ -167,7 +167,7 @@ var _ = Describe("Out", func() {
 			releaseVersions, err = versionsWithFingerprints(pivnetClient, productSlug, releases)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(versionsWithoutETags(releaseVersions)).To(ContainElement(version))
+			Expect(versionsWithoutFingerprints(releaseVersions)).To(ContainElement(version))
 
 			By("Outputting a valid json response")
 			response := concourse.OutResponse{}
@@ -178,10 +178,10 @@ var _ = Describe("Out", func() {
 			release, err := pivnetClient.GetRelease(productSlug, version)
 			Expect(err).NotTo(HaveOccurred())
 
-			releaseETag, err := pivnetClient.ReleaseETag(productSlug, release.ID)
+			releaseFingerprint, err := pivnetClient.ReleaseFingerprint(productSlug, release.ID)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedVersion := fmt.Sprintf("%s#%s", version, releaseETag)
+			expectedVersion := fmt.Sprintf("%s#%s", version, releaseFingerprint)
 			Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
 
 			Expect(release.ReleaseType).To(Equal(releaseType))
@@ -243,7 +243,7 @@ var _ = Describe("Out", func() {
 				releaseVersions, err := versionsWithFingerprints(pivnetClient, productSlug, releases)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(versionsWithoutETags(releaseVersions)).NotTo(ContainElement(version))
+				Expect(versionsWithoutFingerprints(releaseVersions)).NotTo(ContainElement(version))
 
 				By("Running the command")
 				session := run(command, stdinContents)
@@ -256,7 +256,7 @@ var _ = Describe("Out", func() {
 				releaseVersions, err = versionsWithFingerprints(pivnetClient, productSlug, releases)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(versionsWithoutETags(releaseVersions)).To(ContainElement(version))
+				Expect(versionsWithoutFingerprints(releaseVersions)).To(ContainElement(version))
 
 				By("Outputting a valid json response")
 				response := concourse.OutResponse{}
@@ -290,7 +290,7 @@ var _ = Describe("Out", func() {
 	})
 })
 
-// versionsWithFingerprints adds the release ETags to the release versions
+// versionsWithFingerprints adds the release Fingerprints to the release versions
 func versionsWithFingerprints(
 	c gp.CombinedClient,
 	productSlug string,
@@ -298,12 +298,12 @@ func versionsWithFingerprints(
 ) ([]string, error) {
 	var allVersions []string
 	for _, r := range releases {
-		etag, err := c.ReleaseETag(productSlug, r.ID)
+		fingerprint, err := c.ReleaseFingerprint(productSlug, r.ID)
 		if err != nil {
 			return nil, err
 		}
 
-		version, err := versions.CombineVersionAndETag(r.Version, etag)
+		version, err := versions.CombineVersionAndFingerprint(r.Version, fingerprint)
 		if err != nil {
 			return nil, err
 		}

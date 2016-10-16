@@ -24,10 +24,10 @@ type FakeFileWriter struct {
 	writeMetadataYAMLFileReturns struct {
 		result1 error
 	}
-	WriteVersionFileStub        func(versionWithETag string) error
+	WriteVersionFileStub        func(versionWithFingerprint string) error
 	writeVersionFileMutex       sync.RWMutex
 	writeVersionFileArgsForCall []struct {
-		versionWithETag string
+		versionWithFingerprint string
 	}
 	writeVersionFileReturns struct {
 		result1 error
@@ -102,15 +102,15 @@ func (fake *FakeFileWriter) WriteMetadataYAMLFileReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeFileWriter) WriteVersionFile(versionWithETag string) error {
+func (fake *FakeFileWriter) WriteVersionFile(versionWithFingerprint string) error {
 	fake.writeVersionFileMutex.Lock()
 	fake.writeVersionFileArgsForCall = append(fake.writeVersionFileArgsForCall, struct {
-		versionWithETag string
-	}{versionWithETag})
-	fake.recordInvocation("WriteVersionFile", []interface{}{versionWithETag})
+		versionWithFingerprint string
+	}{versionWithFingerprint})
+	fake.recordInvocation("WriteVersionFile", []interface{}{versionWithFingerprint})
 	fake.writeVersionFileMutex.Unlock()
 	if fake.WriteVersionFileStub != nil {
-		return fake.WriteVersionFileStub(versionWithETag)
+		return fake.WriteVersionFileStub(versionWithFingerprint)
 	} else {
 		return fake.writeVersionFileReturns.result1
 	}
@@ -125,7 +125,7 @@ func (fake *FakeFileWriter) WriteVersionFileCallCount() int {
 func (fake *FakeFileWriter) WriteVersionFileArgsForCall(i int) string {
 	fake.writeVersionFileMutex.RLock()
 	defer fake.writeVersionFileMutex.RUnlock()
-	return fake.writeVersionFileArgsForCall[i].versionWithETag
+	return fake.writeVersionFileArgsForCall[i].versionWithFingerprint
 }
 
 func (fake *FakeFileWriter) WriteVersionFileReturns(result1 error) {

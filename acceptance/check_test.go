@@ -29,13 +29,13 @@ var _ = Describe("Check", func() {
 
 		releases := allReleases[:4]
 
-		By("Getting release ETags")
+		By("Getting release Fingerprints")
 		versions = make([]string, len(releases))
 		for i, r := range releases {
-			releaseETag, err := pivnetClient.ReleaseETag(productSlug, r.ID)
+			releaseFingerprint, err := pivnetClient.ReleaseFingerprint(productSlug, r.ID)
 			Expect(err).NotTo(HaveOccurred())
 
-			versions[i] = fmt.Sprintf("%s#%s", r.Version, releaseETag)
+			versions[i] = fmt.Sprintf("%s#%s", r.Version, releaseFingerprint)
 		}
 
 		By("Creating command object")

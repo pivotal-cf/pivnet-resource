@@ -146,11 +146,11 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-func versionsWithoutETags(versionsWithETags []string) []string {
-	versionsWithoutETags := make([]string, len(versionsWithETags))
-	for i, v := range versionsWithETags {
+func versionsWithoutFingerprints(versionsWithFingerprints []string) []string {
+	versionsWithoutFingerprints := make([]string, len(versionsWithFingerprints))
+	for i, v := range versionsWithFingerprints {
 		split := strings.Split(v, "#")
-		versionsWithoutETags[i] = split[0]
+		versionsWithoutFingerprints[i] = split[0]
 	}
-	return versionsWithoutETags
+	return versionsWithoutFingerprints
 }

@@ -32,7 +32,7 @@ type fileSummer interface {
 type fileWriter interface {
 	WriteMetadataJSONFile(mdata metadata.Metadata) error
 	WriteMetadataYAMLFile(mdata metadata.Metadata) error
-	WriteVersionFile(versionWithETag string) error
+	WriteVersionFile(versionWithFingerprint string) error
 }
 
 //go:generate counterfeiter --fake-name FakePivnetClient . pivnetClient
@@ -43,7 +43,7 @@ type pivnetClient interface {
 	GetProductFile(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
 	ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error)
-	ReleaseETag(productSlug string, releaseID int) (string, error)
+	ReleaseFingerprint(productSlug string, releaseID int) (string, error)
 }
 
 type InCommand struct {
@@ -77,11 +77,11 @@ func NewInCommand(
 func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error) {
 	productSlug := input.Source.ProductSlug
 
-	version, etag, err := versions.SplitIntoVersionAndETag(input.Version.ProductVersion)
+	version, fingerprint, err := versions.SplitIntoVersionAndFingerprint(input.Version.ProductVersion)
 	if err != nil {
-		c.logger.Println("Parsing of etag failed; continuing without it")
+		c.logger.Println("Parsing of fingerprint failed; continuing without it")
 		version = input.Version.ProductVersion
-		etag = ""
+		fingerprint = ""
 	}
 
 	c.logger.Println(fmt.Sprintf(
@@ -95,16 +95,16 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
-	if etag != "" {
-		actualETag, err := c.pivnetClient.ReleaseETag(productSlug, release.ID)
+	if fingerprint != "" {
+		actualFingerprint, err := c.pivnetClient.ReleaseFingerprint(productSlug, release.ID)
 		if err != nil {
 			return concourse.InResponse{}, err
 		}
-		if actualETag != etag {
+		if actualFingerprint != fingerprint {
 			return concourse.InResponse{}, fmt.Errorf(
-				"provided etag: '%s' does not match actual etag (from pivnet): '%s' - %s",
-				etag,
-				actualETag,
+				"provided fingerprint: '%s' does not match actual fingerprint (from pivnet): '%s' - %s",
+				fingerprint,
+				actualFingerprint,
 				"pivnet does not support downloading old versions of a release",
 			)
 		}
@@ -147,7 +147,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Println("Creating metadata")
 
-	versionWithETag, err := versions.CombineVersionAndETag(version, etag)
+	versionWithFingerprint, err := versions.CombineVersionAndFingerprint(version, fingerprint)
 
 	mdata := metadata.Metadata{
 		Release: &metadata.Release{
@@ -204,7 +204,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Println("Writing metadata files")
 
-	err = c.fileWriter.WriteVersionFile(versionWithETag)
+	err = c.fileWriter.WriteVersionFile(versionWithFingerprint)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
@@ -223,7 +223,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	out := concourse.InResponse{
 		Version: concourse.Version{
-			ProductVersion: versionWithETag,
+			ProductVersion: versionWithFingerprint,
 		},
 		Metadata: concourseMetadata,
 	}

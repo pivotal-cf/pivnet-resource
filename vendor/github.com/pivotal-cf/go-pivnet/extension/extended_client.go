@@ -29,7 +29,7 @@ func NewExtendedClient(client Client, logger logger.Logger) ExtendedClient {
 	}
 }
 
-func (c ExtendedClient) ReleaseETag(productSlug string, releaseID int) (string, error) {
+func (c ExtendedClient) ReleaseFingerprint(productSlug string, releaseID int) (string, error) {
 	url := fmt.Sprintf("/products/%s/releases/%d", productSlug, releaseID)
 
 	resp, _, err := c.c.MakeRequest("GET", url, http.StatusOK, nil, nil)

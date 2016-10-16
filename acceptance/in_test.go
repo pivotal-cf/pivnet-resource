@@ -24,10 +24,10 @@ var _ = Describe("In", func() {
 		eulaSlug    = "pivotal_beta_eula"
 		releaseType = pivnet.ReleaseType("Minor Release")
 
-		version         string
-		etag            string
-		versionWithETag string
-		destDirectory   string
+		version                string
+		fingerprint            string
+		versionWithFingerprint string
+		destDirectory          string
 
 		command       *exec.Cmd
 		inRequest     concourse.InRequest
@@ -47,10 +47,10 @@ var _ = Describe("In", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		etag, err = pivnetClient.ReleaseETag(productSlug, release.ID)
+		fingerprint, err = pivnetClient.ReleaseFingerprint(productSlug, release.ID)
 		Expect(err).NotTo(HaveOccurred())
 
-		versionWithETag, err = versions.CombineVersionAndETag(version, etag)
+		versionWithFingerprint, err = versions.CombineVersionAndFingerprint(version, fingerprint)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Creating temp directory")
@@ -68,7 +68,7 @@ var _ = Describe("In", func() {
 				Endpoint:    endpoint,
 			},
 			Version: concourse.Version{
-				ProductVersion: versionWithETag,
+				ProductVersion: versionWithFingerprint,
 			},
 		}
 
@@ -95,7 +95,7 @@ var _ = Describe("In", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Validating output contains correct product version")
-		Expect(response.Version.ProductVersion).To(Equal(versionWithETag))
+		Expect(response.Version.ProductVersion).To(Equal(versionWithFingerprint))
 
 		By("Validing the returned metadata is present")
 		_, err = metadataValueForKey(response.Metadata, "release_type")

@@ -46,13 +46,13 @@ type FakePivnetClient struct {
 	deleteReleaseReturns struct {
 		result1 error
 	}
-	ReleaseETagStub        func(productSlug string, releaseID int) (string, error)
-	releaseETagMutex       sync.RWMutex
-	releaseETagArgsForCall []struct {
+	ReleaseFingerprintStub        func(productSlug string, releaseID int) (string, error)
+	releaseFingerprintMutex       sync.RWMutex
+	releaseFingerprintArgsForCall []struct {
 		productSlug string
 		releaseID   int
 	}
-	releaseETagReturns struct {
+	releaseFingerprintReturns struct {
 		result1 string
 		result2 error
 	}
@@ -197,36 +197,36 @@ func (fake *FakePivnetClient) DeleteReleaseReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakePivnetClient) ReleaseETag(productSlug string, releaseID int) (string, error) {
-	fake.releaseETagMutex.Lock()
-	fake.releaseETagArgsForCall = append(fake.releaseETagArgsForCall, struct {
+func (fake *FakePivnetClient) ReleaseFingerprint(productSlug string, releaseID int) (string, error) {
+	fake.releaseFingerprintMutex.Lock()
+	fake.releaseFingerprintArgsForCall = append(fake.releaseFingerprintArgsForCall, struct {
 		productSlug string
 		releaseID   int
 	}{productSlug, releaseID})
-	fake.recordInvocation("ReleaseETag", []interface{}{productSlug, releaseID})
-	fake.releaseETagMutex.Unlock()
-	if fake.ReleaseETagStub != nil {
-		return fake.ReleaseETagStub(productSlug, releaseID)
+	fake.recordInvocation("ReleaseFingerprint", []interface{}{productSlug, releaseID})
+	fake.releaseFingerprintMutex.Unlock()
+	if fake.ReleaseFingerprintStub != nil {
+		return fake.ReleaseFingerprintStub(productSlug, releaseID)
 	} else {
-		return fake.releaseETagReturns.result1, fake.releaseETagReturns.result2
+		return fake.releaseFingerprintReturns.result1, fake.releaseFingerprintReturns.result2
 	}
 }
 
-func (fake *FakePivnetClient) ReleaseETagCallCount() int {
-	fake.releaseETagMutex.RLock()
-	defer fake.releaseETagMutex.RUnlock()
-	return len(fake.releaseETagArgsForCall)
+func (fake *FakePivnetClient) ReleaseFingerprintCallCount() int {
+	fake.releaseFingerprintMutex.RLock()
+	defer fake.releaseFingerprintMutex.RUnlock()
+	return len(fake.releaseFingerprintArgsForCall)
 }
 
-func (fake *FakePivnetClient) ReleaseETagArgsForCall(i int) (string, int) {
-	fake.releaseETagMutex.RLock()
-	defer fake.releaseETagMutex.RUnlock()
-	return fake.releaseETagArgsForCall[i].productSlug, fake.releaseETagArgsForCall[i].releaseID
+func (fake *FakePivnetClient) ReleaseFingerprintArgsForCall(i int) (string, int) {
+	fake.releaseFingerprintMutex.RLock()
+	defer fake.releaseFingerprintMutex.RUnlock()
+	return fake.releaseFingerprintArgsForCall[i].productSlug, fake.releaseFingerprintArgsForCall[i].releaseID
 }
 
-func (fake *FakePivnetClient) ReleaseETagReturns(result1 string, result2 error) {
-	fake.ReleaseETagStub = nil
-	fake.releaseETagReturns = struct {
+func (fake *FakePivnetClient) ReleaseFingerprintReturns(result1 string, result2 error) {
+	fake.ReleaseFingerprintStub = nil
+	fake.releaseFingerprintReturns = struct {
 		result1 string
 		result2 error
 	}{result1, result2}
@@ -243,8 +243,8 @@ func (fake *FakePivnetClient) Invocations() map[string][][]interface{} {
 	defer fake.createReleaseMutex.RUnlock()
 	fake.deleteReleaseMutex.RLock()
 	defer fake.deleteReleaseMutex.RUnlock()
-	fake.releaseETagMutex.RLock()
-	defer fake.releaseETagMutex.RUnlock()
+	fake.releaseFingerprintMutex.RLock()
+	defer fake.releaseFingerprintMutex.RUnlock()
 	return fake.invocations
 }
 

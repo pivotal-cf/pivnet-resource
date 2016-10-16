@@ -35,10 +35,10 @@ var _ = Describe("In", func() {
 		releaseDependencies []pivnet.ReleaseDependency
 		releaseUpgradePaths []pivnet.ReleaseUpgradePath
 
-		version         string
-		etag            string
-		actualETag      string
-		versionWithETag string
+		version                string
+		fingerprint            string
+		actualFingerprint      string
+		versionWithFingerprint string
 
 		inRequest concourse.InRequest
 		inCommand *in.InCommand
@@ -48,7 +48,7 @@ var _ = Describe("In", func() {
 		fileContentsMD5s  []string
 
 		getReleaseErr          error
-		actualETagErr          error
+		actualFingerprintErr   error
 		acceptEULAErr          error
 		getProductFilesErr     error
 		getProductFileErr      error
@@ -67,7 +67,7 @@ var _ = Describe("In", func() {
 		fakeFileWriter = &infakes.FakeFileWriter{}
 
 		getReleaseErr = nil
-		actualETagErr = nil
+		actualFingerprintErr = nil
 		acceptEULAErr = nil
 		getProductFilesErr = nil
 		getProductFileErr = nil
@@ -78,8 +78,8 @@ var _ = Describe("In", func() {
 		releaseUpgradePathsErr = nil
 
 		version = "C"
-		etag = "etag-0"
-		actualETag = etag
+		fingerprint = "fingerprint-0"
+		actualFingerprint = fingerprint
 
 		fileContentsMD5s = []string{
 			"some-md5 1234",
@@ -87,7 +87,7 @@ var _ = Describe("In", func() {
 		}
 
 		var err error
-		versionWithETag, err = versions.CombineVersionAndETag(version, etag)
+		versionWithFingerprint, err = versions.CombineVersionAndFingerprint(version, fingerprint)
 		Expect(err).NotTo(HaveOccurred())
 
 		downloadFilepaths = []string{
@@ -187,14 +187,14 @@ var _ = Describe("In", func() {
 				ProductSlug: productSlug,
 			},
 			Version: concourse.Version{
-				ProductVersion: versionWithETag,
+				ProductVersion: versionWithFingerprint,
 			},
 		}
 	})
 
 	JustBeforeEach(func() {
 		fakePivnetClient.GetReleaseReturns(release, getReleaseErr)
-		fakePivnetClient.ReleaseETagReturns(actualETag, actualETagErr)
+		fakePivnetClient.ReleaseFingerprintReturns(actualFingerprint, actualFingerprintErr)
 		fakePivnetClient.AcceptEULAReturns(acceptEULAErr)
 		fakePivnetClient.GetProductFilesForReleaseReturns(productFiles, getProductFilesErr)
 
@@ -250,12 +250,12 @@ var _ = Describe("In", func() {
 		)
 	})
 
-	It("invokes the version file writer with downloaded version and etag", func() {
+	It("invokes the version file writer with downloaded version and fingerprint", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(fakeFileWriter.WriteVersionFileCallCount()).To(Equal(1))
-		Expect(fakeFileWriter.WriteVersionFileArgsForCall(0)).To(Equal(versionWithETag))
+		Expect(fakeFileWriter.WriteVersionFileArgsForCall(0)).To(Equal(versionWithFingerprint))
 	})
 
 	var validateProductFilesMetadata = func(
@@ -354,7 +354,7 @@ var _ = Describe("In", func() {
 		Expect(failOnNoMatch).To(BeFalse())
 	})
 
-	Context("when version is provided without etag", func() {
+	Context("when version is provided without fingerprint", func() {
 		BeforeEach(func() {
 			inRequest.Version = concourse.Version{
 				ProductVersion: version,
@@ -366,9 +366,9 @@ var _ = Describe("In", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("does not attempt to discover acutal etag", func() {
+		It("does not attempt to discover acutal fingerprint", func() {
 			_, _ = inCommand.Run(inRequest)
-			Expect(fakePivnetClient.ReleaseETagCallCount()).To(Equal(0))
+			Expect(fakePivnetClient.ReleaseFingerprintCallCount()).To(Equal(0))
 		})
 	})
 
@@ -385,22 +385,22 @@ var _ = Describe("In", func() {
 		})
 	})
 
-	Context("when getting actual etag returns an error", func() {
+	Context("when getting actual fingerprint returns an error", func() {
 		BeforeEach(func() {
-			actualETagErr = fmt.Errorf("some etag error")
+			actualFingerprintErr = fmt.Errorf("some fingerprint error")
 		})
 
 		It("returns the error", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).To(HaveOccurred())
 
-			Expect(err).To(Equal(actualETagErr))
+			Expect(err).To(Equal(actualFingerprintErr))
 		})
 	})
 
-	Context("when actual etag is different than provided", func() {
+	Context("when actual fingerprint is different than provided", func() {
 		BeforeEach(func() {
-			actualETag = "different etag"
+			actualFingerprint = "different fingerprint"
 		})
 
 		It("returns the error", func() {
@@ -409,8 +409,8 @@ var _ = Describe("In", func() {
 
 			Expect(err.Error()).To(MatchRegexp(
 				".*provided.*'%s'.*actual.*'%s'.*",
-				etag,
-				actualETag,
+				fingerprint,
+				actualFingerprint,
 			))
 		})
 	})
