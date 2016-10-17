@@ -239,8 +239,8 @@ Please make all pull requests to the `develop` branch, and
 
 ### Project management
 
-The CI for this project can be found at https://sunrise.ci.cf-app.com and the
+The CI for this project can be found at https://pivnet-resource.ci.cf-app.com and the
 scripts can be found in the
-[pivnet-resourece-ci repo](https://github.com/pivotal-cf/pivnet-resource-ci).
+[pivnet-resource-ci repo](https://github.com/pivotal-cf/pivnet-resource-ci).
 
 The roadmap is captured in [Pivotal Tracker](https://www.pivotaltracker.com/projects/1474244).
