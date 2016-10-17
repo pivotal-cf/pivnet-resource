@@ -1,6 +1,8 @@
 package extension
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -30,8 +32,68 @@ func NewExtendedClient(client Client, logger logger.Logger) ExtendedClient {
 }
 
 func (c ExtendedClient) ReleaseFingerprint(productSlug string, releaseID int) (string, error) {
-	url := fmt.Sprintf("/products/%s/releases/%d", productSlug, releaseID)
+	releaseURL := fmt.Sprintf("/products/%s/releases/%d", productSlug, releaseID)
 
+	releaseETag, err := c.etag(releaseURL)
+	if err != nil {
+		return "", err
+	}
+
+	productFilesURL := fmt.Sprintf(
+		"/products/%s/releases/%d/product_files",
+		productSlug,
+		releaseID,
+	)
+	productFilesETag, err := c.etag(productFilesURL)
+	if err != nil {
+		return "", err
+	}
+
+	fileGroupsURL := fmt.Sprintf(
+		"/products/%s/releases/%d/file_groups",
+		productSlug,
+		releaseID,
+	)
+	fileGroupsETag, err := c.etag(fileGroupsURL)
+	if err != nil {
+		return "", err
+	}
+
+	upgradePathsURL := fmt.Sprintf(
+		"/products/%s/releases/%d/upgrade_paths",
+		productSlug,
+		releaseID,
+	)
+	upgradePathsETag, err := c.etag(upgradePathsURL)
+	if err != nil {
+		return "", err
+	}
+
+	dependenciesURL := fmt.Sprintf(
+		"/products/%s/releases/%d/dependencies",
+		productSlug,
+		releaseID,
+	)
+	dependenciesETag, err := c.etag(dependenciesURL)
+	if err != nil {
+		return "", err
+	}
+
+	hasher := md5.New()
+	hasher.Write([]byte(fmt.Sprintf(
+		"%s%s%s%s%s",
+		releaseETag,
+		productFilesETag,
+		fileGroupsETag,
+		upgradePathsETag,
+		dependenciesETag,
+	)))
+	fingerprint := hex.EncodeToString(hasher.Sum(nil))
+
+	return fingerprint, nil
+}
+
+func (c ExtendedClient) etag(url string) (string, error) {
 	resp, _, err := c.c.MakeRequest("GET", url, http.StatusOK, nil, nil)
 	if err != nil {
 		return "", err
@@ -46,6 +108,7 @@ func (c ExtendedClient) ReleaseFingerprint(productSlug string, releaseID int) (s
 	c.logger.Debug("Received ETag", logger.Data{"etag": rawEtag})
 
 	// Weak ETag looks like: W/"my-etag"; strong ETag looks like: "my-etag"
+	// both are guaranteed to have double-quotes.
 	splitRawEtag := strings.SplitN(rawEtag, `"`, -1)
 
 	if len(splitRawEtag) < 2 {
@@ -53,6 +116,7 @@ func (c ExtendedClient) ReleaseFingerprint(productSlug string, releaseID int) (s
 	}
 
 	etag := splitRawEtag[1]
+
 	return etag, nil
 }
 

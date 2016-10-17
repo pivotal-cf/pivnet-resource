@@ -170,6 +170,7 @@ func (c Client) MakeRequest(
 	defer resp.Body.Close()
 
 	c.logger.Debug("Response status code", logger.Data{"status code": resp.StatusCode})
+	c.logger.Debug("Response headers", logger.Data{"headers": resp.Header})
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
