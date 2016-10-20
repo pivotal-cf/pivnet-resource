@@ -7,11 +7,11 @@ import (
 	"os"
 
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/check"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/filter"
 	"github.com/pivotal-cf/pivnet-resource/gp"
-	"github.com/pivotal-cf/pivnet-resource/logshim"
 	"github.com/pivotal-cf/pivnet-resource/semver"
 	"github.com/pivotal-cf/pivnet-resource/sorter"
 	"github.com/pivotal-cf/pivnet-resource/useragent"

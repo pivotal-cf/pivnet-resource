@@ -10,10 +10,10 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/globs"
 	"github.com/pivotal-cf/pivnet-resource/gp"
-	"github.com/pivotal-cf/pivnet-resource/logshim"
 	"github.com/pivotal-cf/pivnet-resource/md5sum"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/out"
