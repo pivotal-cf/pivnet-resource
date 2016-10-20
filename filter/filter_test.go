@@ -2,7 +2,6 @@ package filter_test
 
 import (
 	"github.com/pivotal-cf/go-pivnet"
-	gp "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/filter"
 
 	. "github.com/onsi/ginkgo"
@@ -41,13 +40,13 @@ var _ = Describe("Filter", func() {
 	Describe("ReleasesByReleaseType", func() {
 		var (
 			releaseType pivnet.ReleaseType
-			releases    []gp.Release
+			releases    []pivnet.Release
 		)
 
 		BeforeEach(func() {
 			releaseType = pivnet.ReleaseType("foo")
 
-			releases = []gp.Release{
+			releases = []pivnet.Release{
 				{
 					ID:          1,
 					Version:     "version1",
@@ -95,13 +94,13 @@ var _ = Describe("Filter", func() {
 	Describe("ReleasesByVersion", func() {
 		var (
 			version  string
-			releases []gp.Release
+			releases []pivnet.Release
 		)
 
 		BeforeEach(func() {
 			version = "version2"
 
-			releases = []gp.Release{
+			releases = []pivnet.Release{
 				{
 					ID:          1,
 					Version:     "version1",
