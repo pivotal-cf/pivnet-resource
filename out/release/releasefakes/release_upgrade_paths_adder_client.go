@@ -18,14 +18,13 @@ type ReleaseUpgradePathsAdderClient struct {
 	addReleaseUpgradePathReturns struct {
 		result1 error
 	}
-	GetReleaseStub        func(productSlug string, releaseVersion string) (go_pivnet.Release, error)
-	getReleaseMutex       sync.RWMutex
-	getReleaseArgsForCall []struct {
-		productSlug    string
-		releaseVersion string
+	ReleasesForProductSlugStub        func(productSlug string) ([]go_pivnet.Release, error)
+	releasesForProductSlugMutex       sync.RWMutex
+	releasesForProductSlugArgsForCall []struct {
+		productSlug string
 	}
-	getReleaseReturns struct {
-		result1 go_pivnet.Release
+	releasesForProductSlugReturns struct {
+		result1 []go_pivnet.Release
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -67,37 +66,36 @@ func (fake *ReleaseUpgradePathsAdderClient) AddReleaseUpgradePathReturns(result1
 	}{result1}
 }
 
-func (fake *ReleaseUpgradePathsAdderClient) GetRelease(productSlug string, releaseVersion string) (go_pivnet.Release, error) {
-	fake.getReleaseMutex.Lock()
-	fake.getReleaseArgsForCall = append(fake.getReleaseArgsForCall, struct {
-		productSlug    string
-		releaseVersion string
-	}{productSlug, releaseVersion})
-	fake.recordInvocation("GetRelease", []interface{}{productSlug, releaseVersion})
-	fake.getReleaseMutex.Unlock()
-	if fake.GetReleaseStub != nil {
-		return fake.GetReleaseStub(productSlug, releaseVersion)
+func (fake *ReleaseUpgradePathsAdderClient) ReleasesForProductSlug(productSlug string) ([]go_pivnet.Release, error) {
+	fake.releasesForProductSlugMutex.Lock()
+	fake.releasesForProductSlugArgsForCall = append(fake.releasesForProductSlugArgsForCall, struct {
+		productSlug string
+	}{productSlug})
+	fake.recordInvocation("ReleasesForProductSlug", []interface{}{productSlug})
+	fake.releasesForProductSlugMutex.Unlock()
+	if fake.ReleasesForProductSlugStub != nil {
+		return fake.ReleasesForProductSlugStub(productSlug)
 	} else {
-		return fake.getReleaseReturns.result1, fake.getReleaseReturns.result2
+		return fake.releasesForProductSlugReturns.result1, fake.releasesForProductSlugReturns.result2
 	}
 }
 
-func (fake *ReleaseUpgradePathsAdderClient) GetReleaseCallCount() int {
-	fake.getReleaseMutex.RLock()
-	defer fake.getReleaseMutex.RUnlock()
-	return len(fake.getReleaseArgsForCall)
+func (fake *ReleaseUpgradePathsAdderClient) ReleasesForProductSlugCallCount() int {
+	fake.releasesForProductSlugMutex.RLock()
+	defer fake.releasesForProductSlugMutex.RUnlock()
+	return len(fake.releasesForProductSlugArgsForCall)
 }
 
-func (fake *ReleaseUpgradePathsAdderClient) GetReleaseArgsForCall(i int) (string, string) {
-	fake.getReleaseMutex.RLock()
-	defer fake.getReleaseMutex.RUnlock()
-	return fake.getReleaseArgsForCall[i].productSlug, fake.getReleaseArgsForCall[i].releaseVersion
+func (fake *ReleaseUpgradePathsAdderClient) ReleasesForProductSlugArgsForCall(i int) string {
+	fake.releasesForProductSlugMutex.RLock()
+	defer fake.releasesForProductSlugMutex.RUnlock()
+	return fake.releasesForProductSlugArgsForCall[i].productSlug
 }
 
-func (fake *ReleaseUpgradePathsAdderClient) GetReleaseReturns(result1 go_pivnet.Release, result2 error) {
-	fake.GetReleaseStub = nil
-	fake.getReleaseReturns = struct {
-		result1 go_pivnet.Release
+func (fake *ReleaseUpgradePathsAdderClient) ReleasesForProductSlugReturns(result1 []go_pivnet.Release, result2 error) {
+	fake.ReleasesForProductSlugStub = nil
+	fake.releasesForProductSlugReturns = struct {
+		result1 []go_pivnet.Release
 		result2 error
 	}{result1, result2}
 }
@@ -107,8 +105,8 @@ func (fake *ReleaseUpgradePathsAdderClient) Invocations() map[string][][]interfa
 	defer fake.invocationsMutex.RUnlock()
 	fake.addReleaseUpgradePathMutex.RLock()
 	defer fake.addReleaseUpgradePathMutex.RUnlock()
-	fake.getReleaseMutex.RLock()
-	defer fake.getReleaseMutex.RUnlock()
+	fake.releasesForProductSlugMutex.RLock()
+	defer fake.releasesForProductSlugMutex.RUnlock()
 	return fake.invocations
 }
 

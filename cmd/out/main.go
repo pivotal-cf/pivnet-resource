@@ -12,6 +12,7 @@ import (
 	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
+	"github.com/pivotal-cf/pivnet-resource/filter"
 	"github.com/pivotal-cf/pivnet-resource/globs"
 	"github.com/pivotal-cf/pivnet-resource/gp"
 	"github.com/pivotal-cf/pivnet-resource/md5sum"
@@ -144,10 +145,9 @@ func main() {
 	}
 
 	validation := validator.NewOutValidator(input)
-
 	semverConverter := semver.NewSemverConverter(logger)
-
 	md5summer := md5sum.NewFileSummer()
+	f := filter.NewFilter()
 
 	combinedClient := gp.CombinedClient{
 		pivnetClient,
@@ -194,6 +194,7 @@ func main() {
 		combinedClient,
 		m,
 		input.Source.ProductSlug,
+		f,
 	)
 
 	releaseFinalizer := release.NewFinalizer(

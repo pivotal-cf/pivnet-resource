@@ -1,6 +1,7 @@
 package release_test
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -20,6 +21,13 @@ var _ = Describe("ReleaseUpgradePathsAdder", func() {
 			l *log.Logger
 
 			pivnetClient *releasefakes.ReleaseUpgradePathsAdderClient
+			fakeFilter   *releasefakes.FakeFilter
+
+			existingReleases []pivnet.Release
+			filteredReleases []pivnet.Release
+
+			existingReleasesErr error
+			filterErr           error
 
 			mdata metadata.Metadata
 
@@ -31,29 +39,50 @@ var _ = Describe("ReleaseUpgradePathsAdder", func() {
 
 		BeforeEach(func() {
 			pivnetClient = &releasefakes.ReleaseUpgradePathsAdderClient{}
+			fakeFilter = &releasefakes.FakeFilter{}
+
 			l = log.New(ioutil.Discard, "it doesn't matter", 0)
+
+			existingReleases = []pivnet.Release{
+				{
+					ID:      1234,
+					Version: "1.2.3",
+				},
+				{
+					ID:      1235,
+					Version: "1.2.4",
+				},
+				{
+					ID:      2345,
+					Version: "2.3.4",
+				},
+				{
+					ID:      3456,
+					Version: "3.4.5",
+				},
+			}
+
+			filteredReleases = []pivnet.Release{
+				existingReleases[0],
+				existingReleases[1],
+			}
 
 			productSlug = "some-product-slug"
 
-			pivnetRelease = pivnet.Release{
-				Availability: "some-value",
-				ID:           1337,
-				Version:      "some-version",
-				EULA: &pivnet.EULA{
-					Slug: "a_eula_slug",
-				},
-			}
+			pivnetRelease = existingReleases[2]
 
 			mdata = metadata.Metadata{
 				Release: &metadata.Release{
-					Availability: "some-value",
-					Version:      "some-version",
-					EULASlug:     "a_eula_slug",
+					Version: "some-version",
 				},
 				ProductFiles: []metadata.ProductFile{},
+				UpgradePaths: []metadata.UpgradePath{
+					{},
+				},
 			}
 
-			pivnetClient.AddReleaseUpgradePathReturns(nil)
+			existingReleasesErr = nil
+			filterErr = nil
 		})
 
 		JustBeforeEach(func() {
@@ -62,97 +91,130 @@ var _ = Describe("ReleaseUpgradePathsAdder", func() {
 				pivnetClient,
 				mdata,
 				productSlug,
+				fakeFilter,
 			)
+
+			pivnetClient.ReleasesForProductSlugReturns(existingReleases, existingReleasesErr)
+			fakeFilter.ReleasesByVersionReturns(filteredReleases, filterErr)
 		})
 
-		Context("when release upgrade paths are provided", func() {
+		Describe("upgrade path via ID", func() {
 			BeforeEach(func() {
-				mdata.UpgradePaths = []metadata.UpgradePath{
-					{
-						ID:      9876,
-						Version: "some-previous-release-version",
-					},
-					{
-						ID:      8765,
-						Version: "some-other-previous-release-version",
-					},
-				}
+				mdata.UpgradePaths[0].ID = existingReleases[0].ID
+				mdata.UpgradePaths[0].Version = ""
 			})
 
 			It("adds the upgrade paths", func() {
 				err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(pivnetClient.AddReleaseUpgradePathCallCount()).To(Equal(2))
+				Expect(pivnetClient.AddReleaseUpgradePathCallCount()).To(Equal(1))
+				invokedProductSlug, invokedReleaseID, invokedPreviousReleaseID :=
+					pivnetClient.AddReleaseUpgradePathArgsForCall(0)
+				Expect(invokedProductSlug).To(Equal(productSlug))
+				Expect(invokedReleaseID).To(Equal(pivnetRelease.ID))
+				Expect(invokedPreviousReleaseID).To(Equal(existingReleases[0].ID))
 			})
 
-			Context("when the previous release ID is zero", func() {
+			Context("when provided ID does not match any existing release", func() {
 				BeforeEach(func() {
-					mdata.UpgradePaths[1].ID = 0
-
-					previousRelease := pivnet.Release{
-						ID: 9876,
-					}
-
-					pivnetClient.GetReleaseReturns(previousRelease, nil)
-				})
-
-				It("obtains the previous release from the version and product slug", func() {
-					err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(pivnetClient.AddReleaseUpgradePathCallCount()).To(Equal(2))
-					Expect(pivnetClient.GetReleaseCallCount()).To(Equal(1))
-				})
-
-				Context("when obtaining the previous release returns an error", func() {
-					var (
-						expectedErr error
-					)
-
-					BeforeEach(func() {
-						expectedErr = fmt.Errorf("some release error")
-						pivnetClient.GetReleaseReturns(pivnet.Release{}, expectedErr)
-					})
-
-					It("forwards the error", func() {
-						err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
-						Expect(err).To(HaveOccurred())
-
-						Expect(err).To(Equal(expectedErr))
-					})
-				})
-
-				Context("when previous release version is empty", func() {
-					BeforeEach(func() {
-						mdata.UpgradePaths[1].Version = ""
-					})
-
-					It("returns an error", func() {
-						err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
-						Expect(err).To(HaveOccurred())
-
-						Expect(err.Error()).To(ContainSubstring("upgrade_paths[1]"))
-					})
-				})
-			})
-
-			Context("when adding dependency returns an error ", func() {
-				var (
-					expectedErr error
-				)
-
-				BeforeEach(func() {
-					expectedErr = fmt.Errorf("boom")
-					pivnetClient.AddReleaseUpgradePathReturns(expectedErr)
+					mdata.UpgradePaths[0].ID = 19283
 				})
 
 				It("returns an error", func() {
 					err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
 					Expect(err).To(HaveOccurred())
 
-					Expect(err).To(Equal(expectedErr))
+					Expect(err.Error()).To(MatchRegexp("No releases found for id: '%d'", mdata.UpgradePaths[0].ID))
 				})
+			})
+		})
+
+		Describe("upgrade path via version", func() {
+			BeforeEach(func() {
+				mdata.UpgradePaths[0].ID = 0
+				mdata.UpgradePaths[0].Version = "1.2.*"
+			})
+
+			It("filters all the releases by the provided version", func() {
+				err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(pivnetClient.AddReleaseUpgradePathCallCount()).To(Equal(2))
+				Expect(fakeFilter.ReleasesByVersionCallCount()).To(Equal(1))
+			})
+
+			Context("when filtering releases returns an error", func() {
+				BeforeEach(func() {
+					filterErr = errors.New("filter err")
+				})
+
+				It("returns an error", func() {
+					err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
+					Expect(err).To(HaveOccurred())
+
+					Expect(err).To(Equal(filterErr))
+				})
+			})
+
+			Context("when filtered releases are empty", func() {
+				BeforeEach(func() {
+					filteredReleases = []pivnet.Release{}
+				})
+
+				It("returns an error", func() {
+					err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
+					Expect(err).To(HaveOccurred())
+
+					Expect(err.Error()).To(MatchRegexp("No releases found for version: '%s'", mdata.UpgradePaths[0].Version))
+				})
+			})
+		})
+
+		Context("when previous release version is empty and ID is 0", func() {
+			BeforeEach(func() {
+				mdata.UpgradePaths[0].Version = ""
+				mdata.UpgradePaths[0].ID = 0
+			})
+
+			It("returns an error", func() {
+				err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(ContainSubstring("upgrade_paths[0]"))
+			})
+		})
+
+		Context("when getting all releases returns an error ", func() {
+			BeforeEach(func() {
+				existingReleasesErr = errors.New("existing releases err")
+			})
+
+			It("returns an error", func() {
+				err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(Equal(existingReleasesErr))
+			})
+		})
+
+		Context("when adding upgrade path returns an error ", func() {
+			var (
+				expectedErr error
+			)
+
+			BeforeEach(func() {
+				mdata.UpgradePaths[0].ID = existingReleases[0].ID
+
+				expectedErr = fmt.Errorf("boom")
+				pivnetClient.AddReleaseUpgradePathReturns(expectedErr)
+			})
+
+			It("returns an error", func() {
+				err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(Equal(expectedErr))
 			})
 		})
 	})
