@@ -144,6 +144,27 @@ var _ = Describe("ReleaseUpgradePathsAdder", func() {
 				Expect(fakeFilter.ReleasesByVersionCallCount()).To(Equal(1))
 			})
 
+			Context("when filtering returns the same upgrade path for different filters", func() {
+				BeforeEach(func() {
+					mdata.UpgradePaths = []metadata.UpgradePath{
+						{
+							Version: "1.2.*",
+						},
+						{
+							Version: "this will also match the same releases",
+						},
+					}
+				})
+
+				It("only attempts to add each unique upgrade path once", func() {
+					err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(pivnetClient.AddReleaseUpgradePathCallCount()).To(Equal(2))
+					Expect(fakeFilter.ReleasesByVersionCallCount()).To(Equal(2))
+				})
+			})
+
 			Context("when filtering releases returns an error", func() {
 				BeforeEach(func() {
 					filterErr = errors.New("filter err")

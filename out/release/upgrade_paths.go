@@ -49,7 +49,7 @@ func (rf ReleaseUpgradePathsAdder) AddReleaseUpgradePaths(release pivnet.Release
 		return err
 	}
 
-	var upgradeFromReleases []pivnet.Release
+	upgradeFromReleases := map[pivnet.Release]interface{}{}
 
 	for i, u := range rf.metadata.UpgradePaths {
 		if u.ID == 0 && u.Version == "" {
@@ -69,18 +69,20 @@ func (rf ReleaseUpgradePathsAdder) AddReleaseUpgradePaths(release pivnet.Release
 				return fmt.Errorf("No releases found for version: '%s'", u.Version)
 			}
 
-			upgradeFromReleases = append(upgradeFromReleases, matchingReleases...)
+			for _, r := range matchingReleases {
+				upgradeFromReleases[r] = nil
+			}
 		} else {
 			r, err := filterReleasesForID(allReleases, u.ID)
 			if err != nil {
 				return err
 			}
 
-			upgradeFromReleases = append(upgradeFromReleases, r)
+			upgradeFromReleases[r] = nil
 		}
 	}
 
-	for _, r := range upgradeFromReleases {
+	for r, _ := range upgradeFromReleases {
 		rf.logger.Println(fmt.Sprintf(
 			"Adding upgrade path: '%s'",
 			r.Version,
