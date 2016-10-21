@@ -147,3 +147,20 @@ Within each `release` element either:
 or:
 
 * `version` and `product.slug` must be present and non-empty.
+
+## Upgrade paths
+
+The top-level `upgrade_paths` key is optional.
+If provided, it is permitted to be an empty array.
+
+Each element in `upgrade_paths` must have either:
+
+* `id` - must be present and non-zero
+
+or:
+
+* `version` - must be present and non-empty.
+  - Regular expressions are permitted - all matching
+    upgrade paths will be added.
+  - If an upgrade path matches multiple regular expressions,
+    it will only be added once.
