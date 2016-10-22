@@ -27,6 +27,8 @@ var _ = Describe("Check", func() {
 		checkRequest concourse.CheckRequest
 		checkCommand *check.CheckCommand
 
+		versionsWithFingerprints []string
+
 		releaseTypes    []pivnet.ReleaseType
 		releaseTypesErr error
 
@@ -36,7 +38,6 @@ var _ = Describe("Check", func() {
 
 		releasesByReleaseTypeErr error
 		releasesByVersionErr     error
-		fingerprintErr           error
 		logging                  *log.Logger
 
 		tempDir     string
@@ -53,7 +54,6 @@ var _ = Describe("Check", func() {
 		releasesByVersionErr = nil
 		releaseTypesErr = nil
 		releasesErr = nil
-		fingerprintErr = nil
 
 		releaseTypes = []pivnet.ReleaseType{
 			pivnet.ReleaseType("foo release"),
@@ -64,19 +64,29 @@ var _ = Describe("Check", func() {
 		allReleases = []pivnet.Release{
 			{
 				ID:          1,
-				Version:     "A",
+				Version:     "1.2.3",
 				ReleaseType: releaseTypes[0],
+				UpdatedAt:   "time1",
 			},
 			{
 				ID:          2,
-				Version:     "C",
+				Version:     "2.3.4",
 				ReleaseType: releaseTypes[1],
+				UpdatedAt:   "time2",
 			},
 			{
 				ID:          3,
-				Version:     "B",
+				Version:     "1.2.4",
 				ReleaseType: releaseTypes[2],
+				UpdatedAt:   "time3",
 			},
+		}
+
+		versionsWithFingerprints = make([]string, len(allReleases))
+		for i, r := range allReleases {
+			v, err := versions.CombineVersionAndFingerprint(r.Version, r.UpdatedAt)
+			Expect(err).NotTo(HaveOccurred())
+			versionsWithFingerprints[i] = v
 		}
 
 		filteredReleases = allReleases
@@ -100,11 +110,6 @@ var _ = Describe("Check", func() {
 	JustBeforeEach(func() {
 		fakePivnetClient.ReleaseTypesReturns(releaseTypes, releaseTypesErr)
 		fakePivnetClient.ReleasesForProductSlugReturns(allReleases, releasesErr)
-
-		fakePivnetClient.ReleaseFingerprintStub = func(productSlug string, releaseID int) (string, error) {
-			fingerprint := fmt.Sprintf("fingerprint-%d", releaseID)
-			return fingerprint, fingerprintErr
-		}
 
 		fakeFilter.ReleasesByReleaseTypeReturns(filteredReleases, releasesByReleaseTypeErr)
 		fakeFilter.ReleasesByVersionReturns(filteredReleases, releasesByVersionErr)
@@ -130,10 +135,7 @@ var _ = Describe("Check", func() {
 		response, err := checkCommand.Run(checkRequest)
 		Expect(err).NotTo(HaveOccurred())
 
-		expectedVersionWithFingerprint, err := versions.CombineVersionAndFingerprint(
-			allReleases[0].Version, fmt.Sprintf("fingerprint-%d", allReleases[0].ID),
-		)
-		Expect(err).NotTo(HaveOccurred())
+		expectedVersionWithFingerprint := versionsWithFingerprints[0]
 
 		Expect(response).To(HaveLen(1))
 		Expect(response[0].ProductVersion).To(Equal(expectedVersionWithFingerprint))
@@ -211,26 +213,10 @@ var _ = Describe("Check", func() {
 		})
 	})
 
-	Context("when there is an error getting fingerprint", func() {
-		BeforeEach(func() {
-			fingerprintErr = fmt.Errorf("some error")
-		})
-
-		It("returns an error", func() {
-			_, err := checkCommand.Run(checkRequest)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(ContainSubstring("some error"))
-		})
-	})
-
 	Describe("when a version is provided", func() {
 		Context("when the version is the latest", func() {
 			BeforeEach(func() {
-				versionWithFingerprint, err := versions.CombineVersionAndFingerprint(
-					allReleases[0].Version, fmt.Sprintf("fingerprint-%d", allReleases[0].ID),
-				)
-				Expect(err).NotTo(HaveOccurred())
+				versionWithFingerprint := versionsWithFingerprints[0]
 
 				checkRequest.Version = concourse.Version{
 					ProductVersion: versionWithFingerprint,
@@ -241,10 +227,7 @@ var _ = Describe("Check", func() {
 				response, err := checkCommand.Run(checkRequest)
 				Expect(err).NotTo(HaveOccurred())
 
-				versionWithFingerprintA, err := versions.CombineVersionAndFingerprint(
-					allReleases[0].Version, fmt.Sprintf("fingerprint-%d", allReleases[0].ID),
-				)
-				Expect(err).NotTo(HaveOccurred())
+				versionWithFingerprintA := versionsWithFingerprints[0]
 
 				Expect(response).To(HaveLen(1))
 				Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintA))
@@ -253,10 +236,7 @@ var _ = Describe("Check", func() {
 
 		Context("when the version is not the latest", func() {
 			BeforeEach(func() {
-				versionWithFingerprint, err := versions.CombineVersionAndFingerprint(
-					allReleases[2].Version, fmt.Sprintf("fingerprint-%d", allReleases[2].ID),
-				)
-				Expect(err).NotTo(HaveOccurred())
+				versionWithFingerprint := versionsWithFingerprints[2]
 
 				checkRequest.Version = concourse.Version{
 					ProductVersion: versionWithFingerprint,
@@ -267,15 +247,8 @@ var _ = Describe("Check", func() {
 				response, err := checkCommand.Run(checkRequest)
 				Expect(err).NotTo(HaveOccurred())
 
-				versionWithFingerprintC, err := versions.CombineVersionAndFingerprint(
-					allReleases[1].Version, fmt.Sprintf("fingerprint-%d", allReleases[1].ID),
-				)
-				Expect(err).NotTo(HaveOccurred())
-
-				versionWithFingerprintA, err := versions.CombineVersionAndFingerprint(
-					allReleases[0].Version, fmt.Sprintf("fingerprint-%d", allReleases[0].ID),
-				)
-				Expect(err).NotTo(HaveOccurred())
+				versionWithFingerprintA := versionsWithFingerprints[0]
+				versionWithFingerprintC := versionsWithFingerprints[1]
 
 				Expect(response).To(HaveLen(2))
 				Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintC))
@@ -295,10 +268,7 @@ var _ = Describe("Check", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			versionWithFingerprintC, err := versions.CombineVersionAndFingerprint(
-				allReleases[1].Version, fmt.Sprintf("fingerprint-%d", allReleases[1].ID),
-			)
-			Expect(err).NotTo(HaveOccurred())
+			versionWithFingerprintC := versionsWithFingerprints[1]
 
 			Expect(response).To(HaveLen(1))
 			Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintC))
@@ -349,10 +319,7 @@ var _ = Describe("Check", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			versionWithFingerprintC, err := versions.CombineVersionAndFingerprint(
-				allReleases[1].Version, fmt.Sprintf("fingerprint-%d", allReleases[1].ID),
-			)
-			Expect(err).NotTo(HaveOccurred())
+			versionWithFingerprintC := versionsWithFingerprints[1]
 
 			Expect(response).To(HaveLen(1))
 			Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintC))
@@ -379,23 +346,15 @@ var _ = Describe("Check", func() {
 
 		BeforeEach(func() {
 			checkRequest.Source.SortBy = concourse.SortBySemver
-			checkRequest.Version = concourse.Version{
-				ProductVersion: "1.2.3#fingerprint-5432",
-			}
 
 			semverOrderedReleases = []pivnet.Release{
-				{
-					ID:      7654,
-					Version: "2.3.4",
-				},
-				{
-					ID:      6543,
-					Version: "1.2.4",
-				},
-				{
-					ID:      5432,
-					Version: "1.2.3",
-				},
+				allReleases[1], // 2.3.4
+				allReleases[2], // 1.2.4
+				allReleases[0], // 1.2.3
+			}
+
+			checkRequest.Version = concourse.Version{
+				ProductVersion: versionsWithFingerprints[0], // 1.2.3#time1
 			}
 
 			fakeSorter.SortBySemverReturns(semverOrderedReleases, nil)
@@ -405,18 +364,10 @@ var _ = Describe("Check", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			versionsWithFingerprints := make([]string, len(semverOrderedReleases))
-
-			versionsWithFingerprints[0], err = versions.CombineVersionAndFingerprint(
-				"1.2.4", fmt.Sprintf("fingerprint-%d", 6543),
-			)
-			versionsWithFingerprints[1], err = versions.CombineVersionAndFingerprint(
-				"2.3.4", fmt.Sprintf("fingerprint-%d", 7654),
-			)
-
 			Expect(response).To(HaveLen(2))
-			Expect(response[0].ProductVersion).To(Equal(versionsWithFingerprints[0]))
+			Expect(response[0].ProductVersion).To(Equal(versionsWithFingerprints[2]))
 			Expect(response[1].ProductVersion).To(Equal(versionsWithFingerprints[1]))
+
 			Expect(fakeSorter.SortBySemverCallCount()).To(Equal(1))
 		})
 

@@ -27,7 +27,6 @@ type sorter interface {
 type pivnetClient interface {
 	ReleaseTypes() ([]pivnet.ReleaseType, error)
 	ReleasesForProductSlug(string) ([]pivnet.Release, error)
-	ReleaseFingerprint(productSlug string, releaseID int) (string, error)
 }
 
 type CheckCommand struct {
@@ -60,48 +59,16 @@ func NewCheckCommand(
 func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckResponse, error) {
 	c.logger.Println("Received input, starting Check CMD run")
 
-	logDir := filepath.Dir(c.logFilePath)
-	existingLogFiles, err := filepath.Glob(filepath.Join(logDir, "*.log*"))
+	err := c.removeExistingLogFiles()
 	if err != nil {
-		// This is untested because the only error returned by filepath.Glob is a
-		// malformed glob, and this glob is hard-coded to be correct.
 		return nil, err
-	}
-
-	c.logger.Println(fmt.Sprintf("Located logfiles: %v", existingLogFiles))
-
-	for _, f := range existingLogFiles {
-		if filepath.Base(f) != filepath.Base(c.logFilePath) {
-			c.logger.Println(fmt.Sprintf("Removing existing log file: %s", f))
-			err := os.Remove(f)
-			if err != nil {
-				// This is untested because it is too hard to force os.Remove to return
-				// an error.
-				return nil, err
-			}
-		}
 	}
 
 	releaseType := input.Source.ReleaseType
 
-	c.logger.Println(fmt.Sprintf("Validating release type: '%s'", releaseType))
-	releaseTypes, err := c.pivnetClient.ReleaseTypes()
+	err = c.validateReleaseType(releaseType)
 	if err != nil {
 		return nil, err
-	}
-
-	releaseTypesAsStrings := make([]string, len(releaseTypes))
-	for i, r := range releaseTypes {
-		releaseTypesAsStrings[i] = string(r)
-	}
-
-	if releaseType != "" && !containsString(releaseTypesAsStrings, releaseType) {
-		releaseTypesPrintable := fmt.Sprintf("['%s']", strings.Join(releaseTypesAsStrings, "', '"))
-		return nil, fmt.Errorf(
-			"provided release type: '%s' must be one of: %s",
-			releaseType,
-			releaseTypesPrintable,
-		)
 	}
 
 	productSlug := input.Source.ProductSlug
@@ -140,18 +107,19 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	versionsWithFingerprints, err := versionsWithFingerprints(c.pivnetClient, productSlug, releases)
+	vs, err := releaseVersions(releases)
 	if err != nil {
-		return nil, err
+		// Untested because versions.CombineVersionAndFingerprint cannot be forced to return an error.
+		return concourse.CheckResponse{}, err
 	}
 
-	if len(versionsWithFingerprints) == 0 {
+	if len(vs) == 0 {
 		return concourse.CheckResponse{}, nil
 	}
 
 	c.logger.Println("Gathering new versions")
 
-	newVersions, err := versions.Since(versionsWithFingerprints, input.Version.ProductVersion)
+	newVersions, err := versions.Since(vs, input.Version.ProductVersion)
 	if err != nil {
 		// Untested because versions.Since cannot be forced to return an error.
 		return nil, err
@@ -171,12 +139,62 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	}
 
 	if len(out) == 0 {
-		out = append(out, concourse.Version{ProductVersion: versionsWithFingerprints[0]})
+		out = append(out, concourse.Version{ProductVersion: vs[0]})
 	}
 
 	c.logger.Println("Finishing check and returning ouput")
 
 	return out, nil
+}
+
+func (c *CheckCommand) removeExistingLogFiles() error {
+	logDir := filepath.Dir(c.logFilePath)
+	existingLogFiles, err := filepath.Glob(filepath.Join(logDir, "*.log*"))
+	if err != nil {
+		// This is untested because the only error returned by filepath.Glob is a
+		// malformed glob, and this glob is hard-coded to be correct.
+		return err
+	}
+
+	c.logger.Println(fmt.Sprintf("Located logfiles: %v", existingLogFiles))
+
+	for _, f := range existingLogFiles {
+		if filepath.Base(f) != filepath.Base(c.logFilePath) {
+			c.logger.Println(fmt.Sprintf("Removing existing log file: %s", f))
+			err := os.Remove(f)
+			if err != nil {
+				// This is untested because it is too hard to force os.Remove to return
+				// an error.
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (c *CheckCommand) validateReleaseType(releaseType string) error {
+	c.logger.Println(fmt.Sprintf("Validating release type: '%s'", releaseType))
+	releaseTypes, err := c.pivnetClient.ReleaseTypes()
+	if err != nil {
+		return err
+	}
+
+	releaseTypesAsStrings := make([]string, len(releaseTypes))
+	for i, r := range releaseTypes {
+		releaseTypesAsStrings[i] = string(r)
+	}
+
+	if releaseType != "" && !containsString(releaseTypesAsStrings, releaseType) {
+		releaseTypesPrintable := fmt.Sprintf("['%s']", strings.Join(releaseTypesAsStrings, "', '"))
+		return fmt.Errorf(
+			"provided release type: '%s' must be one of: %s",
+			releaseType,
+			releaseTypesPrintable,
+		)
+	}
+
+	return nil
 }
 
 func containsString(strings []string, str string) bool {
@@ -188,26 +206,16 @@ func containsString(strings []string, str string) bool {
 	return false
 }
 
-// versionsWithFingerprints adds the release Fingerprints to the release versions
-func versionsWithFingerprints(
-	c pivnetClient,
-	productSlug string,
-	releases []pivnet.Release,
-) ([]string, error) {
-	var allVersions []string
-	for _, r := range releases {
-		fingerprint, err := c.ReleaseFingerprint(productSlug, r.ID)
+func releaseVersions(releases []pivnet.Release) ([]string, error) {
+	releaseVersions := make([]string, len(releases))
+
+	var err error
+	for i, r := range releases {
+		releaseVersions[i], err = versions.CombineVersionAndFingerprint(r.Version, r.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
-
-		version, err := versions.CombineVersionAndFingerprint(r.Version, fingerprint)
-		if err != nil {
-			return nil, err
-		}
-
-		allVersions = append(allVersions, version)
 	}
 
-	return allVersions, nil
+	return releaseVersions, nil
 }

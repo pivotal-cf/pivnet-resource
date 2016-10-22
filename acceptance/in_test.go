@@ -25,7 +25,6 @@ var _ = Describe("In", func() {
 		releaseType = pivnet.ReleaseType("Minor Release")
 
 		version                string
-		fingerprint            string
 		versionWithFingerprint string
 		destDirectory          string
 
@@ -47,10 +46,7 @@ var _ = Describe("In", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		fingerprint, err = pivnetClient.ReleaseFingerprint(productSlug, release.ID)
-		Expect(err).NotTo(HaveOccurred())
-
-		versionWithFingerprint, err = versions.CombineVersionAndFingerprint(version, fingerprint)
+		versionWithFingerprint, err = versions.CombineVersionAndFingerprint(release.Version, release.UpdatedAt)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Creating temp directory")

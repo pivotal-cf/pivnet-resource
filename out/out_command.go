@@ -86,7 +86,7 @@ type releaseUpgradePathsAdder interface {
 
 //go:generate counterfeiter --fake-name Finalizer . finalizer
 type finalizer interface {
-	Finalize(release pivnet.Release) (concourse.OutResponse, error)
+	Finalize(productSlug string, releaseVersion string) (concourse.OutResponse, error)
 }
 
 //go:generate counterfeiter --fake-name Validation . validation
@@ -168,7 +168,7 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		return concourse.OutResponse{}, err
 	}
 
-	out, err := c.finalizer.Finalize(pivnetRelease)
+	out, err := c.finalizer.Finalize(input.Source.ProductSlug, pivnetRelease.Version)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}

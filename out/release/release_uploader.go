@@ -4,19 +4,22 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"time"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 )
 
 type ReleaseUploader struct {
-	s3          s3Client
-	pivnet      uploadClient
-	logger      *log.Logger
-	md5Summer   md5Summer
-	metadata    metadata.Metadata
-	sourcesDir  string
-	productSlug string
+	s3            s3Client
+	pivnet        uploadClient
+	logger        *log.Logger
+	md5Summer     md5Summer
+	metadata      metadata.Metadata
+	sourcesDir    string
+	productSlug   string
+	asyncTimeout  time.Duration
+	pollFrequency time.Duration
 }
 
 //go:generate counterfeiter --fake-name UploadClient . uploadClient
@@ -24,7 +27,8 @@ type uploadClient interface {
 	FindProductForSlug(slug string) (pivnet.Product, error)
 	CreateProductFile(pivnet.CreateProductFileConfig) (pivnet.ProductFile, error)
 	AddProductFile(productSlug string, releaseID int, productFileID int) error
-	GetProductFiles(productSlug string) ([]pivnet.ProductFile, error)
+	ProductFiles(productSlug string) ([]pivnet.ProductFile, error)
+	ProductFile(productSlug string, productFileID int) (pivnet.ProductFile, error)
 	DeleteProductFile(productSlug string, releaseID int) (pivnet.ProductFile, error)
 }
 
@@ -46,15 +50,19 @@ func NewReleaseUploader(
 	metadata metadata.Metadata,
 	sourcesDir,
 	productSlug string,
+	asyncTimeout time.Duration,
+	pollFrequency time.Duration,
 ) ReleaseUploader {
 	return ReleaseUploader{
-		s3:          s3,
-		pivnet:      pivnet,
-		logger:      logger,
-		md5Summer:   md5Summer,
-		metadata:    metadata,
-		sourcesDir:  sourcesDir,
-		productSlug: productSlug,
+		s3:            s3,
+		pivnet:        pivnet,
+		logger:        logger,
+		md5Summer:     md5Summer,
+		metadata:      metadata,
+		sourcesDir:    sourcesDir,
+		productSlug:   productSlug,
+		asyncTimeout:  asyncTimeout,
+		pollFrequency: pollFrequency,
 	}
 }
 
@@ -109,7 +117,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			}
 		}
 
-		productFiles, err := u.pivnet.GetProductFiles(u.productSlug)
+		productFiles, err := u.pivnet.ProductFiles(u.productSlug)
 		if err != nil {
 			return err
 		}
@@ -147,7 +155,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		u.logger.Println(fmt.Sprintf(
 			"Adding product file: '%s' with ID: %d",
-			filename,
+			uploadAs,
 			productFile.ID,
 		))
 
@@ -155,7 +163,46 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		if err != nil {
 			return err
 		}
+
+		err = u.pollForProductFile(productFile)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+func (u ReleaseUploader) pollForProductFile(productFile pivnet.ProductFile) error {
+	u.logger.Printf(
+		"Polling product file: '%s' for async transfer - will wait up to %v",
+		productFile.Name,
+		u.asyncTimeout,
+	)
+
+	timeoutTimer := time.NewTimer(u.asyncTimeout)
+	pollTicker := time.NewTicker(u.pollFrequency)
+
+	for {
+		select {
+		case <-timeoutTimer.C:
+			return fmt.Errorf("timed out")
+		case <-pollTicker.C:
+			pf, err := u.pivnet.ProductFile(u.productSlug, productFile.ID)
+			if err != nil {
+				return err
+			}
+
+			if pf.FileTransferStatus == "complete" {
+				u.logger.Printf("Product file: '%s' async transfer complete", productFile.Name)
+
+				timeoutTimer.Stop()
+				pollTicker.Stop()
+
+				return nil
+			}
+
+			u.logger.Printf("Product file: '%s' async transfer incomplete", productFile.Name)
+		}
+	}
 }

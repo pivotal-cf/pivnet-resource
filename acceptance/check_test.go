@@ -2,7 +2,6 @@ package acceptance
 
 import (
 	"encoding/json"
-	"fmt"
 	"os/exec"
 
 	. "github.com/onsi/ginkgo"
@@ -10,16 +9,17 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
+	"github.com/pivotal-cf/pivnet-resource/versions"
 )
 
 var _ = Describe("Check", func() {
 	var (
 		productSlug = "p-mysql"
 
-		versions      []string
-		command       *exec.Cmd
-		checkRequest  concourse.CheckRequest
-		stdinContents []byte
+		releaseVersions []string
+		command         *exec.Cmd
+		checkRequest    concourse.CheckRequest
+		stdinContents   []byte
 	)
 
 	BeforeEach(func() {
@@ -29,13 +29,13 @@ var _ = Describe("Check", func() {
 
 		releases := allReleases[:4]
 
-		By("Getting release Fingerprints")
-		versions = make([]string, len(releases))
+		By("Getting release versions")
+		releaseVersions = make([]string, len(releases))
 		for i, r := range releases {
-			releaseFingerprint, err := pivnetClient.ReleaseFingerprint(productSlug, r.ID)
+			releaseVersion, err := versions.CombineVersionAndFingerprint(r.Version, r.UpdatedAt)
 			Expect(err).NotTo(HaveOccurred())
 
-			versions[i] = fmt.Sprintf("%s#%s", r.Version, releaseFingerprint)
+			releaseVersions[i] = releaseVersion
 		}
 
 		By("Creating command object")
@@ -49,7 +49,7 @@ var _ = Describe("Check", func() {
 				Endpoint:    endpoint,
 			},
 			Version: concourse.Version{
-				ProductVersion: versions[3],
+				ProductVersion: releaseVersions[3],
 			},
 		}
 
@@ -57,7 +57,7 @@ var _ = Describe("Check", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	It("returns all newer versions than the provided version without error", func() {
+	It("returns all newer release versions than the provided version without error", func() {
 		By("Running the command")
 		session := run(command, stdinContents)
 		Eventually(session, executableTimeout).Should(gexec.Exit(0))
@@ -70,10 +70,10 @@ var _ = Describe("Check", func() {
 		By("Validating all the expected elements were returned")
 		Expect(response).To(HaveLen(3))
 
-		By("Validating the returned elements have the expected product versions")
-		Expect(response[0].ProductVersion).To(Equal(versions[2]))
-		Expect(response[1].ProductVersion).To(Equal(versions[1]))
-		Expect(response[2].ProductVersion).To(Equal(versions[0]))
+		By("Validating the returned elements have the expected product release versions")
+		Expect(response[0].ProductVersion).To(Equal(releaseVersions[2]))
+		Expect(response[1].ProductVersion).To(Equal(releaseVersions[1]))
+		Expect(response[2].ProductVersion).To(Equal(releaseVersions[0]))
 	})
 
 	Context("when validation fails", func() {

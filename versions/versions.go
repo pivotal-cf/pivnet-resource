@@ -46,8 +46,3 @@ func CombineVersionAndFingerprint(version string, fingerprint string) (string, e
 func combineVersionAndFingerprint(version string, fingerprint string) string {
 	return fmt.Sprintf("%s%s%s", version, fingerprintDelimiter, fingerprint)
 }
-
-//go:generate counterfeiter --fake-name FakeExtendedClient . extendedClient
-type extendedClient interface {
-	ReleaseFingerprint(productSlug string, releaseID int) (string, error)
-}

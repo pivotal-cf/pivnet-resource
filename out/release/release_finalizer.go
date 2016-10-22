@@ -2,6 +2,7 @@ package release
 
 import (
 	"fmt"
+	"log"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
@@ -10,7 +11,8 @@ import (
 )
 
 type ReleaseFinalizer struct {
-	pivnet      updateClient
+	logger      *log.Logger
+	pivnet      finalizerClient
 	metadata    metadata.Metadata
 	params      concourse.OutParams
 	sourcesDir  string
@@ -18,7 +20,8 @@ type ReleaseFinalizer struct {
 }
 
 func NewFinalizer(
-	pivnetClient updateClient,
+	pivnetClient finalizerClient,
+	logger *log.Logger,
 	params concourse.OutParams,
 	metadata metadata.Metadata,
 	sourcesDir,
@@ -26,6 +29,7 @@ func NewFinalizer(
 ) ReleaseFinalizer {
 	return ReleaseFinalizer{
 		pivnet:      pivnetClient,
+		logger:      logger,
 		params:      params,
 		metadata:    metadata,
 		sourcesDir:  sourcesDir,
@@ -33,40 +37,40 @@ func NewFinalizer(
 	}
 }
 
-//go:generate counterfeiter --fake-name UpdateClient . updateClient
-type updateClient interface {
-	ReleaseFingerprint(productSlug string, releaseID int) (string, error)
+//go:generate counterfeiter --fake-name FinalizerClient . finalizerClient
+type finalizerClient interface {
+	GetRelease(productSlug string, releaseVersion string) (pivnet.Release, error)
 }
 
-func (rf ReleaseFinalizer) Finalize(release pivnet.Release) (concourse.OutResponse, error) {
-	releaseFingerprint, err := rf.pivnet.ReleaseFingerprint(rf.productSlug, release.ID)
+func (rf ReleaseFinalizer) Finalize(productSlug string, releaseVersion string) (concourse.OutResponse, error) {
+	newRelease, err := rf.pivnet.GetRelease(productSlug, releaseVersion)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
 
-	outputVersion, err := versions.CombineVersionAndFingerprint(release.Version, releaseFingerprint)
+	outputVersion, err := versions.CombineVersionAndFingerprint(newRelease.Version, newRelease.UpdatedAt)
 	if err != nil {
 		return concourse.OutResponse{}, err // this will never return an error
 	}
 
 	metadata := []concourse.Metadata{
-		{Name: "version", Value: release.Version},
-		{Name: "release_type", Value: string(release.ReleaseType)},
-		{Name: "release_date", Value: release.ReleaseDate},
-		{Name: "description", Value: release.Description},
-		{Name: "release_notes_url", Value: release.ReleaseNotesURL},
-		{Name: "availability", Value: release.Availability},
-		{Name: "controlled", Value: fmt.Sprintf("%t", release.Controlled)},
-		{Name: "eccn", Value: release.ECCN},
-		{Name: "license_exception", Value: release.LicenseException},
-		{Name: "end_of_support_date", Value: release.EndOfSupportDate},
-		{Name: "end_of_guidance_date", Value: release.EndOfGuidanceDate},
-		{Name: "end_of_availability_date", Value: release.EndOfAvailabilityDate},
+		{Name: "version", Value: newRelease.Version},
+		{Name: "release_type", Value: string(newRelease.ReleaseType)},
+		{Name: "release_date", Value: newRelease.ReleaseDate},
+		{Name: "description", Value: newRelease.Description},
+		{Name: "release_notes_url", Value: newRelease.ReleaseNotesURL},
+		{Name: "availability", Value: newRelease.Availability},
+		{Name: "controlled", Value: fmt.Sprintf("%t", newRelease.Controlled)},
+		{Name: "eccn", Value: newRelease.ECCN},
+		{Name: "license_exception", Value: newRelease.LicenseException},
+		{Name: "end_of_support_date", Value: newRelease.EndOfSupportDate},
+		{Name: "end_of_guidance_date", Value: newRelease.EndOfGuidanceDate},
+		{Name: "end_of_availability_date", Value: newRelease.EndOfAvailabilityDate},
 	}
-	if release.EULA != nil {
+	if newRelease.EULA != nil {
 		metadata = append(
 			metadata,
-			concourse.Metadata{Name: "eula_slug", Value: release.EULA.Slug})
+			concourse.Metadata{Name: "eula_slug", Value: newRelease.EULA.Slug})
 	}
 
 	return concourse.OutResponse{

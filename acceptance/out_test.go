@@ -15,7 +15,6 @@ import (
 	"github.com/onsi/gomega/gexec"
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
-	"github.com/pivotal-cf/pivnet-resource/gp"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/versions"
 
@@ -151,7 +150,7 @@ var _ = Describe("Out", func() {
 			releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
 			Expect(err).NotTo(HaveOccurred())
 
-			releaseVersions, err := versionsWithFingerprints(pivnetClient, productSlug, releases)
+			releaseVersions, err := versionsWithFingerprints(releases)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(versionsWithoutFingerprints(releaseVersions)).NotTo(ContainElement(version))
@@ -164,7 +163,7 @@ var _ = Describe("Out", func() {
 			releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
 			Expect(err).NotTo(HaveOccurred())
 
-			releaseVersions, err = versionsWithFingerprints(pivnetClient, productSlug, releases)
+			releaseVersions, err = versionsWithFingerprints(releases)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(versionsWithoutFingerprints(releaseVersions)).To(ContainElement(version))
@@ -178,10 +177,9 @@ var _ = Describe("Out", func() {
 			release, err := pivnetClient.GetRelease(productSlug, version)
 			Expect(err).NotTo(HaveOccurred())
 
-			releaseFingerprint, err := pivnetClient.ReleaseFingerprint(productSlug, release.ID)
+			expectedVersion, err := versions.CombineVersionAndFingerprint(release.Version, release.UpdatedAt)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedVersion := fmt.Sprintf("%s#%s", version, releaseFingerprint)
 			Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
 
 			Expect(release.ReleaseType).To(Equal(releaseType))
@@ -240,7 +238,7 @@ var _ = Describe("Out", func() {
 				releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
 				Expect(err).NotTo(HaveOccurred())
 
-				releaseVersions, err := versionsWithFingerprints(pivnetClient, productSlug, releases)
+				releaseVersions, err := versionsWithFingerprints(releases)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(versionsWithoutFingerprints(releaseVersions)).NotTo(ContainElement(version))
@@ -253,7 +251,7 @@ var _ = Describe("Out", func() {
 				releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
 				Expect(err).NotTo(HaveOccurred())
 
-				releaseVersions, err = versionsWithFingerprints(pivnetClient, productSlug, releases)
+				releaseVersions, err = versionsWithFingerprints(releases)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(versionsWithoutFingerprints(releaseVersions)).To(ContainElement(version))
@@ -292,18 +290,11 @@ var _ = Describe("Out", func() {
 
 // versionsWithFingerprints adds the release Fingerprints to the release versions
 func versionsWithFingerprints(
-	c gp.CombinedClient,
-	productSlug string,
 	releases []pivnet.Release,
 ) ([]string, error) {
 	var allVersions []string
 	for _, r := range releases {
-		fingerprint, err := c.ReleaseFingerprint(productSlug, r.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		version, err := versions.CombineVersionAndFingerprint(r.Version, fingerprint)
+		version, err := versions.CombineVersionAndFingerprint(r.Version, r.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}

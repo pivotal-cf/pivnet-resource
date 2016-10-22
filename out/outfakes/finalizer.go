@@ -4,15 +4,15 @@ package outfakes
 import (
 	"sync"
 
-	go_pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 )
 
 type Finalizer struct {
-	FinalizeStub        func(release go_pivnet.Release) (concourse.OutResponse, error)
+	FinalizeStub        func(productSlug string, releaseVersion string) (concourse.OutResponse, error)
 	finalizeMutex       sync.RWMutex
 	finalizeArgsForCall []struct {
-		release go_pivnet.Release
+		productSlug    string
+		releaseVersion string
 	}
 	finalizeReturns struct {
 		result1 concourse.OutResponse
@@ -22,15 +22,16 @@ type Finalizer struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Finalizer) Finalize(release go_pivnet.Release) (concourse.OutResponse, error) {
+func (fake *Finalizer) Finalize(productSlug string, releaseVersion string) (concourse.OutResponse, error) {
 	fake.finalizeMutex.Lock()
 	fake.finalizeArgsForCall = append(fake.finalizeArgsForCall, struct {
-		release go_pivnet.Release
-	}{release})
-	fake.recordInvocation("Finalize", []interface{}{release})
+		productSlug    string
+		releaseVersion string
+	}{productSlug, releaseVersion})
+	fake.recordInvocation("Finalize", []interface{}{productSlug, releaseVersion})
 	fake.finalizeMutex.Unlock()
 	if fake.FinalizeStub != nil {
-		return fake.FinalizeStub(release)
+		return fake.FinalizeStub(productSlug, releaseVersion)
 	} else {
 		return fake.finalizeReturns.result1, fake.finalizeReturns.result2
 	}
@@ -42,10 +43,10 @@ func (fake *Finalizer) FinalizeCallCount() int {
 	return len(fake.finalizeArgsForCall)
 }
 
-func (fake *Finalizer) FinalizeArgsForCall(i int) go_pivnet.Release {
+func (fake *Finalizer) FinalizeArgsForCall(i int) (string, string) {
 	fake.finalizeMutex.RLock()
 	defer fake.finalizeMutex.RUnlock()
-	return fake.finalizeArgsForCall[i].release
+	return fake.finalizeArgsForCall[i].productSlug, fake.finalizeArgsForCall[i].releaseVersion
 }
 
 func (fake *Finalizer) FinalizeReturns(result1 concourse.OutResponse, result2 error) {

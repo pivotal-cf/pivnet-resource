@@ -96,15 +96,19 @@ func (c Client) EULAs() ([]pivnet.EULA, error) {
 	return c.client.EULA.List()
 }
 
-func (c Client) GetProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error) {
+func (c Client) ProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error) {
 	return c.client.ProductFiles.ListForRelease(productSlug, releaseID)
 }
 
-func (c Client) GetProductFiles(productSlug string) ([]pivnet.ProductFile, error) {
+func (c Client) ProductFiles(productSlug string) ([]pivnet.ProductFile, error) {
 	return c.client.ProductFiles.List(productSlug)
 }
 
-func (c Client) GetProductFile(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error) {
+func (c Client) ProductFile(productSlug string, productFileID int) (pivnet.ProductFile, error) {
+	return c.client.ProductFiles.Get(productSlug, productFileID)
+}
+
+func (c Client) ProductFileForRelease(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error) {
 	return c.client.ProductFiles.GetForRelease(productSlug, releaseID, productFileID)
 }
 
@@ -146,10 +150,6 @@ func (c Client) MakeRequest(method string, url string, expectedResponseCode int,
 
 func (c Client) CreateRequest(method string, url string, body io.Reader) (*http.Request, error) {
 	return c.client.CreateRequest(method, url, body)
-}
-
-func (c ExtendedClient) ReleaseFingerprint(productSlug string, releaseID int) (string, error) {
-	return c.client.ReleaseFingerprint(productSlug, releaseID)
 }
 
 func (c ExtendedClient) DownloadFile(writer io.Writer, downloadLink string) error {

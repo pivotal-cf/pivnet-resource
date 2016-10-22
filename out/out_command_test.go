@@ -107,11 +107,11 @@ var _ = Describe("Out", func() {
 			cmd = out.NewOutCommand(config)
 
 			validator.ValidateReturns(validateErr)
-			creator.CreateReturns(pivnet.Release{ID: 1337, Availability: "none"}, createErr)
+			creator.CreateReturns(pivnet.Release{ID: 1337, Availability: "none", Version: "some-version"}, createErr)
 
 			globber.ExactGlobsReturns(returnedExactGlobs, exactGlobsErr)
 
-			userGroupsUpdater.UpdateUserGroupsReturns(pivnet.Release{ID: 1337, Availability: "none"}, updateUserGroupErr)
+			userGroupsUpdater.UpdateUserGroupsReturns(pivnet.Release{ID: 1337, Availability: "none", Version: "some-version"}, updateUserGroupErr)
 
 			uploader.UploadReturns(uploadErr)
 			releaseDependenciesAdder.AddReleaseDependenciesReturns(addReleaseDependenciesErr)
@@ -119,7 +119,7 @@ var _ = Describe("Out", func() {
 
 			finalizer.FinalizeReturns(concourse.OutResponse{
 				Version: concourse.Version{
-					ProductVersion: "some-returned-product-version",
+					ProductVersion: "some-new-version",
 				},
 			}, finalizeErr)
 
@@ -136,7 +136,7 @@ var _ = Describe("Out", func() {
 
 			Expect(response).To(Equal(concourse.OutResponse{
 				Version: concourse.Version{
-					ProductVersion: "some-returned-product-version",
+					ProductVersion: "some-new-version",
 				},
 			}))
 
@@ -149,16 +149,17 @@ var _ = Describe("Out", func() {
 
 			Expect(uploader.UploadCallCount()).To(Equal(1))
 			invokedPivnetRelease, invokedExactGlobs := uploader.UploadArgsForCall(0)
-			Expect(invokedPivnetRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
+			Expect(invokedPivnetRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none", Version: "some-version"}))
 			Expect(invokedExactGlobs).To(Equal([]string{"some-glob-1", "some-glob-2"}))
 
 			Expect(userGroupsUpdater.UpdateUserGroupsCallCount()).To(Equal(1))
 			invokedPivnetRelease = userGroupsUpdater.UpdateUserGroupsArgsForCall(0)
-			Expect(invokedPivnetRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
+			Expect(invokedPivnetRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none", Version: "some-version"}))
 
 			Expect(finalizer.FinalizeCallCount()).To(Equal(1))
-			invokedRelease := finalizer.FinalizeArgsForCall(0)
-			Expect(invokedRelease).To(Equal(pivnet.Release{ID: 1337, Availability: "none"}))
+			invokedProductSlug, invokedReleaseVersion := finalizer.FinalizeArgsForCall(0)
+			Expect(invokedProductSlug).To(Equal(productSlug))
+			Expect(invokedReleaseVersion).To(Equal("some-version"))
 		})
 
 		Context("when skipUpload is true", func() {

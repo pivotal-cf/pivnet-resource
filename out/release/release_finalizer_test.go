@@ -1,6 +1,10 @@
 package release_test
 
 import (
+	"errors"
+	"io/ioutil"
+	"log"
+
 	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
@@ -14,19 +18,23 @@ import (
 var _ = Describe("ReleaseFinalizer", func() {
 	Describe("Finalize", func() {
 		var (
-			pivnetClient *releasefakes.UpdateClient
-			params       concourse.OutParams
+			fakePivnet *releasefakes.FinalizerClient
+			l          *log.Logger
+			params     concourse.OutParams
 
 			mdata metadata.Metadata
 
 			productSlug   string
 			pivnetRelease pivnet.Release
 
+			releaseErr error
+
 			finalizer release.ReleaseFinalizer
 		)
 
 		BeforeEach(func() {
-			pivnetClient = &releasefakes.UpdateClient{}
+			fakePivnet = &releasefakes.FinalizerClient{}
+			l = log.New(ioutil.Discard, "it doesn't matter", 0)
 
 			params = concourse.OutParams{}
 
@@ -39,6 +47,7 @@ var _ = Describe("ReleaseFinalizer", func() {
 				EULA: &pivnet.EULA{
 					Slug: "a_eula_slug",
 				},
+				UpdatedAt: "some-new-time",
 			}
 
 			mdata = metadata.Metadata{
@@ -50,30 +59,46 @@ var _ = Describe("ReleaseFinalizer", func() {
 				ProductFiles: []metadata.ProductFile{},
 			}
 
-			pivnetClient.ReleaseFingerprintReturns("a-diff-fingerprint", nil)
+			releaseErr = nil
 		})
 
 		JustBeforeEach(func() {
 			finalizer = release.NewFinalizer(
-				pivnetClient,
+				fakePivnet,
+				l,
 				params,
 				mdata,
 				"/some/sources/dir",
 				productSlug,
 			)
+
+			fakePivnet.GetReleaseReturns(pivnetRelease, releaseErr)
 		})
 
 		It("returns a final concourse out response", func() {
-			response, err := finalizer.Finalize(pivnetRelease)
+			response, err := finalizer.Finalize(productSlug, pivnetRelease.Version)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(response.Version).To(Equal(concourse.Version{
-				ProductVersion: "some-version#a-diff-fingerprint",
+				ProductVersion: "some-version#some-new-time",
 			}))
 
 			Expect(response.Metadata).To(ContainElement(concourse.Metadata{Name: "version", Value: "some-version"}))
 			Expect(response.Metadata).To(ContainElement(concourse.Metadata{Name: "controlled", Value: "false"}))
 			Expect(response.Metadata).To(ContainElement(concourse.Metadata{Name: "eula_slug", Value: "a_eula_slug"}))
+		})
+
+		Context("when getting the release returns an error", func() {
+			BeforeEach(func() {
+				releaseErr = errors.New("release error")
+			})
+
+			It("forwards the error", func() {
+				_, err := finalizer.Finalize(productSlug, pivnetRelease.Version)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(Equal(releaseErr))
+			})
 		})
 	})
 })

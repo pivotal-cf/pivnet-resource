@@ -181,7 +181,7 @@ var _ = Describe("Lifecycle test", func() {
 
 			It("uploads files to s3 and creates files on pivnet", func() {
 				By("Getting existing list of product files")
-				existingProductFiles, err := pivnetClient.GetProductFiles(productSlug)
+				existingProductFiles, err := pivnetClient.ProductFiles(productSlug)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying existing product files does not yet contain new files")
@@ -213,14 +213,13 @@ var _ = Describe("Lifecycle test", func() {
 				release, err := pivnetClient.GetRelease(productSlug, version)
 				Expect(err).NotTo(HaveOccurred())
 
-				releaseFingerprint, err := pivnetClient.ReleaseFingerprint(productSlug, release.ID)
+				expectedVersion, err := versions.CombineVersionAndFingerprint(release.Version, release.UpdatedAt)
 				Expect(err).NotTo(HaveOccurred())
 
-				expectedVersion := fmt.Sprintf("%s#%s", version, releaseFingerprint)
 				Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
 
 				By("Getting updated list of product files")
-				updatedProductFiles, err := pivnetClient.GetProductFiles(productSlug)
+				updatedProductFiles, err := pivnetClient.ProductFiles(productSlug)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying number of product files has increased by the expected amount")
@@ -240,21 +239,18 @@ var _ = Describe("Lifecycle test", func() {
 				release, err = pivnetClient.GetRelease(productSlug, version)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				releaseFingerprint, err = pivnetClient.ReleaseFingerprint(productSlug, release.ID)
-				Expect(err).NotTo(HaveOccurred())
-
-				versionWithFingerprint, err := versions.CombineVersionAndFingerprint(version, releaseFingerprint)
+				versionWithFingerprint, err := versions.CombineVersionAndFingerprint(release.Version, release.UpdatedAt)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying release contains new product files")
-				productFilesFromRelease, err := pivnetClient.GetProductFilesForRelease(productSlug, release.ID)
+				productFilesFromRelease, err := pivnetClient.ProductFilesForRelease(productSlug, release.ID)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				Expect(len(productFilesFromRelease)).To(Equal(totalFiles))
 				for _, p := range productFilesFromRelease {
 					Expect(sourceFileNames).To(ContainElement(p.Name))
 
-					productFile, err := pivnetClient.GetProductFile(
+					productFile, err := pivnetClient.ProductFileForRelease(
 						productSlug,
 						release.ID,
 						p.ID,

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -42,7 +43,7 @@ func main() {
 		version = "dev"
 	}
 
-	logger := log.New(os.Stderr, "", log.LstdFlags)
+	logger := log.New(os.Stderr, "", log.LstdFlags|log.Lmicroseconds)
 
 	logger.Printf("PivNet Resource version: %s", version)
 
@@ -165,6 +166,8 @@ func main() {
 		input.Source.ProductSlug,
 	)
 
+	asyncTimeout := 5 * time.Minute
+	pollFrequency := 1 * time.Second
 	releaseUploader := release.NewReleaseUploader(
 		uploaderClient,
 		pivnetClient,
@@ -173,6 +176,8 @@ func main() {
 		m,
 		sourcesDir,
 		input.Source.ProductSlug,
+		asyncTimeout,
+		pollFrequency,
 	)
 
 	releaseUserGroupsUpdater := release.NewUserGroupsUpdater(
@@ -199,6 +204,7 @@ func main() {
 
 	releaseFinalizer := release.NewFinalizer(
 		combinedClient,
+		logger,
 		input.Params,
 		m,
 		sourcesDir,

@@ -7,7 +7,7 @@ import (
 	go_pivnet "github.com/pivotal-cf/go-pivnet"
 )
 
-type UpdateClient struct {
+type FinalizerClient struct {
 	GetReleaseStub        func(productSlug string, releaseVersion string) (go_pivnet.Release, error)
 	getReleaseMutex       sync.RWMutex
 	getReleaseArgsForCall []struct {
@@ -22,7 +22,7 @@ type UpdateClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *UpdateClient) GetRelease(productSlug string, releaseVersion string) (go_pivnet.Release, error) {
+func (fake *FinalizerClient) GetRelease(productSlug string, releaseVersion string) (go_pivnet.Release, error) {
 	fake.getReleaseMutex.Lock()
 	fake.getReleaseArgsForCall = append(fake.getReleaseArgsForCall, struct {
 		productSlug    string
@@ -37,19 +37,19 @@ func (fake *UpdateClient) GetRelease(productSlug string, releaseVersion string) 
 	}
 }
 
-func (fake *UpdateClient) GetReleaseCallCount() int {
+func (fake *FinalizerClient) GetReleaseCallCount() int {
 	fake.getReleaseMutex.RLock()
 	defer fake.getReleaseMutex.RUnlock()
 	return len(fake.getReleaseArgsForCall)
 }
 
-func (fake *UpdateClient) GetReleaseArgsForCall(i int) (string, string) {
+func (fake *FinalizerClient) GetReleaseArgsForCall(i int) (string, string) {
 	fake.getReleaseMutex.RLock()
 	defer fake.getReleaseMutex.RUnlock()
 	return fake.getReleaseArgsForCall[i].productSlug, fake.getReleaseArgsForCall[i].releaseVersion
 }
 
-func (fake *UpdateClient) GetReleaseReturns(result1 go_pivnet.Release, result2 error) {
+func (fake *FinalizerClient) GetReleaseReturns(result1 go_pivnet.Release, result2 error) {
 	fake.GetReleaseStub = nil
 	fake.getReleaseReturns = struct {
 		result1 go_pivnet.Release
@@ -57,7 +57,7 @@ func (fake *UpdateClient) GetReleaseReturns(result1 go_pivnet.Release, result2 e
 	}{result1, result2}
 }
 
-func (fake *UpdateClient) Invocations() map[string][][]interface{} {
+func (fake *FinalizerClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.getReleaseMutex.RLock()
@@ -65,7 +65,7 @@ func (fake *UpdateClient) Invocations() map[string][][]interface{} {
 	return fake.invocations
 }
 
-func (fake *UpdateClient) recordInvocation(key string, args []interface{}) {
+func (fake *FinalizerClient) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {

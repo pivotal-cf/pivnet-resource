@@ -27,24 +27,24 @@ type FakePivnetClient struct {
 	acceptEULAReturns struct {
 		result1 error
 	}
-	GetProductFilesForReleaseStub        func(productSlug string, releaseID int) ([]go_pivnet.ProductFile, error)
-	getProductFilesForReleaseMutex       sync.RWMutex
-	getProductFilesForReleaseArgsForCall []struct {
+	ProductFilesForReleaseStub        func(productSlug string, releaseID int) ([]go_pivnet.ProductFile, error)
+	productFilesForReleaseMutex       sync.RWMutex
+	productFilesForReleaseArgsForCall []struct {
 		productSlug string
 		releaseID   int
 	}
-	getProductFilesForReleaseReturns struct {
+	productFilesForReleaseReturns struct {
 		result1 []go_pivnet.ProductFile
 		result2 error
 	}
-	GetProductFileStub        func(productSlug string, releaseID int, productFileID int) (go_pivnet.ProductFile, error)
-	getProductFileMutex       sync.RWMutex
-	getProductFileArgsForCall []struct {
+	ProductFileForReleaseStub        func(productSlug string, releaseID int, productFileID int) (go_pivnet.ProductFile, error)
+	productFileForReleaseMutex       sync.RWMutex
+	productFileForReleaseArgsForCall []struct {
 		productSlug   string
 		releaseID     int
 		productFileID int
 	}
-	getProductFileReturns struct {
+	productFileForReleaseReturns struct {
 		result1 go_pivnet.ProductFile
 		result2 error
 	}
@@ -66,16 +66,6 @@ type FakePivnetClient struct {
 	}
 	releaseUpgradePathsReturns struct {
 		result1 []go_pivnet.ReleaseUpgradePath
-		result2 error
-	}
-	ReleaseFingerprintStub        func(productSlug string, releaseID int) (string, error)
-	releaseFingerprintMutex       sync.RWMutex
-	releaseFingerprintArgsForCall []struct {
-		productSlug string
-		releaseID   int
-	}
-	releaseFingerprintReturns struct {
-		result1 string
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -151,72 +141,72 @@ func (fake *FakePivnetClient) AcceptEULAReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakePivnetClient) GetProductFilesForRelease(productSlug string, releaseID int) ([]go_pivnet.ProductFile, error) {
-	fake.getProductFilesForReleaseMutex.Lock()
-	fake.getProductFilesForReleaseArgsForCall = append(fake.getProductFilesForReleaseArgsForCall, struct {
+func (fake *FakePivnetClient) ProductFilesForRelease(productSlug string, releaseID int) ([]go_pivnet.ProductFile, error) {
+	fake.productFilesForReleaseMutex.Lock()
+	fake.productFilesForReleaseArgsForCall = append(fake.productFilesForReleaseArgsForCall, struct {
 		productSlug string
 		releaseID   int
 	}{productSlug, releaseID})
-	fake.recordInvocation("GetProductFilesForRelease", []interface{}{productSlug, releaseID})
-	fake.getProductFilesForReleaseMutex.Unlock()
-	if fake.GetProductFilesForReleaseStub != nil {
-		return fake.GetProductFilesForReleaseStub(productSlug, releaseID)
+	fake.recordInvocation("ProductFilesForRelease", []interface{}{productSlug, releaseID})
+	fake.productFilesForReleaseMutex.Unlock()
+	if fake.ProductFilesForReleaseStub != nil {
+		return fake.ProductFilesForReleaseStub(productSlug, releaseID)
 	} else {
-		return fake.getProductFilesForReleaseReturns.result1, fake.getProductFilesForReleaseReturns.result2
+		return fake.productFilesForReleaseReturns.result1, fake.productFilesForReleaseReturns.result2
 	}
 }
 
-func (fake *FakePivnetClient) GetProductFilesForReleaseCallCount() int {
-	fake.getProductFilesForReleaseMutex.RLock()
-	defer fake.getProductFilesForReleaseMutex.RUnlock()
-	return len(fake.getProductFilesForReleaseArgsForCall)
+func (fake *FakePivnetClient) ProductFilesForReleaseCallCount() int {
+	fake.productFilesForReleaseMutex.RLock()
+	defer fake.productFilesForReleaseMutex.RUnlock()
+	return len(fake.productFilesForReleaseArgsForCall)
 }
 
-func (fake *FakePivnetClient) GetProductFilesForReleaseArgsForCall(i int) (string, int) {
-	fake.getProductFilesForReleaseMutex.RLock()
-	defer fake.getProductFilesForReleaseMutex.RUnlock()
-	return fake.getProductFilesForReleaseArgsForCall[i].productSlug, fake.getProductFilesForReleaseArgsForCall[i].releaseID
+func (fake *FakePivnetClient) ProductFilesForReleaseArgsForCall(i int) (string, int) {
+	fake.productFilesForReleaseMutex.RLock()
+	defer fake.productFilesForReleaseMutex.RUnlock()
+	return fake.productFilesForReleaseArgsForCall[i].productSlug, fake.productFilesForReleaseArgsForCall[i].releaseID
 }
 
-func (fake *FakePivnetClient) GetProductFilesForReleaseReturns(result1 []go_pivnet.ProductFile, result2 error) {
-	fake.GetProductFilesForReleaseStub = nil
-	fake.getProductFilesForReleaseReturns = struct {
+func (fake *FakePivnetClient) ProductFilesForReleaseReturns(result1 []go_pivnet.ProductFile, result2 error) {
+	fake.ProductFilesForReleaseStub = nil
+	fake.productFilesForReleaseReturns = struct {
 		result1 []go_pivnet.ProductFile
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) GetProductFile(productSlug string, releaseID int, productFileID int) (go_pivnet.ProductFile, error) {
-	fake.getProductFileMutex.Lock()
-	fake.getProductFileArgsForCall = append(fake.getProductFileArgsForCall, struct {
+func (fake *FakePivnetClient) ProductFileForRelease(productSlug string, releaseID int, productFileID int) (go_pivnet.ProductFile, error) {
+	fake.productFileForReleaseMutex.Lock()
+	fake.productFileForReleaseArgsForCall = append(fake.productFileForReleaseArgsForCall, struct {
 		productSlug   string
 		releaseID     int
 		productFileID int
 	}{productSlug, releaseID, productFileID})
-	fake.recordInvocation("GetProductFile", []interface{}{productSlug, releaseID, productFileID})
-	fake.getProductFileMutex.Unlock()
-	if fake.GetProductFileStub != nil {
-		return fake.GetProductFileStub(productSlug, releaseID, productFileID)
+	fake.recordInvocation("ProductFileForRelease", []interface{}{productSlug, releaseID, productFileID})
+	fake.productFileForReleaseMutex.Unlock()
+	if fake.ProductFileForReleaseStub != nil {
+		return fake.ProductFileForReleaseStub(productSlug, releaseID, productFileID)
 	} else {
-		return fake.getProductFileReturns.result1, fake.getProductFileReturns.result2
+		return fake.productFileForReleaseReturns.result1, fake.productFileForReleaseReturns.result2
 	}
 }
 
-func (fake *FakePivnetClient) GetProductFileCallCount() int {
-	fake.getProductFileMutex.RLock()
-	defer fake.getProductFileMutex.RUnlock()
-	return len(fake.getProductFileArgsForCall)
+func (fake *FakePivnetClient) ProductFileForReleaseCallCount() int {
+	fake.productFileForReleaseMutex.RLock()
+	defer fake.productFileForReleaseMutex.RUnlock()
+	return len(fake.productFileForReleaseArgsForCall)
 }
 
-func (fake *FakePivnetClient) GetProductFileArgsForCall(i int) (string, int, int) {
-	fake.getProductFileMutex.RLock()
-	defer fake.getProductFileMutex.RUnlock()
-	return fake.getProductFileArgsForCall[i].productSlug, fake.getProductFileArgsForCall[i].releaseID, fake.getProductFileArgsForCall[i].productFileID
+func (fake *FakePivnetClient) ProductFileForReleaseArgsForCall(i int) (string, int, int) {
+	fake.productFileForReleaseMutex.RLock()
+	defer fake.productFileForReleaseMutex.RUnlock()
+	return fake.productFileForReleaseArgsForCall[i].productSlug, fake.productFileForReleaseArgsForCall[i].releaseID, fake.productFileForReleaseArgsForCall[i].productFileID
 }
 
-func (fake *FakePivnetClient) GetProductFileReturns(result1 go_pivnet.ProductFile, result2 error) {
-	fake.GetProductFileStub = nil
-	fake.getProductFileReturns = struct {
+func (fake *FakePivnetClient) ProductFileForReleaseReturns(result1 go_pivnet.ProductFile, result2 error) {
+	fake.ProductFileForReleaseStub = nil
+	fake.productFileForReleaseReturns = struct {
 		result1 go_pivnet.ProductFile
 		result2 error
 	}{result1, result2}
@@ -292,41 +282,6 @@ func (fake *FakePivnetClient) ReleaseUpgradePathsReturns(result1 []go_pivnet.Rel
 	}{result1, result2}
 }
 
-func (fake *FakePivnetClient) ReleaseFingerprint(productSlug string, releaseID int) (string, error) {
-	fake.releaseFingerprintMutex.Lock()
-	fake.releaseFingerprintArgsForCall = append(fake.releaseFingerprintArgsForCall, struct {
-		productSlug string
-		releaseID   int
-	}{productSlug, releaseID})
-	fake.recordInvocation("ReleaseFingerprint", []interface{}{productSlug, releaseID})
-	fake.releaseFingerprintMutex.Unlock()
-	if fake.ReleaseFingerprintStub != nil {
-		return fake.ReleaseFingerprintStub(productSlug, releaseID)
-	} else {
-		return fake.releaseFingerprintReturns.result1, fake.releaseFingerprintReturns.result2
-	}
-}
-
-func (fake *FakePivnetClient) ReleaseFingerprintCallCount() int {
-	fake.releaseFingerprintMutex.RLock()
-	defer fake.releaseFingerprintMutex.RUnlock()
-	return len(fake.releaseFingerprintArgsForCall)
-}
-
-func (fake *FakePivnetClient) ReleaseFingerprintArgsForCall(i int) (string, int) {
-	fake.releaseFingerprintMutex.RLock()
-	defer fake.releaseFingerprintMutex.RUnlock()
-	return fake.releaseFingerprintArgsForCall[i].productSlug, fake.releaseFingerprintArgsForCall[i].releaseID
-}
-
-func (fake *FakePivnetClient) ReleaseFingerprintReturns(result1 string, result2 error) {
-	fake.ReleaseFingerprintStub = nil
-	fake.releaseFingerprintReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakePivnetClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -334,16 +289,14 @@ func (fake *FakePivnetClient) Invocations() map[string][][]interface{} {
 	defer fake.getReleaseMutex.RUnlock()
 	fake.acceptEULAMutex.RLock()
 	defer fake.acceptEULAMutex.RUnlock()
-	fake.getProductFilesForReleaseMutex.RLock()
-	defer fake.getProductFilesForReleaseMutex.RUnlock()
-	fake.getProductFileMutex.RLock()
-	defer fake.getProductFileMutex.RUnlock()
+	fake.productFilesForReleaseMutex.RLock()
+	defer fake.productFilesForReleaseMutex.RUnlock()
+	fake.productFileForReleaseMutex.RLock()
+	defer fake.productFileForReleaseMutex.RUnlock()
 	fake.releaseDependenciesMutex.RLock()
 	defer fake.releaseDependenciesMutex.RUnlock()
 	fake.releaseUpgradePathsMutex.RLock()
 	defer fake.releaseUpgradePathsMutex.RUnlock()
-	fake.releaseFingerprintMutex.RLock()
-	defer fake.releaseFingerprintMutex.RUnlock()
 	return fake.invocations
 }
 

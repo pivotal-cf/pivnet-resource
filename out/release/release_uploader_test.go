@@ -2,8 +2,8 @@ package release_test
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
+	"time"
 
 	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
@@ -22,6 +22,8 @@ var _ = Describe("ReleaseUploader", func() {
 		md5Summer     *releasefakes.Md5Summer
 		pivnetRelease pivnet.Release
 		uploader      release.ReleaseUploader
+		asyncTimeout  time.Duration
+		pollFrequency time.Duration
 
 		productSlug string
 
@@ -35,15 +37,19 @@ var _ = Describe("ReleaseUploader", func() {
 		createProductFileErr    error
 		uploadFileErr           error
 		sumFileErr              error
+		productFileErr          error
 	)
 
 	BeforeEach(func() {
 		s3Client = &releasefakes.S3Client{}
-		logging = log.New(ioutil.Discard, "it doesn't matter", 0)
+		logging = log.New(GinkgoWriter, "uploader test - ", 0)
 		uploadClient = &releasefakes.UploadClient{}
 		md5Summer = &releasefakes.Md5Summer{}
 
 		productSlug = "some-product-slug"
+
+		asyncTimeout = 15 * time.Millisecond
+		pollFrequency = 5 * time.Millisecond
 
 		pivnetRelease = pivnet.Release{
 			ID:      1111,
@@ -75,6 +81,7 @@ var _ = Describe("ReleaseUploader", func() {
 		createProductFileErr = nil
 		uploadFileErr = nil
 		sumFileErr = nil
+		productFileErr = nil
 	})
 
 	JustBeforeEach(func() {
@@ -86,12 +93,32 @@ var _ = Describe("ReleaseUploader", func() {
 			mdata,
 			"/some/sources/dir",
 			productSlug,
+			asyncTimeout,
+			pollFrequency,
 		)
 
 		md5Summer.SumFileReturns(actualMD5Sum, sumFileErr)
 		s3Client.UploadFileReturns(newAWSObjectKey, uploadFileErr)
 		uploadClient.CreateProductFileReturns(pivnet.ProductFile{ID: 13367}, createProductFileErr)
-		uploadClient.GetProductFilesReturns(existingProductFiles, existingProductFilesErr)
+		uploadClient.ProductFilesReturns(existingProductFiles, existingProductFilesErr)
+
+		invokeCount := 0
+		uploadClient.ProductFileStub = func(string, int) (pivnet.ProductFile, error) {
+			if productFileErr != nil {
+				return pivnet.ProductFile{}, productFileErr
+			}
+
+			productFile := existingProductFiles[0]
+
+			invokeCount += 1
+
+			if invokeCount == 1 {
+				return productFile, nil
+			}
+
+			productFile.FileTransferStatus = "complete"
+			return productFile, nil
+		}
 	})
 
 	Describe("Upload", func() {
@@ -206,6 +233,30 @@ var _ = Describe("ReleaseUploader", func() {
 			It("returns an error", func() {
 				err := uploader.Upload(pivnetRelease, []string{""})
 				Expect(err).To(MatchError(errors.New("error adding product")))
+			})
+		})
+
+		Context("when polling for the product file returns an error", func() {
+			BeforeEach(func() {
+				productFileErr = errors.New("product file error")
+			})
+
+			It("returns an error", func() {
+				err := uploader.Upload(pivnetRelease, []string{""})
+				Expect(err).To(Equal(productFileErr))
+			})
+		})
+
+		Context("when polling for the product file times out", func() {
+			BeforeEach(func() {
+				asyncTimeout = pollFrequency / 2
+			})
+
+			It("returns an error", func() {
+				err := uploader.Upload(pivnetRelease, []string{""})
+				Expect(err).To(HaveOccurred())
+
+				Expect(err.Error()).To(ContainSubstring("timed out"))
 			})
 		})
 	})

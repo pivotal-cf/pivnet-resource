@@ -50,8 +50,8 @@ var _ = Describe("In", func() {
 		getReleaseErr          error
 		actualFingerprintErr   error
 		acceptEULAErr          error
-		getProductFilesErr     error
-		getProductFileErr      error
+		productFilesErr        error
+		productFileErr         error
 		downloadErr            error
 		downloadLinksByGlobErr error
 		md5sumErr              error
@@ -69,8 +69,8 @@ var _ = Describe("In", func() {
 		getReleaseErr = nil
 		actualFingerprintErr = nil
 		acceptEULAErr = nil
-		getProductFilesErr = nil
-		getProductFileErr = nil
+		productFilesErr = nil
+		productFileErr = nil
 		downloadLinksByGlobErr = nil
 		downloadErr = nil
 		md5sumErr = nil
@@ -145,8 +145,9 @@ var _ = Describe("In", func() {
 		file1URL := "some-file-path"
 
 		release = pivnet.Release{
-			Version: version,
-			ID:      1234,
+			Version:   version,
+			UpdatedAt: actualFingerprint,
+			ID:        1234,
 			Links: &pivnet.Links{
 				ProductFiles: map[string]string{
 					"href": file1URL,
@@ -193,21 +194,22 @@ var _ = Describe("In", func() {
 	})
 
 	JustBeforeEach(func() {
+		release.UpdatedAt = actualFingerprint
+
 		fakePivnetClient.GetReleaseReturns(release, getReleaseErr)
-		fakePivnetClient.ReleaseFingerprintReturns(actualFingerprint, actualFingerprintErr)
 		fakePivnetClient.AcceptEULAReturns(acceptEULAErr)
-		fakePivnetClient.GetProductFilesForReleaseReturns(productFiles, getProductFilesErr)
+		fakePivnetClient.ProductFilesForReleaseReturns(productFiles, productFilesErr)
 
 		fakePivnetClient.ReleaseDependenciesReturns(releaseDependencies, releaseDependenciesErr)
 		fakePivnetClient.ReleaseUpgradePathsReturns(releaseUpgradePaths, releaseUpgradePathsErr)
 
-		fakePivnetClient.GetProductFileStub = func(
+		fakePivnetClient.ProductFileForReleaseStub = func(
 			productSlug string,
 			releaseID int,
 			productFileID int,
 		) (pivnet.ProductFile, error) {
-			if getProductFileErr != nil {
-				return pivnet.ProductFile{}, getProductFileErr
+			if productFileErr != nil {
+				return pivnet.ProductFile{}, productFileErr
 			}
 
 			switch productFileID {
@@ -347,7 +349,7 @@ var _ = Describe("In", func() {
 
 		Expect(fakeFilter.DownloadLinksCallCount()).To(Equal(1))
 		Expect(fakeFilter.DownloadLinksByGlobsCallCount()).To(Equal(1))
-		Expect(fakePivnetClient.GetProductFileCallCount()).To(Equal(len(productFiles)))
+		Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(productFiles)))
 		Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
 
 		_, _, failOnNoMatch := fakeFilter.DownloadLinksByGlobsArgsForCall(0)
@@ -361,14 +363,9 @@ var _ = Describe("In", func() {
 			}
 		})
 
-		It("returns without error", func() {
+		It("returns without error (does not compare against actual fingerprint)", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("does not attempt to discover acutal fingerprint", func() {
-			_, _ = inCommand.Run(inRequest)
-			Expect(fakePivnetClient.ReleaseFingerprintCallCount()).To(Equal(0))
 		})
 	})
 
@@ -382,19 +379,6 @@ var _ = Describe("In", func() {
 			Expect(err).To(HaveOccurred())
 
 			Expect(err).To(Equal(getReleaseErr))
-		})
-	})
-
-	Context("when getting actual fingerprint returns an error", func() {
-		BeforeEach(func() {
-			actualFingerprintErr = fmt.Errorf("some fingerprint error")
-		})
-
-		It("returns the error", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err).To(Equal(actualFingerprintErr))
 		})
 	})
 
@@ -430,27 +414,27 @@ var _ = Describe("In", func() {
 
 	Context("when getting product files returns error", func() {
 		BeforeEach(func() {
-			getProductFilesErr = fmt.Errorf("some product files error")
+			productFilesErr = fmt.Errorf("some product files error")
 		})
 
 		It("returns error", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).To(HaveOccurred())
 
-			Expect(err).To(Equal(getProductFilesErr))
+			Expect(err).To(Equal(productFilesErr))
 		})
 	})
 
 	Context("when getting individual product file returns error", func() {
 		BeforeEach(func() {
-			getProductFileErr = fmt.Errorf("some product file error")
+			productFileErr = fmt.Errorf("some product file error")
 		})
 
 		It("returns error", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).To(HaveOccurred())
 
-			Expect(err).To(Equal(getProductFileErr))
+			Expect(err).To(Equal(productFileErr))
 		})
 	})
 
@@ -465,7 +449,7 @@ var _ = Describe("In", func() {
 
 			Expect(fakeFilter.DownloadLinksCallCount()).To(Equal(1))
 			Expect(fakeFilter.DownloadLinksByGlobsCallCount()).To(Equal(1))
-			Expect(fakePivnetClient.GetProductFileCallCount()).To(Equal(len(productFiles)))
+			Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(productFiles)))
 			Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
 
 			_, _, failOnNoMatch := fakeFilter.DownloadLinksByGlobsArgsForCall(0)
@@ -506,14 +490,14 @@ var _ = Describe("In", func() {
 
 		Context("when getting a product file returns error", func() {
 			BeforeEach(func() {
-				getProductFileErr = fmt.Errorf("some product file error")
+				productFileErr = fmt.Errorf("some product file error")
 			})
 
 			It("returns error", func() {
 				_, err := inCommand.Run(inRequest)
 				Expect(err).To(HaveOccurred())
 
-				Expect(err).To(Equal(getProductFileErr))
+				Expect(err).To(Equal(productFileErr))
 			})
 		})
 

@@ -39,11 +39,10 @@ type fileWriter interface {
 type pivnetClient interface {
 	GetRelease(productSlug string, version string) (pivnet.Release, error)
 	AcceptEULA(productSlug string, releaseID int) error
-	GetProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
-	GetProductFile(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
+	ProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
+	ProductFileForRelease(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
 	ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error)
-	ReleaseFingerprint(productSlug string, releaseID int) (string, error)
 }
 
 type InCommand struct {
@@ -96,10 +95,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	}
 
 	if fingerprint != "" {
-		actualFingerprint, err := c.pivnetClient.ReleaseFingerprint(productSlug, release.ID)
-		if err != nil {
-			return concourse.InResponse{}, err
-		}
+		actualFingerprint := release.UpdatedAt
 		if actualFingerprint != fingerprint {
 			return concourse.InResponse{}, fmt.Errorf(
 				"provided fingerprint: '%s' does not match actual fingerprint (from pivnet): '%s' - %s",
@@ -235,7 +231,7 @@ func (c InCommand) getProductFiles(
 	productSlug string,
 	releaseID int,
 ) ([]pivnet.ProductFile, error) {
-	productFiles, err := c.pivnetClient.GetProductFilesForRelease(productSlug, releaseID)
+	productFiles, err := c.pivnetClient.ProductFilesForRelease(productSlug, releaseID)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +239,7 @@ func (c InCommand) getProductFiles(
 	// Get individual product files to obtain metadata that isn't found
 	// in the endpoint for all product files.
 	for i, p := range productFiles {
-		productFiles[i], err = c.pivnetClient.GetProductFile(productSlug, releaseID, p.ID)
+		productFiles[i], err = c.pivnetClient.ProductFileForRelease(productSlug, releaseID, p.ID)
 		if err != nil {
 			return nil, err
 		}
