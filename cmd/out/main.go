@@ -166,8 +166,8 @@ func main() {
 		input.Source.ProductSlug,
 	)
 
-	asyncTimeout := 5 * time.Minute
-	pollFrequency := 1 * time.Second
+	asyncTimeout := 1 * time.Hour
+	pollFrequency := 5 * time.Second
 	releaseUploader := release.NewReleaseUploader(
 		uploaderClient,
 		pivnetClient,
