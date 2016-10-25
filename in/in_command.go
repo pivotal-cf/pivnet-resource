@@ -266,13 +266,12 @@ func (c InCommand) downloadFiles(
 
 	filtered, err := c.filter.ProductFileNamesByGlobs(productFiles, globs)
 	if err != nil {
-		if _, ok := err.(filter.ErrNoMatch); ok {
-			if !failOnNoMatch {
-				// do nothing
-			} else {
-				return err
-			}
-			panic(err)
+		if _, ok := err.(filter.ErrNoMatch); !ok {
+			return err
+		}
+
+		if failOnNoMatch {
+			return err
 		}
 	}
 

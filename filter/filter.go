@@ -103,7 +103,13 @@ func (f Filter) DownloadLinks(p []pivnet.ProductFile) map[string]string {
 	return links
 }
 
-type ErrNoMatch error
+type ErrNoMatch struct {
+	glob string
+}
+
+func (e ErrNoMatch) Error() string {
+	return fmt.Sprintf("no match for glob: '%s'", e.glob)
+}
 
 func (f Filter) ProductFileNamesByGlobs(
 	productFiles []pivnet.ProductFile,
@@ -127,7 +133,7 @@ func (f Filter) ProductFileNamesByGlobs(
 		}
 
 		if len(filtered) == prevFilteredCount {
-			return nil, fmt.Errorf("no product files match glob: %s", pattern)
+			return nil, ErrNoMatch{glob: pattern}
 		}
 	}
 

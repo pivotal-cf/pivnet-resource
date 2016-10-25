@@ -425,7 +425,7 @@ var _ = Describe("Filter", func() {
 					globs,
 				)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError("no product files match glob: does-not-exist.txt"))
+				Expect(err).To(MatchError("no match for glob: 'does-not-exist.txt'"))
 			})
 		})
 	})
