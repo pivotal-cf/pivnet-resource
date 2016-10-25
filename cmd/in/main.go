@@ -81,26 +81,16 @@ func main() {
 		ls,
 	)
 
-	extendedClient := gp.NewExtendedClient(*client, ls)
-
-	d := downloader.NewDownloader(extendedClient, downloadDir, logger)
+	d := downloader.NewDownloader(client, downloadDir, logger)
 	fs := md5sum.NewFileSummer()
 
-	f := filter.NewFilter()
-
-	combinedClient := struct {
-		*gp.Client
-		*gp.ExtendedClient
-	}{
-		client,
-		extendedClient,
-	}
+	f := filter.NewFilter(ls)
 
 	fileWriter := filesystem.NewFileWriter(downloadDir, logger)
 
 	response, err := in.NewInCommand(
 		logger,
-		combinedClient,
+		client,
 		f,
 		d,
 		fs,

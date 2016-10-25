@@ -28,9 +28,10 @@ var _ = Describe("In", func() {
 		fakeFileSummer   *infakes.FakeFileSummer
 		fakeFileWriter   *infakes.FakeFileWriter
 
-		productFiles []pivnet.ProductFile
-		productFile1 pivnet.ProductFile
-		productFile2 pivnet.ProductFile
+		productFiles         []pivnet.ProductFile
+		filteredProductFiles []pivnet.ProductFile
+		productFile1         pivnet.ProductFile
+		productFile2         pivnet.ProductFile
 
 		releaseDependencies []pivnet.ReleaseDependency
 		releaseUpgradePaths []pivnet.ReleaseUpgradePath
@@ -53,7 +54,7 @@ var _ = Describe("In", func() {
 		productFilesErr        error
 		productFileErr         error
 		downloadErr            error
-		downloadLinksByGlobErr error
+		filterErr              error
 		md5sumErr              error
 		releaseDependenciesErr error
 		releaseUpgradePathsErr error
@@ -71,7 +72,7 @@ var _ = Describe("In", func() {
 		acceptEULAErr = nil
 		productFilesErr = nil
 		productFileErr = nil
-		downloadLinksByGlobErr = nil
+		filterErr = nil
 		downloadErr = nil
 		md5sumErr = nil
 		releaseDependenciesErr = nil
@@ -141,6 +142,8 @@ var _ = Describe("In", func() {
 				},
 			},
 		}
+
+		filteredProductFiles = []pivnet.ProductFile{productFile1, productFile2}
 
 		file1URL := "some-file-path"
 
@@ -223,7 +226,7 @@ var _ = Describe("In", func() {
 			return pivnet.ProductFile{}, nil
 		}
 
-		fakeFilter.DownloadLinksByGlobsReturns(map[string]string{}, downloadLinksByGlobErr)
+		fakeFilter.ProductFileNamesByGlobsReturns(filteredProductFiles, filterErr)
 		fakeDownloader.DownloadReturns(downloadFilepaths, downloadErr)
 		fakeFileSummer.SumFileStub = func(path string) (string, error) {
 			if md5sumErr != nil {
@@ -347,13 +350,9 @@ var _ = Describe("In", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(fakeFilter.DownloadLinksCallCount()).To(Equal(1))
-		Expect(fakeFilter.DownloadLinksByGlobsCallCount()).To(Equal(1))
+		Expect(fakeFilter.ProductFileNamesByGlobsCallCount()).To(Equal(1))
 		Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(productFiles)))
 		Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
-
-		_, _, failOnNoMatch := fakeFilter.DownloadLinksByGlobsArgsForCall(0)
-		Expect(failOnNoMatch).To(BeFalse())
 	})
 
 	Context("when version is provided without fingerprint", func() {
@@ -447,13 +446,9 @@ var _ = Describe("In", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeFilter.DownloadLinksCallCount()).To(Equal(1))
-			Expect(fakeFilter.DownloadLinksByGlobsCallCount()).To(Equal(1))
+			Expect(fakeFilter.ProductFileNamesByGlobsCallCount()).To(Equal(1))
 			Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(productFiles)))
 			Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
-
-			_, _, failOnNoMatch := fakeFilter.DownloadLinksByGlobsArgsForCall(0)
-			Expect(failOnNoMatch).To(BeTrue())
 		})
 
 		It("includes md5 when invoking metadata writer", func() {
@@ -501,16 +496,16 @@ var _ = Describe("In", func() {
 			})
 		})
 
-		Context("when filtering download links returns error", func() {
+		Context("when filtering an returns error", func() {
 			BeforeEach(func() {
-				downloadLinksByGlobErr = fmt.Errorf("some filter error")
+				filterErr = fmt.Errorf("some filter error")
 			})
 
-			It("returns error", func() {
+			It("returns the error", func() {
 				_, err := inCommand.Run(inRequest)
 				Expect(err).To(HaveOccurred())
 
-				Expect(err).To(Equal(downloadLinksByGlobErr))
+				Expect(err).To(Equal(filterErr))
 			})
 		})
 

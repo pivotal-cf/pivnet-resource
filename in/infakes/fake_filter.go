@@ -8,115 +8,70 @@ import (
 )
 
 type FakeFilter struct {
-	DownloadLinksByGlobsStub        func(downloadLinks map[string]string, glob []string, failOnNoMatch bool) (map[string]string, error)
-	downloadLinksByGlobsMutex       sync.RWMutex
-	downloadLinksByGlobsArgsForCall []struct {
-		downloadLinks map[string]string
-		glob          []string
-		failOnNoMatch bool
+	ProductFileNamesByGlobsStub        func(productFiles []go_pivnet.ProductFile, globs []string) ([]go_pivnet.ProductFile, error)
+	productFileNamesByGlobsMutex       sync.RWMutex
+	productFileNamesByGlobsArgsForCall []struct {
+		productFiles []go_pivnet.ProductFile
+		globs        []string
 	}
-	downloadLinksByGlobsReturns struct {
-		result1 map[string]string
+	productFileNamesByGlobsReturns struct {
+		result1 []go_pivnet.ProductFile
 		result2 error
-	}
-	DownloadLinksStub        func(p []go_pivnet.ProductFile) map[string]string
-	downloadLinksMutex       sync.RWMutex
-	downloadLinksArgsForCall []struct {
-		p []go_pivnet.ProductFile
-	}
-	downloadLinksReturns struct {
-		result1 map[string]string
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeFilter) DownloadLinksByGlobs(downloadLinks map[string]string, glob []string, failOnNoMatch bool) (map[string]string, error) {
-	var globCopy []string
-	if glob != nil {
-		globCopy = make([]string, len(glob))
-		copy(globCopy, glob)
+func (fake *FakeFilter) ProductFileNamesByGlobs(productFiles []go_pivnet.ProductFile, globs []string) ([]go_pivnet.ProductFile, error) {
+	var productFilesCopy []go_pivnet.ProductFile
+	if productFiles != nil {
+		productFilesCopy = make([]go_pivnet.ProductFile, len(productFiles))
+		copy(productFilesCopy, productFiles)
 	}
-	fake.downloadLinksByGlobsMutex.Lock()
-	fake.downloadLinksByGlobsArgsForCall = append(fake.downloadLinksByGlobsArgsForCall, struct {
-		downloadLinks map[string]string
-		glob          []string
-		failOnNoMatch bool
-	}{downloadLinks, globCopy, failOnNoMatch})
-	fake.recordInvocation("DownloadLinksByGlobs", []interface{}{downloadLinks, globCopy, failOnNoMatch})
-	fake.downloadLinksByGlobsMutex.Unlock()
-	if fake.DownloadLinksByGlobsStub != nil {
-		return fake.DownloadLinksByGlobsStub(downloadLinks, glob, failOnNoMatch)
+	var globsCopy []string
+	if globs != nil {
+		globsCopy = make([]string, len(globs))
+		copy(globsCopy, globs)
+	}
+	fake.productFileNamesByGlobsMutex.Lock()
+	fake.productFileNamesByGlobsArgsForCall = append(fake.productFileNamesByGlobsArgsForCall, struct {
+		productFiles []go_pivnet.ProductFile
+		globs        []string
+	}{productFilesCopy, globsCopy})
+	fake.recordInvocation("ProductFileNamesByGlobs", []interface{}{productFilesCopy, globsCopy})
+	fake.productFileNamesByGlobsMutex.Unlock()
+	if fake.ProductFileNamesByGlobsStub != nil {
+		return fake.ProductFileNamesByGlobsStub(productFiles, globs)
 	} else {
-		return fake.downloadLinksByGlobsReturns.result1, fake.downloadLinksByGlobsReturns.result2
+		return fake.productFileNamesByGlobsReturns.result1, fake.productFileNamesByGlobsReturns.result2
 	}
 }
 
-func (fake *FakeFilter) DownloadLinksByGlobsCallCount() int {
-	fake.downloadLinksByGlobsMutex.RLock()
-	defer fake.downloadLinksByGlobsMutex.RUnlock()
-	return len(fake.downloadLinksByGlobsArgsForCall)
+func (fake *FakeFilter) ProductFileNamesByGlobsCallCount() int {
+	fake.productFileNamesByGlobsMutex.RLock()
+	defer fake.productFileNamesByGlobsMutex.RUnlock()
+	return len(fake.productFileNamesByGlobsArgsForCall)
 }
 
-func (fake *FakeFilter) DownloadLinksByGlobsArgsForCall(i int) (map[string]string, []string, bool) {
-	fake.downloadLinksByGlobsMutex.RLock()
-	defer fake.downloadLinksByGlobsMutex.RUnlock()
-	return fake.downloadLinksByGlobsArgsForCall[i].downloadLinks, fake.downloadLinksByGlobsArgsForCall[i].glob, fake.downloadLinksByGlobsArgsForCall[i].failOnNoMatch
+func (fake *FakeFilter) ProductFileNamesByGlobsArgsForCall(i int) ([]go_pivnet.ProductFile, []string) {
+	fake.productFileNamesByGlobsMutex.RLock()
+	defer fake.productFileNamesByGlobsMutex.RUnlock()
+	return fake.productFileNamesByGlobsArgsForCall[i].productFiles, fake.productFileNamesByGlobsArgsForCall[i].globs
 }
 
-func (fake *FakeFilter) DownloadLinksByGlobsReturns(result1 map[string]string, result2 error) {
-	fake.DownloadLinksByGlobsStub = nil
-	fake.downloadLinksByGlobsReturns = struct {
-		result1 map[string]string
+func (fake *FakeFilter) ProductFileNamesByGlobsReturns(result1 []go_pivnet.ProductFile, result2 error) {
+	fake.ProductFileNamesByGlobsStub = nil
+	fake.productFileNamesByGlobsReturns = struct {
+		result1 []go_pivnet.ProductFile
 		result2 error
 	}{result1, result2}
-}
-
-func (fake *FakeFilter) DownloadLinks(p []go_pivnet.ProductFile) map[string]string {
-	var pCopy []go_pivnet.ProductFile
-	if p != nil {
-		pCopy = make([]go_pivnet.ProductFile, len(p))
-		copy(pCopy, p)
-	}
-	fake.downloadLinksMutex.Lock()
-	fake.downloadLinksArgsForCall = append(fake.downloadLinksArgsForCall, struct {
-		p []go_pivnet.ProductFile
-	}{pCopy})
-	fake.recordInvocation("DownloadLinks", []interface{}{pCopy})
-	fake.downloadLinksMutex.Unlock()
-	if fake.DownloadLinksStub != nil {
-		return fake.DownloadLinksStub(p)
-	} else {
-		return fake.downloadLinksReturns.result1
-	}
-}
-
-func (fake *FakeFilter) DownloadLinksCallCount() int {
-	fake.downloadLinksMutex.RLock()
-	defer fake.downloadLinksMutex.RUnlock()
-	return len(fake.downloadLinksArgsForCall)
-}
-
-func (fake *FakeFilter) DownloadLinksArgsForCall(i int) []go_pivnet.ProductFile {
-	fake.downloadLinksMutex.RLock()
-	defer fake.downloadLinksMutex.RUnlock()
-	return fake.downloadLinksArgsForCall[i].p
-}
-
-func (fake *FakeFilter) DownloadLinksReturns(result1 map[string]string) {
-	fake.DownloadLinksStub = nil
-	fake.downloadLinksReturns = struct {
-		result1 map[string]string
-	}{result1}
 }
 
 func (fake *FakeFilter) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.downloadLinksByGlobsMutex.RLock()
-	defer fake.downloadLinksByGlobsMutex.RUnlock()
-	fake.downloadLinksMutex.RLock()
-	defer fake.downloadLinksMutex.RUnlock()
+	fake.productFileNamesByGlobsMutex.RLock()
+	defer fake.productFileNamesByGlobsMutex.RUnlock()
 	return fake.invocations
 }
 

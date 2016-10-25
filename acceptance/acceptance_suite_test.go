@@ -31,7 +31,7 @@ var (
 	pivnetBucketName   string
 	s3FilepathPrefix   string
 
-	pivnetClient gp.CombinedClient
+	pivnetClient *gp.Client
 )
 
 func TestAcceptance(t *testing.T) {
@@ -106,12 +106,7 @@ var _ = BeforeSuite(func() {
 		UserAgent: "pivnet-resource/integration-test",
 	}
 
-	client := gp.NewClient(clientConfig, ls)
-	extendedClient := gp.NewExtendedClient(*client, ls)
-	pivnetClient = gp.CombinedClient{
-		client,
-		extendedClient,
-	}
+	pivnetClient = gp.NewClient(clientConfig, ls)
 })
 
 var _ = AfterSuite(func() {

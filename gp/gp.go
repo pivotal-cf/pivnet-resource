@@ -6,14 +6,8 @@ import (
 	"net/http"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf/go-pivnet/extension"
 	"github.com/pivotal-cf/go-pivnet/logger"
 )
-
-type CombinedClient struct {
-	*Client
-	*ExtendedClient
-}
 
 type Client struct {
 	client pivnet.Client
@@ -22,16 +16,6 @@ type Client struct {
 func NewClient(config pivnet.ClientConfig, logger logger.Logger) *Client {
 	return &Client{
 		client: pivnet.NewClient(config, logger),
-	}
-}
-
-type ExtendedClient struct {
-	client extension.ExtendedClient
-}
-
-func NewExtendedClient(c Client, logger logger.Logger) *ExtendedClient {
-	return &ExtendedClient{
-		client: extension.NewExtendedClient(c, logger),
 	}
 }
 
@@ -96,6 +80,10 @@ func (c Client) EULAs() ([]pivnet.EULA, error) {
 	return c.client.EULA.List()
 }
 
+func (c Client) FindProductForSlug(slug string) (pivnet.Product, error) {
+	return c.client.Products.Get(slug)
+}
+
 func (c Client) ProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error) {
 	return c.client.ProductFiles.ListForRelease(productSlug, releaseID)
 }
@@ -116,16 +104,16 @@ func (c Client) DeleteProductFile(productSlug string, releaseID int) (pivnet.Pro
 	return c.client.ProductFiles.Delete(productSlug, releaseID)
 }
 
-func (c Client) FindProductForSlug(slug string) (pivnet.Product, error) {
-	return c.client.Products.Get(slug)
-}
-
 func (c Client) CreateProductFile(config pivnet.CreateProductFileConfig) (pivnet.ProductFile, error) {
 	return c.client.ProductFiles.Create(config)
 }
 
 func (c Client) AddProductFile(productSlug string, releaseID int, productFileID int) error {
 	return c.client.ProductFiles.AddToRelease(productSlug, releaseID, productFileID)
+}
+
+func (c Client) DownloadProductFile(writer io.Writer, productSlug string, releaseID int, productFileID int) error {
+	return c.client.ProductFiles.DownloadForRelease(writer, productSlug, releaseID, productFileID)
 }
 
 func (c Client) ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error) {
@@ -150,9 +138,4 @@ func (c Client) MakeRequest(method string, url string, expectedResponseCode int,
 
 func (c Client) CreateRequest(method string, url string, body io.Reader) (*http.Request, error) {
 	return c.client.CreateRequest(method, url, body)
-}
-
-func (c ExtendedClient) DownloadFile(writer io.Writer, downloadLink string) error {
-	err, _ := c.client.DownloadFile(writer, downloadLink)
-	return err
 }

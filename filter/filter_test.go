@@ -2,6 +2,7 @@ package filter_test
 
 import (
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger/loggerfakes"
 	"github.com/pivotal-cf/pivnet-resource/filter"
 
 	. "github.com/onsi/ginkgo"
@@ -10,13 +11,17 @@ import (
 
 var _ = Describe("Filter", func() {
 	var (
+		fakeLogger *loggerfakes.FakeLogger
+
 		f *filter.Filter
 
 		releases []pivnet.Release
 	)
 
 	BeforeEach(func() {
-		f = filter.NewFilter()
+		fakeLogger = &loggerfakes.FakeLogger{}
+
+		f = filter.NewFilter(fakeLogger)
 
 		releases = []pivnet.Release{
 			{
@@ -339,6 +344,88 @@ var _ = Describe("Filter", func() {
 					"ios-file.zip":     "ios-link",
 					"random-file.zip":  "random-link",
 				}))
+			})
+		})
+	})
+	Describe("ProductFileNamesByGlobs", func() {
+		var (
+			productFiles []pivnet.ProductFile
+			globs        []string
+		)
+
+		BeforeEach(func() {
+			productFiles = []pivnet.ProductFile{
+				{
+					ID:   1234,
+					Name: "name0",
+				},
+				{
+					ID:   2345,
+					Name: "name1",
+				},
+				{
+					ID:   3456,
+					Name: "name2",
+				},
+			}
+
+			globs = []string{"*name1*", "*name2*"}
+		})
+
+		It("returns the download links that match the glob filters", func() {
+			filtered, err := f.ProductFileNamesByGlobs(
+				productFiles,
+				globs,
+			)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(filtered).To(HaveLen(2))
+			Expect(filtered).To(Equal([]pivnet.ProductFile{productFiles[1], productFiles[2]}))
+		})
+
+		Context("when a bad pattern is passed", func() {
+			BeforeEach(func() {
+				globs = []string{"["}
+			})
+
+			It("returns an error", func() {
+				_, err := f.ProductFileNamesByGlobs(
+					productFiles,
+					globs,
+				)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError("syntax error in pattern"))
+			})
+		})
+
+		Describe("Passed a glob that matches no files", func() {
+			BeforeEach(func() {
+				globs = []string{"*will-not-match*"}
+			})
+
+			It("returns empty slice", func() {
+				filtered, err := f.ProductFileNamesByGlobs(
+					productFiles,
+					globs,
+				)
+				Expect(err).To(HaveOccurred())
+
+				Expect(filtered).To(HaveLen(0))
+			})
+		})
+
+		Describe("When a glob that matches a file and glob that does not match a file", func() {
+			BeforeEach(func() {
+				globs = []string{"name1", "does-not-exist.txt"}
+			})
+
+			It("returns an error", func() {
+				_, err := f.ProductFileNamesByGlobs(
+					productFiles,
+					globs,
+				)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError("no product files match glob: does-not-exist.txt"))
 			})
 		})
 	})

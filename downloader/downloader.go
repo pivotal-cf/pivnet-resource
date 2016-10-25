@@ -1,37 +1,43 @@
 package downloader
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
+
+	pivnet "github.com/pivotal-cf/go-pivnet"
 )
 
-//go:generate counterfeiter --fake-name FakeExtendedClient . extendedClient
-type extendedClient interface {
-	DownloadFile(writer io.Writer, downloadLink string) error
+//go:generate counterfeiter --fake-name FakeClient . client
+type client interface {
+	DownloadProductFile(writer io.Writer, productSlug string, releaseID int, productFileID int) error
 }
 
 type Downloader struct {
-	extendedClient extendedClient
-	downloadDir    string
-	logger         *log.Logger
+	client      client
+	downloadDir string
+	logger      *log.Logger
 }
 
 func NewDownloader(
-	extendedClient extendedClient,
+	client client,
 	downloadDir string,
 	logger *log.Logger,
 ) *Downloader {
 	return &Downloader{
-		extendedClient: extendedClient,
-		downloadDir:    downloadDir,
-		logger:         logger,
+		client:      client,
+		downloadDir: downloadDir,
+		logger:      logger,
 	}
 }
 
-func (d Downloader) Download(downloadLinks map[string]string) ([]string, error) {
+func (d Downloader) Download(
+	pfs []pivnet.ProductFile,
+	productSlug string,
+	releaseID int,
+) ([]string, error) {
 	d.logger.Println("Ensuring download directory exists")
 
 	err := os.MkdirAll(d.downloadDir, os.ModePerm)
@@ -40,17 +46,24 @@ func (d Downloader) Download(downloadLinks map[string]string) ([]string, error) 
 	}
 
 	var fileNames []string
-	for fileName, downloadLink := range downloadLinks {
+	for _, pf := range pfs {
+		parts := strings.Split(pf.AWSObjectKey, "/")
+		fileName := parts[len(parts)-1]
+
 		downloadPath := filepath.Join(d.downloadDir, fileName)
 
-		d.logger.Println(fmt.Sprintf("Creating file: '%s'", downloadPath))
+		d.logger.Printf("Creating file: '%s'", downloadPath)
 		file, err := os.Create(downloadPath)
 		if err != nil {
 			return nil, err
 		}
 
-		d.logger.Println(fmt.Sprintf("Downloading link: '%s' to file: '%s'", downloadLink, downloadPath))
-		err = d.extendedClient.DownloadFile(file, downloadLink)
+		d.logger.Printf(
+			"Downloading: '%s' to file: '%s'",
+			pf.Name,
+			downloadPath,
+		)
+		err = d.client.DownloadProductFile(file, productSlug, releaseID, pf.ID)
 		if err != nil {
 			return nil, err
 		}

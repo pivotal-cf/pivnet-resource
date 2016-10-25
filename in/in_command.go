@@ -8,19 +8,22 @@ import (
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
+	"github.com/pivotal-cf/pivnet-resource/filter"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/versions"
 )
 
-//go:generate counterfeiter --fake-name FakeFilter . filter
-type filter interface {
-	DownloadLinksByGlobs(downloadLinks map[string]string, glob []string, failOnNoMatch bool) (map[string]string, error)
-	DownloadLinks(p []pivnet.ProductFile) map[string]string
+//go:generate counterfeiter --fake-name FakeFilter . filterer
+type filterer interface {
+	ProductFileNamesByGlobs(
+		productFiles []pivnet.ProductFile,
+		globs []string,
+	) ([]pivnet.ProductFile, error)
 }
 
 //go:generate counterfeiter --fake-name FakeDownloader . downloader
 type downloader interface {
-	Download(downloadLinks map[string]string) ([]string, error)
+	Download(productFiles []pivnet.ProductFile, productSlug string, releaseID int) ([]string, error)
 }
 
 //go:generate counterfeiter --fake-name FakeFileSummer . fileSummer
@@ -49,7 +52,7 @@ type InCommand struct {
 	logger       *log.Logger
 	downloadDir  string
 	pivnetClient pivnetClient
-	filter       filter
+	filter       filterer
 	downloader   downloader
 	fileSummer   fileSummer
 	fileWriter   fileWriter
@@ -58,7 +61,7 @@ type InCommand struct {
 func NewInCommand(
 	logger *log.Logger,
 	pivnetClient pivnetClient,
-	filter filter,
+	filter filterer,
 	downloader downloader,
 	fileSummer fileSummer,
 	fileWriter fileWriter,
@@ -254,30 +257,28 @@ func (c InCommand) downloadFiles(
 	productSlug string,
 	releaseID int,
 ) error {
-	c.logger.Println("Getting download links")
-
-	downloadLinks := c.filter.DownloadLinks(productFiles)
-
 	c.logger.Println("Filtering download links by glob")
 
 	// It is acceptable to match nothing if globs were not provided.
 	// This is the use-case when there are no files on pivnet and the pipeline
-	// does not specify anything.
+	// config does not specify anything.
 	failOnNoMatch := (globs != nil)
 
-	var err error
-	downloadLinks, err = c.filter.DownloadLinksByGlobs(
-		downloadLinks,
-		globs,
-		failOnNoMatch,
-	)
+	filtered, err := c.filter.ProductFileNamesByGlobs(productFiles, globs)
 	if err != nil {
-		return err
+		if _, ok := err.(filter.ErrNoMatch); ok {
+			if !failOnNoMatch {
+				// do nothing
+			} else {
+				return err
+			}
+			panic(err)
+		}
 	}
 
 	c.logger.Println("Downloading filtered files")
 
-	files, err := c.downloader.Download(downloadLinks)
+	files, err := c.downloader.Download(filtered, productSlug, releaseID)
 	if err != nil {
 		return err
 	}

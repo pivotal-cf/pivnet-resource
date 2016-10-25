@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/downloader"
 	"github.com/pivotal-cf/pivnet-resource/downloader/downloaderfakes"
 
@@ -17,16 +18,16 @@ import (
 
 var _ = Describe("Downloader", func() {
 	var (
-		fakeExtendedClient *downloaderfakes.FakeExtendedClient
-		d                  *downloader.Downloader
-		server             *ghttp.Server
-		apiAddress         string
-		dir                string
-		logger             *log.Logger
+		fakeClient *downloaderfakes.FakeClient
+		d          *downloader.Downloader
+		server     *ghttp.Server
+		apiAddress string
+		dir        string
+		logger     *log.Logger
 	)
 
 	BeforeEach(func() {
-		fakeExtendedClient = &downloaderfakes.FakeExtendedClient{}
+		fakeClient = &downloaderfakes.FakeClient{}
 
 		server = ghttp.NewServer()
 		apiAddress = server.URL()
@@ -38,7 +39,7 @@ var _ = Describe("Downloader", func() {
 	})
 
 	JustBeforeEach(func() {
-		d = downloader.NewDownloader(fakeExtendedClient, dir, logger)
+		d = downloader.NewDownloader(fakeClient, dir, logger)
 	})
 
 	AfterEach(func() {
@@ -47,14 +48,34 @@ var _ = Describe("Downloader", func() {
 	})
 
 	Describe("Download", func() {
-		It("returns a list of (full) filepaths", func() {
-			fileNames := map[string]string{
-				"file-0": "/file-0",
-				"file-1": "/file-1",
-				"file-2": "/file-2",
-			}
+		var (
+			productSlug  string
+			releaseID    int
+			productFiles []pivnet.ProductFile
+		)
 
-			filepaths, err := d.Download(fileNames)
+		BeforeEach(func() {
+			productSlug = "some-product-slug"
+			releaseID = 1234
+
+			productFiles = []pivnet.ProductFile{
+				{
+					Name:         "pf-0",
+					AWSObjectKey: "bucket/path/file-0",
+				},
+				{
+					Name:         "pf-1",
+					AWSObjectKey: "bucket/path/file-1",
+				},
+				{
+					Name:         "pf-2",
+					AWSObjectKey: "bucket/path/file-2",
+				},
+			}
+		})
+
+		It("returns a list of (full) filepaths", func() {
+			filepaths, err := d.Download(productFiles, productSlug, releaseID)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(len(filepaths)).To(Equal(3))
@@ -71,11 +92,11 @@ var _ = Describe("Downloader", func() {
 
 			BeforeEach(func() {
 				expectedErr = errors.New("download file error")
-				fakeExtendedClient.DownloadFileReturns(expectedErr)
+				fakeClient.DownloadProductFileReturns(expectedErr)
 			})
 
 			It("raises an error", func() {
-				_, err := d.Download(map[string]string{"^731drop": "&h%%%%"})
+				_, err := d.Download(productFiles, productSlug, releaseID)
 
 				Expect(err).Should(HaveOccurred())
 				Expect(err).To(Equal(expectedErr))
@@ -88,17 +109,32 @@ var _ = Describe("Downloader", func() {
 			})
 
 			It("creates the directory", func() {
-				_, err := d.Download(nil)
+				_, err := d.Download(productFiles, productSlug, releaseID)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = os.Open(dir)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
+
+			Context("when creating the directory fails", func() {
+				BeforeEach(func() {
+					dir = "/not/valid"
+				})
+
+				It("returns an error", func() {
+					_, err := d.Download(productFiles, productSlug, releaseID)
+					Expect(err).To(HaveOccurred())
+				})
+			})
 		})
 
 		Context("when it fails to create a file", func() {
+			BeforeEach(func() {
+				productFiles[0].AWSObjectKey = "/"
+			})
+
 			It("returns an error", func() {
-				_, err := d.Download(map[string]string{"/": ""})
+				_, err := d.Download(productFiles, productSlug, releaseID)
 				Expect(err).To(HaveOccurred())
 			})
 		})

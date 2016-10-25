@@ -84,12 +84,10 @@ func main() {
 		UserAgent: useragent.UserAgent(version, "put", input.Source.ProductSlug),
 	}
 
-	pivnetClient := gp.NewClient(
+	client := gp.NewClient(
 		clientConfig,
 		ls,
 	)
-
-	extendedClient := gp.NewExtendedClient(*pivnetClient, ls)
 
 	bucket := input.Source.Bucket
 	if bucket == "" {
@@ -148,15 +146,11 @@ func main() {
 	validation := validator.NewOutValidator(input)
 	semverConverter := semver.NewSemverConverter(logger)
 	md5summer := md5sum.NewFileSummer()
-	f := filter.NewFilter()
 
-	combinedClient := gp.CombinedClient{
-		pivnetClient,
-		extendedClient,
-	}
+	f := filter.NewFilter(ls)
 
 	releaseCreator := release.NewReleaseCreator(
-		combinedClient,
+		client,
 		semverConverter,
 		logger,
 		m,
@@ -170,7 +164,7 @@ func main() {
 	pollFrequency := 5 * time.Second
 	releaseUploader := release.NewReleaseUploader(
 		uploaderClient,
-		pivnetClient,
+		client,
 		logger,
 		md5summer,
 		m,
@@ -182,28 +176,28 @@ func main() {
 
 	releaseUserGroupsUpdater := release.NewUserGroupsUpdater(
 		logger,
-		combinedClient,
+		client,
 		m,
 		input.Source.ProductSlug,
 	)
 
 	releaseDependenciesAdder := release.NewReleaseDependenciesAdder(
 		logger,
-		combinedClient,
+		client,
 		m,
 		input.Source.ProductSlug,
 	)
 
 	releaseUpgradePathsAdder := release.NewReleaseUpgradePathsAdder(
 		logger,
-		combinedClient,
+		client,
 		m,
 		input.Source.ProductSlug,
 		f,
 	)
 
 	releaseFinalizer := release.NewFinalizer(
-		combinedClient,
+		client,
 		logger,
 		input.Params,
 		m,
