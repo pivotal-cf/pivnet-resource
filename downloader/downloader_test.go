@@ -118,7 +118,7 @@ var _ = Describe("Downloader", func() {
 
 			Context("when creating the directory fails", func() {
 				BeforeEach(func() {
-					dir = "/not/valid"
+					dir = "/proc/nope"
 				})
 
 				It("returns an error", func() {
