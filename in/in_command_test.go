@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
-	"github.com/pivotal-cf/pivnet-resource/filter"
 	"github.com/pivotal-cf/pivnet-resource/in"
 	"github.com/pivotal-cf/pivnet-resource/in/infakes"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
@@ -351,8 +350,14 @@ var _ = Describe("In", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(fakeFilter.ProductFileNamesByGlobsCallCount()).To(Equal(1))
+		Expect(fakeFilter.ProductFileNamesByGlobsCallCount()).To(Equal(0))
+
 		Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(productFiles)))
+
+		Expect(fakeDownloader.DownloadCallCount()).To(Equal(1))
+		invokedProductFiles, _, _ := fakeDownloader.DownloadArgsForCall(0)
+		Expect(invokedProductFiles).To(Equal(productFiles))
+
 		Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
 	})
 
@@ -507,28 +512,6 @@ var _ = Describe("In", func() {
 				Expect(err).To(HaveOccurred())
 
 				Expect(err).To(Equal(filterErr))
-			})
-
-			Context("when the error is no globs match", func() {
-				BeforeEach(func() {
-					filterErr = filter.ErrNoMatch{}
-				})
-
-				It("returns the error", func() {
-					_, err := inCommand.Run(inRequest)
-					Expect(err).To(HaveOccurred())
-				})
-
-				Context("when globs are nil", func() {
-					BeforeEach(func() {
-						inRequest.Params.Globs = nil
-					})
-
-					It("does not return an error", func() {
-						_, err := inCommand.Run(inRequest)
-						Expect(err).NotTo(HaveOccurred())
-					})
-				})
 			})
 		})
 

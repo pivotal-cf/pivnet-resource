@@ -8,7 +8,6 @@ import (
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
-	"github.com/pivotal-cf/pivnet-resource/filter"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/versions"
 )
@@ -259,18 +258,13 @@ func (c InCommand) downloadFiles(
 ) error {
 	c.logger.Println("Filtering download links by glob")
 
-	// It is acceptable to match nothing if globs were not provided.
-	// This is the use-case when there are no files on pivnet and the pipeline
-	// config does not specify anything.
-	failOnNoMatch := (globs != nil)
+	filtered := productFiles
 
-	filtered, err := c.filter.ProductFileNamesByGlobs(productFiles, globs)
-	if err != nil {
-		if _, ok := err.(filter.ErrNoMatch); !ok {
-			return err
-		}
-
-		if failOnNoMatch {
+	// If globs were not provided, download everything without filtering.
+	if globs != nil {
+		var err error
+		filtered, err = c.filter.ProductFileNamesByGlobs(productFiles, globs)
+		if err != nil {
 			return err
 		}
 	}
