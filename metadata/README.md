@@ -34,6 +34,12 @@ product_files:
     some
     multi-line
     description
+file_groups:
+- id: 2345
+  name: "some file group"
+  product_files:
+  - id: 9876
+    name: some-product-file
 dependencies:
 - release:
     id: 1234
@@ -133,6 +139,12 @@ All other keys are optional. The purpose of the keys is as follows:
 * `upload_as` *Optional.* The display name for the file in Pivotal Network.
   This affects only the display name; the filename of the uploaded file remains
   the same as that of the local file.
+
+## File Groups
+
+The top-level `file_groups` key is currently written to during `in`
+but is not read during `out`. Therefore it cannot be used to set file groups
+when creating or updating a release.
 
 ## Dependencies
 
