@@ -40,7 +40,7 @@ type ProductFile struct {
 
 type FileGroup struct {
 	ID           int           `yaml:"id,omitempty"`
-	Name         string        `yaml:"id,omitempty"`
+	Name         string        `yaml:"name,omitempty"`
 	ProductFiles []ProductFile `yaml:"product_files,omitempty"`
 }
 
