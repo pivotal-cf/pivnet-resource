@@ -105,6 +105,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 				}
 
 				description = f.Description
+
 				if f.FileType != "" {
 					fileType = f.FileType
 				}

@@ -360,6 +360,7 @@ var _ = Describe("In", func() {
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
 		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
+		validateFileGroupsMetadata(invokedMetadata, fileGroups)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
 	})
@@ -376,6 +377,7 @@ var _ = Describe("In", func() {
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
 		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
+		validateFileGroupsMetadata(invokedMetadata, fileGroups)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
 	})
@@ -628,6 +630,28 @@ var _ = Describe("In", func() {
 		})
 	})
 })
+
+var validateFileGroupsMetadata = func(
+	writtenMetadata metadata.Metadata,
+	fileGroups []pivnet.FileGroup,
+) {
+	Expect(writtenMetadata.FileGroups).To(HaveLen(len(fileGroups)))
+	for i, fg := range fileGroups {
+		Expect(writtenMetadata.FileGroups[i].ID).To(Equal(fg.ID))
+		Expect(writtenMetadata.FileGroups[i].Name).To(Equal(fg.Name))
+
+		for j, p := range fg.ProductFiles {
+			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].File).To(Equal(p.Name))
+			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].Description).To(Equal(p.Description))
+			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].ID).To(Equal(p.ID))
+			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].AWSObjectKey).To(Equal(p.AWSObjectKey))
+			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].FileType).To(Equal(p.FileType))
+			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].FileVersion).To(Equal(p.FileVersion))
+			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].MD5).To(Equal(p.MD5))
+			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].UploadAs).To(BeEmpty())
+		}
+	}
+}
 
 var validateProductFilesMetadata = func(
 	writtenMetadata metadata.Metadata,

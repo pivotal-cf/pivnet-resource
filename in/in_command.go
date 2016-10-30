@@ -118,9 +118,33 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Println("Getting product files")
 
-	productFiles, err := c.getProductFiles(productSlug, release.ID)
+	productFiles, err := c.pivnetClient.ProductFilesForRelease(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
+	}
+
+	c.logger.Println("Getting file groups")
+
+	fileGroups, err := c.pivnetClient.FileGroupsForRelease(productSlug, release.ID)
+	if err != nil {
+		return concourse.InResponse{}, err
+	}
+
+	for _, fg := range fileGroups {
+		productFiles = append(productFiles, fg.ProductFiles...)
+	}
+
+	// Get individual product files to obtain metadata that isn't found
+	// in the endpoint for all product files.
+	for i, p := range productFiles {
+		productFiles[i], err = c.pivnetClient.ProductFileForRelease(
+			productSlug,
+			release.ID,
+			p.ID,
+		)
+		if err != nil {
+			return concourse.InResponse{}, err
+		}
 	}
 
 	c.logger.Println("Getting release dependencies")
@@ -201,6 +225,26 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		})
 	}
 
+	for _, fg := range fileGroups {
+		mfg := metadata.FileGroup{
+			ID:   fg.ID,
+			Name: fg.Name,
+		}
+		for _, pf := range fg.ProductFiles {
+			mfg.ProductFiles = append(mfg.ProductFiles, metadata.ProductFile{
+				ID:           pf.ID,
+				File:         pf.Name,
+				Description:  pf.Description,
+				AWSObjectKey: pf.AWSObjectKey,
+				FileType:     pf.FileType,
+				FileVersion:  pf.FileVersion,
+				MD5:          pf.MD5,
+			})
+		}
+
+		mdata.FileGroups = append(mdata.FileGroups, mfg)
+	}
+
 	c.logger.Println("Writing metadata files")
 
 	err = c.fileWriter.WriteVersionFile(versionWithFingerprint)
@@ -228,36 +272,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	}
 
 	return out, nil
-}
-
-func (c InCommand) getProductFiles(
-	productSlug string,
-	releaseID int,
-) ([]pivnet.ProductFile, error) {
-	productFiles, err := c.pivnetClient.ProductFilesForRelease(productSlug, releaseID)
-	if err != nil {
-		return nil, err
-	}
-
-	fileGroups, err := c.pivnetClient.FileGroupsForRelease(productSlug, releaseID)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, fg := range fileGroups {
-		productFiles = append(productFiles, fg.ProductFiles...)
-	}
-
-	// Get individual product files to obtain metadata that isn't found
-	// in the endpoint for all product files.
-	for i, p := range productFiles {
-		productFiles[i], err = c.pivnetClient.ProductFileForRelease(productSlug, releaseID, p.ID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return productFiles, nil
 }
 
 func (c InCommand) downloadFiles(

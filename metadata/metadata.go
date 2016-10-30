@@ -7,6 +7,7 @@ type Metadata struct {
 	ProductFiles []ProductFile `yaml:"product_files,omitempty"`
 	Dependencies []Dependency  `yaml:"dependencies,omitempty"`
 	UpgradePaths []UpgradePath `yaml:"upgrade_paths,omitempty"`
+	FileGroups   []FileGroup   `yaml:"file_groups,omitempty"`
 }
 
 type Release struct {
@@ -35,6 +36,12 @@ type ProductFile struct {
 	FileVersion  string `yaml:"file_version,omitempty"`
 	MD5          string `yaml:"md5,omitempty"`
 	ID           int    `yaml:"id,omitempty"`
+}
+
+type FileGroup struct {
+	ID           int           `yaml:"id,omitempty"`
+	Name         string        `yaml:"id,omitempty"`
+	ProductFiles []ProductFile `yaml:"product_files,omitempty"`
 }
 
 type Dependency struct {
