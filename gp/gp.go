@@ -116,6 +116,10 @@ func (c Client) DownloadProductFile(writer io.Writer, productSlug string, releas
 	return c.client.ProductFiles.DownloadForRelease(writer, productSlug, releaseID, productFileID)
 }
 
+func (c Client) FileGroupsForRelease(productSlug string, releaseID int) ([]pivnet.FileGroup, error) {
+	return c.client.FileGroups.ListForRelease(productSlug, releaseID)
+}
+
 func (c Client) ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error) {
 	return c.client.ReleaseDependencies.List(productSlug, releaseID)
 }

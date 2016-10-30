@@ -41,6 +41,7 @@ type fileWriter interface {
 type pivnetClient interface {
 	GetRelease(productSlug string, version string) (pivnet.Release, error)
 	AcceptEULA(productSlug string, releaseID int) error
+	FileGroupsForRelease(productSlug string, releaseID int) ([]pivnet.FileGroup, error)
 	ProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
 	ProductFileForRelease(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
@@ -236,6 +237,15 @@ func (c InCommand) getProductFiles(
 	productFiles, err := c.pivnetClient.ProductFilesForRelease(productSlug, releaseID)
 	if err != nil {
 		return nil, err
+	}
+
+	fileGroups, err := c.pivnetClient.FileGroupsForRelease(productSlug, releaseID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, fg := range fileGroups {
+		productFiles = append(productFiles, fg.ProductFiles...)
 	}
 
 	// Get individual product files to obtain metadata that isn't found

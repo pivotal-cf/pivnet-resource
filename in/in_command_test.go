@@ -28,10 +28,18 @@ var _ = Describe("In", func() {
 		fakeFileSummer   *infakes.FakeFileSummer
 		fakeFileWriter   *infakes.FakeFileWriter
 
-		productFiles         []pivnet.ProductFile
+		fileGroups []pivnet.FileGroup
+
+		releaseProductFiles    []pivnet.ProductFile
+		fileGroup1ProductFiles []pivnet.ProductFile
+		fileGroup2ProductFiles []pivnet.ProductFile
+
 		filteredProductFiles []pivnet.ProductFile
-		productFile1         pivnet.ProductFile
-		productFile2         pivnet.ProductFile
+
+		releaseProductFile1   pivnet.ProductFile
+		releaseProductFile2   pivnet.ProductFile
+		fileGroup1ProductFile pivnet.ProductFile
+		fileGroup2ProductFile pivnet.ProductFile
 
 		releaseDependencies []pivnet.ReleaseDependency
 		releaseUpgradePaths []pivnet.ReleaseUpgradePath
@@ -49,7 +57,6 @@ var _ = Describe("In", func() {
 		fileContentsMD5s  []string
 
 		getReleaseErr          error
-		actualFingerprintErr   error
 		acceptEULAErr          error
 		productFilesErr        error
 		productFileErr         error
@@ -58,6 +65,7 @@ var _ = Describe("In", func() {
 		md5sumErr              error
 		releaseDependenciesErr error
 		releaseUpgradePathsErr error
+		fileGroupsErr          error
 	)
 
 	BeforeEach(func() {
@@ -68,7 +76,6 @@ var _ = Describe("In", func() {
 		fakeFileWriter = &infakes.FakeFileWriter{}
 
 		getReleaseErr = nil
-		actualFingerprintErr = nil
 		acceptEULAErr = nil
 		productFilesErr = nil
 		productFileErr = nil
@@ -77,6 +84,7 @@ var _ = Describe("In", func() {
 		md5sumErr = nil
 		releaseDependenciesErr = nil
 		releaseUpgradePathsErr = nil
+		fileGroupsErr = nil
 
 		version = "C"
 		fingerprint = "fingerprint-0"
@@ -85,6 +93,8 @@ var _ = Describe("In", func() {
 		fileContentsMD5s = []string{
 			"some-md5 1234",
 			"some-md5 3456",
+			"some-md5 4567",
+			"some-md5 5678",
 		}
 
 		var err error
@@ -94,11 +104,13 @@ var _ = Describe("In", func() {
 		downloadFilepaths = []string{
 			"file-1234",
 			"file-3456",
+			"file-4567",
+			"file-5678",
 		}
 
 		// The endpoint for all product files returns less metadata than the
 		// individual product files, so we split them apart to differentiate them
-		productFiles = []pivnet.ProductFile{
+		releaseProductFiles = []pivnet.ProductFile{
 			{
 				ID:           1234,
 				Name:         "product file 1234",
@@ -113,11 +125,29 @@ var _ = Describe("In", func() {
 			},
 		}
 
-		productFile1 = pivnet.ProductFile{
-			ID:           productFiles[0].ID,
-			Name:         productFiles[0].Name,
-			Description:  productFiles[0].Description,
-			AWSObjectKey: productFiles[0].AWSObjectKey,
+		fileGroup1ProductFiles = []pivnet.ProductFile{
+			{
+				ID:           4567,
+				Name:         "product file 4567",
+				Description:  "some product file 4567",
+				AWSObjectKey: downloadFilepaths[2],
+			},
+		}
+
+		fileGroup2ProductFiles = []pivnet.ProductFile{
+			{
+				ID:           5678,
+				Name:         "product file 5678",
+				Description:  "some product file 5678",
+				AWSObjectKey: downloadFilepaths[3],
+			},
+		}
+
+		releaseProductFile1 = pivnet.ProductFile{
+			ID:           releaseProductFiles[0].ID,
+			Name:         releaseProductFiles[0].Name,
+			Description:  releaseProductFiles[0].Description,
+			AWSObjectKey: releaseProductFiles[0].AWSObjectKey,
 			FileType:     pivnet.FileTypeSoftware,
 			FileVersion:  "some-file-version 1234",
 			MD5:          fileContentsMD5s[0],
@@ -128,11 +158,11 @@ var _ = Describe("In", func() {
 			},
 		}
 
-		productFile2 = pivnet.ProductFile{
-			ID:           productFiles[1].ID,
-			Name:         productFiles[1].Name,
-			Description:  productFiles[1].Description,
-			AWSObjectKey: productFiles[1].AWSObjectKey,
+		releaseProductFile2 = pivnet.ProductFile{
+			ID:           releaseProductFiles[1].ID,
+			Name:         releaseProductFiles[1].Name,
+			Description:  releaseProductFiles[1].Description,
+			AWSObjectKey: releaseProductFiles[1].AWSObjectKey,
 			FileType:     pivnet.FileTypeSoftware,
 			FileVersion:  "some-file-version 3456",
 			MD5:          fileContentsMD5s[1],
@@ -143,9 +173,59 @@ var _ = Describe("In", func() {
 			},
 		}
 
-		filteredProductFiles = []pivnet.ProductFile{productFile1, productFile2}
+		fileGroup1ProductFile = pivnet.ProductFile{
+			ID:           fileGroup1ProductFiles[0].ID,
+			Name:         fileGroup1ProductFiles[0].Name,
+			Description:  fileGroup1ProductFiles[0].Description,
+			AWSObjectKey: fileGroup1ProductFiles[0].AWSObjectKey,
+			FileType:     pivnet.FileTypeSoftware,
+			FileVersion:  "some-file-version 4567",
+			MD5:          fileContentsMD5s[2],
+			Links: &pivnet.Links{
+				Download: map[string]string{
+					"href": "bar",
+				},
+			},
+		}
 
-		file1URL := "some-file-path"
+		fileGroup2ProductFile = pivnet.ProductFile{
+			ID:           fileGroup2ProductFiles[0].ID,
+			Name:         fileGroup2ProductFiles[0].Name,
+			Description:  fileGroup2ProductFiles[0].Description,
+			AWSObjectKey: fileGroup2ProductFiles[0].AWSObjectKey,
+			FileType:     pivnet.FileTypeSoftware,
+			FileVersion:  "some-file-version 5678",
+			MD5:          fileContentsMD5s[3],
+			Links: &pivnet.Links{
+				Download: map[string]string{
+					"href": "bar",
+				},
+			},
+		}
+
+		filteredProductFiles = []pivnet.ProductFile{
+			releaseProductFile1,
+			releaseProductFile2,
+			fileGroup1ProductFile,
+			fileGroup2ProductFile,
+		}
+
+		fileGroups = []pivnet.FileGroup{
+			{
+				ID:   4321,
+				Name: "fg1",
+				ProductFiles: []pivnet.ProductFile{
+					fileGroup1ProductFile,
+				},
+			},
+			{
+				ID:   5432,
+				Name: "fg2",
+				ProductFiles: []pivnet.ProductFile{
+					fileGroup2ProductFile,
+				},
+			},
+		}
 
 		release = pivnet.Release{
 			Version:   version,
@@ -153,7 +233,7 @@ var _ = Describe("In", func() {
 			ID:        1234,
 			Links: &pivnet.Links{
 				ProductFiles: map[string]string{
-					"href": file1URL,
+					"href": "some-file-path",
 				},
 			},
 			EULA: &pivnet.EULA{
@@ -201,10 +281,11 @@ var _ = Describe("In", func() {
 
 		fakePivnetClient.GetReleaseReturns(release, getReleaseErr)
 		fakePivnetClient.AcceptEULAReturns(acceptEULAErr)
-		fakePivnetClient.ProductFilesForReleaseReturns(productFiles, productFilesErr)
+		fakePivnetClient.ProductFilesForReleaseReturns(releaseProductFiles, productFilesErr)
 
 		fakePivnetClient.ReleaseDependenciesReturns(releaseDependencies, releaseDependenciesErr)
 		fakePivnetClient.ReleaseUpgradePathsReturns(releaseUpgradePaths, releaseUpgradePathsErr)
+		fakePivnetClient.FileGroupsForReleaseReturns(fileGroups, fileGroupsErr)
 
 		fakePivnetClient.ProductFileForReleaseStub = func(
 			productSlug string,
@@ -216,10 +297,14 @@ var _ = Describe("In", func() {
 			}
 
 			switch productFileID {
-			case productFile1.ID:
-				return productFile1, nil
-			case productFile2.ID:
-				return productFile2, nil
+			case releaseProductFile1.ID:
+				return releaseProductFile1, nil
+			case releaseProductFile2.ID:
+				return releaseProductFile2, nil
+			case fileGroup1ProductFile.ID:
+				return fileGroup1ProductFile, nil
+			case fileGroup2ProductFile.ID:
+				return fileGroup2ProductFile, nil
 			}
 
 			Fail(fmt.Sprintf("unexpected productFileID: %d", productFileID))
@@ -263,47 +348,6 @@ var _ = Describe("In", func() {
 		Expect(fakeFileWriter.WriteVersionFileArgsForCall(0)).To(Equal(versionWithFingerprint))
 	})
 
-	var validateProductFilesMetadata = func(
-		writtenMetadata metadata.Metadata,
-		pF []pivnet.ProductFile,
-	) {
-		Expect(writtenMetadata.ProductFiles).To(HaveLen(len(pF)))
-		for i, p := range pF {
-			Expect(writtenMetadata.ProductFiles[i].File).To(Equal(p.Name))
-			Expect(writtenMetadata.ProductFiles[i].Description).To(Equal(p.Description))
-			Expect(writtenMetadata.ProductFiles[i].ID).To(Equal(p.ID))
-			Expect(writtenMetadata.ProductFiles[i].AWSObjectKey).To(Equal(p.AWSObjectKey))
-			Expect(writtenMetadata.ProductFiles[i].FileType).To(Equal(p.FileType))
-			Expect(writtenMetadata.ProductFiles[i].FileVersion).To(Equal(p.FileVersion))
-			Expect(writtenMetadata.ProductFiles[i].MD5).To(Equal(p.MD5))
-			Expect(writtenMetadata.ProductFiles[i].UploadAs).To(BeEmpty())
-		}
-	}
-
-	var validateReleaseDependenciesMetadata = func(
-		writtenMetadata metadata.Metadata,
-		dependencies []pivnet.ReleaseDependency,
-	) {
-		Expect(writtenMetadata.Dependencies).To(HaveLen(len(dependencies)))
-		for i, d := range dependencies {
-			Expect(writtenMetadata.Dependencies[i].Release.ID).To(Equal(d.Release.ID))
-			Expect(writtenMetadata.Dependencies[i].Release.Version).To(Equal(d.Release.Version))
-			Expect(writtenMetadata.Dependencies[i].Release.Product.ID).To(Equal(d.Release.Product.ID))
-			Expect(writtenMetadata.Dependencies[i].Release.Product.Name).To(Equal(d.Release.Product.Name))
-		}
-	}
-
-	var validateReleaseUpgradePathsMetadata = func(
-		writtenMetadata metadata.Metadata,
-		upgradePaths []pivnet.ReleaseUpgradePath,
-	) {
-		Expect(writtenMetadata.UpgradePaths).To(HaveLen(len(upgradePaths)))
-		for i, d := range upgradePaths {
-			Expect(writtenMetadata.UpgradePaths[i].ID).To(Equal(d.Release.ID))
-			Expect(writtenMetadata.UpgradePaths[i].Version).To(Equal(d.Release.Version))
-		}
-	}
-
 	It("invokes the json metadata file writer with correct metadata", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
@@ -315,12 +359,7 @@ var _ = Describe("In", func() {
 		Expect(invokedMetadata.Release.Version).To(Equal(version))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-		pFiles := []pivnet.ProductFile{
-			productFile1,
-			productFile2,
-		}
-
-		validateProductFilesMetadata(invokedMetadata, pFiles)
+		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
 	})
@@ -336,12 +375,7 @@ var _ = Describe("In", func() {
 		Expect(invokedMetadata.Release.Version).To(Equal(version))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-		pFiles := []pivnet.ProductFile{
-			productFile1,
-			productFile2,
-		}
-
-		validateProductFilesMetadata(invokedMetadata, pFiles)
+		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
 	})
@@ -350,13 +384,20 @@ var _ = Describe("In", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
+		Expect(fakePivnetClient.ProductFilesForReleaseCallCount()).To(Equal(1))
+		Expect(fakePivnetClient.FileGroupsForReleaseCallCount()).To(Equal(1))
+
 		Expect(fakeFilter.ProductFileNamesByGlobsCallCount()).To(Equal(0))
 
-		Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(productFiles)))
+		expectedProductFiles := releaseProductFiles
+		expectedProductFiles = append(expectedProductFiles, fileGroup1ProductFile)
+		expectedProductFiles = append(expectedProductFiles, fileGroup2ProductFile)
+
+		Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(expectedProductFiles)))
 
 		Expect(fakeDownloader.DownloadCallCount()).To(Equal(1))
 		invokedProductFiles, _, _ := fakeDownloader.DownloadArgsForCall(0)
-		Expect(invokedProductFiles).To(Equal(productFiles))
+		Expect(invokedProductFiles).To(Equal(filteredProductFiles))
 
 		Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
 	})
@@ -417,6 +458,19 @@ var _ = Describe("In", func() {
 		})
 	})
 
+	Context("when getting file groups returns error", func() {
+		BeforeEach(func() {
+			fileGroupsErr = fmt.Errorf("some file group error")
+		})
+
+		It("returns error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(fileGroupsErr))
+		})
+	})
+
 	Context("when getting product files returns error", func() {
 		BeforeEach(func() {
 			productFilesErr = fmt.Errorf("some product files error")
@@ -443,17 +497,17 @@ var _ = Describe("In", func() {
 		})
 	})
 
-	Context("when globs are provided", func() {
+	Describe("when globs are provided", func() {
 		BeforeEach(func() {
 			inRequest.Params.Globs = []string{"some*glob", "other*glob"}
 		})
 
-		It("downloads files", func() {
+		It("downloads files, filtering by globs", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeFilter.ProductFileNamesByGlobsCallCount()).To(Equal(1))
-			Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(productFiles)))
+			Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(filteredProductFiles)))
 			Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
 		})
 
@@ -468,19 +522,14 @@ var _ = Describe("In", func() {
 			Expect(invokedMetadata.Release.Version).To(Equal(version))
 			Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-			pFiles := []pivnet.ProductFile{
-				productFile1,
-				productFile2,
-			}
-
-			validateProductFilesMetadata(invokedMetadata, pFiles)
+			validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 			validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		})
 
 		Context("when the file type is not 'Software'", func() {
 			BeforeEach(func() {
-				productFile2.FileType = "not software"
-				fileContentsMD5s[1] = "not interested"
+				releaseProductFile2.FileType = "not software"
+				fileContentsMD5s[1] = "this would fail if type was software"
 			})
 
 			It("ignores MD5", func() {
@@ -579,3 +628,44 @@ var _ = Describe("In", func() {
 		})
 	})
 })
+
+var validateProductFilesMetadata = func(
+	writtenMetadata metadata.Metadata,
+	pF []pivnet.ProductFile,
+) {
+	Expect(writtenMetadata.ProductFiles).To(HaveLen(len(pF)))
+	for i, p := range pF {
+		Expect(writtenMetadata.ProductFiles[i].File).To(Equal(p.Name))
+		Expect(writtenMetadata.ProductFiles[i].Description).To(Equal(p.Description))
+		Expect(writtenMetadata.ProductFiles[i].ID).To(Equal(p.ID))
+		Expect(writtenMetadata.ProductFiles[i].AWSObjectKey).To(Equal(p.AWSObjectKey))
+		Expect(writtenMetadata.ProductFiles[i].FileType).To(Equal(p.FileType))
+		Expect(writtenMetadata.ProductFiles[i].FileVersion).To(Equal(p.FileVersion))
+		Expect(writtenMetadata.ProductFiles[i].MD5).To(Equal(p.MD5))
+		Expect(writtenMetadata.ProductFiles[i].UploadAs).To(BeEmpty())
+	}
+}
+
+var validateReleaseDependenciesMetadata = func(
+	writtenMetadata metadata.Metadata,
+	dependencies []pivnet.ReleaseDependency,
+) {
+	Expect(writtenMetadata.Dependencies).To(HaveLen(len(dependencies)))
+	for i, d := range dependencies {
+		Expect(writtenMetadata.Dependencies[i].Release.ID).To(Equal(d.Release.ID))
+		Expect(writtenMetadata.Dependencies[i].Release.Version).To(Equal(d.Release.Version))
+		Expect(writtenMetadata.Dependencies[i].Release.Product.ID).To(Equal(d.Release.Product.ID))
+		Expect(writtenMetadata.Dependencies[i].Release.Product.Name).To(Equal(d.Release.Product.Name))
+	}
+}
+
+var validateReleaseUpgradePathsMetadata = func(
+	writtenMetadata metadata.Metadata,
+	upgradePaths []pivnet.ReleaseUpgradePath,
+) {
+	Expect(writtenMetadata.UpgradePaths).To(HaveLen(len(upgradePaths)))
+	for i, d := range upgradePaths {
+		Expect(writtenMetadata.UpgradePaths[i].ID).To(Equal(d.Release.ID))
+		Expect(writtenMetadata.UpgradePaths[i].Version).To(Equal(d.Release.Version))
+	}
+}
