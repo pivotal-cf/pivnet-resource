@@ -360,6 +360,7 @@ var _ = Describe("In", func() {
 		Expect(invokedMetadata.Release.Version).To(Equal(version))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
+		validateReleaseProductFilesMetadata(invokedMetadata, releaseProductFiles)
 		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateFileGroupsMetadata(invokedMetadata, fileGroups)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
@@ -378,6 +379,7 @@ var _ = Describe("In", func() {
 		Expect(invokedMetadata.Release.Version).To(Equal(version))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
+		validateReleaseProductFilesMetadata(invokedMetadata, releaseProductFiles)
 		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateFileGroupsMetadata(invokedMetadata, fileGroups)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
@@ -650,6 +652,17 @@ var validateFileGroupsMetadata = func(
 	}
 }
 
+var validateReleaseProductFilesMetadata = func(
+	writtenMetadata metadata.Metadata,
+	pF []pivnet.ProductFile,
+) {
+	Expect(writtenMetadata.Release.ProductFiles).To(HaveLen(len(pF)))
+
+	for i, p := range pF {
+		Expect(writtenMetadata.Release.ProductFiles[i].ID).To(Equal(p.ID))
+	}
+}
+
 var validateProductFilesMetadata = func(
 	writtenMetadata metadata.Metadata,
 	pF []pivnet.ProductFile,
@@ -657,8 +670,6 @@ var validateProductFilesMetadata = func(
 	Expect(writtenMetadata.ProductFiles).To(HaveLen(len(pF)))
 
 	for i, p := range pF {
-		Expect(writtenMetadata.Release.ProductFiles[i].ID).To(Equal(p.ID))
-
 		Expect(writtenMetadata.ProductFiles[i].File).To(Equal(p.Name))
 		Expect(writtenMetadata.ProductFiles[i].Description).To(Equal(p.Description))
 		Expect(writtenMetadata.ProductFiles[i].ID).To(Equal(p.ID))

@@ -118,7 +118,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Println("Getting product files")
 
-	productFiles, err := c.pivnetClient.ProductFilesForRelease(productSlug, release.ID)
+	releaseProductFiles, err := c.pivnetClient.ProductFilesForRelease(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
@@ -130,7 +130,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
-	allProductFiles := productFiles
+	allProductFiles := releaseProductFiles
 	for _, fg := range fileGroups {
 		allProductFiles = append(allProductFiles, fg.ProductFiles...)
 	}
@@ -195,11 +195,13 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		mdata.Release.EULASlug = release.EULA.Slug
 	}
 
-	for _, pf := range allProductFiles {
+	for _, pf := range releaseProductFiles {
 		mdata.Release.ProductFiles = append(mdata.Release.ProductFiles, metadata.ReleaseProductFile{
 			ID: pf.ID,
 		})
+	}
 
+	for _, pf := range allProductFiles {
 		mdata.ProductFiles = append(mdata.ProductFiles, metadata.ProductFile{
 			ID:           pf.ID,
 			File:         pf.Name,
