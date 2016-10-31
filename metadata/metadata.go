@@ -11,6 +11,7 @@ type Metadata struct {
 }
 
 type Release struct {
+	ID                    int                  `yaml:"id,omitempty"`
 	Version               string               `yaml:"version"`
 	ReleaseType           string               `yaml:"release_type"`
 	EULASlug              string               `yaml:"eula_slug"`

@@ -10,6 +10,7 @@ The contents of this metadata (in YAML format) are as follows:
 ---
 release:
   version: "v1.0.0"
+  id: 12345
   release_type: All-In-One
   release_date: 1997-12-31
   eula_slug: "pivotal_beta_eula"
@@ -76,6 +77,8 @@ The top-level `release` key is required.
 
   These constraints prevent inconsistencies that would occur when creating a new
   version of a resource that cannot be discovered by the check for that resource.
+
+* `id`: *Optional.* Written during `in` and ignored during `out`.
 
 * `release_type`: *Required.* See the
 [official docs](https://network.pivotal.io/docs/api) for the supported types.

@@ -175,6 +175,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	mdata := metadata.Metadata{
 		Release: &metadata.Release{
+			ID:                    release.ID,
 			Version:               release.Version,
 			ReleaseType:           string(release.ReleaseType),
 			ReleaseDate:           release.ReleaseDate,

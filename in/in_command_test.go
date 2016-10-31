@@ -356,6 +356,7 @@ var _ = Describe("In", func() {
 		invokedMetadata := fakeFileWriter.WriteMetadataJSONFileArgsForCall(0)
 
 		Expect(invokedMetadata.Release).NotTo(BeNil())
+		Expect(invokedMetadata.Release.ID).To(Equal(release.ID))
 		Expect(invokedMetadata.Release.Version).To(Equal(version))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
@@ -373,6 +374,7 @@ var _ = Describe("In", func() {
 		invokedMetadata := fakeFileWriter.WriteMetadataYAMLFileArgsForCall(0)
 
 		Expect(invokedMetadata.Release).NotTo(BeNil())
+		Expect(invokedMetadata.Release.ID).To(Equal(release.ID))
 		Expect(invokedMetadata.Release.Version).To(Equal(version))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
