@@ -130,14 +130,15 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
+	allProductFiles := productFiles
 	for _, fg := range fileGroups {
-		productFiles = append(productFiles, fg.ProductFiles...)
+		allProductFiles = append(allProductFiles, fg.ProductFiles...)
 	}
 
 	// Get individual product files to obtain metadata that isn't found
 	// in the endpoint for all product files.
-	for i, p := range productFiles {
-		productFiles[i], err = c.pivnetClient.ProductFileForRelease(
+	for i, p := range allProductFiles {
+		allProductFiles[i], err = c.pivnetClient.ProductFileForRelease(
 			productSlug,
 			release.ID,
 			p.ID,
@@ -163,7 +164,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Println("Downloading files")
 
-	err = c.downloadFiles(input.Params.Globs, productFiles, productSlug, release.ID)
+	err = c.downloadFiles(input.Params.Globs, allProductFiles, productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
