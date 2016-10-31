@@ -97,7 +97,7 @@ var _ = BeforeSuite(func() {
 	By("Creating pivnet client (for out-of-band operations)")
 
 	testLogger := log.New(sanitizedWriter, "", log.LstdFlags)
-	verbose := false
+	verbose := true
 	ls := logshim.NewLogShim(testLogger, testLogger, verbose)
 
 	clientConfig := pivnet.ClientConfig{
