@@ -195,7 +195,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		mdata.Release.EULASlug = release.EULA.Slug
 	}
 
-	for _, pf := range productFiles {
+	for _, pf := range allProductFiles {
 		mdata.Release.ProductFiles = append(mdata.Release.ProductFiles, metadata.ReleaseProductFile{
 			ID: pf.ID,
 		})

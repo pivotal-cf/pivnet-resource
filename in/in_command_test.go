@@ -360,7 +360,7 @@ var _ = Describe("In", func() {
 		Expect(invokedMetadata.Release.Version).To(Equal(version))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-		validateProductFilesMetadata(invokedMetadata, releaseProductFiles)
+		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateFileGroupsMetadata(invokedMetadata, fileGroups)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
@@ -378,7 +378,7 @@ var _ = Describe("In", func() {
 		Expect(invokedMetadata.Release.Version).To(Equal(version))
 		Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-		validateProductFilesMetadata(invokedMetadata, releaseProductFiles)
+		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateFileGroupsMetadata(invokedMetadata, fileGroups)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
@@ -526,7 +526,7 @@ var _ = Describe("In", func() {
 			Expect(invokedMetadata.Release.Version).To(Equal(version))
 			Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
 
-			validateProductFilesMetadata(invokedMetadata, releaseProductFiles)
+			validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 			validateFileGroupsMetadata(invokedMetadata, fileGroups)
 			validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		})
