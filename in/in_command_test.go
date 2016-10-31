@@ -637,19 +637,13 @@ var validateFileGroupsMetadata = func(
 	fileGroups []pivnet.FileGroup,
 ) {
 	Expect(writtenMetadata.FileGroups).To(HaveLen(len(fileGroups)))
+
 	for i, fg := range fileGroups {
 		Expect(writtenMetadata.FileGroups[i].ID).To(Equal(fg.ID))
 		Expect(writtenMetadata.FileGroups[i].Name).To(Equal(fg.Name))
 
 		for j, p := range fg.ProductFiles {
-			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].File).To(Equal(p.Name))
-			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].Description).To(Equal(p.Description))
 			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].ID).To(Equal(p.ID))
-			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].AWSObjectKey).To(Equal(p.AWSObjectKey))
-			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].FileType).To(Equal(p.FileType))
-			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].FileVersion).To(Equal(p.FileVersion))
-			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].MD5).To(Equal(p.MD5))
-			Expect(writtenMetadata.FileGroups[i].ProductFiles[j].UploadAs).To(BeEmpty())
 		}
 	}
 }
@@ -659,7 +653,10 @@ var validateProductFilesMetadata = func(
 	pF []pivnet.ProductFile,
 ) {
 	Expect(writtenMetadata.ProductFiles).To(HaveLen(len(pF)))
+
 	for i, p := range pF {
+		Expect(writtenMetadata.Release.ProductFiles[i].ID).To(Equal(p.ID))
+
 		Expect(writtenMetadata.ProductFiles[i].File).To(Equal(p.Name))
 		Expect(writtenMetadata.ProductFiles[i].Description).To(Equal(p.Description))
 		Expect(writtenMetadata.ProductFiles[i].ID).To(Equal(p.ID))
@@ -676,6 +673,7 @@ var validateReleaseDependenciesMetadata = func(
 	dependencies []pivnet.ReleaseDependency,
 ) {
 	Expect(writtenMetadata.Dependencies).To(HaveLen(len(dependencies)))
+
 	for i, d := range dependencies {
 		Expect(writtenMetadata.Dependencies[i].Release.ID).To(Equal(d.Release.ID))
 		Expect(writtenMetadata.Dependencies[i].Release.Version).To(Equal(d.Release.Version))
@@ -689,6 +687,7 @@ var validateReleaseUpgradePathsMetadata = func(
 	upgradePaths []pivnet.ReleaseUpgradePath,
 ) {
 	Expect(writtenMetadata.UpgradePaths).To(HaveLen(len(upgradePaths)))
+
 	for i, d := range upgradePaths {
 		Expect(writtenMetadata.UpgradePaths[i].ID).To(Equal(d.Release.ID))
 		Expect(writtenMetadata.UpgradePaths[i].Version).To(Equal(d.Release.Version))

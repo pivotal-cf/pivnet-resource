@@ -11,20 +11,25 @@ type Metadata struct {
 }
 
 type Release struct {
-	Version               string   `yaml:"version"`
-	ReleaseType           string   `yaml:"release_type"`
-	EULASlug              string   `yaml:"eula_slug"`
-	ReleaseDate           string   `yaml:"release_date"`
-	Description           string   `yaml:"description"`
-	ReleaseNotesURL       string   `yaml:"release_notes_url"`
-	Availability          string   `yaml:"availability"`
-	UserGroupIDs          []string `yaml:"user_group_ids,omitempty"`
-	Controlled            bool     `yaml:"controlled"`
-	ECCN                  string   `yaml:"eccn"`
-	LicenseException      string   `yaml:"license_exception"`
-	EndOfSupportDate      string   `yaml:"end_of_support_date"`
-	EndOfGuidanceDate     string   `yaml:"end_of_guidance_date"`
-	EndOfAvailabilityDate string   `yaml:"end_of_availability_date"`
+	Version               string               `yaml:"version"`
+	ReleaseType           string               `yaml:"release_type"`
+	EULASlug              string               `yaml:"eula_slug"`
+	ReleaseDate           string               `yaml:"release_date"`
+	Description           string               `yaml:"description"`
+	ReleaseNotesURL       string               `yaml:"release_notes_url"`
+	Availability          string               `yaml:"availability"`
+	UserGroupIDs          []string             `yaml:"user_group_ids,omitempty"`
+	Controlled            bool                 `yaml:"controlled"`
+	ECCN                  string               `yaml:"eccn"`
+	LicenseException      string               `yaml:"license_exception"`
+	EndOfSupportDate      string               `yaml:"end_of_support_date"`
+	EndOfGuidanceDate     string               `yaml:"end_of_guidance_date"`
+	EndOfAvailabilityDate string               `yaml:"end_of_availability_date"`
+	ProductFiles          []ReleaseProductFile `yaml:"product_files,omitempty"`
+}
+
+type ReleaseProductFile struct {
+	ID int `yaml:"id,omitempty"`
 }
 
 type ProductFile struct {
@@ -39,9 +44,13 @@ type ProductFile struct {
 }
 
 type FileGroup struct {
-	ID           int           `yaml:"id,omitempty"`
-	Name         string        `yaml:"name,omitempty"`
-	ProductFiles []ProductFile `yaml:"product_files,omitempty"`
+	ID           int                    `yaml:"id,omitempty"`
+	Name         string                 `yaml:"name,omitempty"`
+	ProductFiles []FileGroupProductFile `yaml:"product_files,omitempty"`
+}
+
+type FileGroupProductFile struct {
+	ID int `yaml:"id,omitempty"`
 }
 
 type Dependency struct {

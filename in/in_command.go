@@ -195,6 +195,10 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	}
 
 	for _, pf := range productFiles {
+		mdata.Release.ProductFiles = append(mdata.Release.ProductFiles, metadata.ReleaseProductFile{
+			ID: pf.ID,
+		})
+
 		mdata.ProductFiles = append(mdata.ProductFiles, metadata.ProductFile{
 			ID:           pf.ID,
 			File:         pf.Name,
@@ -231,15 +235,10 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 			ID:   fg.ID,
 			Name: fg.Name,
 		}
+
 		for _, pf := range fg.ProductFiles {
-			mfg.ProductFiles = append(mfg.ProductFiles, metadata.ProductFile{
-				ID:           pf.ID,
-				File:         pf.Name,
-				Description:  pf.Description,
-				AWSObjectKey: pf.AWSObjectKey,
-				FileType:     pf.FileType,
-				FileVersion:  pf.FileVersion,
-				MD5:          pf.MD5,
+			mfg.ProductFiles = append(mfg.ProductFiles, metadata.FileGroupProductFile{
+				ID: pf.ID,
 			})
 		}
 

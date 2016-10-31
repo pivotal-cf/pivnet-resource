@@ -17,6 +17,8 @@ release:
     "wow this is a long description for this product"
   release_notes_url: http://example.com
   availability: Selected User Groups Only
+  product_files:
+  - id: 9283
   user_group_ids:
     - 8
     - 23
@@ -29,7 +31,15 @@ release:
   end_of_availability_date: "2015-07-04"
 product_files:
 - file: relative/path/to/some/product/file
+  id: 9283
   upload_as: some human-readable name
+  description: |
+    some
+    multi-line
+    description
+- file: another/relative/path/to/some/other/product/file
+  id: 5432
+  upload_as: some other human-readable name
   description: |
     some
     multi-line
@@ -38,8 +48,7 @@ file_groups:
 - id: 2345
   name: "some file group"
   product_files:
-  - id: 9876
-    name: some-product-file
+  - id: 5432
 dependencies:
 - release:
     id: 1234
@@ -104,6 +113,8 @@ The top-level `release` key is required.
   - `All Users`
   - `Selected User Groups Only`
 
+* `product_files`: *Optional.* Written during `in` and ignored during `out`.
+
 * `user_group_ids`: *Optional.* Comma-separated list of user
   group IDs.
 
@@ -142,9 +153,9 @@ All other keys are optional. The purpose of the keys is as follows:
 
 ## File Groups
 
-The top-level `file_groups` key is currently written to during `in`
-but is not read during `out`. Therefore it cannot be used to set file groups
-when creating or updating a release.
+The top-level `file_groups` key is written to during `in` but is not read from
+during `out`. Therefore it cannot be used to set file groups when creating
+or updating a release.
 
 ## Dependencies
 
