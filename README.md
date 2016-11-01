@@ -123,8 +123,6 @@ for more details on the structure of the metadata file.
   - Files are downloaded to the working directory (e.g. `/tmp/build/get`) and the
   file names will be the same as they are on Pivotal Network - e.g. a file with
   name `some-file.txt` will be downloaded to `/tmp/build/get/some-file.txt`.
-  - Downloaded files will be available to tasks under the folder specified by the
-  tasks inputs. File names will be preserved.
 
 ### `out`: Upload a product to Pivotal Network.
 
