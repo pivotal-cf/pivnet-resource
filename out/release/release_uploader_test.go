@@ -48,8 +48,8 @@ var _ = Describe("ReleaseUploader", func() {
 
 		productSlug = "some-product-slug"
 
-		asyncTimeout = 15 * time.Millisecond
-		pollFrequency = 5 * time.Millisecond
+		asyncTimeout = 450 * time.Millisecond
+		pollFrequency = 15 * time.Millisecond
 
 		pivnetRelease = pivnet.Release{
 			ID:      1111,
