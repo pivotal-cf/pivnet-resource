@@ -9,6 +9,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/in/filesystem"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 
@@ -20,6 +22,7 @@ var _ = Describe("FileWriter", func() {
 	var (
 		fileWriter  *filesystem.FileWriter
 		downloadDir string
+		fakeLogger  logger.Logger
 	)
 
 	BeforeEach(func() {
@@ -27,9 +30,10 @@ var _ = Describe("FileWriter", func() {
 		downloadDir, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
 
-		logging := log.New(ioutil.Discard, "doesn't matter", 0)
+		logger := log.New(GinkgoWriter, "", log.LstdFlags)
+		fakeLogger = logshim.NewLogShim(logger, logger, true)
 
-		fileWriter = filesystem.NewFileWriter(downloadDir, logging)
+		fileWriter = filesystem.NewFileWriter(downloadDir, fakeLogger)
 	})
 
 	AfterEach(func() {

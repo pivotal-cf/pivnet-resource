@@ -1,8 +1,11 @@
 package filter_test
 
 import (
+	"log"
+
 	"github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf/go-pivnet/logger/loggerfakes"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/filter"
 
 	. "github.com/onsi/ginkgo"
@@ -11,7 +14,7 @@ import (
 
 var _ = Describe("Filter", func() {
 	var (
-		fakeLogger *loggerfakes.FakeLogger
+		fakeLogger logger.Logger
 
 		f *filter.Filter
 
@@ -19,7 +22,8 @@ var _ = Describe("Filter", func() {
 	)
 
 	BeforeEach(func() {
-		fakeLogger = &loggerfakes.FakeLogger{}
+		logger := log.New(GinkgoWriter, "", log.LstdFlags)
+		fakeLogger = logshim.NewLogShim(logger, logger, true)
 
 		f = filter.NewFilter(fakeLogger)
 

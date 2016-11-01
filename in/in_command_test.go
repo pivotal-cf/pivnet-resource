@@ -2,13 +2,14 @@ package in_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/in"
 	"github.com/pivotal-cf/pivnet-resource/in/infakes"
@@ -22,6 +23,8 @@ var _ = Describe("In", func() {
 	)
 
 	var (
+		fakeLogger logger.Logger
+
 		fakeFilter       *infakes.FakeFilter
 		fakeDownloader   *infakes.FakeDownloader
 		fakePivnetClient *infakes.FakePivnetClient
@@ -328,10 +331,11 @@ var _ = Describe("In", func() {
 			return "", nil
 		}
 
-		logging := log.New(ioutil.Discard, "doesn't matter", 0)
+		logger := log.New(GinkgoWriter, "", log.LstdFlags)
+		fakeLogger = logshim.NewLogShim(logger, logger, true)
 
 		inCommand = in.NewInCommand(
-			logging,
+			fakeLogger,
 			fakePivnetClient,
 			fakeFilter,
 			fakeDownloader,

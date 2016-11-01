@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/downloader"
 	"github.com/pivotal-cf/pivnet-resource/downloader/downloaderfakes"
 
@@ -23,7 +25,7 @@ var _ = Describe("Downloader", func() {
 		server     *ghttp.Server
 		apiAddress string
 		dir        string
-		logger     *log.Logger
+		fakeLogger logger.Logger
 	)
 
 	BeforeEach(func() {
@@ -31,7 +33,8 @@ var _ = Describe("Downloader", func() {
 
 		server = ghttp.NewServer()
 		apiAddress = server.URL()
-		logger = log.New(ioutil.Discard, "doesn't matter", 0)
+		logger := log.New(GinkgoWriter, "", log.LstdFlags)
+		fakeLogger = logshim.NewLogShim(logger, logger, true)
 
 		var err error
 		dir, err = ioutil.TempDir("", "pivnet-resource")
@@ -39,7 +42,7 @@ var _ = Describe("Downloader", func() {
 	})
 
 	JustBeforeEach(func() {
-		d = downloader.NewDownloader(fakeClient, dir, logger)
+		d = downloader.NewDownloader(fakeClient, dir, fakeLogger)
 	})
 
 	AfterEach(func() {

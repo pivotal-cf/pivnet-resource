@@ -3,20 +3,20 @@ package filesystem
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"gopkg.in/yaml.v2"
 )
 
 type FileWriter struct {
 	downloadDir string
-	logger      *log.Logger
+	logger      logger.Logger
 }
 
-func NewFileWriter(downloadDir string, logger *log.Logger) *FileWriter {
+func NewFileWriter(downloadDir string, logger logger.Logger) *FileWriter {
 	return &FileWriter{
 		downloadDir: downloadDir,
 		logger:      logger,
@@ -25,7 +25,7 @@ func NewFileWriter(downloadDir string, logger *log.Logger) *FileWriter {
 
 func (w FileWriter) WriteMetadataYAMLFile(mdata metadata.Metadata) error {
 	yamlMetadataFilepath := filepath.Join(w.downloadDir, "metadata.yaml")
-	w.logger.Println("Writing metadata to yaml file")
+	w.logger.Debug("Writing metadata to yaml file")
 
 	yamlMetadata, err := yaml.Marshal(mdata)
 	if err != nil {
@@ -44,7 +44,7 @@ func (w FileWriter) WriteMetadataYAMLFile(mdata metadata.Metadata) error {
 
 func (w FileWriter) WriteMetadataJSONFile(mdata metadata.Metadata) error {
 	jsonMetadataFilepath := filepath.Join(w.downloadDir, "metadata.json")
-	w.logger.Println("Writing metadata to json file")
+	w.logger.Debug("Writing metadata to json file")
 
 	jsonMetadata, err := json.Marshal(mdata)
 	if err != nil {
@@ -64,7 +64,7 @@ func (w FileWriter) WriteMetadataJSONFile(mdata metadata.Metadata) error {
 func (w FileWriter) WriteVersionFile(version string) error {
 	versionFilepath := filepath.Join(w.downloadDir, "version")
 
-	w.logger.Println("Writing version to file")
+	w.logger.Debug("Writing version to file")
 
 	err := ioutil.WriteFile(versionFilepath, []byte(version), os.ModePerm)
 	if err != nil {

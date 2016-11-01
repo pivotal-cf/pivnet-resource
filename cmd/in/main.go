@@ -81,15 +81,15 @@ func main() {
 		ls,
 	)
 
-	d := downloader.NewDownloader(client, downloadDir, logger)
+	d := downloader.NewDownloader(client, downloadDir, ls)
 	fs := md5sum.NewFileSummer()
 
 	f := filter.NewFilter(ls)
 
-	fileWriter := filesystem.NewFileWriter(downloadDir, logger)
+	fileWriter := filesystem.NewFileWriter(downloadDir, ls)
 
 	response, err := in.NewInCommand(
-		logger,
+		ls,
 		client,
 		f,
 		d,

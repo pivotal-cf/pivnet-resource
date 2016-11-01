@@ -1,13 +1,14 @@
 package downloader
 
 import (
+	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
 //go:generate counterfeiter --fake-name FakeClient . client
@@ -18,13 +19,13 @@ type client interface {
 type Downloader struct {
 	client      client
 	downloadDir string
-	logger      *log.Logger
+	logger      logger.Logger
 }
 
 func NewDownloader(
 	client client,
 	downloadDir string,
-	logger *log.Logger,
+	logger logger.Logger,
 ) *Downloader {
 	return &Downloader{
 		client:      client,
@@ -38,7 +39,7 @@ func (d Downloader) Download(
 	productSlug string,
 	releaseID int,
 ) ([]string, error) {
-	d.logger.Println("Ensuring download directory exists")
+	d.logger.Debug("Ensuring download directory exists")
 
 	err := os.MkdirAll(d.downloadDir, os.ModePerm)
 	if err != nil {
@@ -52,17 +53,17 @@ func (d Downloader) Download(
 
 		downloadPath := filepath.Join(d.downloadDir, fileName)
 
-		d.logger.Printf("Creating file: '%s'", downloadPath)
+		d.logger.Debug(fmt.Sprintf("Creating file: '%s'", downloadPath))
 		file, err := os.Create(downloadPath)
 		if err != nil {
 			return nil, err
 		}
 
-		d.logger.Printf(
+		d.logger.Info(fmt.Sprintf(
 			"Downloading: '%s' to file: '%s'",
 			pf.Name,
 			downloadPath,
-		)
+		))
 		err = d.client.DownloadProductFile(file, productSlug, releaseID, pf.ID)
 		if err != nil {
 			return nil, err

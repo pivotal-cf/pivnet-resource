@@ -2,11 +2,11 @@ package in
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"strings"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/versions"
@@ -49,7 +49,7 @@ type pivnetClient interface {
 }
 
 type InCommand struct {
-	logger       *log.Logger
+	logger       logger.Logger
 	downloadDir  string
 	pivnetClient pivnetClient
 	filter       filterer
@@ -59,7 +59,7 @@ type InCommand struct {
 }
 
 func NewInCommand(
-	logger *log.Logger,
+	logger logger.Logger,
 	pivnetClient pivnetClient,
 	filter filterer,
 	downloader downloader,
@@ -81,12 +81,12 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	version, fingerprint, err := versions.SplitIntoVersionAndFingerprint(input.Version.ProductVersion)
 	if err != nil {
-		c.logger.Println("Parsing of fingerprint failed; continuing without it")
+		c.logger.Info("Parsing of fingerprint failed; continuing without it")
 		version = input.Version.ProductVersion
 		fingerprint = ""
 	}
 
-	c.logger.Println(fmt.Sprintf(
+	c.logger.Info(fmt.Sprintf(
 		"Getting release for product slug: '%s' and product version: '%s'",
 		productSlug,
 		version,
@@ -109,21 +109,21 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		}
 	}
 
-	c.logger.Println(fmt.Sprintf("Accepting EULA for release with ID: %d", release.ID))
+	c.logger.Info(fmt.Sprintf("Accepting EULA for release with ID: %d", release.ID))
 
 	err = c.pivnetClient.AcceptEULA(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Println("Getting product files")
+	c.logger.Info("Getting product files")
 
 	releaseProductFiles, err := c.pivnetClient.ProductFilesForRelease(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Println("Getting file groups")
+	c.logger.Info("Getting file groups")
 
 	fileGroups, err := c.pivnetClient.FileGroupsForRelease(productSlug, release.ID)
 	if err != nil {
@@ -148,28 +148,28 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		}
 	}
 
-	c.logger.Println("Getting release dependencies")
+	c.logger.Info("Getting release dependencies")
 
 	releaseDependencies, err := c.pivnetClient.ReleaseDependencies(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Println("Getting release upgrade paths")
+	c.logger.Info("Getting release upgrade paths")
 
 	releaseUpgradePaths, err := c.pivnetClient.ReleaseUpgradePaths(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Println("Downloading files")
+	c.logger.Info("Downloading files")
 
 	err = c.downloadFiles(input.Params.Globs, allProductFiles, productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
 
-	c.logger.Println("Creating metadata")
+	c.logger.Info("Creating metadata")
 
 	versionWithFingerprint, err := versions.CombineVersionAndFingerprint(version, fingerprint)
 
@@ -248,7 +248,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		mdata.FileGroups = append(mdata.FileGroups, mfg)
 	}
 
-	c.logger.Println("Writing metadata files")
+	c.logger.Info("Writing metadata files")
 
 	err = c.fileWriter.WriteVersionFile(versionWithFingerprint)
 	if err != nil {
@@ -283,7 +283,7 @@ func (c InCommand) downloadFiles(
 	productSlug string,
 	releaseID int,
 ) error {
-	c.logger.Println("Filtering download links by glob")
+	c.logger.Info("Filtering download links by glob")
 
 	filtered := productFiles
 
@@ -296,7 +296,7 @@ func (c InCommand) downloadFiles(
 		}
 	}
 
-	c.logger.Println("Downloading filtered files")
+	c.logger.Info("Downloading filtered files")
 
 	files, err := c.downloader.Download(filtered, productSlug, releaseID)
 	if err != nil {
@@ -359,7 +359,7 @@ func (c InCommand) addReleaseMetadata(
 }
 
 func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]string) error {
-	c.logger.Println("Calcuating MD5 for downloaded files")
+	c.logger.Info("Calcuating MD5 for downloaded files")
 
 	for _, downloadPath := range filepaths {
 		_, f := filepath.Split(downloadPath)
@@ -380,9 +380,9 @@ func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]strin
 		}
 	}
 
-	c.logger.Println("MD5 matched for all downloaded files")
+	c.logger.Info("MD5 matched for all downloaded files")
 
-	c.logger.Println("Get complete")
+	c.logger.Info("Get complete")
 
 	return nil
 }
