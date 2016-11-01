@@ -90,10 +90,6 @@ var _ = Describe("Downloader", func() {
 		})
 
 		Context("when the pivnet client returns an error", func() {
-			var (
-				expectedErr *downloaderfakes.FakeNetError
-			)
-
 			BeforeEach(func() {
 				productFiles = []pivnet.ProductFile{
 					{
@@ -104,14 +100,18 @@ var _ = Describe("Downloader", func() {
 			})
 
 			Context("when the pivnet client returns a network error", func() {
+				var (
+					expectedErr *NetError
+				)
+
 				BeforeEach(func() {
-					expectedErr = &downloaderfakes.FakeNetError{}
+					expectedErr = &NetError{}
 					fakeClient.DownloadProductFileReturns(expectedErr)
 				})
 
 				Context("when the network error is temporary", func() {
 					BeforeEach(func() {
-						expectedErr.TemporaryReturns(true)
+						expectedErr.IsTemporary = true
 					})
 
 					It("attempts three downloads", func() {
@@ -213,3 +213,11 @@ var _ = Describe("Downloader", func() {
 		})
 	})
 })
+
+type NetError struct {
+	IsTemporary bool
+}
+
+func (ne *NetError) Error() string   { return "net error" }
+func (ne *NetError) Timeout() bool   { return false }
+func (ne *NetError) Temporary() bool { return ne.IsTemporary }
