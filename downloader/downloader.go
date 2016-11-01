@@ -3,6 +3,7 @@ package downloader
 import (
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -64,7 +65,8 @@ func (d Downloader) Download(
 			pf.Name,
 			downloadPath,
 		))
-		err = d.client.DownloadProductFile(file, productSlug, releaseID, pf.ID)
+
+		err = d.downloadProductFileWithRetries(file, productSlug, releaseID, pf.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -72,4 +74,33 @@ func (d Downloader) Download(
 	}
 
 	return fileNames, nil
+}
+
+var maxDownloadAttempts int = 3
+
+func (d Downloader) downloadProductFileWithRetries(
+	file io.Writer,
+	productSlug string,
+	releaseID int,
+	productFileID int,
+) error {
+	var err error
+
+	for i := maxDownloadAttempts; i > 0; i-- {
+		err = d.client.DownloadProductFile(file, productSlug, releaseID, productFileID)
+
+		if err != nil {
+			if netErr, ok := err.(net.Error); ok {
+				if netErr.Temporary() {
+					continue
+				}
+			}
+
+			break
+		}
+
+		return nil
+	}
+
+	return err
 }

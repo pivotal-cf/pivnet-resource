@@ -2,6 +2,7 @@ package downloader_test
 
 import (
 	"errors"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -88,21 +89,90 @@ var _ = Describe("Downloader", func() {
 			Expect(filepaths).Should(ContainElement(filepath.Join(dir, "file-2")))
 		})
 
-		Context("when it fails to make a request", func() {
+		Context("when the pivnet client returns an error", func() {
 			var (
-				expectedErr error
+				expectedErr *downloaderfakes.FakeNetError
 			)
 
 			BeforeEach(func() {
-				expectedErr = errors.New("download file error")
-				fakeClient.DownloadProductFileReturns(expectedErr)
+				productFiles = []pivnet.ProductFile{
+					{
+						Name:         "pf-0",
+						AWSObjectKey: "bucket/path/file-0",
+					},
+				}
 			})
 
-			It("raises an error", func() {
-				_, err := d.Download(productFiles, productSlug, releaseID)
+			Context("when the pivnet client returns a network error", func() {
+				BeforeEach(func() {
+					expectedErr = &downloaderfakes.FakeNetError{}
+					fakeClient.DownloadProductFileReturns(expectedErr)
+				})
 
-				Expect(err).Should(HaveOccurred())
-				Expect(err).To(Equal(expectedErr))
+				Context("when the network error is temporary", func() {
+					BeforeEach(func() {
+						expectedErr.TemporaryReturns(true)
+					})
+
+					It("attempts three downloads", func() {
+						_, err := d.Download(productFiles, productSlug, releaseID)
+
+						Expect(err).Should(HaveOccurred())
+						Expect(err).To(Equal(expectedErr))
+						Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(3))
+					})
+
+					Context("when the download succeeds the second or third time", func() {
+						BeforeEach(func() {
+							remainingFailures := 1
+
+							fakeClient.DownloadProductFileStub = func(w io.Writer, s string, r int, p int) error {
+								if remainingFailures > 0 {
+									remainingFailures--
+									return expectedErr
+								}
+
+								return nil
+							}
+						})
+
+						It("does not throw an error", func() {
+							_, err := d.Download(productFiles, productSlug, releaseID)
+
+							Expect(err).ShouldNot(HaveOccurred())
+							Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(2))
+						})
+					})
+				})
+
+				Context("when the network error is not temporary", func() {
+					It("raises an error", func() {
+						_, err := d.Download(productFiles, productSlug, releaseID)
+
+						Expect(err).Should(HaveOccurred())
+						Expect(err).To(Equal(expectedErr))
+						Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(1))
+					})
+				})
+			})
+
+			Context("when it encounters other errors", func() {
+				var (
+					expectedErr error
+				)
+
+				BeforeEach(func() {
+					expectedErr = errors.New("download file error")
+					fakeClient.DownloadProductFileReturns(expectedErr)
+				})
+
+				It("raises an error", func() {
+					_, err := d.Download(productFiles, productSlug, releaseID)
+
+					Expect(err).Should(HaveOccurred())
+					Expect(err).To(Equal(expectedErr))
+					Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(1))
+				})
 			})
 		})
 
