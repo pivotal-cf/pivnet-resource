@@ -156,7 +156,43 @@ var _ = Describe("Downloader", func() {
 				})
 			})
 
-			Context("when it encounters other errors", func() {
+			Context("when the pivnet client returns an unexpected EOF error", func() {
+				BeforeEach(func() {
+					fakeClient.DownloadProductFileReturns(io.ErrUnexpectedEOF)
+				})
+
+				It("attempts three downloads", func() {
+					_, err := d.Download(productFiles, productSlug, releaseID)
+
+					Expect(err).Should(HaveOccurred())
+					Expect(err).To(Equal(io.ErrUnexpectedEOF))
+					Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(3))
+				})
+
+				Context("when the download succeeds the second or third time", func() {
+					BeforeEach(func() {
+						remainingFailures := 1
+
+						fakeClient.DownloadProductFileStub = func(w io.Writer, s string, r int, p int) error {
+							if remainingFailures > 0 {
+								remainingFailures--
+								return io.ErrUnexpectedEOF
+							}
+
+							return nil
+						}
+					})
+
+					It("does not throw an error", func() {
+						_, err := d.Download(productFiles, productSlug, releaseID)
+
+						Expect(err).ShouldNot(HaveOccurred())
+						Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(2))
+					})
+				})
+			})
+
+			Context("when the pivnet client returns other errors", func() {
 				var (
 					expectedErr error
 				)

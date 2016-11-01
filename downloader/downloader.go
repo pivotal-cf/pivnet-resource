@@ -90,13 +90,17 @@ func (d Downloader) downloadProductFileWithRetries(
 		err = d.client.DownloadProductFile(file, productSlug, releaseID, productFileID)
 
 		if err != nil {
+			if err == io.ErrUnexpectedEOF {
+				continue
+			}
+
 			if netErr, ok := err.(net.Error); ok {
 				if netErr.Temporary() {
 					continue
 				}
 			}
 
-			break
+			return err
 		}
 
 		return nil
