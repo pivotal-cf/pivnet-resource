@@ -153,17 +153,17 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		}
 	}
 
-	pivnetRelease, err = c.userGroupsUpdater.UpdateUserGroups(pivnetRelease)
-	if err != nil {
-		return concourse.OutResponse{}, err
-	}
-
 	err = c.releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
 
 	err = c.releaseDependenciesAdder.AddReleaseDependencies(pivnetRelease)
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+
+	pivnetRelease, err = c.userGroupsUpdater.UpdateUserGroups(pivnetRelease)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
