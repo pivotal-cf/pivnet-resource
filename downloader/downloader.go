@@ -76,8 +76,6 @@ func (d Downloader) Download(
 	return fileNames, nil
 }
 
-var maxDownloadAttempts int = 3
-
 func (d Downloader) downloadProductFileWithRetries(
 	file io.Writer,
 	productSlug string,
@@ -86,7 +84,8 @@ func (d Downloader) downloadProductFileWithRetries(
 ) error {
 	var err error
 
-	for i := maxDownloadAttempts; i > 0; i-- {
+	maxDownloadAttempts := 3
+	for i := 0; i < maxDownloadAttempts; i++ {
 		err = d.client.DownloadProductFile(file, productSlug, releaseID, productFileID)
 
 		if err != nil {
@@ -113,5 +112,6 @@ func (d Downloader) downloadProductFileWithRetries(
 		maxDownloadAttempts,
 		err.Error(),
 	))
+
 	return err
 }
