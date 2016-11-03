@@ -109,7 +109,7 @@ func (d Downloader) downloadProductFileWithRetries(
 		return nil
 	}
 
-	d.logger.Debug(fmt.Sprintf("Download failed after %d attempts: %s",
+	d.logger.Info(fmt.Sprintf("Download failed after %d attempts: %s",
 		maxDownloadAttempts,
 		err.Error(),
 	))
