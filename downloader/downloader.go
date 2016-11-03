@@ -66,8 +66,13 @@ func (d Downloader) Download(
 			downloadPath,
 		))
 
-		err = d.downloadProductFileWithRetries(file, productSlug, releaseID, pf.ID)
+		maxAttempts := 3
+		err = d.downloadProductFileWithRetries(file, productSlug, releaseID, pf.ID, maxAttempts)
 		if err != nil {
+			d.logger.Info(fmt.Sprintf("Download failed after %d attempts: %s",
+				maxAttempts,
+				err.Error(),
+			))
 			return nil, err
 		}
 		fileNames = append(fileNames, downloadPath)
@@ -81,43 +86,54 @@ func (d Downloader) downloadProductFileWithRetries(
 	productSlug string,
 	releaseID int,
 	productFileID int,
+	maxAttempts int,
 ) error {
 	var err error
 
-	maxDownloadAttempts := 3
-	for i := 0; i < maxDownloadAttempts; i++ {
+	for i := 0; i < maxAttempts; i++ {
 		err = d.client.DownloadProductFile(file, productSlug, releaseID, productFileID)
 
 		if err != nil {
-			if err == io.ErrUnexpectedEOF {
-				d.logger.Info(fmt.Sprintf(
-					"Retrying download due to unexpected EOF error: %s",
-					err.Error(),
-				))
-				continue
+			retryable := d.errorRetryable(err)
+
+			if !retryable {
+				return err
 			}
 
-			if netErr, ok := err.(net.Error); ok {
-				if netErr.Temporary() {
-					d.logger.Info(fmt.Sprintf(
-						"Retrying download due to temporary network error: %s",
-						err.Error(),
-					))
-					continue
-				}
-			}
+			d.logger.Info(fmt.Sprintf(
+				"Retrying download due retryable error: %s",
+				err.Error(),
+			))
 
-			d.logger.Debug(fmt.Sprintf("Download failed: %s", err.Error()))
-			return err
+			continue
 		}
 
 		return nil
 	}
 
-	d.logger.Info(fmt.Sprintf("Download failed after %d attempts: %s",
-		maxDownloadAttempts,
-		err.Error(),
-	))
-
 	return err
+}
+
+// errorRetryable returns true if error indicates download can be retried.
+// provided err must be non-nil
+func (d Downloader) errorRetryable(err error) bool {
+	if err == io.ErrUnexpectedEOF {
+		d.logger.Info(fmt.Sprintf(
+			"Received unexpected EOF error: %s",
+			err.Error(),
+		))
+		return true
+	}
+
+	if netErr, ok := err.(net.Error); ok {
+		if netErr.Temporary() {
+			d.logger.Info(fmt.Sprintf(
+				"Received temporary network error: %s",
+				err.Error(),
+			))
+			return true
+		}
+	}
+
+	return false
 }
