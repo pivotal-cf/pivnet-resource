@@ -90,13 +90,19 @@ func (d Downloader) downloadProductFileWithRetries(
 
 		if err != nil {
 			if err == io.ErrUnexpectedEOF {
-				d.logger.Info(fmt.Sprintf("Unexpected EOF error (%s); retrying download", err.Error()))
+				d.logger.Info(fmt.Sprintf(
+					"Retrying download due to unexpected EOF error: %s",
+					err.Error(),
+				))
 				continue
 			}
 
 			if netErr, ok := err.(net.Error); ok {
 				if netErr.Temporary() {
-					d.logger.Info(fmt.Sprintf("Temporary network error (%s); retrying download", err.Error()))
+					d.logger.Info(fmt.Sprintf(
+						"Retrying download due to temporary network error: %s",
+						err.Error(),
+					))
 					continue
 				}
 			}
