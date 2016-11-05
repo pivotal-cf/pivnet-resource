@@ -20,9 +20,12 @@ const (
 )
 
 type pivnetErr struct {
-	Status  int      `json:"status"`
 	Message string   `json:"message"`
 	Errors  []string `json:"errors"`
+}
+
+type pivnetInternalServerErr struct {
+	Error string `json:"error"`
 }
 
 type ErrPivnetOther struct {
@@ -210,9 +213,23 @@ func (c Client) MakeRequest(
 
 	if expectedStatusCode > 0 && resp.StatusCode != expectedStatusCode {
 		var pErr pivnetErr
-		err = json.Unmarshal(b, &pErr)
-		if err != nil {
-			return nil, nil, err
+
+		// We have to handle 500 differently because it has a different structure
+		if resp.StatusCode == http.StatusInternalServerError {
+			var internalServerError pivnetInternalServerErr
+			err = json.Unmarshal(b, &internalServerError)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			pErr = pivnetErr{
+				Message: internalServerError.Error,
+			}
+		} else {
+			err = json.Unmarshal(b, &pErr)
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 
 		switch resp.StatusCode {
@@ -222,12 +239,12 @@ func (c Client) MakeRequest(
 			return nil, nil, newErrNotFound(pErr.Message)
 		case http.StatusUnavailableForLegalReasons:
 			return nil, nil, newErrUnavailableForLegalReasons()
-		}
-
-		return nil, nil, ErrPivnetOther{
-			ResponseCode: resp.StatusCode,
-			Message:      pErr.Message,
-			Errors:       pErr.Errors,
+		default:
+			return nil, nil, ErrPivnetOther{
+				ResponseCode: resp.StatusCode,
+				Message:      pErr.Message,
+				Errors:       pErr.Errors,
+			}
 		}
 	}
 
