@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/check"
 	"github.com/pivotal-cf/pivnet-resource/check/checkfakes"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
@@ -20,6 +22,7 @@ import (
 
 var _ = Describe("Check", func() {
 	var (
+		fakeLogger       logger.Logger
 		fakeFilter       *checkfakes.FakeFilter
 		fakePivnetClient *checkfakes.FakePivnetClient
 		fakeSorter       *checkfakes.FakeSorter
@@ -38,7 +41,6 @@ var _ = Describe("Check", func() {
 
 		releasesByReleaseTypeErr error
 		releasesByVersionErr     error
-		logging                  *log.Logger
 
 		tempDir     string
 		logFilePath string
@@ -48,7 +50,9 @@ var _ = Describe("Check", func() {
 		fakeFilter = &checkfakes.FakeFilter{}
 		fakePivnetClient = &checkfakes.FakePivnetClient{}
 		fakeSorter = &checkfakes.FakeSorter{}
-		logging = log.New(ioutil.Discard, "doesn't matter", 0)
+
+		logger := log.New(GinkgoWriter, "", log.LstdFlags)
+		fakeLogger = logshim.NewLogShim(logger, logger, true)
 
 		releasesByReleaseTypeErr = nil
 		releasesByVersionErr = nil
@@ -117,7 +121,7 @@ var _ = Describe("Check", func() {
 		binaryVersion := "v0.1.2-unit-tests"
 
 		checkCommand = check.NewCheckCommand(
-			logging,
+			fakeLogger,
 			binaryVersion,
 			fakeFilter,
 			fakePivnetClient,

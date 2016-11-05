@@ -2,12 +2,12 @@ package check
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/versions"
 )
@@ -30,7 +30,7 @@ type pivnetClient interface {
 }
 
 type CheckCommand struct {
-	logger        *log.Logger
+	logger        logger.Logger
 	binaryVersion string
 	filter        filter
 	pivnetClient  pivnetClient
@@ -39,7 +39,7 @@ type CheckCommand struct {
 }
 
 func NewCheckCommand(
-	logger *log.Logger,
+	logger logger.Logger,
 	binaryVersion string,
 	filter filter,
 	pivnetClient pivnetClient,
@@ -57,7 +57,7 @@ func NewCheckCommand(
 }
 
 func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckResponse, error) {
-	c.logger.Println("Received input, starting Check CMD run")
+	c.logger.Info("Received input, starting Check CMD run")
 
 	err := c.removeExistingLogFiles()
 	if err != nil {
@@ -73,14 +73,14 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	productSlug := input.Source.ProductSlug
 
-	c.logger.Println("Getting all releases")
+	c.logger.Info("Getting all releases")
 	releases, err := c.pivnetClient.ReleasesForProductSlug(productSlug)
 	if err != nil {
 		return nil, err
 	}
 
 	if releaseType != "" {
-		c.logger.Println(fmt.Sprintf("Filtering all releases by release type: '%s'", releaseType))
+		c.logger.Info(fmt.Sprintf("Filtering all releases by release type: '%s'", releaseType))
 		releases, err = c.filter.ReleasesByReleaseType(
 			releases,
 			pivnet.ReleaseType(releaseType),
@@ -92,7 +92,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	version := input.Source.ProductVersion
 	if version != "" {
-		c.logger.Println(fmt.Sprintf("Filtering all releases by product version: '%s'", version))
+		c.logger.Info(fmt.Sprintf("Filtering all releases by product version: '%s'", version))
 		releases, err = c.filter.ReleasesByVersion(releases, version)
 		if err != nil {
 			return nil, err
@@ -100,7 +100,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	}
 
 	if input.Source.SortBy == concourse.SortBySemver {
-		c.logger.Println("Sorting all releases by semver")
+		c.logger.Info("Sorting all releases by semver")
 		releases, err = c.semverSorter.SortBySemver(releases)
 		if err != nil {
 			return nil, err
@@ -117,7 +117,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return concourse.CheckResponse{}, nil
 	}
 
-	c.logger.Println("Gathering new versions")
+	c.logger.Info("Gathering new versions")
 
 	newVersions, err := versions.Since(vs, input.Version.ProductVersion)
 	if err != nil {
@@ -131,7 +131,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		return nil, err
 	}
 
-	c.logger.Printf("New versions: %v", reversedVersions)
+	c.logger.Info(fmt.Sprintf("New versions: %v", reversedVersions))
 
 	var out concourse.CheckResponse
 	for _, v := range reversedVersions {
@@ -142,7 +142,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		out = append(out, concourse.Version{ProductVersion: vs[0]})
 	}
 
-	c.logger.Println("Finishing check and returning ouput")
+	c.logger.Info("Finishing check and returning ouput")
 
 	return out, nil
 }
@@ -156,11 +156,11 @@ func (c *CheckCommand) removeExistingLogFiles() error {
 		return err
 	}
 
-	c.logger.Println(fmt.Sprintf("Located logfiles: %v", existingLogFiles))
+	c.logger.Info(fmt.Sprintf("Located logfiles: %v", existingLogFiles))
 
 	for _, f := range existingLogFiles {
 		if filepath.Base(f) != filepath.Base(c.logFilePath) {
-			c.logger.Println(fmt.Sprintf("Removing existing log file: %s", f))
+			c.logger.Info(fmt.Sprintf("Removing existing log file: %s", f))
 			err := os.Remove(f)
 			if err != nil {
 				// This is untested because it is too hard to force os.Remove to return
@@ -174,7 +174,7 @@ func (c *CheckCommand) removeExistingLogFiles() error {
 }
 
 func (c *CheckCommand) validateReleaseType(releaseType string) error {
-	c.logger.Println(fmt.Sprintf("Validating release type: '%s'", releaseType))
+	c.logger.Info(fmt.Sprintf("Validating release type: '%s'", releaseType))
 	releaseTypes, err := c.pivnetClient.ReleaseTypes()
 	if err != nil {
 		return err

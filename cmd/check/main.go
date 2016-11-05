@@ -49,7 +49,7 @@ func main() {
 	logger.SetOutput(sanitizer.NewSanitizer(sanitized, logFile))
 
 	verbose := false
-	sp := logshim.NewLogShim(logger, logger, verbose)
+	ls := logshim.NewLogShim(logger, logger, verbose)
 
 	err = validator.NewCheckValidator(input).Validate()
 	if err != nil {
@@ -70,16 +70,16 @@ func main() {
 	}
 	client := gp.NewClient(
 		clientConfig,
-		sp,
+		ls,
 	)
 
-	f := filter.NewFilter(sp)
+	f := filter.NewFilter(ls)
 
 	semverConverter := semver.NewSemverConverter(logger)
 	s := sorter.NewSorter(logger, semverConverter)
 
 	response, err := check.NewCheckCommand(
-		logger,
+		ls,
 		version,
 		f,
 		client,
