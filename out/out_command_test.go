@@ -2,10 +2,11 @@ package out_test
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
 
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/out"
@@ -18,7 +19,8 @@ import (
 var _ = Describe("Out", func() {
 	Describe("Run", func() {
 		var (
-			logger                   *log.Logger
+			fakeLogger logger.Logger
+
 			finalizer                *outfakes.Finalizer
 			userGroupsUpdater        *outfakes.UserGroupsUpdater
 			releaseDependenciesAdder *outfakes.ReleaseDependenciesAdder
@@ -47,7 +49,9 @@ var _ = Describe("Out", func() {
 		)
 
 		BeforeEach(func() {
-			logger = log.New(ioutil.Discard, "doesn't matter", 0)
+			logger := log.New(GinkgoWriter, "", log.LstdFlags)
+			fakeLogger = logshim.NewLogShim(logger, logger, true)
+
 			finalizer = &outfakes.Finalizer{}
 			userGroupsUpdater = &outfakes.UserGroupsUpdater{}
 			releaseDependenciesAdder = &outfakes.ReleaseDependenciesAdder{}
@@ -89,7 +93,7 @@ var _ = Describe("Out", func() {
 			}
 
 			config := out.OutCommandConfig{
-				Logger:                   logger,
+				Logger:                   fakeLogger,
 				OutDir:                   "some/out/dir",
 				SourcesDir:               "some/sources/dir",
 				GlobClient:               globber,

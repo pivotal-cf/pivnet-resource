@@ -2,18 +2,18 @@ package release
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"time"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 )
 
 type ReleaseUploader struct {
 	s3            s3Client
 	pivnet        uploadClient
-	logger        *log.Logger
+	logger        logger.Logger
 	md5Summer     md5Summer
 	metadata      metadata.Metadata
 	sourcesDir    string
@@ -45,7 +45,7 @@ type md5Summer interface {
 func NewReleaseUploader(
 	s3 s3Client,
 	pivnet uploadClient,
-	logger *log.Logger,
+	logger logger.Logger,
 	md5Summer md5Summer,
 	metadata metadata.Metadata,
 	sourcesDir,
@@ -74,7 +74,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			return err
 		}
 
-		u.logger.Println(fmt.Sprintf("uploading to s3: '%s'", exactGlob))
+		u.logger.Info(fmt.Sprintf("uploading to s3: '%s'", exactGlob))
 
 		awsObjectKey, err := u.s3.UploadFile(exactGlob)
 		if err != nil {
@@ -89,14 +89,14 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		for _, f := range u.metadata.ProductFiles {
 			if f.File == exactGlob {
-				u.logger.Println(fmt.Sprintf(
+				u.logger.Info(fmt.Sprintf(
 					"exact glob '%s' matches metadata file: '%s'",
 					exactGlob,
 					f.File,
 				))
 
 				if f.UploadAs != "" {
-					u.logger.Println(fmt.Sprintf(
+					u.logger.Info(fmt.Sprintf(
 						"uploading '%s' to remote filename: '%s' instead",
 						exactGlob,
 						f.UploadAs,
@@ -110,7 +110,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 					fileType = f.FileType
 				}
 			} else {
-				u.logger.Println(fmt.Sprintf(
+				u.logger.Info(fmt.Sprintf(
 					"exact glob '%s' does not match metadata file: '%s'",
 					exactGlob,
 					f.File,
@@ -125,7 +125,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		for _, pf := range productFiles {
 			if pf.AWSObjectKey == awsObjectKey {
-				u.logger.Println(fmt.Sprintf("Deleting existing product file with AWSObjectKey: '%s'", pf.AWSObjectKey))
+				u.logger.Info(fmt.Sprintf("Deleting existing product file with AWSObjectKey: '%s'", pf.AWSObjectKey))
 
 				_, err = u.pivnet.DeleteProductFile(u.productSlug, pf.ID)
 				if err != nil {
@@ -136,7 +136,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			}
 		}
 
-		u.logger.Println(fmt.Sprintf(
+		u.logger.Info(fmt.Sprintf(
 			"Creating product file with remote name: '%s'",
 			uploadAs,
 		))
@@ -154,7 +154,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			return err
 		}
 
-		u.logger.Println(fmt.Sprintf(
+		u.logger.Info(fmt.Sprintf(
 			"Adding product file: '%s' with ID: %d",
 			uploadAs,
 			productFile.ID,
@@ -175,11 +175,11 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 }
 
 func (u ReleaseUploader) pollForProductFile(productFile pivnet.ProductFile) error {
-	u.logger.Printf(
+	u.logger.Info(fmt.Sprintf(
 		"Polling product file: '%s' for async transfer - will wait up to %v",
 		productFile.Name,
 		u.asyncTimeout,
-	)
+	))
 
 	timeoutTimer := time.NewTimer(u.asyncTimeout)
 	pollTicker := time.NewTicker(u.pollFrequency)
@@ -195,7 +195,10 @@ func (u ReleaseUploader) pollForProductFile(productFile pivnet.ProductFile) erro
 			}
 
 			if pf.FileTransferStatus == "complete" {
-				u.logger.Printf("Product file: '%s' async transfer complete", productFile.Name)
+				u.logger.Info(fmt.Sprintf(
+					"Product file: '%s' async transfer complete",
+					productFile.Name,
+				))
 
 				timeoutTimer.Stop()
 				pollTicker.Stop()
@@ -203,7 +206,10 @@ func (u ReleaseUploader) pollForProductFile(productFile pivnet.ProductFile) erro
 				return nil
 			}
 
-			u.logger.Printf("Product file: '%s' async transfer incomplete", productFile.Name)
+			u.logger.Info(fmt.Sprintf(
+				"Product file: '%s' async transfer incomplete",
+				productFile.Name,
+			))
 		}
 	}
 }

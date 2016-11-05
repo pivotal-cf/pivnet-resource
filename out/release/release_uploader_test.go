@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/out/release"
 	"github.com/pivotal-cf/pivnet-resource/out/release/releasefakes"
@@ -16,8 +18,9 @@ import (
 
 var _ = Describe("ReleaseUploader", func() {
 	var (
+		fakeLogger logger.Logger
+
 		s3Client      *releasefakes.S3Client
-		logging       *log.Logger
 		uploadClient  *releasefakes.UploadClient
 		md5Summer     *releasefakes.Md5Summer
 		pivnetRelease pivnet.Release
@@ -41,8 +44,10 @@ var _ = Describe("ReleaseUploader", func() {
 	)
 
 	BeforeEach(func() {
+		logger := log.New(GinkgoWriter, "", log.LstdFlags)
+		fakeLogger = logshim.NewLogShim(logger, logger, true)
+
 		s3Client = &releasefakes.S3Client{}
-		logging = log.New(GinkgoWriter, "uploader test - ", 0)
 		uploadClient = &releasefakes.UploadClient{}
 		md5Summer = &releasefakes.Md5Summer{}
 
@@ -88,7 +93,7 @@ var _ = Describe("ReleaseUploader", func() {
 		uploader = release.NewReleaseUploader(
 			s3Client,
 			uploadClient,
-			logging,
+			fakeLogger,
 			md5Summer,
 			mdata,
 			"/some/sources/dir",

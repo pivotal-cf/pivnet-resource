@@ -2,14 +2,14 @@ package release
 
 import (
 	"fmt"
-	"log"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 )
 
 type ReleaseUpgradePathsAdder struct {
-	logger      *log.Logger
+	logger      logger.Logger
 	pivnet      releaseUpgradePathsAdderClient
 	metadata    metadata.Metadata
 	productSlug string
@@ -17,7 +17,7 @@ type ReleaseUpgradePathsAdder struct {
 }
 
 func NewReleaseUpgradePathsAdder(
-	logger *log.Logger,
+	logger logger.Logger,
 	pivnetClient releaseUpgradePathsAdderClient,
 	metadata metadata.Metadata,
 	productSlug string,
@@ -83,7 +83,7 @@ func (rf ReleaseUpgradePathsAdder) AddReleaseUpgradePaths(release pivnet.Release
 	}
 
 	for r, _ := range upgradeFromReleases {
-		rf.logger.Println(fmt.Sprintf(
+		rf.logger.Info(fmt.Sprintf(
 			"Adding upgrade path: '%s'",
 			r.Version,
 		))

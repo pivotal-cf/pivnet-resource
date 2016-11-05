@@ -3,10 +3,11 @@ package release_test
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/out/release"
 	"github.com/pivotal-cf/pivnet-resource/out/release/releasefakes"
@@ -18,7 +19,7 @@ import (
 var _ = Describe("ReleaseUpgradePathsAdder", func() {
 	Describe("AddReleaseUpgradePaths", func() {
 		var (
-			l *log.Logger
+			fakeLogger logger.Logger
 
 			pivnetClient *releasefakes.ReleaseUpgradePathsAdderClient
 			fakeFilter   *releasefakes.FakeFilter
@@ -38,10 +39,11 @@ var _ = Describe("ReleaseUpgradePathsAdder", func() {
 		)
 
 		BeforeEach(func() {
+			logger := log.New(GinkgoWriter, "", log.LstdFlags)
+			fakeLogger = logshim.NewLogShim(logger, logger, true)
+
 			pivnetClient = &releasefakes.ReleaseUpgradePathsAdderClient{}
 			fakeFilter = &releasefakes.FakeFilter{}
-
-			l = log.New(ioutil.Discard, "it doesn't matter", 0)
 
 			existingReleases = []pivnet.Release{
 				{
@@ -87,7 +89,7 @@ var _ = Describe("ReleaseUpgradePathsAdder", func() {
 
 		JustBeforeEach(func() {
 			releaseUpgradePathsAdder = release.NewReleaseUpgradePathsAdder(
-				l,
+				fakeLogger,
 				pivnetClient,
 				mdata,
 				productSlug,

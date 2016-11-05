@@ -2,22 +2,22 @@ package release
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 )
 
 type UserGroupsUpdater struct {
-	logger      *log.Logger
+	logger      logger.Logger
 	pivnet      userGroupsUpdaterClient
 	metadata    metadata.Metadata
 	productSlug string
 }
 
 func NewUserGroupsUpdater(
-	logger *log.Logger,
+	logger logger.Logger,
 	pivnetClient userGroupsUpdaterClient,
 	metadata metadata.Metadata,
 	productSlug string,
@@ -46,7 +46,7 @@ func (rf UserGroupsUpdater) UpdateUserGroups(release pivnet.Release) (pivnet.Rel
 			Availability: availability,
 		}
 
-		rf.logger.Println(fmt.Sprintf(
+		rf.logger.Info(fmt.Sprintf(
 			"Updating availability to: '%s'",
 			availability,
 		))
@@ -66,7 +66,7 @@ func (rf UserGroupsUpdater) UpdateUserGroups(release pivnet.Release) (pivnet.Rel
 					return pivnet.Release{}, err
 				}
 
-				rf.logger.Println(fmt.Sprintf(
+				rf.logger.Info(fmt.Sprintf(
 					"Adding user group with ID: %d",
 					userGroupID,
 				))

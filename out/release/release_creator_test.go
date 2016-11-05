@@ -3,11 +3,12 @@ package release_test
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 
 	"github.com/blang/semver"
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/out/release"
@@ -19,9 +20,10 @@ import (
 
 var _ = Describe("ReleaseCreator", func() {
 	var (
+		fakeLogger logger.Logger
+
 		pivnetClient        *releasefakes.ReleaseClient
 		fakeSemverConverter *releasefakes.FakeSemverConverter
-		logging             *log.Logger
 
 		creator release.ReleaseCreator
 
@@ -36,8 +38,10 @@ var _ = Describe("ReleaseCreator", func() {
 	)
 
 	BeforeEach(func() {
+		logger := log.New(GinkgoWriter, "", log.LstdFlags)
+		fakeLogger = logshim.NewLogShim(logger, logger, true)
+
 		pivnetClient = &releasefakes.ReleaseClient{}
-		logging = log.New(ioutil.Discard, "it doesn't matter", 0)
 		fakeSemverConverter = &releasefakes.FakeSemverConverter{}
 
 		sortBy = concourse.SortByNone
@@ -95,7 +99,7 @@ var _ = Describe("ReleaseCreator", func() {
 			creator = release.NewReleaseCreator(
 				pivnetClient,
 				fakeSemverConverter,
-				logging,
+				fakeLogger,
 				meta,
 				params,
 				source,

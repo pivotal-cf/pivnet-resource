@@ -2,10 +2,11 @@ package release_test
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
 
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/out/release"
@@ -18,8 +19,9 @@ import (
 var _ = Describe("ReleaseFinalizer", func() {
 	Describe("Finalize", func() {
 		var (
+			fakeLogger logger.Logger
+
 			fakePivnet *releasefakes.FinalizerClient
-			l          *log.Logger
 			params     concourse.OutParams
 
 			mdata metadata.Metadata
@@ -33,8 +35,10 @@ var _ = Describe("ReleaseFinalizer", func() {
 		)
 
 		BeforeEach(func() {
+			logger := log.New(GinkgoWriter, "", log.LstdFlags)
+			fakeLogger = logshim.NewLogShim(logger, logger, true)
+
 			fakePivnet = &releasefakes.FinalizerClient{}
-			l = log.New(ioutil.Discard, "it doesn't matter", 0)
 
 			params = concourse.OutParams{}
 
@@ -65,7 +69,7 @@ var _ = Describe("ReleaseFinalizer", func() {
 		JustBeforeEach(func() {
 			finalizer = release.NewFinalizer(
 				fakePivnet,
-				l,
+				fakeLogger,
 				params,
 				mdata,
 				"/some/sources/dir",

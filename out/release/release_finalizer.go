@@ -2,16 +2,16 @@ package release
 
 import (
 	"fmt"
-	"log"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/versions"
 )
 
 type ReleaseFinalizer struct {
-	logger      *log.Logger
+	logger      logger.Logger
 	pivnet      finalizerClient
 	metadata    metadata.Metadata
 	params      concourse.OutParams
@@ -21,7 +21,7 @@ type ReleaseFinalizer struct {
 
 func NewFinalizer(
 	pivnetClient finalizerClient,
-	logger *log.Logger,
+	logger logger.Logger,
 	params concourse.OutParams,
 	metadata metadata.Metadata,
 	sourcesDir,

@@ -2,12 +2,12 @@ package release
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
 	"github.com/blang/semver"
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 )
@@ -15,7 +15,7 @@ import (
 type ReleaseCreator struct {
 	pivnet          releaseClient
 	semverConverter semverConverter
-	logger          *log.Logger
+	logger          logger.Logger
 	metadata        metadata.Metadata
 	sourcesDir      string
 	productSlug     string
@@ -40,7 +40,7 @@ type semverConverter interface {
 func NewReleaseCreator(
 	pivnet releaseClient,
 	semverConverter semverConverter,
-	logger *log.Logger,
+	logger logger.Logger,
 	metadata metadata.Metadata,
 	params concourse.OutParams,
 	source concourse.Source,
@@ -67,11 +67,11 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		if err != nil {
 			return pivnet.Release{}, err
 		}
-		rc.logger.Println(fmt.Sprintf("Successfully parsed semver as: '%s'", v.String()))
+		rc.logger.Info(fmt.Sprintf("Successfully parsed semver as: '%s'", v.String()))
 	}
 
 	if rc.source.ProductVersion != "" {
-		rc.logger.Println(fmt.Sprintf(
+		rc.logger.Info(fmt.Sprintf(
 			"Validating product version: '%s' against regex: '%s'",
 			version,
 			rc.source.ProductVersion,
@@ -93,7 +93,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	eulaSlug := rc.metadata.Release.EULASlug
 
-	rc.logger.Println(fmt.Sprintf("Validating EULA: '%s'", eulaSlug))
+	rc.logger.Info(fmt.Sprintf("Validating EULA: '%s'", eulaSlug))
 
 	eulas, err := rc.pivnet.EULAs()
 	if err != nil {
@@ -124,7 +124,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	releaseType := pivnet.ReleaseType(rc.metadata.Release.ReleaseType)
 
-	rc.logger.Println(fmt.Sprintf("Validating release type: '%s'", releaseType))
+	rc.logger.Info(fmt.Sprintf("Validating release type: '%s'", releaseType))
 
 	releaseTypes, err := rc.pivnet.ReleaseTypes()
 	if err != nil {
@@ -172,7 +172,11 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	for _, r := range releases {
 		if r.Version == version {
-			rc.logger.Printf("Deleting existing release: '%s' - id: '%d'", r.Version, r.ID)
+			rc.logger.Info(fmt.Sprintf(
+				"Deleting existing release: '%s' - id: '%d'",
+				r.Version,
+				r.ID,
+			))
 
 			err := rc.pivnet.DeleteRelease(rc.productSlug, r)
 			if err != nil {
@@ -197,12 +201,12 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		EndOfAvailabilityDate: rc.metadata.Release.EndOfAvailabilityDate,
 	}
 
-	rc.logger.Println(fmt.Sprintf("Creating new release with config: %+v", config))
+	rc.logger.Info(fmt.Sprintf("Creating new release with config: %+v", config))
 	release, err := rc.pivnet.CreateRelease(config)
 	if err != nil {
 		return pivnet.Release{}, err
 	}
 
-	rc.logger.Println(fmt.Sprintf("Created new release with ID: %d", release.ID))
+	rc.logger.Info(fmt.Sprintf("Created new release with ID: %d", release.ID))
 	return release, nil
 }

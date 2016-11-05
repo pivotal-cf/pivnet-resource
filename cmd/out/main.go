@@ -152,7 +152,7 @@ func main() {
 	releaseCreator := release.NewReleaseCreator(
 		client,
 		semverConverter,
-		logger,
+		ls,
 		m,
 		input.Params,
 		input.Source,
@@ -165,7 +165,7 @@ func main() {
 	releaseUploader := release.NewReleaseUploader(
 		uploaderClient,
 		client,
-		logger,
+		ls,
 		md5summer,
 		m,
 		sourcesDir,
@@ -175,21 +175,21 @@ func main() {
 	)
 
 	releaseUserGroupsUpdater := release.NewUserGroupsUpdater(
-		logger,
+		ls,
 		client,
 		m,
 		input.Source.ProductSlug,
 	)
 
 	releaseDependenciesAdder := release.NewReleaseDependenciesAdder(
-		logger,
+		ls,
 		client,
 		m,
 		input.Source.ProductSlug,
 	)
 
 	releaseUpgradePathsAdder := release.NewReleaseUpgradePathsAdder(
-		logger,
+		ls,
 		client,
 		m,
 		input.Source.ProductSlug,
@@ -198,7 +198,7 @@ func main() {
 
 	releaseFinalizer := release.NewFinalizer(
 		client,
-		logger,
+		ls,
 		input.Params,
 		m,
 		sourcesDir,
@@ -206,7 +206,7 @@ func main() {
 	)
 
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
-		Logger:                   logger,
+		Logger:                   ls,
 		OutDir:                   outDir,
 		SourcesDir:               sourcesDir,
 		GlobClient:               globber,

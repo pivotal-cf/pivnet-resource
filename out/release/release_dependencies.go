@@ -2,21 +2,21 @@ package release
 
 import (
 	"fmt"
-	"log"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 )
 
 type ReleaseDependenciesAdder struct {
-	logger      *log.Logger
+	logger      logger.Logger
 	pivnet      releaseDependenciesAdderClient
 	metadata    metadata.Metadata
 	productSlug string
 }
 
 func NewReleaseDependenciesAdder(
-	logger *log.Logger,
+	logger logger.Logger,
 	pivnetClient releaseDependenciesAdderClient,
 	metadata metadata.Metadata,
 	productSlug string,
@@ -46,7 +46,7 @@ func (rf ReleaseDependenciesAdder) AddReleaseDependencies(release pivnet.Release
 				)
 			}
 
-			rf.logger.Println(fmt.Sprintf(
+			rf.logger.Info(fmt.Sprintf(
 				"Looking up dependent release ID for: '%s/%s'",
 				d.Release.Product.Slug,
 				d.Release.Version,
@@ -58,7 +58,7 @@ func (rf ReleaseDependenciesAdder) AddReleaseDependencies(release pivnet.Release
 			dependentReleaseID = r.ID
 		}
 
-		rf.logger.Println(fmt.Sprintf(
+		rf.logger.Info(fmt.Sprintf(
 			"Adding dependent release with ID: %d",
 			dependentReleaseID,
 		))

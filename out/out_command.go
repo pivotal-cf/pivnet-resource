@@ -2,15 +2,15 @@ package out
 
 import (
 	"fmt"
-	"log"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 )
 
 type OutCommand struct {
-	logger                   *log.Logger
+	logger                   logger.Logger
 	outDir                   string
 	sourcesDir               string
 	globClient               globber
@@ -26,7 +26,7 @@ type OutCommand struct {
 }
 
 type OutCommandConfig struct {
-	Logger                   *log.Logger
+	Logger                   logger.Logger
 	OutDir                   string
 	SourcesDir               string
 	GlobClient               globber
@@ -144,7 +144,7 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 	}
 
 	if c.skipUpload {
-		c.logger.Println(
+		c.logger.Info(
 			"file glob and s3_filepath_prefix not provided - skipping upload to s3")
 	} else {
 		err = c.uploader.Upload(pivnetRelease, exactGlobs)
@@ -173,7 +173,7 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		return concourse.OutResponse{}, err
 	}
 
-	c.logger.Println("Put complete")
+	c.logger.Info("Put complete")
 
 	return out, nil
 }

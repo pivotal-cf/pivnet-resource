@@ -2,10 +2,11 @@ package release_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/out/release"
 	"github.com/pivotal-cf/pivnet-resource/out/release/releasefakes"
@@ -17,7 +18,7 @@ import (
 var _ = Describe("ReleaseDependenciesAdder", func() {
 	Describe("AddReleaseDependencies", func() {
 		var (
-			l *log.Logger
+			fakeLogger logger.Logger
 
 			pivnetClient *releasefakes.ReleaseDependenciesAdderClient
 
@@ -30,8 +31,10 @@ var _ = Describe("ReleaseDependenciesAdder", func() {
 		)
 
 		BeforeEach(func() {
+			logger := log.New(GinkgoWriter, "", log.LstdFlags)
+			fakeLogger = logshim.NewLogShim(logger, logger, true)
+
 			pivnetClient = &releasefakes.ReleaseDependenciesAdderClient{}
-			l = log.New(ioutil.Discard, "it doesn't matter", 0)
 
 			productSlug = "some-product-slug"
 
@@ -58,7 +61,7 @@ var _ = Describe("ReleaseDependenciesAdder", func() {
 
 		JustBeforeEach(func() {
 			releaseDependenciesAdder = release.NewReleaseDependenciesAdder(
-				l,
+				fakeLogger,
 				pivnetClient,
 				mdata,
 				productSlug,
