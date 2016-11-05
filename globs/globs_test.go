@@ -8,12 +8,16 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/globs"
 )
 
 var _ = Describe("Globber", func() {
 	Describe("ExactGlobs", func() {
 		var (
+			fakeLogger logger.Logger
+
 			globberConfig globs.GlobberConfig
 			globber       *globs.Globber
 
@@ -33,12 +37,13 @@ var _ = Describe("Globber", func() {
 			_, err = os.Create(filepath.Join(myFilesDir, "file-0"))
 			Expect(err).NotTo(HaveOccurred())
 
-			l := log.New(ioutil.Discard, "doesn't matter", 0)
+			logger := log.New(GinkgoWriter, "", log.LstdFlags)
+			fakeLogger = logshim.NewLogShim(logger, logger, true)
 
 			globberConfig = globs.GlobberConfig{
 				FileGlob:   "my_files/*",
 				SourcesDir: tempDir,
-				Logger:     l,
+				Logger:     fakeLogger,
 			}
 
 			globber = globs.NewGlobber(globberConfig)

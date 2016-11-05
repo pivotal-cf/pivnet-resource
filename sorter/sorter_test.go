@@ -2,11 +2,11 @@ package sorter_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 
 	bsemver "github.com/blang/semver"
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/sorter"
 	"github.com/pivotal-cf/pivnet-resource/sorter/sorterfakes"
 
@@ -22,7 +22,8 @@ var _ = Describe("Sorter", func() {
 	)
 
 	BeforeEach(func() {
-		testLogger := log.New(ioutil.Discard, "it doesn't matter", 0)
+		logger := log.New(GinkgoWriter, "", log.LstdFlags)
+		fakeLogger := logshim.NewLogShim(logger, logger, true)
 		fakeSemverConverter = &sorterfakes.FakeSemverConverter{}
 
 		fakeSemverConverter.ToValidSemverStub = func(input string) (bsemver.Version, error) {
@@ -66,7 +67,7 @@ var _ = Describe("Sorter", func() {
 			}
 		}
 
-		s = sorter.NewSorter(testLogger, fakeSemverConverter)
+		s = sorter.NewSorter(fakeLogger, fakeSemverConverter)
 	})
 
 	Describe("SortBySemver", func() {

@@ -2,22 +2,23 @@ package globs
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
+
+	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
 type Globber struct {
 	fileGlob   string
 	sourcesDir string
 
-	logger *log.Logger
+	logger logger.Logger
 }
 
 type GlobberConfig struct {
 	FileGlob   string
 	SourcesDir string
 
-	Logger *log.Logger
+	Logger logger.Logger
 }
 
 func NewGlobber(config GlobberConfig) *Globber {

@@ -1,10 +1,10 @@
 package semver_test
 
 import (
-	"io/ioutil"
 	"log"
 
 	bsemver "github.com/blang/semver"
+	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/semver"
 
 	. "github.com/onsi/ginkgo"
@@ -17,8 +17,9 @@ var _ = Describe("SemverConverter", func() {
 	)
 
 	BeforeEach(func() {
-		testLogger := log.New(ioutil.Discard, "it doesn't matter", 0)
-		s = semver.NewSemverConverter(testLogger)
+		logger := log.New(GinkgoWriter, "", log.LstdFlags)
+		fakeLogger := logshim.NewLogShim(logger, logger, true)
+		s = semver.NewSemverConverter(fakeLogger)
 	})
 
 	Describe("ToValidSemver", func() {

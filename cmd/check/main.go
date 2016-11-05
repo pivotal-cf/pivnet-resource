@@ -75,8 +75,8 @@ func main() {
 
 	f := filter.NewFilter(ls)
 
-	semverConverter := semver.NewSemverConverter(logger)
-	s := sorter.NewSorter(logger, semverConverter)
+	semverConverter := semver.NewSemverConverter(ls)
+	s := sorter.NewSorter(ls, semverConverter)
 
 	response, err := check.NewCheckCommand(
 		ls,

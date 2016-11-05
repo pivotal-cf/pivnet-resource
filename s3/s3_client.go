@@ -3,10 +3,10 @@ package s3
 import (
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 
 	"github.com/concourse/s3-resource"
+	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
 type Client struct {
@@ -15,7 +15,7 @@ type Client struct {
 	regionName      string
 	bucket          string
 
-	logger *log.Logger
+	logger logger.Logger
 	stderr io.Writer
 
 	s3client s3resource.S3Client
@@ -27,7 +27,7 @@ type NewClientConfig struct {
 	RegionName      string
 	Bucket          string
 
-	Logger *log.Logger
+	Logger logger.Logger
 	Stderr io.Writer
 }
 
@@ -79,12 +79,12 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 
 	acl := "private"
 
-	c.logger.Printf(
+	c.logger.Info(fmt.Sprintf(
 		"Uploading %s to s3://%s/%s",
 		localPath,
 		c.bucket,
 		remotePath,
-	)
+	))
 
 	_, err = c.s3client.UploadFile(
 		c.bucket,
@@ -98,12 +98,12 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 
 	fmt.Fprintln(c.stderr) // the s3client does not append a new-line to its output
 
-	c.logger.Printf(
+	c.logger.Info(fmt.Sprintf(
 		"Successfully uploaded '%s' to 's3://%s/%s'",
 		localPath,
 		c.bucket,
 		remotePath,
-	)
+	))
 
 	return nil
 }

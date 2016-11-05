@@ -1,10 +1,11 @@
 package sorter
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/blang/semver"
 	pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
 //go:generate counterfeiter --fake-name FakeSemverConverter . semverConverter
@@ -13,11 +14,11 @@ type semverConverter interface {
 }
 
 type Sorter struct {
-	logger          *log.Logger
+	logger          logger.Logger
 	semverConverter semverConverter
 }
 
-func NewSorter(logger *log.Logger, semverConverter semverConverter) *Sorter {
+func NewSorter(logger logger.Logger, semverConverter semverConverter) *Sorter {
 	return &Sorter{
 		logger:          logger,
 		semverConverter: semverConverter,
@@ -37,7 +38,10 @@ func (s Sorter) SortBySemver(input []pivnet.Release) ([]pivnet.Release, error) {
 	for _, release := range input {
 		asSemver, err := s.semverConverter.ToValidSemver(release.Version)
 		if err != nil {
-			s.logger.Printf("failed to parse release version as semver: '%s'", release.Version)
+			s.logger.Info(fmt.Sprintf(
+				"failed to parse release version as semver: '%s'",
+				release.Version,
+			))
 			continue
 		}
 

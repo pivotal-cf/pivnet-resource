@@ -105,7 +105,7 @@ func main() {
 		RegionName:      region,
 		Bucket:          bucket,
 		Stderr:          os.Stderr,
-		Logger:          logger,
+		Logger:          ls,
 	})
 
 	uploaderClient := uploader.NewClient(uploader.Config{
@@ -117,7 +117,7 @@ func main() {
 	globber := globs.NewGlobber(globs.GlobberConfig{
 		FileGlob:   input.Params.FileGlob,
 		SourcesDir: sourcesDir,
-		Logger:     logger,
+		Logger:     ls,
 	})
 
 	skipUpload := input.Params.FileGlob == "" && input.Params.FilepathPrefix == ""
@@ -144,7 +144,7 @@ func main() {
 	}
 
 	validation := validator.NewOutValidator(input)
-	semverConverter := semver.NewSemverConverter(logger)
+	semverConverter := semver.NewSemverConverter(ls)
 	md5summer := md5sum.NewFileSummer()
 
 	f := filter.NewFilter(ls)

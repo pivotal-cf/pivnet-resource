@@ -1,17 +1,18 @@
 package semver
 
 import (
-	"log"
+	"fmt"
 	"strings"
 
 	"github.com/blang/semver"
+	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
 type SemverConverter struct {
-	logger *log.Logger
+	logger logger.Logger
 }
 
-func NewSemverConverter(logger *log.Logger) *SemverConverter {
+func NewSemverConverter(logger logger.Logger) *SemverConverter {
 	return &SemverConverter{logger}
 }
 
@@ -24,7 +25,10 @@ func (s SemverConverter) ToValidSemver(input string) (semver.Version, error) {
 		return v, nil
 	}
 
-	s.logger.Printf("failed to parse semver: '%s', appending zeros and trying again", input)
+	s.logger.Info(fmt.Sprintf(
+		"failed to parse semver: '%s', appending zeros and trying again",
+		input,
+	))
 	maybeSemver := input
 
 	segs := strings.SplitN(maybeSemver, ".", 3)
@@ -40,7 +44,10 @@ func (s SemverConverter) ToValidSemver(input string) (semver.Version, error) {
 		return v, nil
 	}
 
-	s.logger.Printf("still failed to parse semver: '%s', giving up", maybeSemver)
+	s.logger.Info(fmt.Sprintf(
+		"still failed to parse semver: '%s', giving up",
+		maybeSemver,
+	))
 
 	return semver.Version{}, err
 }
