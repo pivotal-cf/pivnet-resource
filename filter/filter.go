@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/logger"
@@ -48,27 +47,6 @@ func (f Filter) ReleasesByVersion(releases []pivnet.Release, version string) ([]
 	}
 
 	return filteredReleases, nil
-}
-
-func (f Filter) DownloadLinks(p []pivnet.ProductFile) map[string]string {
-	links := make(map[string]string)
-
-	for _, productFile := range p {
-		parts := strings.Split(productFile.AWSObjectKey, "/")
-		fileName := parts[len(parts)-1]
-
-		if productFile.Links == nil {
-			panic("links not present")
-		}
-
-		if productFile.Links.Download == nil {
-			panic("download links not present")
-		}
-
-		links[fileName] = productFile.Links.Download["href"]
-	}
-
-	return links
 }
 
 func (f Filter) ProductFileNamesByGlobs(

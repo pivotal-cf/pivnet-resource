@@ -208,30 +208,6 @@ var _ = Describe("Filter", func() {
 		})
 	})
 
-	Describe("Download Links", func() {
-		It("returns the download links", func() {
-			productFiles := []pivnet.ProductFile{
-				{
-					ID:           3,
-					AWSObjectKey: "product_files/banana/file-name-1.zip",
-					Links:        &pivnet.Links{Download: map[string]string{"href": "android-link"}},
-				},
-				{
-					ID:           4,
-					AWSObjectKey: "product_files/banana/file-name-2.zip",
-					Links:        &pivnet.Links{Download: map[string]string{"href": "ios-link"}},
-				},
-			}
-
-			links := f.DownloadLinks(productFiles)
-			Expect(links).To(HaveLen(2))
-			Expect(links).To(Equal(map[string]string{
-				"file-name-1.zip": "android-link",
-				"file-name-2.zip": "ios-link",
-			}))
-		})
-	})
-
 	Describe("ProductFileNamesByGlobs", func() {
 		var (
 			productFiles []pivnet.ProductFile
