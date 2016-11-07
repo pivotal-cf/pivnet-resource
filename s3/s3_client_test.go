@@ -34,7 +34,11 @@ var _ = Describe("S3 Client", func() {
 			sourcesDir, err = ioutil.TempDir("", "pivnet-resource-s3-test")
 			Expect(err).ShouldNot(HaveOccurred())
 
-			err = ioutil.WriteFile(filepath.Join(sourcesDir, fileGlob), nil, os.ModePerm)
+			err = ioutil.WriteFile(
+				filepath.Join(sourcesDir, fileGlob),
+				nil,
+				os.ModePerm,
+			)
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
@@ -68,7 +72,11 @@ var _ = Describe("S3 Client", func() {
 
 		Context("when glob matches more than one file", func() {
 			BeforeEach(func() {
-				err := ioutil.WriteFile(filepath.Join(sourcesDir, "some-file-2"), nil, os.ModePerm)
+				err := ioutil.WriteFile(
+					filepath.Join(sourcesDir, "some-file-2"),
+					nil,
+					os.ModePerm,
+				)
 				Expect(err).ShouldNot(HaveOccurred())
 			})
 

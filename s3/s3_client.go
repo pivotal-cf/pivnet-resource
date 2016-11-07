@@ -71,7 +71,11 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 	}
 
 	if len(matches) > 1 {
-		return fmt.Errorf("more than one match found for pattern: '%s': %v", fileGlob, matches)
+		return fmt.Errorf(
+			"more than one match found for pattern: '%s': %v",
+			fileGlob,
+			matches,
+		)
 	}
 
 	localPath := matches[0]
@@ -96,7 +100,8 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 		return err
 	}
 
-	fmt.Fprintln(c.stderr) // the s3client does not append a new-line to its output
+	// the s3client does not append a new-line to its output
+	fmt.Fprintln(c.stderr)
 
 	c.logger.Info(fmt.Sprintf(
 		"Successfully uploaded '%s' to 's3://%s/%s'",
