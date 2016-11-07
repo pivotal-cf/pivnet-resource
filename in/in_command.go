@@ -14,7 +14,7 @@ import (
 
 //go:generate counterfeiter --fake-name FakeFilter . filterer
 type filterer interface {
-	ProductFileNamesByGlobs(
+	ProductFileKeysByGlobs(
 		productFiles []pivnet.ProductFile,
 		globs []string,
 	) ([]pivnet.ProductFile, error)
@@ -290,7 +290,7 @@ func (c InCommand) downloadFiles(
 	// If globs were not provided, download everything without filtering.
 	if globs != nil {
 		var err error
-		filtered, err = c.filter.ProductFileNamesByGlobs(productFiles, globs)
+		filtered, err = c.filter.ProductFileKeysByGlobs(productFiles, globs)
 		if err != nil {
 			return err
 		}

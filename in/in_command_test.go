@@ -314,7 +314,7 @@ var _ = Describe("In", func() {
 			return pivnet.ProductFile{}, nil
 		}
 
-		fakeFilter.ProductFileNamesByGlobsReturns(filteredProductFiles, filterErr)
+		fakeFilter.ProductFileKeysByGlobsReturns(filteredProductFiles, filterErr)
 		fakeDownloader.DownloadReturns(downloadFilepaths, downloadErr)
 		fakeFileSummer.SumFileStub = func(path string) (string, error) {
 			if md5sumErr != nil {
@@ -397,7 +397,7 @@ var _ = Describe("In", func() {
 		Expect(fakePivnetClient.ProductFilesForReleaseCallCount()).To(Equal(1))
 		Expect(fakePivnetClient.FileGroupsForReleaseCallCount()).To(Equal(1))
 
-		Expect(fakeFilter.ProductFileNamesByGlobsCallCount()).To(Equal(0))
+		Expect(fakeFilter.ProductFileKeysByGlobsCallCount()).To(Equal(0))
 
 		expectedProductFiles := releaseProductFiles
 		expectedProductFiles = append(expectedProductFiles, fileGroup1ProductFile)
@@ -516,7 +516,7 @@ var _ = Describe("In", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeFilter.ProductFileNamesByGlobsCallCount()).To(Equal(1))
+			Expect(fakeFilter.ProductFileKeysByGlobsCallCount()).To(Equal(1))
 			Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(filteredProductFiles)))
 			Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
 		})
