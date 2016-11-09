@@ -136,10 +136,6 @@ func (c Client) AddReleaseUpgradePath(productSlug string, releaseID int, previou
 	return c.client.ReleaseUpgradePaths.Add(productSlug, releaseID, previousReleaseID)
 }
 
-func (c Client) MakeRequest(method string, url string, expectedResponseCode int, body io.Reader, data interface{}) (*http.Response, []byte, error) {
-	return c.client.MakeRequest(method, url, expectedResponseCode, body, data)
-}
-
 func (c Client) CreateRequest(method string, url string, body io.Reader) (*http.Request, error) {
 	return c.client.CreateRequest(method, url, body)
 }
