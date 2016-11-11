@@ -88,6 +88,11 @@ func (rf ReleaseUpgradePathsAdder) AddReleaseUpgradePaths(release pivnet.Release
 			r.Version,
 		))
 
+		if r.ID == release.ID {
+			rf.logger.Info(fmt.Sprintf("skipping release: %s", r.Version))
+			continue
+		}
+
 		err := rf.pivnet.AddReleaseUpgradePath(rf.productSlug, release.ID, r.ID)
 		if err != nil {
 			return err

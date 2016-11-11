@@ -130,6 +130,19 @@ var _ = Describe("ReleaseUpgradePathsAdder", func() {
 					Expect(err.Error()).To(MatchRegexp("No releases found for id: '%d'", mdata.UpgradePaths[0].ID))
 				})
 			})
+
+			Context("when release matches upgrade path", func() {
+				BeforeEach(func() {
+					mdata.UpgradePaths[0].ID = pivnetRelease.ID
+				})
+
+				It("does not attempt to add itself as an upgrade path", func() {
+					err := releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(pivnetClient.AddReleaseUpgradePathCallCount()).To(Equal(0))
+				})
+			})
 		})
 
 		Describe("upgrade path via version", func() {
