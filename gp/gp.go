@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/logger"
@@ -112,7 +113,7 @@ func (c Client) AddProductFile(productSlug string, releaseID int, productFileID 
 	return c.client.ProductFiles.AddToRelease(productSlug, releaseID, productFileID)
 }
 
-func (c Client) DownloadProductFile(writer io.Writer, productSlug string, releaseID int, productFileID int) error {
+func (c Client) DownloadProductFile(writer *os.File, productSlug string, releaseID int, productFileID int) error {
 	return c.client.ProductFiles.DownloadForRelease(writer, productSlug, releaseID, productFileID)
 }
 

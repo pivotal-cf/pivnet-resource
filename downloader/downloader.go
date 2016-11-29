@@ -2,8 +2,6 @@ package downloader
 
 import (
 	"fmt"
-	"io"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +12,7 @@ import (
 
 //go:generate counterfeiter --fake-name FakeClient . client
 type client interface {
-	DownloadProductFile(writer io.Writer, productSlug string, releaseID int, productFileID int) error
+	DownloadProductFile(writer *os.File, productSlug string, releaseID int, productFileID int) error
 }
 
 type Downloader struct {
@@ -66,11 +64,9 @@ func (d Downloader) Download(
 			downloadPath,
 		))
 
-		maxAttempts := 3
-		err = d.downloadProductFileWithRetries(file, productSlug, releaseID, pf.ID, maxAttempts)
+		err = d.client.DownloadProductFile(file, productSlug, releaseID, pf.ID)
 		if err != nil {
-			d.logger.Info(fmt.Sprintf("Download failed after %d attempts: %s",
-				maxAttempts,
+			d.logger.Info(fmt.Sprintf("Download failed: %s",
 				err.Error(),
 			))
 			return nil, err
@@ -79,61 +75,4 @@ func (d Downloader) Download(
 	}
 
 	return fileNames, nil
-}
-
-func (d Downloader) downloadProductFileWithRetries(
-	file io.Writer,
-	productSlug string,
-	releaseID int,
-	productFileID int,
-	maxAttempts int,
-) error {
-	var err error
-
-	for i := 0; i < maxAttempts; i++ {
-		err = d.client.DownloadProductFile(file, productSlug, releaseID, productFileID)
-
-		if err != nil {
-			retryable := d.errorRetryable(err)
-
-			if !retryable {
-				return err
-			}
-
-			d.logger.Info(fmt.Sprintf(
-				"Retrying download due retryable error: %s",
-				err.Error(),
-			))
-
-			continue
-		}
-
-		return nil
-	}
-
-	return err
-}
-
-// errorRetryable returns true if error indicates download can be retried.
-// provided err must be non-nil
-func (d Downloader) errorRetryable(err error) bool {
-	if err == io.ErrUnexpectedEOF {
-		d.logger.Info(fmt.Sprintf(
-			"Received unexpected EOF error: %s",
-			err.Error(),
-		))
-		return true
-	}
-
-	if netErr, ok := err.(net.Error); ok {
-		if netErr.Temporary() {
-			d.logger.Info(fmt.Sprintf(
-				"Received temporary network error: %s",
-				err.Error(),
-			))
-			return true
-		}
-	}
-
-	return false
 }

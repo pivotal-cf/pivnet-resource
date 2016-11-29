@@ -2,7 +2,6 @@ package downloader_test
 
 import (
 	"errors"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -64,23 +63,46 @@ var _ = Describe("Downloader", func() {
 
 			productFiles = []pivnet.ProductFile{
 				{
+					ID:           1337,
 					Name:         "pf-0",
 					AWSObjectKey: "bucket/path/file-0",
 				},
 				{
+					ID:           1234,
 					Name:         "pf-1",
 					AWSObjectKey: "bucket/path/file-1",
 				},
 				{
+					ID:           1886,
 					Name:         "pf-2",
 					AWSObjectKey: "bucket/path/file-2",
 				},
 			}
 		})
 
-		It("returns a list of (full) filepaths", func() {
+		It("downloads all of the product files", func() {
 			filepaths, err := d.Download(productFiles, productSlug, releaseID)
 			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(3))
+
+			f, slug, relID, productFileID := fakeClient.DownloadProductFileArgsForCall(0)
+			Expect(f.Name()).To(BeAnExistingFile())
+			Expect(slug).To(Equal(productSlug))
+			Expect(relID).To(Equal(releaseID))
+			Expect(productFileID).To(Equal(productFiles[0].ID))
+
+			f, slug, relID, productFileID = fakeClient.DownloadProductFileArgsForCall(1)
+			Expect(f.Name()).To(BeAnExistingFile())
+			Expect(slug).To(Equal(productSlug))
+			Expect(relID).To(Equal(releaseID))
+			Expect(productFileID).To(Equal(productFiles[1].ID))
+
+			f, slug, relID, productFileID = fakeClient.DownloadProductFileArgsForCall(2)
+			Expect(f.Name()).To(BeAnExistingFile())
+			Expect(slug).To(Equal(productSlug))
+			Expect(relID).To(Equal(releaseID))
+			Expect(productFileID).To(Equal(productFiles[2].ID))
 
 			Expect(len(filepaths)).To(Equal(3))
 
@@ -97,99 +119,6 @@ var _ = Describe("Downloader", func() {
 						AWSObjectKey: "bucket/path/file-0",
 					},
 				}
-			})
-
-			Context("when the pivnet client returns a network error", func() {
-				var (
-					expectedErr *NetError
-				)
-
-				BeforeEach(func() {
-					expectedErr = &NetError{}
-					fakeClient.DownloadProductFileReturns(expectedErr)
-				})
-
-				Context("when the network error is temporary", func() {
-					BeforeEach(func() {
-						expectedErr.IsTemporary = true
-					})
-
-					It("attempts three downloads", func() {
-						_, err := d.Download(productFiles, productSlug, releaseID)
-
-						Expect(err).Should(HaveOccurred())
-						Expect(err).To(Equal(expectedErr))
-						Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(3))
-					})
-
-					Context("when the download succeeds the second or third time", func() {
-						BeforeEach(func() {
-							remainingFailures := 1
-
-							fakeClient.DownloadProductFileStub = func(w io.Writer, s string, r int, p int) error {
-								if remainingFailures > 0 {
-									remainingFailures--
-									return expectedErr
-								}
-
-								return nil
-							}
-						})
-
-						It("does not throw an error", func() {
-							_, err := d.Download(productFiles, productSlug, releaseID)
-
-							Expect(err).ShouldNot(HaveOccurred())
-							Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(2))
-						})
-					})
-				})
-
-				Context("when the network error is not temporary", func() {
-					It("raises an error", func() {
-						_, err := d.Download(productFiles, productSlug, releaseID)
-
-						Expect(err).Should(HaveOccurred())
-						Expect(err).To(Equal(expectedErr))
-						Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(1))
-					})
-				})
-			})
-
-			Context("when the pivnet client returns an unexpected EOF error", func() {
-				BeforeEach(func() {
-					fakeClient.DownloadProductFileReturns(io.ErrUnexpectedEOF)
-				})
-
-				It("attempts three downloads", func() {
-					_, err := d.Download(productFiles, productSlug, releaseID)
-
-					Expect(err).Should(HaveOccurred())
-					Expect(err).To(Equal(io.ErrUnexpectedEOF))
-					Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(3))
-				})
-
-				Context("when the download succeeds the second or third time", func() {
-					BeforeEach(func() {
-						remainingFailures := 1
-
-						fakeClient.DownloadProductFileStub = func(w io.Writer, s string, r int, p int) error {
-							if remainingFailures > 0 {
-								remainingFailures--
-								return io.ErrUnexpectedEOF
-							}
-
-							return nil
-						}
-					})
-
-					It("does not throw an error", func() {
-						_, err := d.Download(productFiles, productSlug, releaseID)
-
-						Expect(err).ShouldNot(HaveOccurred())
-						Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(2))
-					})
-				})
 			})
 
 			Context("when the pivnet client returns other errors", func() {
@@ -249,11 +178,3 @@ var _ = Describe("Downloader", func() {
 		})
 	})
 })
-
-type NetError struct {
-	IsTemporary bool
-}
-
-func (ne *NetError) Error() string   { return "net error" }
-func (ne *NetError) Timeout() bool   { return false }
-func (ne *NetError) Temporary() bool { return ne.IsTemporary }
