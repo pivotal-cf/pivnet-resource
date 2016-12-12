@@ -10,6 +10,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/pivotal-cf/go-pivnet/download"
 	"github.com/pivotal-cf/go-pivnet/logger"
@@ -28,7 +29,7 @@ type Client struct {
 
 	HTTP *http.Client
 
-	downloader *download.Client
+	downloader download.Client
 
 	Auth                *AuthService
 	EULA                *EULAsService
@@ -53,13 +54,15 @@ func NewClient(config ClientConfig, logger logger.Logger) Client {
 	baseURL := fmt.Sprintf("%s%s", config.Host, apiVersion)
 
 	httpClient := &http.Client{
+		Timeout: 60 * time.Second,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: config.SkipSSLValidation},
+			Proxy:           http.ProxyFromEnvironment,
 		},
 	}
 
-	ranger := download.NewRanger(10)
-	downloader := download.New(http.DefaultClient, ranger)
+	ranger := download.NewRanger(100)
+	downloader := download.New(http.DefaultClient, ranger, download.NewBar())
 
 	client := Client{
 		baseURL:    baseURL,
