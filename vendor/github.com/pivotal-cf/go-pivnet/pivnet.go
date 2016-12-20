@@ -50,19 +50,28 @@ type ClientConfig struct {
 	SkipSSLValidation bool
 }
 
-func NewClient(config ClientConfig, logger logger.Logger) Client {
+func NewClient(
+	config ClientConfig,
+	logger logger.Logger,
+) Client {
 	baseURL := fmt.Sprintf("%s%s", config.Host, apiVersion)
 
 	httpClient := &http.Client{
 		Timeout: 60 * time.Second,
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: config.SkipSSLValidation},
-			Proxy:           http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: config.SkipSSLValidation,
+			},
+			Proxy: http.ProxyFromEnvironment,
 		},
 	}
 
 	ranger := download.NewRanger(100)
-	downloader := download.New(http.DefaultClient, ranger, download.NewBar())
+	downloader := download.New(
+		http.DefaultClient,
+		ranger,
+		download.NewBar(),
+	)
 
 	client := Client{
 		baseURL:    baseURL,

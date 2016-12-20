@@ -42,7 +42,7 @@ var _ = Describe("Downloader", func() {
 	})
 
 	JustBeforeEach(func() {
-		d = downloader.NewDownloader(fakeClient, dir, fakeLogger)
+		d = downloader.NewDownloader(fakeClient, dir, fakeLogger, GinkgoWriter)
 	})
 
 	AfterEach(func() {
@@ -86,23 +86,26 @@ var _ = Describe("Downloader", func() {
 
 			Expect(fakeClient.DownloadProductFileCallCount()).To(Equal(3))
 
-			f, slug, relID, productFileID := fakeClient.DownloadProductFileArgsForCall(0)
+			f, slug, relID, productFileID, w := fakeClient.DownloadProductFileArgsForCall(0)
 			Expect(f.Name()).To(BeAnExistingFile())
 			Expect(slug).To(Equal(productSlug))
 			Expect(relID).To(Equal(releaseID))
 			Expect(productFileID).To(Equal(productFiles[0].ID))
+			Expect(w).To(Equal(GinkgoWriter))
 
-			f, slug, relID, productFileID = fakeClient.DownloadProductFileArgsForCall(1)
+			f, slug, relID, productFileID, w = fakeClient.DownloadProductFileArgsForCall(1)
 			Expect(f.Name()).To(BeAnExistingFile())
 			Expect(slug).To(Equal(productSlug))
 			Expect(relID).To(Equal(releaseID))
 			Expect(productFileID).To(Equal(productFiles[1].ID))
+			Expect(w).To(Equal(GinkgoWriter))
 
-			f, slug, relID, productFileID = fakeClient.DownloadProductFileArgsForCall(2)
+			f, slug, relID, productFileID, w = fakeClient.DownloadProductFileArgsForCall(2)
 			Expect(f.Name()).To(BeAnExistingFile())
 			Expect(slug).To(Equal(productSlug))
 			Expect(relID).To(Equal(releaseID))
 			Expect(productFileID).To(Equal(productFiles[2].ID))
+			Expect(w).To(Equal(GinkgoWriter))
 
 			Expect(len(filepaths)).To(Equal(3))
 

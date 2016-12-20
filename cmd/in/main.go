@@ -81,7 +81,7 @@ func main() {
 		ls,
 	)
 
-	d := downloader.NewDownloader(client, downloadDir, ls)
+	d := downloader.NewDownloader(client, downloadDir, ls, os.Stderr)
 	fs := md5sum.NewFileSummer()
 
 	f := filter.NewFilter(ls)

@@ -2,35 +2,41 @@
 package downloaderfakes
 
 import (
+	"io"
 	"os"
 	"sync"
 )
 
 type FakeClient struct {
-	DownloadProductFileStub        func(writer *os.File, productSlug string, releaseID int, productFileID int) error
+	DownloadProductFileStub        func(writer *os.File, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error
 	downloadProductFileMutex       sync.RWMutex
 	downloadProductFileArgsForCall []struct {
-		writer        *os.File
-		productSlug   string
-		releaseID     int
-		productFileID int
+		writer         *os.File
+		productSlug    string
+		releaseID      int
+		productFileID  int
+		progressWriter io.Writer
 	}
 	downloadProductFileReturns struct {
 		result1 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeClient) DownloadProductFile(writer *os.File, productSlug string, releaseID int, productFileID int) error {
+func (fake *FakeClient) DownloadProductFile(writer *os.File, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error {
 	fake.downloadProductFileMutex.Lock()
 	fake.downloadProductFileArgsForCall = append(fake.downloadProductFileArgsForCall, struct {
-		writer        *os.File
-		productSlug   string
-		releaseID     int
-		productFileID int
-	}{writer, productSlug, releaseID, productFileID})
+		writer         *os.File
+		productSlug    string
+		releaseID      int
+		productFileID  int
+		progressWriter io.Writer
+	}{writer, productSlug, releaseID, productFileID, progressWriter})
+	fake.recordInvocation("DownloadProductFile", []interface{}{writer, productSlug, releaseID, productFileID, progressWriter})
 	fake.downloadProductFileMutex.Unlock()
 	if fake.DownloadProductFileStub != nil {
-		return fake.DownloadProductFileStub(writer, productSlug, releaseID, productFileID)
+		return fake.DownloadProductFileStub(writer, productSlug, releaseID, productFileID, progressWriter)
 	} else {
 		return fake.downloadProductFileReturns.result1
 	}
@@ -42,10 +48,10 @@ func (fake *FakeClient) DownloadProductFileCallCount() int {
 	return len(fake.downloadProductFileArgsForCall)
 }
 
-func (fake *FakeClient) DownloadProductFileArgsForCall(i int) (*os.File, string, int, int) {
+func (fake *FakeClient) DownloadProductFileArgsForCall(i int) (*os.File, string, int, int, io.Writer) {
 	fake.downloadProductFileMutex.RLock()
 	defer fake.downloadProductFileMutex.RUnlock()
-	return fake.downloadProductFileArgsForCall[i].writer, fake.downloadProductFileArgsForCall[i].productSlug, fake.downloadProductFileArgsForCall[i].releaseID, fake.downloadProductFileArgsForCall[i].productFileID
+	return fake.downloadProductFileArgsForCall[i].writer, fake.downloadProductFileArgsForCall[i].productSlug, fake.downloadProductFileArgsForCall[i].releaseID, fake.downloadProductFileArgsForCall[i].productFileID, fake.downloadProductFileArgsForCall[i].progressWriter
 }
 
 func (fake *FakeClient) DownloadProductFileReturns(result1 error) {
@@ -53,4 +59,24 @@ func (fake *FakeClient) DownloadProductFileReturns(result1 error) {
 	fake.downloadProductFileReturns = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *FakeClient) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.downloadProductFileMutex.RLock()
+	defer fake.downloadProductFileMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *FakeClient) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }

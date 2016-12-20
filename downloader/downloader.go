@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,24 +13,27 @@ import (
 
 //go:generate counterfeiter --fake-name FakeClient . client
 type client interface {
-	DownloadProductFile(writer *os.File, productSlug string, releaseID int, productFileID int) error
+	DownloadProductFile(writer *os.File, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error
 }
 
 type Downloader struct {
-	client      client
-	downloadDir string
-	logger      logger.Logger
+	client         client
+	downloadDir    string
+	logger         logger.Logger
+	progressWriter io.Writer
 }
 
 func NewDownloader(
 	client client,
 	downloadDir string,
 	logger logger.Logger,
+	progressWriter io.Writer,
 ) *Downloader {
 	return &Downloader{
-		client:      client,
-		downloadDir: downloadDir,
-		logger:      logger,
+		client:         client,
+		downloadDir:    downloadDir,
+		logger:         logger,
+		progressWriter: progressWriter,
 	}
 }
 
@@ -64,7 +68,7 @@ func (d Downloader) Download(
 			downloadPath,
 		))
 
-		err = d.client.DownloadProductFile(file, productSlug, releaseID, pf.ID)
+		err = d.client.DownloadProductFile(file, productSlug, releaseID, pf.ID, d.progressWriter)
 		if err != nil {
 			d.logger.Info(fmt.Sprintf("Download failed: %s",
 				err.Error(),
