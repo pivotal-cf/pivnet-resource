@@ -35,14 +35,17 @@ type ReleaseProductFile struct {
 }
 
 type ProductFile struct {
-	File         string `yaml:"file,omitempty"`
-	Description  string `yaml:"description,omitempty"`
-	UploadAs     string `yaml:"upload_as,omitempty"`
-	AWSObjectKey string `yaml:"aws_object_key,omitempty"`
-	FileType     string `yaml:"file_type,omitempty"`
-	FileVersion  string `yaml:"file_version,omitempty"`
-	MD5          string `yaml:"md5,omitempty"`
-	ID           int    `yaml:"id,omitempty"`
+	File               string   `yaml:"file,omitempty"`
+	Description        string   `yaml:"description,omitempty"`
+	UploadAs           string   `yaml:"upload_as,omitempty"`
+	AWSObjectKey       string   `yaml:"aws_object_key,omitempty"`
+	FileType           string   `yaml:"file_type,omitempty"`
+	FileVersion        string   `yaml:"file_version,omitempty"`
+	MD5                string   `yaml:"md5,omitempty"`
+	ID                 int      `yaml:"id,omitempty"`
+	Version            string   `yaml:"version,omitempty"`
+	DocsURL            string   `yaml:"docs_url,omitempty"`
+	SystemRequirements []string `yaml:"system_requirements,omitempty"`
 }
 
 type FileGroup struct {

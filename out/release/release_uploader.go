@@ -84,6 +84,9 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		filename := filepath.Base(exactGlob)
 
 		var description string
+		var docsURL string
+		var systemRequirements []string
+
 		uploadAs := filename
 		fileType := "Software"
 
@@ -108,6 +111,14 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 				if f.FileType != "" {
 					fileType = f.FileType
+				}
+
+				if f.DocsURL != "" {
+					docsURL = f.DocsURL
+				}
+
+				if len(f.SystemRequirements) > 0 {
+					systemRequirements = f.SystemRequirements
 				}
 			} else {
 				u.logger.Info(fmt.Sprintf(
@@ -142,13 +153,15 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		))
 
 		productFile, err := u.pivnet.CreateProductFile(pivnet.CreateProductFileConfig{
-			ProductSlug:  u.productSlug,
-			Name:         uploadAs,
-			AWSObjectKey: awsObjectKey,
-			FileVersion:  release.Version,
-			MD5:          fileContentsMD5,
-			Description:  description,
-			FileType:     fileType,
+			ProductSlug:        u.productSlug,
+			Name:               uploadAs,
+			AWSObjectKey:       awsObjectKey,
+			FileVersion:        release.Version,
+			MD5:                fileContentsMD5,
+			Description:        description,
+			FileType:           fileType,
+			DocsURL:            docsURL,
+			SystemRequirements: systemRequirements,
 		})
 		if err != nil {
 			return err

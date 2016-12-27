@@ -211,13 +211,15 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	for _, pf := range allProductFiles {
 		mdata.ProductFiles = append(mdata.ProductFiles, metadata.ProductFile{
-			ID:           pf.ID,
-			File:         pf.Name,
-			Description:  pf.Description,
-			AWSObjectKey: pf.AWSObjectKey,
-			FileType:     pf.FileType,
-			FileVersion:  pf.FileVersion,
-			MD5:          pf.MD5,
+			ID:                 pf.ID,
+			File:               pf.Name,
+			Description:        pf.Description,
+			AWSObjectKey:       pf.AWSObjectKey,
+			FileType:           pf.FileType,
+			FileVersion:        pf.FileVersion,
+			MD5:                pf.MD5,
+			DocsURL:            pf.DocsURL,
+			SystemRequirements: pf.SystemRequirements,
 		})
 	}
 

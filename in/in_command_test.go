@@ -150,13 +150,15 @@ var _ = Describe("In", func() {
 		}
 
 		releaseProductFile1 = pivnet.ProductFile{
-			ID:           releaseProductFiles[0].ID,
-			Name:         releaseProductFiles[0].Name,
-			Description:  releaseProductFiles[0].Description,
-			AWSObjectKey: releaseProductFiles[0].AWSObjectKey,
-			FileType:     pivnet.FileTypeSoftware,
-			FileVersion:  "some-file-version 1234",
-			MD5:          fileContentsMD5s[0],
+			ID:                 releaseProductFiles[0].ID,
+			Name:               releaseProductFiles[0].Name,
+			Description:        releaseProductFiles[0].Description,
+			AWSObjectKey:       releaseProductFiles[0].AWSObjectKey,
+			FileType:           pivnet.FileTypeSoftware,
+			FileVersion:        "some-file-version 1234",
+			MD5:                fileContentsMD5s[0],
+			DocsURL:            "some-url",
+			SystemRequirements: []string{"req1", "req2"},
 			Links: &pivnet.Links{
 				Download: map[string]string{
 					"href": "foo",
@@ -165,13 +167,15 @@ var _ = Describe("In", func() {
 		}
 
 		releaseProductFile2 = pivnet.ProductFile{
-			ID:           releaseProductFiles[1].ID,
-			Name:         releaseProductFiles[1].Name,
-			Description:  releaseProductFiles[1].Description,
-			AWSObjectKey: releaseProductFiles[1].AWSObjectKey,
-			FileType:     pivnet.FileTypeSoftware,
-			FileVersion:  "some-file-version 3456",
-			MD5:          fileContentsMD5s[1],
+			ID:                 releaseProductFiles[1].ID,
+			Name:               releaseProductFiles[1].Name,
+			Description:        releaseProductFiles[1].Description,
+			AWSObjectKey:       releaseProductFiles[1].AWSObjectKey,
+			FileType:           pivnet.FileTypeSoftware,
+			FileVersion:        "some-file-version 3456",
+			MD5:                fileContentsMD5s[1],
+			DocsURL:            "some-url",
+			SystemRequirements: []string{"req1", "req2"},
 			Links: &pivnet.Links{
 				Download: map[string]string{
 					"href": "bar",
@@ -180,13 +184,15 @@ var _ = Describe("In", func() {
 		}
 
 		fileGroup1ProductFile = pivnet.ProductFile{
-			ID:           fileGroup1ProductFiles[0].ID,
-			Name:         fileGroup1ProductFiles[0].Name,
-			Description:  fileGroup1ProductFiles[0].Description,
-			AWSObjectKey: fileGroup1ProductFiles[0].AWSObjectKey,
-			FileType:     pivnet.FileTypeSoftware,
-			FileVersion:  "some-file-version 4567",
-			MD5:          fileContentsMD5s[2],
+			ID:                 fileGroup1ProductFiles[0].ID,
+			Name:               fileGroup1ProductFiles[0].Name,
+			Description:        fileGroup1ProductFiles[0].Description,
+			AWSObjectKey:       fileGroup1ProductFiles[0].AWSObjectKey,
+			FileType:           pivnet.FileTypeSoftware,
+			FileVersion:        "some-file-version 4567",
+			MD5:                fileContentsMD5s[2],
+			DocsURL:            "some-url",
+			SystemRequirements: []string{"req1", "req2"},
 			Links: &pivnet.Links{
 				Download: map[string]string{
 					"href": "bar",
@@ -195,13 +201,15 @@ var _ = Describe("In", func() {
 		}
 
 		fileGroup2ProductFile = pivnet.ProductFile{
-			ID:           fileGroup2ProductFiles[0].ID,
-			Name:         fileGroup2ProductFiles[0].Name,
-			Description:  fileGroup2ProductFiles[0].Description,
-			AWSObjectKey: fileGroup2ProductFiles[0].AWSObjectKey,
-			FileType:     pivnet.FileTypeSoftware,
-			FileVersion:  "some-file-version 5678",
-			MD5:          fileContentsMD5s[3],
+			ID:                 fileGroup2ProductFiles[0].ID,
+			Name:               fileGroup2ProductFiles[0].Name,
+			Description:        fileGroup2ProductFiles[0].Description,
+			AWSObjectKey:       fileGroup2ProductFiles[0].AWSObjectKey,
+			FileType:           pivnet.FileTypeSoftware,
+			FileVersion:        "some-file-version 5678",
+			MD5:                fileContentsMD5s[3],
+			DocsURL:            "some-url",
+			SystemRequirements: []string{"req1", "req2"},
 			Links: &pivnet.Links{
 				Download: map[string]string{
 					"href": "bar",
@@ -712,6 +720,8 @@ var validateProductFilesMetadata = func(
 		Expect(writtenMetadata.ProductFiles[i].FileVersion).To(Equal(p.FileVersion))
 		Expect(writtenMetadata.ProductFiles[i].MD5).To(Equal(p.MD5))
 		Expect(writtenMetadata.ProductFiles[i].UploadAs).To(BeEmpty())
+		Expect(writtenMetadata.ProductFiles[i].DocsURL).To(Equal(p.DocsURL))
+		Expect(writtenMetadata.ProductFiles[i].SystemRequirements).To(Equal(p.SystemRequirements))
 	}
 }
 

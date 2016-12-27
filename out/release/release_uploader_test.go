@@ -64,10 +64,12 @@ var _ = Describe("ReleaseUploader", func() {
 		mdata = metadata.Metadata{
 			ProductFiles: []metadata.ProductFile{
 				{
-					File:        "some/file",
-					Description: "a description",
-					UploadAs:    "a file",
-					FileType:    "something",
+					File:               "some/file",
+					Description:        "a description",
+					UploadAs:           "a file",
+					FileType:           "something",
+					DocsURL:            "some-docs-url",
+					SystemRequirements: []string{"req1", "req2"},
 				},
 			},
 		}
@@ -135,13 +137,15 @@ var _ = Describe("ReleaseUploader", func() {
 			Expect(s3Client.UploadFileArgsForCall(0)).To(Equal("some/file"))
 
 			Expect(uploadClient.CreateProductFileArgsForCall(0)).To(Equal(pivnet.CreateProductFileConfig{
-				ProductSlug:  productSlug,
-				AWSObjectKey: newAWSObjectKey,
-				MD5:          actualMD5Sum,
-				FileVersion:  pivnetRelease.Version,
-				Name:         mdata.ProductFiles[0].UploadAs,
-				Description:  mdata.ProductFiles[0].Description,
-				FileType:     mdata.ProductFiles[0].FileType,
+				ProductSlug:        productSlug,
+				AWSObjectKey:       newAWSObjectKey,
+				MD5:                actualMD5Sum,
+				FileVersion:        pivnetRelease.Version,
+				Name:               mdata.ProductFiles[0].UploadAs,
+				Description:        mdata.ProductFiles[0].Description,
+				FileType:           mdata.ProductFiles[0].FileType,
+				DocsURL:            mdata.ProductFiles[0].DocsURL,
+				SystemRequirements: mdata.ProductFiles[0].SystemRequirements,
 			}))
 
 			invokedProductSlug, releaseID, productFileID := uploadClient.AddProductFileArgsForCall(0)
