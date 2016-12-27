@@ -3,11 +3,12 @@ package metadata
 import "fmt"
 
 type Metadata struct {
-	Release      *Release      `yaml:"release,omitempty"`
-	ProductFiles []ProductFile `yaml:"product_files,omitempty"`
-	Dependencies []Dependency  `yaml:"dependencies,omitempty"`
-	UpgradePaths []UpgradePath `yaml:"upgrade_paths,omitempty"`
-	FileGroups   []FileGroup   `yaml:"file_groups,omitempty"`
+	Release              *Release              `yaml:"release,omitempty"`
+	ProductFiles         []ProductFile         `yaml:"product_files,omitempty"`
+	Dependencies         []Dependency          `yaml:"dependencies,omitempty"`
+	DependencySpecifiers []DependencySpecifier `yaml:"dependency_specifiers,omitempty"`
+	UpgradePaths         []UpgradePath         `yaml:"upgrade_paths,omitempty"`
+	FileGroups           []FileGroup           `yaml:"file_groups,omitempty"`
 }
 
 type Release struct {
@@ -73,6 +74,12 @@ type Product struct {
 	ID   int    `yaml:"id,omitempty"`
 	Slug string `yaml:"slug,omitempty"`
 	Name string `yaml:"name,omitempty"`
+}
+
+type DependencySpecifier struct {
+	ID          int    `yaml:"id,omitempty"`
+	Specifier   string `yaml:"specifier,omitempty"`
+	ProductSlug string `yaml:"product_slug,omitempty"`
 }
 
 func (m Metadata) Validate() error {

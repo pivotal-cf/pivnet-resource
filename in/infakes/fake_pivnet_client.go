@@ -68,6 +68,16 @@ type FakePivnetClient struct {
 		result1 []go_pivnet.ReleaseDependency
 		result2 error
 	}
+	DependencySpecifiersStub        func(productSlug string, releaseID int) ([]go_pivnet.DependencySpecifier, error)
+	dependencySpecifiersMutex       sync.RWMutex
+	dependencySpecifiersArgsForCall []struct {
+		productSlug string
+		releaseID   int
+	}
+	dependencySpecifiersReturns struct {
+		result1 []go_pivnet.DependencySpecifier
+		result2 error
+	}
 	ReleaseUpgradePathsStub        func(productSlug string, releaseID int) ([]go_pivnet.ReleaseUpgradePath, error)
 	releaseUpgradePathsMutex       sync.RWMutex
 	releaseUpgradePathsArgsForCall []struct {
@@ -292,6 +302,41 @@ func (fake *FakePivnetClient) ReleaseDependenciesReturns(result1 []go_pivnet.Rel
 	}{result1, result2}
 }
 
+func (fake *FakePivnetClient) DependencySpecifiers(productSlug string, releaseID int) ([]go_pivnet.DependencySpecifier, error) {
+	fake.dependencySpecifiersMutex.Lock()
+	fake.dependencySpecifiersArgsForCall = append(fake.dependencySpecifiersArgsForCall, struct {
+		productSlug string
+		releaseID   int
+	}{productSlug, releaseID})
+	fake.recordInvocation("DependencySpecifiers", []interface{}{productSlug, releaseID})
+	fake.dependencySpecifiersMutex.Unlock()
+	if fake.DependencySpecifiersStub != nil {
+		return fake.DependencySpecifiersStub(productSlug, releaseID)
+	} else {
+		return fake.dependencySpecifiersReturns.result1, fake.dependencySpecifiersReturns.result2
+	}
+}
+
+func (fake *FakePivnetClient) DependencySpecifiersCallCount() int {
+	fake.dependencySpecifiersMutex.RLock()
+	defer fake.dependencySpecifiersMutex.RUnlock()
+	return len(fake.dependencySpecifiersArgsForCall)
+}
+
+func (fake *FakePivnetClient) DependencySpecifiersArgsForCall(i int) (string, int) {
+	fake.dependencySpecifiersMutex.RLock()
+	defer fake.dependencySpecifiersMutex.RUnlock()
+	return fake.dependencySpecifiersArgsForCall[i].productSlug, fake.dependencySpecifiersArgsForCall[i].releaseID
+}
+
+func (fake *FakePivnetClient) DependencySpecifiersReturns(result1 []go_pivnet.DependencySpecifier, result2 error) {
+	fake.DependencySpecifiersStub = nil
+	fake.dependencySpecifiersReturns = struct {
+		result1 []go_pivnet.DependencySpecifier
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakePivnetClient) ReleaseUpgradePaths(productSlug string, releaseID int) ([]go_pivnet.ReleaseUpgradePath, error) {
 	fake.releaseUpgradePathsMutex.Lock()
 	fake.releaseUpgradePathsArgsForCall = append(fake.releaseUpgradePathsArgsForCall, struct {
@@ -342,6 +387,8 @@ func (fake *FakePivnetClient) Invocations() map[string][][]interface{} {
 	defer fake.productFileForReleaseMutex.RUnlock()
 	fake.releaseDependenciesMutex.RLock()
 	defer fake.releaseDependenciesMutex.RUnlock()
+	fake.dependencySpecifiersMutex.RLock()
+	defer fake.dependencySpecifiersMutex.RUnlock()
 	fake.releaseUpgradePathsMutex.RLock()
 	defer fake.releaseUpgradePathsMutex.RUnlock()
 	return fake.invocations

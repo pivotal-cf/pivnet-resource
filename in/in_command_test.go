@@ -44,8 +44,9 @@ var _ = Describe("In", func() {
 		fileGroup1ProductFile pivnet.ProductFile
 		fileGroup2ProductFile pivnet.ProductFile
 
-		releaseDependencies []pivnet.ReleaseDependency
-		releaseUpgradePaths []pivnet.ReleaseUpgradePath
+		releaseDependencies  []pivnet.ReleaseDependency
+		dependencySpecifiers []pivnet.DependencySpecifier
+		releaseUpgradePaths  []pivnet.ReleaseUpgradePath
 
 		version                string
 		fingerprint            string
@@ -59,16 +60,17 @@ var _ = Describe("In", func() {
 		downloadFilepaths []string
 		fileContentsMD5s  []string
 
-		getReleaseErr          error
-		acceptEULAErr          error
-		productFilesErr        error
-		productFileErr         error
-		downloadErr            error
-		filterErr              error
-		md5sumErr              error
-		releaseDependenciesErr error
-		releaseUpgradePathsErr error
-		fileGroupsErr          error
+		getReleaseErr           error
+		acceptEULAErr           error
+		productFilesErr         error
+		productFileErr          error
+		downloadErr             error
+		filterErr               error
+		md5sumErr               error
+		releaseDependenciesErr  error
+		dependencySpecifiersErr error
+		releaseUpgradePathsErr  error
+		fileGroupsErr           error
 	)
 
 	BeforeEach(func() {
@@ -86,6 +88,7 @@ var _ = Describe("In", func() {
 		downloadErr = nil
 		md5sumErr = nil
 		releaseDependenciesErr = nil
+		dependencySpecifiersErr = nil
 		releaseUpgradePathsErr = nil
 		fileGroupsErr = nil
 
@@ -259,6 +262,16 @@ var _ = Describe("In", func() {
 			},
 		}
 
+		dependencySpecifiers = []pivnet.DependencySpecifier{
+			{
+				ID:        56,
+				Specifier: "1.2.*",
+				Product: pivnet.Product{
+					Slug: "some-product",
+				},
+			},
+		}
+
 		releaseUpgradePaths = []pivnet.ReleaseUpgradePath{
 			{
 				Release: pivnet.UpgradePathRelease{
@@ -287,6 +300,7 @@ var _ = Describe("In", func() {
 		fakePivnetClient.ProductFilesForReleaseReturns(releaseProductFiles, productFilesErr)
 
 		fakePivnetClient.ReleaseDependenciesReturns(releaseDependencies, releaseDependenciesErr)
+		fakePivnetClient.DependencySpecifiersReturns(dependencySpecifiers, dependencySpecifiersErr)
 		fakePivnetClient.ReleaseUpgradePathsReturns(releaseUpgradePaths, releaseUpgradePathsErr)
 		fakePivnetClient.FileGroupsForReleaseReturns(fileGroups, fileGroupsErr)
 
@@ -368,6 +382,7 @@ var _ = Describe("In", func() {
 		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateFileGroupsMetadata(invokedMetadata, fileGroups)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
+		validateDependencySpecifiersMetadata(invokedMetadata, dependencySpecifiers)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
 	})
 
@@ -387,6 +402,7 @@ var _ = Describe("In", func() {
 		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateFileGroupsMetadata(invokedMetadata, fileGroups)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
+		validateDependencySpecifiersMetadata(invokedMetadata, dependencySpecifiers)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
 	})
 
@@ -535,6 +551,7 @@ var _ = Describe("In", func() {
 			validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 			validateFileGroupsMetadata(invokedMetadata, fileGroups)
 			validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
+			validateDependencySpecifiersMetadata(invokedMetadata, dependencySpecifiers)
 		})
 
 		Context("when the file type is not 'Software'", func() {
@@ -626,6 +643,19 @@ var _ = Describe("In", func() {
 		})
 	})
 
+	Context("when getting dependency specifiers returns an error", func() {
+		BeforeEach(func() {
+			dependencySpecifiersErr = fmt.Errorf("some dependency specifiers error")
+		})
+
+		It("returns the error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(dependencySpecifiersErr))
+		})
+	})
+
 	Context("when getting release upgrade paths returns an error", func() {
 		BeforeEach(func() {
 			releaseUpgradePathsErr = fmt.Errorf("some release upgrade paths error")
@@ -696,6 +726,19 @@ var validateReleaseDependenciesMetadata = func(
 		Expect(writtenMetadata.Dependencies[i].Release.Version).To(Equal(d.Release.Version))
 		Expect(writtenMetadata.Dependencies[i].Release.Product.ID).To(Equal(d.Release.Product.ID))
 		Expect(writtenMetadata.Dependencies[i].Release.Product.Name).To(Equal(d.Release.Product.Name))
+	}
+}
+
+var validateDependencySpecifiersMetadata = func(
+	writtenMetadata metadata.Metadata,
+	dependencySpecifiers []pivnet.DependencySpecifier,
+) {
+	Expect(writtenMetadata.DependencySpecifiers).To(HaveLen(len(dependencySpecifiers)))
+
+	for i, d := range dependencySpecifiers {
+		Expect(writtenMetadata.DependencySpecifiers[i].ID).To(Equal(d.ID))
+		Expect(writtenMetadata.DependencySpecifiers[i].Specifier).To(Equal(d.Specifier))
+		Expect(writtenMetadata.DependencySpecifiers[i].ProductSlug).To(Equal(d.Product.Slug))
 	}
 }
 

@@ -45,6 +45,7 @@ type pivnetClient interface {
 	ProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
 	ProductFileForRelease(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
+	DependencySpecifiers(productSlug string, releaseID int) ([]pivnet.DependencySpecifier, error)
 	ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error)
 }
 
@@ -155,6 +156,13 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
+	c.logger.Info("Getting dependency specifiers")
+
+	dependencySpecifiers, err := c.pivnetClient.DependencySpecifiers(productSlug, release.ID)
+	if err != nil {
+		return concourse.InResponse{}, err
+	}
+
 	c.logger.Info("Getting release upgrade paths")
 
 	releaseUpgradePaths, err := c.pivnetClient.ReleaseUpgradePaths(productSlug, release.ID)
@@ -223,6 +231,14 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 					Name: d.Release.Product.Name,
 				},
 			},
+		})
+	}
+
+	for _, d := range dependencySpecifiers {
+		mdata.DependencySpecifiers = append(mdata.DependencySpecifiers, metadata.DependencySpecifier{
+			ID:          d.ID,
+			Specifier:   d.Specifier,
+			ProductSlug: d.Product.Slug,
 		})
 	}
 
