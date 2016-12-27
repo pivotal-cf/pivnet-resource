@@ -10,52 +10,55 @@ import (
 )
 
 type OutCommand struct {
-	logger                   logger.Logger
-	outDir                   string
-	sourcesDir               string
-	globClient               globber
-	validation               validation
-	creator                  creator
-	userGroupsUpdater        userGroupsUpdater
-	releaseDependenciesAdder releaseDependenciesAdder
-	releaseUpgradePathsAdder releaseUpgradePathsAdder
-	finalizer                finalizer
-	uploader                 uploader
-	m                        metadata.Metadata
-	skipUpload               bool
+	logger                      logger.Logger
+	outDir                      string
+	sourcesDir                  string
+	globClient                  globber
+	validation                  validation
+	creator                     creator
+	userGroupsUpdater           userGroupsUpdater
+	releaseDependenciesAdder    releaseDependenciesAdder
+	dependencySpecifiersCreator dependencySpecifiersCreator
+	releaseUpgradePathsAdder    releaseUpgradePathsAdder
+	finalizer                   finalizer
+	uploader                    uploader
+	m                           metadata.Metadata
+	skipUpload                  bool
 }
 
 type OutCommandConfig struct {
-	Logger                   logger.Logger
-	OutDir                   string
-	SourcesDir               string
-	GlobClient               globber
-	Validation               validation
-	Creator                  creator
-	UserGroupsUpdater        userGroupsUpdater
-	ReleaseDependenciesAdder releaseDependenciesAdder
-	ReleaseUpgradePathsAdder releaseUpgradePathsAdder
-	Finalizer                finalizer
-	Uploader                 uploader
-	M                        metadata.Metadata
-	SkipUpload               bool
+	Logger                      logger.Logger
+	OutDir                      string
+	SourcesDir                  string
+	GlobClient                  globber
+	Validation                  validation
+	Creator                     creator
+	UserGroupsUpdater           userGroupsUpdater
+	ReleaseDependenciesAdder    releaseDependenciesAdder
+	DependencySpecifiersCreator dependencySpecifiersCreator
+	ReleaseUpgradePathsAdder    releaseUpgradePathsAdder
+	Finalizer                   finalizer
+	Uploader                    uploader
+	M                           metadata.Metadata
+	SkipUpload                  bool
 }
 
 func NewOutCommand(config OutCommandConfig) OutCommand {
 	return OutCommand{
-		logger:                   config.Logger,
-		outDir:                   config.OutDir,
-		sourcesDir:               config.SourcesDir,
-		globClient:               config.GlobClient,
-		validation:               config.Validation,
-		creator:                  config.Creator,
-		userGroupsUpdater:        config.UserGroupsUpdater,
-		releaseDependenciesAdder: config.ReleaseDependenciesAdder,
-		releaseUpgradePathsAdder: config.ReleaseUpgradePathsAdder,
-		finalizer:                config.Finalizer,
-		uploader:                 config.Uploader,
-		m:                        config.M,
-		skipUpload:               config.SkipUpload,
+		logger:                      config.Logger,
+		outDir:                      config.OutDir,
+		sourcesDir:                  config.SourcesDir,
+		globClient:                  config.GlobClient,
+		validation:                  config.Validation,
+		creator:                     config.Creator,
+		userGroupsUpdater:           config.UserGroupsUpdater,
+		releaseDependenciesAdder:    config.ReleaseDependenciesAdder,
+		dependencySpecifiersCreator: config.DependencySpecifiersCreator,
+		releaseUpgradePathsAdder:    config.ReleaseUpgradePathsAdder,
+		finalizer:                   config.Finalizer,
+		uploader:                    config.Uploader,
+		m:                           config.M,
+		skipUpload:                  config.SkipUpload,
 	}
 }
 
@@ -77,6 +80,11 @@ type userGroupsUpdater interface {
 //go:generate counterfeiter --fake-name ReleaseDependenciesAdder . releaseDependenciesAdder
 type releaseDependenciesAdder interface {
 	AddReleaseDependencies(release pivnet.Release) error
+}
+
+//go:generate counterfeiter --fake-name DependencySpecifiersCreator . dependencySpecifiersCreator
+type dependencySpecifiersCreator interface {
+	CreateDependencySpecifier(release pivnet.Release) error
 }
 
 //go:generate counterfeiter --fake-name ReleaseUpgradePathsAdder . releaseUpgradePathsAdder
@@ -159,6 +167,11 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 	}
 
 	err = c.releaseDependenciesAdder.AddReleaseDependencies(pivnetRelease)
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+
+	err = c.dependencySpecifiersCreator.CreateDependencySpecifier(pivnetRelease)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}

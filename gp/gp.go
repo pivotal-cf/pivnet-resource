@@ -133,6 +133,10 @@ func (c Client) DependencySpecifiers(productSlug string, releaseID int) ([]pivne
 	return c.client.DependencySpecifiers.List(productSlug, releaseID)
 }
 
+func (c Client) CreateDependencySpecifier(productSlug string, releaseID int, dependentProductSlug string, specifier string) (pivnet.DependencySpecifier, error) {
+	return c.client.DependencySpecifiers.Create(productSlug, releaseID, dependentProductSlug, specifier)
+}
+
 func (c Client) ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error) {
 	return c.client.ReleaseUpgradePaths.Get(productSlug, releaseID)
 }
