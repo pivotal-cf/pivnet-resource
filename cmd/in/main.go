@@ -14,6 +14,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/in"
 	"github.com/pivotal-cf/pivnet-resource/in/filesystem"
 	"github.com/pivotal-cf/pivnet-resource/md5sum"
+	"github.com/pivotal-cf/pivnet-resource/ui"
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
@@ -29,12 +30,19 @@ func main() {
 		version = "dev"
 	}
 
-	logger := log.New(os.Stderr, "", log.LstdFlags)
+	logWriter := os.Stderr
+	uiPrinter := ui.NewUIPrinter(logWriter)
+
+	logger := log.New(logWriter, "", log.LstdFlags)
 
 	logger.Printf("PivNet Resource version: %s", version)
 
 	if len(os.Args) < 2 {
-		log.Fatalf("not enough args - usage: %s <sources directory>", os.Args[0])
+		uiPrinter.PrintErrorlnf(
+			"not enough args - usage: %s <sources directory>",
+			os.Args[0],
+		)
+		os.Exit(1)
 	}
 
 	downloadDir := os.Args[1]
@@ -42,11 +50,12 @@ func main() {
 	var input concourse.InRequest
 	err := json.NewDecoder(os.Stdin).Decode(&input)
 	if err != nil {
-		log.Fatalln(err)
+		uiPrinter.PrintErrorln(err)
+		os.Exit(1)
 	}
 
 	sanitized := concourse.SanitizedSource(input.Source)
-	logger.SetOutput(sanitizer.NewSanitizer(sanitized, os.Stderr))
+	logger.SetOutput(sanitizer.NewSanitizer(sanitized, logWriter))
 
 	verbose := false
 	ls := logshim.NewLogShim(logger, logger, verbose)
@@ -55,12 +64,14 @@ func main() {
 
 	err = os.MkdirAll(downloadDir, os.ModePerm)
 	if err != nil {
-		log.Fatalf("Exiting with error: %s", err)
+		uiPrinter.PrintErrorln(err)
+		os.Exit(1)
 	}
 
 	err = validator.NewInValidator(input).Validate()
 	if err != nil {
-		log.Fatalf("Exiting with error: %s", err)
+		uiPrinter.PrintErrorln(err)
+		os.Exit(1)
 	}
 
 	var endpoint string
@@ -81,7 +92,7 @@ func main() {
 		ls,
 	)
 
-	d := downloader.NewDownloader(client, downloadDir, ls, os.Stderr)
+	d := downloader.NewDownloader(client, downloadDir, ls, logWriter)
 	fs := md5sum.NewFileSummer()
 
 	f := filter.NewFilter(ls)
@@ -97,11 +108,13 @@ func main() {
 		fileWriter,
 	).Run(input)
 	if err != nil {
-		log.Fatalf("Exiting with error: %s", err)
+		uiPrinter.PrintErrorln(err)
+		os.Exit(1)
 	}
 
 	err = json.NewEncoder(os.Stdout).Encode(response)
 	if err != nil {
-		log.Fatalf("Exiting with error: %s", err)
+		uiPrinter.PrintErrorln(err)
+		os.Exit(1)
 	}
 }

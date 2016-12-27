@@ -22,6 +22,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/out/release"
 	"github.com/pivotal-cf/pivnet-resource/s3"
 	"github.com/pivotal-cf/pivnet-resource/semver"
+	"github.com/pivotal-cf/pivnet-resource/ui"
 	"github.com/pivotal-cf/pivnet-resource/uploader"
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
@@ -43,30 +44,38 @@ func main() {
 		version = "dev"
 	}
 
-	logger := log.New(os.Stderr, "", log.LstdFlags|log.Lmicroseconds)
+	logWriter := os.Stderr
+	uiPrinter := ui.NewUIPrinter(logWriter)
+
+	logger := log.New(logWriter, "", log.LstdFlags|log.Lmicroseconds)
 
 	logger.Printf("PivNet Resource version: %s", version)
 
 	if len(os.Args) < 2 {
-		log.Fatalf("not enough args - usage: %s <sources directory>", os.Args[0])
+		uiPrinter.PrintErrorlnf(
+			"not enough args - usage: %s <sources directory>",
+			os.Args[0],
+		)
+		os.Exit(1)
 	}
 
 	sourcesDir := os.Args[1]
 
 	outDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		log.Fatalln(err)
+		uiPrinter.PrintErrorln(err)
+		os.Exit(1)
 	}
 
 	var input concourse.OutRequest
-
 	err = json.NewDecoder(os.Stdin).Decode(&input)
 	if err != nil {
-		log.Fatalln(err)
+		uiPrinter.PrintErrorln(err)
+		os.Exit(1)
 	}
 
 	sanitized := concourse.SanitizedSource(input.Source)
-	logger.SetOutput(sanitizer.NewSanitizer(sanitized, os.Stderr))
+	logger.SetOutput(sanitizer.NewSanitizer(sanitized, logWriter))
 
 	verbose := false
 	ls := logshim.NewLogShim(logger, logger, verbose)
@@ -124,23 +133,31 @@ func main() {
 
 	var m metadata.Metadata
 	if input.Params.MetadataFile == "" {
-		log.Fatalf("params.metadata_file must be provided")
+		uiPrinter.PrintErrorlnf("params.metadata_file must be provided")
+		os.Exit(1)
 	}
 
 	metadataFilepath := filepath.Join(sourcesDir, input.Params.MetadataFile)
 	metadataBytes, err := ioutil.ReadFile(metadataFilepath)
 	if err != nil {
-		log.Fatalf("params.metadata_file could not be read: %s", err.Error())
+		uiPrinter.PrintErrorlnf("params.metadata_file could not be read: %s", err.Error())
+		os.Exit(1)
 	}
 
 	err = yaml.Unmarshal(metadataBytes, &m)
 	if err != nil {
-		log.Fatalf("params.metadata_file could not be parsed: %s", err.Error())
+		uiPrinter.PrintErrorlnf("params.metadata_file could not be parsed: %s", err.Error())
+		os.Exit(1)
 	}
 
-	err = m.Validate()
+	deprecations, err := m.Validate()
 	if err != nil {
-		log.Fatalf("params.metadata_file is invalid: %s", err.Error())
+		uiPrinter.PrintErrorlnf("params.metadata_file is invalid: %s", err.Error())
+		os.Exit(1)
+	}
+
+	for _, deprecation := range deprecations {
+		uiPrinter.PrintDeprecationln(deprecation)
 	}
 
 	validation := validator.NewOutValidator(input)
@@ -231,11 +248,13 @@ func main() {
 
 	response, err := outCmd.Run(input)
 	if err != nil {
-		log.Fatalln(err)
+		uiPrinter.PrintErrorln(err)
+		os.Exit(1)
 	}
 
 	err = json.NewEncoder(os.Stdout).Encode(response)
 	if err != nil {
-		log.Fatalln(err)
+		uiPrinter.PrintErrorln(err)
+		os.Exit(1)
 	}
 }

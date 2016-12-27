@@ -666,6 +666,14 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/fatih/color",
+			"repository": "https://github.com/fatih/color",
+			"vcs": "git",
+			"revision": "bf82308e8c8546dc2b945157173eb8a959ae9505",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/golang/protobuf/proto",
 			"repository": "https://github.com/golang/protobuf",
 			"vcs": "git",
@@ -713,6 +721,22 @@
 			"repository": "https://github.com/lsegal/gucumber",
 			"vcs": "git",
 			"revision": "090009ec4b32fd019e2d5e1a6a92f66268441cee",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/mattn/go-colorable",
+			"repository": "https://github.com/mattn/go-colorable",
+			"vcs": "git",
+			"revision": "d228849504861217f796da67fae4f6e347643f15",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/mattn/go-isatty",
+			"repository": "https://github.com/mattn/go-isatty",
+			"vcs": "git",
+			"revision": "30a891c33c7cde7b02a981314b4228ec99380cca",
 			"branch": "master",
 			"notests": true
 		},
@@ -840,6 +864,15 @@
 			"revision": "f841c39de738b1d0df95b5a7187744f0e03d8112",
 			"branch": "master",
 			"path": "/context",
+			"notests": true
+		},
+		{
+			"importpath": "golang.org/x/sys/unix",
+			"repository": "https://go.googlesource.com/sys",
+			"vcs": "git",
+			"revision": "d75a52659825e75fff6158388dddc6a5b04f9ba5",
+			"branch": "master",
+			"path": "/unix",
 			"notests": true
 		},
 		{

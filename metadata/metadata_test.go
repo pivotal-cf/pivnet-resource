@@ -31,7 +31,8 @@ var _ = Describe("Metadata", func() {
 			})
 
 			It("returns an error", func() {
-				Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "release")))
+				_, err := data.Validate()
+				Expect(err).To(MatchError(fmt.Sprintf("missing required value %q", "release")))
 			})
 		})
 
@@ -41,7 +42,8 @@ var _ = Describe("Metadata", func() {
 			})
 
 			It("returns an error", func() {
-				Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "eula_slug")))
+				_, err := data.Validate()
+				Expect(err).To(MatchError(fmt.Sprintf("missing required value %q", "eula_slug")))
 			})
 		})
 
@@ -51,7 +53,8 @@ var _ = Describe("Metadata", func() {
 			})
 
 			It("returns an error", func() {
-				Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "version")))
+				_, err := data.Validate()
+				Expect(err).To(MatchError(fmt.Sprintf("missing required value %q", "version")))
 			})
 		})
 
@@ -61,7 +64,8 @@ var _ = Describe("Metadata", func() {
 			})
 
 			It("returns an error", func() {
-				Expect(data.Validate()).To(MatchError(fmt.Sprintf("missing required value %q", "release_type")))
+				_, err := data.Validate()
+				Expect(err).To(MatchError(fmt.Sprintf("missing required value %q", "release_type")))
 			})
 		})
 
@@ -71,7 +75,8 @@ var _ = Describe("Metadata", func() {
 			})
 
 			It("returns an error", func() {
-				Expect(data.Validate()).To(MatchError("empty value for file"))
+				_, err := data.Validate()
+				Expect(err).To(MatchError("empty value for file"))
 			})
 		})
 
@@ -91,7 +96,8 @@ var _ = Describe("Metadata", func() {
 			})
 
 			It("returns without error", func() {
-				Expect(data.Validate()).NotTo(HaveOccurred())
+				_, err := data.Validate()
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			Context("when release version is empty", func() {
@@ -100,7 +106,7 @@ var _ = Describe("Metadata", func() {
 				})
 
 				It("returns an error", func() {
-					err := data.Validate()
+					_, err := data.Validate()
 					Expect(err).To(HaveOccurred())
 
 					Expect(err.Error()).To(MatchRegexp(".*dependency\\[0\\]"))
@@ -113,7 +119,7 @@ var _ = Describe("Metadata", func() {
 				})
 
 				It("returns an error", func() {
-					err := data.Validate()
+					_, err := data.Validate()
 					Expect(err).To(HaveOccurred())
 
 					Expect(err.Error()).To(MatchRegexp(".*dependency\\[0\\]"))
@@ -132,7 +138,8 @@ var _ = Describe("Metadata", func() {
 			})
 
 			It("returns without error", func() {
-				Expect(data.Validate()).NotTo(HaveOccurred())
+				_, err := data.Validate()
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			Context("when id is non-zero and version is empty", func() {
@@ -141,7 +148,8 @@ var _ = Describe("Metadata", func() {
 				})
 
 				It("returns without error", func() {
-					Expect(data.Validate()).NotTo(HaveOccurred())
+					_, err := data.Validate()
+					Expect(err).NotTo(HaveOccurred())
 				})
 			})
 
@@ -151,7 +159,8 @@ var _ = Describe("Metadata", func() {
 				})
 
 				It("returns without error", func() {
-					Expect(data.Validate()).NotTo(HaveOccurred())
+					_, err := data.Validate()
+					Expect(err).NotTo(HaveOccurred())
 				})
 			})
 
@@ -162,7 +171,7 @@ var _ = Describe("Metadata", func() {
 				})
 
 				It("returns an error", func() {
-					err := data.Validate()
+					_, err := data.Validate()
 					Expect(err).To(HaveOccurred())
 
 					Expect(err.Error()).To(MatchRegexp(".*upgrade_paths\\[0\\]"))
@@ -181,7 +190,8 @@ var _ = Describe("Metadata", func() {
 			})
 
 			It("returns without error", func() {
-				Expect(data.Validate()).NotTo(HaveOccurred())
+				_, err := data.Validate()
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			Context("when product slug is empty", func() {
@@ -190,7 +200,7 @@ var _ = Describe("Metadata", func() {
 				})
 
 				It("returns error", func() {
-					err := data.Validate()
+					_, err := data.Validate()
 					Expect(err).To(HaveOccurred())
 
 					Expect(err.Error()).To(MatchRegexp(".*slug.*dependency_specifiers\\[0\\]"))
@@ -203,7 +213,7 @@ var _ = Describe("Metadata", func() {
 				})
 
 				It("returns error", func() {
-					err := data.Validate()
+					_, err := data.Validate()
 					Expect(err).To(HaveOccurred())
 
 					Expect(err.Error()).To(MatchRegexp("Specifier.*dependency_specifiers\\[0\\]"))

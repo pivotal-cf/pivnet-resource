@@ -82,38 +82,38 @@ type DependencySpecifier struct {
 	ProductSlug string `yaml:"product_slug,omitempty"`
 }
 
-func (m Metadata) Validate() error {
+func (m Metadata) Validate() ([]string, error) {
 	for _, productFile := range m.ProductFiles {
 		if productFile.File == "" {
-			return fmt.Errorf("empty value for file")
+			return nil, fmt.Errorf("empty value for file")
 		}
 	}
 
 	if m.Release == nil {
-		return fmt.Errorf("missing required value %q", "release")
+		return nil, fmt.Errorf("missing required value %q", "release")
 	}
 
 	if m.Release.Version == "" {
-		return fmt.Errorf("missing required value %q", "version")
+		return nil, fmt.Errorf("missing required value %q", "version")
 	}
 
 	if m.Release.ReleaseType == "" {
-		return fmt.Errorf("missing required value %q", "release_type")
+		return nil, fmt.Errorf("missing required value %q", "release_type")
 	}
 
 	if m.Release.EULASlug == "" {
-		return fmt.Errorf("missing required value %q", "eula_slug")
+		return nil, fmt.Errorf("missing required value %q", "eula_slug")
 	}
 
 	for i, d := range m.DependencySpecifiers {
 		if d.ProductSlug == "" {
-			return fmt.Errorf(
+			return nil, fmt.Errorf(
 				"Dependent product slug must be provided for dependency_specifiers[%d]",
 				i,
 			)
 		}
 		if d.Specifier == "" {
-			return fmt.Errorf(
+			return nil, fmt.Errorf(
 				"Specifier must be provided for dependency_specifiers[%d]",
 				i,
 			)
@@ -124,7 +124,7 @@ func (m Metadata) Validate() error {
 		dependentReleaseID := d.Release.ID
 		if dependentReleaseID == 0 {
 			if d.Release.Version == "" || d.Release.Product.Slug == "" {
-				return fmt.Errorf(
+				return nil, fmt.Errorf(
 					"Either ReleaseID or release version and product slug must be provided for dependency[%d]",
 					i,
 				)
@@ -134,12 +134,20 @@ func (m Metadata) Validate() error {
 
 	for i, u := range m.UpgradePaths {
 		if u.ID == 0 && u.Version == "" {
-			return fmt.Errorf(
+			return nil, fmt.Errorf(
 				"Either id or version must be provided for upgrade_paths[%d]",
 				i,
 			)
 		}
 	}
 
-	return nil
+	var deprecations []string
+	if len(m.Dependencies) > 0 {
+		deprecations = append(
+			deprecations,
+			"Use of 'dependencies' is deprecated - use 'dependency_specifiers' instead",
+		)
+	}
+
+	return deprecations, nil
 }
