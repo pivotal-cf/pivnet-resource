@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
@@ -29,6 +30,8 @@ func main() {
 	if version == "" {
 		version = "dev"
 	}
+
+	color.NoColor = false
 
 	logWriter := os.Stderr
 	uiPrinter := ui.NewUIPrinter(logWriter)
