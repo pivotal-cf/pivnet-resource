@@ -11,7 +11,10 @@ import (
 
 var _ = Describe("Metadata", func() {
 	Describe("Validate", func() {
-		var data metadata.Metadata
+		var (
+			data metadata.Metadata
+		)
+
 		BeforeEach(func() {
 			data = metadata.Metadata{
 				Release: &metadata.Release{
@@ -98,6 +101,14 @@ var _ = Describe("Metadata", func() {
 			It("returns without error", func() {
 				_, err := data.Validate()
 				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns deprecation warning", func() {
+				deprecations, err := data.Validate()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(deprecations).To(HaveLen(1))
+				Expect(deprecations[0]).To(MatchRegexp(".*dependency_specifiers.*"))
 			})
 
 			Context("when release version is empty", func() {
