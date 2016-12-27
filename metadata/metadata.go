@@ -105,6 +105,21 @@ func (m Metadata) Validate() error {
 		return fmt.Errorf("missing required value %q", "eula_slug")
 	}
 
+	for i, d := range m.DependencySpecifiers {
+		if d.ProductSlug == "" {
+			return fmt.Errorf(
+				"Dependent product slug must be provided for dependency_specifiers[%d]",
+				i,
+			)
+		}
+		if d.Specifier == "" {
+			return fmt.Errorf(
+				"Specifier must be provided for dependency_specifiers[%d]",
+				i,
+			)
+		}
+	}
+
 	for i, d := range m.Dependencies {
 		dependentReleaseID := d.Release.ID
 		if dependentReleaseID == 0 {

@@ -169,5 +169,46 @@ var _ = Describe("Metadata", func() {
 				})
 			})
 		})
+		Context("when dependency specifiers are provided", func() {
+			BeforeEach(func() {
+				data.DependencySpecifiers = []metadata.DependencySpecifier{
+					{
+						ID:          1234,
+						ProductSlug: "some-product-slug",
+						Specifier:   "1.2.*",
+					},
+				}
+			})
+
+			It("returns without error", func() {
+				Expect(data.Validate()).NotTo(HaveOccurred())
+			})
+
+			Context("when product slug is empty", func() {
+				BeforeEach(func() {
+					data.DependencySpecifiers[0].ProductSlug = ""
+				})
+
+				It("returns error", func() {
+					err := data.Validate()
+					Expect(err).To(HaveOccurred())
+
+					Expect(err.Error()).To(MatchRegexp(".*slug.*dependency_specifiers\\[0\\]"))
+				})
+			})
+
+			Context("when specifier is empty", func() {
+				BeforeEach(func() {
+					data.DependencySpecifiers[0].Specifier = ""
+				})
+
+				It("returns error", func() {
+					err := data.Validate()
+					Expect(err).To(HaveOccurred())
+
+					Expect(err.Error()).To(MatchRegexp("Specifier.*dependency_specifiers\\[0\\]"))
+				})
+			})
+		})
 	})
 })

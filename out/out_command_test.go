@@ -124,7 +124,7 @@ var _ = Describe("Out", func() {
 
 			uploader.UploadReturns(uploadErr)
 			releaseDependenciesAdder.AddReleaseDependenciesReturns(addReleaseDependenciesErr)
-			dependencySpecifiersCreator.CreateDependencySpecifierReturns(createDependencySpecifiersErr)
+			dependencySpecifiersCreator.CreateDependencySpecifiersReturns(createDependencySpecifiersErr)
 			releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(addReleaseUpgradePathsErr)
 
 			finalizer.FinalizeReturns(concourse.OutResponse{
@@ -155,7 +155,7 @@ var _ = Describe("Out", func() {
 			Expect(globber.ExactGlobsCallCount()).To(Equal(1))
 
 			Expect(releaseDependenciesAdder.AddReleaseDependenciesCallCount()).To(Equal(1))
-			Expect(dependencySpecifiersCreator.CreateDependencySpecifierCallCount()).To(Equal(1))
+			Expect(dependencySpecifiersCreator.CreateDependencySpecifiersCallCount()).To(Equal(1))
 			Expect(releaseUpgradePathsAdder.AddReleaseUpgradePathsCallCount()).To(Equal(1))
 
 			Expect(uploader.UploadCallCount()).To(Equal(1))

@@ -166,6 +166,8 @@ or updating a release.
 
 ## Dependencies
 
+**Configuring dependencies directly is deprecated - use dependency specifiers instead**
+
 The top-level `dependencies` key is optional.
 If provided, it is permitted to be an empty array.
 
@@ -177,6 +179,14 @@ Within each `release` element either:
 or:
 
 * `version` and `product.slug` must be present and non-empty.
+
+## Dependency Specifiers
+
+The top-level `dependency_specifiers` key is optional.
+If provided, it is permitted to be an empty array.
+
+Each element in `dependency_specifiers` must have a non-empty value for both
+the `specifier` key and the `product_slug` key.
 
 ## Upgrade paths
 

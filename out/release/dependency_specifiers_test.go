@@ -56,7 +56,7 @@ var _ = Describe("DependencySpecifiersCreator", func() {
 				ProductFiles: []metadata.ProductFile{},
 			}
 
-			pivnetClient.CreateDependencySpecifierReturns(nil)
+			pivnetClient.CreateDependencySpecifierReturns(pivnet.DependencySpecifier{}, nil)
 		})
 
 		JustBeforeEach(func() {
@@ -98,7 +98,7 @@ var _ = Describe("DependencySpecifiersCreator", func() {
 
 				BeforeEach(func() {
 					expectedErr = fmt.Errorf("boom")
-					pivnetClient.CreateDependencySpecifierReturns(expectedErr)
+					pivnetClient.CreateDependencySpecifierReturns(pivnet.DependencySpecifier{}, expectedErr)
 				})
 
 				It("returns an error", func() {

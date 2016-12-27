@@ -31,7 +31,7 @@ func NewDependencySpecifiersCreator(
 
 //go:generate counterfeiter --fake-name DependencySpecifiersCreatorClient . dependencySpecifiersCreatorClient
 type dependencySpecifiersCreatorClient interface {
-	CreateDependencySpecifier(productSlug string, releaseID int, dependentProductSlug string, specifier string) error
+	CreateDependencySpecifier(productSlug string, releaseID int, dependentProductSlug string, specifier string) (pivnet.DependencySpecifier, error)
 }
 
 func (rf DependencySpecifiersCreator) CreateDependencySpecifiers(release pivnet.Release) error {
@@ -41,7 +41,7 @@ func (rf DependencySpecifiersCreator) CreateDependencySpecifiers(release pivnet.
 			d.ProductSlug,
 			d.Specifier,
 		))
-		err := rf.pivnet.CreateDependencySpecifier(rf.productSlug, release.ID, d.ProductSlug, d.Specifier)
+		_, err := rf.pivnet.CreateDependencySpecifier(rf.productSlug, release.ID, d.ProductSlug, d.Specifier)
 		if err != nil {
 			return err
 		}

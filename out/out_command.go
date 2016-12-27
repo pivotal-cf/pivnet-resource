@@ -84,7 +84,7 @@ type releaseDependenciesAdder interface {
 
 //go:generate counterfeiter --fake-name DependencySpecifiersCreator . dependencySpecifiersCreator
 type dependencySpecifiersCreator interface {
-	CreateDependencySpecifier(release pivnet.Release) error
+	CreateDependencySpecifiers(release pivnet.Release) error
 }
 
 //go:generate counterfeiter --fake-name ReleaseUpgradePathsAdder . releaseUpgradePathsAdder
@@ -171,7 +171,7 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		return concourse.OutResponse{}, err
 	}
 
-	err = c.dependencySpecifiersCreator.CreateDependencySpecifier(pivnetRelease)
+	err = c.dependencySpecifiersCreator.CreateDependencySpecifiers(pivnetRelease)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
