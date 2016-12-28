@@ -207,7 +207,7 @@ func (u ReleaseUploader) pollForProductFile(productFile pivnet.ProductFile) erro
 				return err
 			}
 
-			if pf.FileTransferStatus == "complete" {
+			if pf.ReadyToServe {
 				u.logger.Info(fmt.Sprintf(
 					"Product file: '%s' async transfer complete",
 					productFile.Name,
