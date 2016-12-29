@@ -29,6 +29,15 @@ repository.
 
 ## Source Configuration
 
+```yaml
+resources:
+- name: p-mysql
+  type: pivnet
+  source:
+    api_token: {{api-token}}
+    product_slug: p-mysql
+```
+
 * `api_token`: *Required.*
   Token from your pivnet profile.
 
@@ -181,11 +190,25 @@ corresponding S3 bucket is `pivotal-network-staging`.
 This environment is useful for teams to develop against, as changes to products
 in this account are separated from the live account.
 
+Example configuration for the integration environment:
+
+```yaml
+resources:
+- name: p-mysql
+  type: pivnet
+  source:
+    api_token: {{api-token}}
+    product_slug: p-mysql
+    endpoint: https://pivnet-integration.cfapps.io
+    bucket: pivotal-network-staging
+```
+
 ## Developing
 
 ### Prerequisites
 
-A valid install of golang >= 1.6 is required.
+A valid install of golang is required - version 1.7.x is tested; earlier
+versions may also work.
 
 ### Dependencies
 
