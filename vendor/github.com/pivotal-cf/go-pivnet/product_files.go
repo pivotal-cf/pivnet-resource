@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/pivotal-cf/go-pivnet/download"
 	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
@@ -233,7 +234,6 @@ func (p ProductFilesService) Update(productSlug string, productFile ProductFile)
 	body := createUpdateProductFileBody{
 		ProductFile: ProductFile{
 			Description: productFile.Description,
-			FileType:    productFile.FileType,
 			FileVersion: productFile.FileVersion,
 			MD5:         productFile.MD5,
 			Name:        productFile.Name,
@@ -492,6 +492,8 @@ func (p ProductFilesService) DownloadForRelease(
 	p.client.HTTP.CheckRedirect = nil
 
 	p.client.logger.Debug("Fetching File", logger.Data{"location": resp.Header.Get("Location")})
+
+	p.client.downloader.Bar = download.NewBar()
 
 	err = p.client.downloader.Get(
 		location,
