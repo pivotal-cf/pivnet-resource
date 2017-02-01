@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"golang.org/x/sync/errgroup"
+	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
 //go:generate counterfeiter -o ./fakes/ranger.go --fake-name Ranger . ranger
@@ -17,6 +18,10 @@ type ranger interface {
 //go:generate counterfeiter -o ./fakes/http_client.go --fake-name HTTPClient . httpClient
 type httpClient interface {
 	Do(*http.Request) (*http.Response, error)
+}
+
+type downloadLinkFetcher interface {
+	NewDownloadLink() (string, error)
 }
 
 //go:generate counterfeiter -o ./fakes/bar.go --fake-name Bar . bar
@@ -33,13 +38,19 @@ type Client struct {
 	HTTPClient httpClient
 	Ranger     ranger
 	Bar        bar
+	Logger     logger.Logger
 }
 
 func (c Client) Get(
 	location *os.File,
-	contentURL string,
+	downloadLinkFetcher downloadLinkFetcher,
 	progressWriter io.Writer,
 ) error {
+	contentURL, err := downloadLinkFetcher.NewDownloadLink()
+	if err != nil {
+		return err
+	}
+
 	req, err := http.NewRequest("HEAD", contentURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to construct HEAD request: %s", err)
@@ -82,7 +93,7 @@ func (c Client) Get(
 		}
 
 		g.Go(func() error {
-			err := c.retryableRequest(contentURL, byteRange.HTTPHeader, fileWriter)
+			err := c.retryableRequest(contentURL, byteRange.HTTPHeader, fileWriter, downloadLinkFetcher)
 			if err != nil {
 				return fmt.Errorf("failed during retryable request: %s", err)
 			}
@@ -98,7 +109,7 @@ func (c Client) Get(
 	return nil
 }
 
-func (c Client) retryableRequest(contentURL string, rangeHeader http.Header, fileWriter *os.File) (error) {
+func (c Client) retryableRequest(contentURL string, rangeHeader http.Header, fileWriter *os.File, downloadLinkFetcher downloadLinkFetcher) (error) {
 	currentURL := contentURL
 	defer fileWriter.Close()
 Retry:
@@ -121,6 +132,17 @@ Retry:
 	}
 
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusForbidden {
+		c.Logger.Debug("Received unsuccessful status code: %d", logger.Data{"statusCode": resp.StatusCode})
+		currentURL, err = downloadLinkFetcher.NewDownloadLink()
+		if err != nil {
+			return err
+		}
+		c.Logger.Debug("Fetched new download url: %d", logger.Data{"url": currentURL})
+
+		goto Retry
+	}
 
 	if resp.StatusCode != http.StatusPartialContent {
 		return fmt.Errorf("during GET unexpected status code was returned: %d", resp.StatusCode)
