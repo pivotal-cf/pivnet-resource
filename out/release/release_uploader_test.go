@@ -123,7 +123,7 @@ var _ = Describe("ReleaseUploader", func() {
 				return productFile, nil
 			}
 
-			productFile.ReadyToServe = true
+			productFile.FileTransferStatus = "complete"
 			return productFile, nil
 		}
 	})
