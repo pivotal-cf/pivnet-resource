@@ -3,11 +3,9 @@ package download
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
-
 	"golang.org/x/sync/errgroup"
 )
 
@@ -28,6 +26,7 @@ type bar interface {
 	Add(totalWritten int) int
 	Kickoff()
 	Finish()
+	NewProxyReader(reader io.Reader) io.Reader
 }
 
 type Client struct {
@@ -63,22 +62,30 @@ func (c Client) Get(
 	c.Bar.Kickoff()
 
 	defer c.Bar.Finish()
+	fileInfo, err := location.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to write file: %s", err)
+	}
 
 	var g errgroup.Group
 	for _, r := range ranges {
 		byteRange := r
+
+		fileWriter, err := os.OpenFile(location.Name(), os.O_RDWR, fileInfo.Mode())
+		if err != nil {
+			return fmt.Errorf("failed to write file: %s", err)
+		}
+
+		_, err = fileWriter.Seek(byteRange.Lower, 0)
+		if err != nil {
+			return fmt.Errorf("failed to write file: %s", err)
+		}
+
 		g.Go(func() error {
-			respBytes, err := c.retryableRequest(contentURL, byteRange.HTTPHeader)
+			err := c.retryableRequest(contentURL, byteRange.HTTPHeader, fileWriter)
 			if err != nil {
 				return fmt.Errorf("failed during retryable request: %s", err)
 			}
-
-			bytesWritten, err := location.WriteAt(respBytes, byteRange.Lower)
-			if err != nil {
-				return fmt.Errorf("failed to write file: %s", err)
-			}
-
-			c.Bar.Add(bytesWritten)
 
 			return nil
 		})
@@ -91,15 +98,17 @@ func (c Client) Get(
 	return nil
 }
 
-func (c Client) retryableRequest(url string, rangeHeader http.Header) ([]byte, error) {
-	req, err := http.NewRequest("GET", url, nil)
+func (c Client) retryableRequest(contentURL string, rangeHeader http.Header, fileWriter *os.File) (error) {
+	currentURL := contentURL
+	defer fileWriter.Close()
+Retry:
+	req, err := http.NewRequest("GET", currentURL, nil)
 	if err != nil {
-		return []byte{}, err
+		return err
 	}
 
 	req.Header = rangeHeader
 
-Retry:
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		if netErr, ok := err.(net.Error); ok {
@@ -108,24 +117,25 @@ Retry:
 			}
 		}
 
-		return []byte{}, err
+		return err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusPartialContent {
-		return []byte{}, fmt.Errorf("during GET unexpected status code was returned: %d", resp.StatusCode)
+		return fmt.Errorf("during GET unexpected status code was returned: %d", resp.StatusCode)
 	}
 
-	var respBytes []byte
-	respBytes, err = ioutil.ReadAll(resp.Body)
+	var proxyReader io.Reader
+	proxyReader = c.Bar.NewProxyReader(resp.Body)
+
+	_, err = io.Copy(fileWriter, proxyReader)
 	if err != nil {
 		if err == io.ErrUnexpectedEOF {
 			goto Retry
 		}
-
-		return []byte{}, err
+		return fmt.Errorf("failed to write file: %s", err)
 	}
 
-	return respBytes, err
+	return nil
 }
