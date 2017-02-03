@@ -82,7 +82,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Compiling in binary")
-	inPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/in", "-race")
+	inPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/in")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Sanitizing acceptance test output")
