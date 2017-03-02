@@ -86,6 +86,8 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		var description string
 		var docsURL string
 		var systemRequirements []string
+		var platforms []string
+		var includedFiles []string
 
 		uploadAs := filename
 		fileType := "Software"
@@ -119,6 +121,14 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 				if len(f.SystemRequirements) > 0 {
 					systemRequirements = f.SystemRequirements
+				}
+
+				if len(f.Platforms) > 0 {
+					platforms = f.Platforms
+				}
+
+				if len(f.IncludedFiles) > 0 {
+					includedFiles = f.IncludedFiles
 				}
 			} else {
 				u.logger.Info(fmt.Sprintf(
@@ -162,6 +172,8 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			FileType:           fileType,
 			DocsURL:            docsURL,
 			SystemRequirements: systemRequirements,
+			Platforms:          platforms,
+			IncludedFiles:      includedFiles,
 		})
 		if err != nil {
 			return err

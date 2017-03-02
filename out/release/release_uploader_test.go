@@ -70,6 +70,8 @@ var _ = Describe("ReleaseUploader", func() {
 					FileType:           "something",
 					DocsURL:            "some-docs-url",
 					SystemRequirements: []string{"req1", "req2"},
+					Platforms:          []string{"Linux"},
+					IncludedFiles:      []string{"include1", "include2"},
 				},
 			},
 		}
@@ -146,6 +148,8 @@ var _ = Describe("ReleaseUploader", func() {
 				FileType:           mdata.ProductFiles[0].FileType,
 				DocsURL:            mdata.ProductFiles[0].DocsURL,
 				SystemRequirements: mdata.ProductFiles[0].SystemRequirements,
+				Platforms:          mdata.ProductFiles[0].Platforms,
+				IncludedFiles:      mdata.ProductFiles[0].IncludedFiles,
 			}))
 
 			invokedProductSlug, releaseID, productFileID := uploadClient.AddProductFileArgsForCall(0)

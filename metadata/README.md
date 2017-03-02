@@ -7,6 +7,7 @@ Metadata is written in YAML and JSON format during `in`, and can be provided to
 The contents of this metadata (in YAML format) are as follows:
 
 ```yaml
+
 ---
 release:
   version: "v1.0.0"
