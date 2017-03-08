@@ -7,6 +7,7 @@ Metadata is written in YAML and JSON format during `in`, and can be provided to
 The contents of this metadata (in YAML format) are as follows:
 
 ```yaml
+
 ---
 release:
   version: "v1.0.0"
@@ -45,6 +46,11 @@ product_files:
     some
     multi-line
     description
+  file_type: "Software"
+  docs_url: "http://foobar.com/readme.html"
+  system_requirements: ["spinning platters", "das blinkenlights"]
+  platforms: ["Linux"]
+  included_files: ["Component 1", "Another component"]
 file_groups:
 - id: 2345
   name: "some file group"
@@ -157,6 +163,24 @@ All other keys are optional. The purpose of the keys is as follows:
 * `upload_as` *Optional.* The display name for the file in Pivotal Network.
   This affects only the display name; the filename of the uploaded file remains
   the same as that of the local file.
+  
+* `file_type` *Optional.* The type of file. Must be one of `Software`, `Documentation`
+  or `Open Source License`. If not specified, defaults to `Software`
+  
+* `docs_url` *Optional.* A URL for documentation relevant to this file.
+
+* `system_requirements` *Optional.* Additional list of requirements for using
+  this file. For example: JDK version or system resources such as memory or storage
+  requirements.
+
+* `platforms` *Optional.* A list of platforms supported by this file. Valid values are:
+  `Android`, `AWS`, `Apt-Get`, `BOSH`, `Brew`, `CentOS`, `Chef`, `GVM`, `Generic`,
+  `Google Compute Engine`, `iOS`, `Linux`, `MSI`, `Maven` `Repo`, `Microsoft Hyper-V`,
+  `OS X`, `OVM`, `OpenStack`, `Oracle` `Linux`, `Pivotal CF`, `Puppet`, `RHEL`,
+  `RedHat KVM`, `SLES`, `Solaris`, `Ubuntu`, `VHCS`, `VM`, `Virtual Appliance`,
+  `Windows`, `Windows Server`, `Yum` and `vSphere`.
+
+* `included_files` *Optional.* A list of files or components included with this file.
 
 ## File Groups
 

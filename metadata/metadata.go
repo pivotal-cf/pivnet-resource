@@ -46,6 +46,8 @@ type ProductFile struct {
 	Version            string   `yaml:"version,omitempty"`
 	DocsURL            string   `yaml:"docs_url,omitempty"`
 	SystemRequirements []string `yaml:"system_requirements,omitempty"`
+	Platforms          []string `yaml:"platforms,omitempty"`
+	IncludedFiles      []string `yaml:"included_files,omitempty"`
 }
 
 type FileGroup struct {

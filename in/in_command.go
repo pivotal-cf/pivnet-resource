@@ -220,6 +220,8 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 			MD5:                pf.MD5,
 			DocsURL:            pf.DocsURL,
 			SystemRequirements: pf.SystemRequirements,
+			Platforms:          pf.Platforms,
+			IncludedFiles:      pf.IncludedFiles,
 		})
 	}
 
