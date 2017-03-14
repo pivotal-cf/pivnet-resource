@@ -23,6 +23,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/out/release"
 	"github.com/pivotal-cf/pivnet-resource/s3"
 	"github.com/pivotal-cf/pivnet-resource/semver"
+	"github.com/pivotal-cf/pivnet-resource/sha256sum"
 	"github.com/pivotal-cf/pivnet-resource/ui"
 	"github.com/pivotal-cf/pivnet-resource/uploader"
 	"github.com/pivotal-cf/pivnet-resource/useragent"
@@ -165,6 +166,7 @@ func main() {
 
 	validation := validator.NewOutValidator(input)
 	semverConverter := semver.NewSemverConverter(ls)
+	sha256Summer := sha256sum.NewFileSummer()
 	md5summer := md5sum.NewFileSummer()
 
 	f := filter.NewFilter(ls)
@@ -186,6 +188,7 @@ func main() {
 		uploaderClient,
 		client,
 		ls,
+		sha256Summer,
 		md5summer,
 		m,
 		sourcesDir,

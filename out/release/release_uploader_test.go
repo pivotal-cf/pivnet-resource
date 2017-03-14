@@ -22,6 +22,7 @@ var _ = Describe("ReleaseUploader", func() {
 
 		s3Client      *releasefakes.S3Client
 		uploadClient  *releasefakes.UploadClient
+		sha256Summer  *releasefakes.Sha256Summer
 		md5Summer     *releasefakes.Md5Summer
 		pivnetRelease pivnet.Release
 		uploader      release.ReleaseUploader
@@ -33,13 +34,15 @@ var _ = Describe("ReleaseUploader", func() {
 		mdata metadata.Metadata
 
 		existingProductFiles []pivnet.ProductFile
+		actualSHA256Sum      string
 		actualMD5Sum         string
 		newAWSObjectKey      string
 
 		existingProductFilesErr error
 		createProductFileErr    error
 		uploadFileErr           error
-		sumFileErr              error
+		sha256SumFileErr        error
+		md5SumFileErr           error
 		productFileErr          error
 	)
 
@@ -49,6 +52,7 @@ var _ = Describe("ReleaseUploader", func() {
 
 		s3Client = &releasefakes.S3Client{}
 		uploadClient = &releasefakes.UploadClient{}
+		sha256Summer = &releasefakes.Sha256Summer{}
 		md5Summer = &releasefakes.Md5Summer{}
 
 		productSlug = "some-product-slug"
@@ -83,13 +87,15 @@ var _ = Describe("ReleaseUploader", func() {
 			},
 		}
 
+		actualSHA256Sum = "madeupsha256"
 		actualMD5Sum = "madeupmd5"
 		newAWSObjectKey = "s3-remote-path"
 
 		existingProductFilesErr = nil
 		createProductFileErr = nil
 		uploadFileErr = nil
-		sumFileErr = nil
+		sha256SumFileErr = nil
+		md5SumFileErr = nil
 		productFileErr = nil
 	})
 
@@ -98,6 +104,7 @@ var _ = Describe("ReleaseUploader", func() {
 			s3Client,
 			uploadClient,
 			fakeLogger,
+			sha256Summer,
 			md5Summer,
 			mdata,
 			"/some/sources/dir",
@@ -106,7 +113,8 @@ var _ = Describe("ReleaseUploader", func() {
 			pollFrequency,
 		)
 
-		md5Summer.SumFileReturns(actualMD5Sum, sumFileErr)
+		sha256Summer.SumFileReturns(actualSHA256Sum, sha256SumFileErr)
+		md5Summer.SumFileReturns(actualMD5Sum, md5SumFileErr)
 		s3Client.UploadFileReturns(newAWSObjectKey, uploadFileErr)
 		uploadClient.CreateProductFileReturns(pivnet.ProductFile{ID: 13367}, createProductFileErr)
 		uploadClient.ProductFilesReturns(existingProductFiles, existingProductFilesErr)
@@ -135,12 +143,14 @@ var _ = Describe("ReleaseUploader", func() {
 			err := uploader.Upload(pivnetRelease, []string{"some/file"})
 			Expect(err).NotTo(HaveOccurred())
 
+			Expect(sha256Summer.SumFileArgsForCall(0)).To(Equal("/some/sources/dir/some/file"))
 			Expect(md5Summer.SumFileArgsForCall(0)).To(Equal("/some/sources/dir/some/file"))
 			Expect(s3Client.UploadFileArgsForCall(0)).To(Equal("some/file"))
 
 			Expect(uploadClient.CreateProductFileArgsForCall(0)).To(Equal(pivnet.CreateProductFileConfig{
 				ProductSlug:        productSlug,
 				AWSObjectKey:       newAWSObjectKey,
+				SHA256:             actualSHA256Sum,
 				MD5:                actualMD5Sum,
 				FileVersion:        pivnetRelease.Version,
 				Name:               mdata.ProductFiles[0].UploadAs,
@@ -194,9 +204,20 @@ var _ = Describe("ReleaseUploader", func() {
 			})
 		})
 
+		Context("when the file sha256 cannot be computed", func() {
+			BeforeEach(func() {
+				sha256SumFileErr = errors.New("sha256 error")
+			})
+
+			It("returns an error", func() {
+				err := uploader.Upload(pivnetRelease, []string{""})
+				Expect(err).To(MatchError(errors.New("sha256 error")))
+			})
+		})
+
 		Context("when the file md5 cannot be computed", func() {
 			BeforeEach(func() {
-				sumFileErr = errors.New("md5 error")
+				md5SumFileErr = errors.New("md5 error")
 			})
 
 			It("returns an error", func() {

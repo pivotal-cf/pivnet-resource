@@ -14,6 +14,7 @@ type ReleaseUploader struct {
 	s3            s3Client
 	pivnet        uploadClient
 	logger        logger.Logger
+	sha256Summer  sha256Summer
 	md5Summer     md5Summer
 	metadata      metadata.Metadata
 	sourcesDir    string
@@ -37,6 +38,11 @@ type s3Client interface {
 	UploadFile(string) (string, error)
 }
 
+//go:generate counterfeiter --fake-name Sha256Summer . sha256Summer
+type sha256Summer interface {
+	SumFile(filepath string) (string, error)
+}
+
 //go:generate counterfeiter --fake-name Md5Summer . md5Summer
 type md5Summer interface {
 	SumFile(filepath string) (string, error)
@@ -46,6 +52,7 @@ func NewReleaseUploader(
 	s3 s3Client,
 	pivnet uploadClient,
 	logger logger.Logger,
+	sha256Summer sha256Summer,
 	md5Summer md5Summer,
 	metadata metadata.Metadata,
 	sourcesDir,
@@ -57,6 +64,7 @@ func NewReleaseUploader(
 		s3:            s3,
 		pivnet:        pivnet,
 		logger:        logger,
+		sha256Summer:  sha256Summer,
 		md5Summer:     md5Summer,
 		metadata:      metadata,
 		sourcesDir:    sourcesDir,
@@ -69,6 +77,11 @@ func NewReleaseUploader(
 func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) error {
 	for _, exactGlob := range exactGlobs {
 		fullFilepath := filepath.Join(u.sourcesDir, exactGlob)
+		fileContentsSHA256, err := u.sha256Summer.SumFile(fullFilepath)
+		if err != nil {
+			return err
+		}
+
 		fileContentsMD5, err := u.md5Summer.SumFile(fullFilepath)
 		if err != nil {
 			return err
@@ -167,6 +180,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			Name:               uploadAs,
 			AWSObjectKey:       awsObjectKey,
 			FileVersion:        release.Version,
+			SHA256:             fileContentsSHA256,
 			MD5:                fileContentsMD5,
 			Description:        description,
 			FileType:           fileType,
