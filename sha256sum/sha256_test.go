@@ -43,7 +43,7 @@ var _ = Describe("SHA256", func() {
 			sha256, err := fileSummer.SumFile(tempFilePath)
 			Expect(err).NotTo(HaveOccurred())
 
-			// Expected md5 of 'foobar contents'
+			// Expected sha256 of 'foobar contents'
 			Expect(sha256).To(Equal("070a103eb906d53a5933d96f3301635d6c416491d6a0ebd0bf4d4e448af5762d"))
 		})
 

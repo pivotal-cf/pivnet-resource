@@ -41,6 +41,7 @@ type ProductFile struct {
 	AWSObjectKey       string   `yaml:"aws_object_key,omitempty"`
 	FileType           string   `yaml:"file_type,omitempty"`
 	FileVersion        string   `yaml:"file_version,omitempty"`
+	SHA256             string   `yaml:"sha256,omitempty"`
 	MD5                string   `yaml:"md5,omitempty"`
 	ID                 int      `yaml:"id,omitempty"`
 	Version            string   `yaml:"version,omitempty"`

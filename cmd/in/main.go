@@ -15,6 +15,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/in"
 	"github.com/pivotal-cf/pivnet-resource/in/filesystem"
 	"github.com/pivotal-cf/pivnet-resource/md5sum"
+	"github.com/pivotal-cf/pivnet-resource/sha256sum"
 	"github.com/pivotal-cf/pivnet-resource/ui"
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
@@ -96,7 +97,9 @@ func main() {
 	)
 
 	d := downloader.NewDownloader(client, downloadDir, ls, logWriter)
-	fs := md5sum.NewFileSummer()
+
+	fs := sha256sum.NewFileSummer()
+	md5fs := md5sum.NewFileSummer()
 
 	f := filter.NewFilter(ls)
 
@@ -108,6 +111,7 @@ func main() {
 		f,
 		d,
 		fs,
+		md5fs,
 		fileWriter,
 	).Run(input)
 	if err != nil {

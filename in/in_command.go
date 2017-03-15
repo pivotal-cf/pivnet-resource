@@ -50,13 +50,14 @@ type pivnetClient interface {
 }
 
 type InCommand struct {
-	logger       logger.Logger
-	downloadDir  string
-	pivnetClient pivnetClient
-	filter       filterer
-	downloader   downloader
-	fileSummer   fileSummer
-	fileWriter   fileWriter
+	logger           logger.Logger
+	downloadDir      string
+	pivnetClient     pivnetClient
+	filter           filterer
+	downloader       downloader
+	sha256FileSummer fileSummer
+	md5FileSummer    fileSummer
+	fileWriter       fileWriter
 }
 
 func NewInCommand(
@@ -64,16 +65,18 @@ func NewInCommand(
 	pivnetClient pivnetClient,
 	filter filterer,
 	downloader downloader,
-	fileSummer fileSummer,
+	sha256FileSummer fileSummer,
+	md5FileSummer fileSummer,
 	fileWriter fileWriter,
 ) *InCommand {
 	return &InCommand{
-		logger:       logger,
-		pivnetClient: pivnetClient,
-		filter:       filter,
-		downloader:   downloader,
-		fileSummer:   fileSummer,
-		fileWriter:   fileWriter,
+		logger:           logger,
+		pivnetClient:     pivnetClient,
+		filter:           filter,
+		downloader:       downloader,
+		sha256FileSummer: sha256FileSummer,
+		md5FileSummer:    md5FileSummer,
+		fileWriter:       fileWriter,
 	}
 }
 
@@ -217,6 +220,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 			AWSObjectKey:       pf.AWSObjectKey,
 			FileType:           pf.FileType,
 			FileVersion:        pf.FileVersion,
+			SHA256:             pf.SHA256,
 			MD5:                pf.MD5,
 			DocsURL:            pf.DocsURL,
 			SystemRequirements: pf.SystemRequirements,
@@ -323,6 +327,7 @@ func (c InCommand) downloadFiles(
 		return err
 	}
 
+	fileSHA256s := map[string]string{}
 	fileMD5s := map[string]string{}
 	for _, p := range productFiles {
 		parts := strings.Split(p.AWSObjectKey, "/")
@@ -338,11 +343,12 @@ func (c InCommand) downloadFiles(
 		}
 
 		if p.FileType == pivnet.FileTypeSoftware {
+			fileSHA256s[fileName] = p.SHA256
 			fileMD5s[fileName] = p.MD5
 		}
 	}
 
-	err = c.compareMD5s(files, fileMD5s)
+	err = c.compareSHA256sOrMD5s(files, fileSHA256s, fileMD5s)
 	if err != nil {
 		return err
 	}
@@ -378,29 +384,47 @@ func (c InCommand) addReleaseMetadata(
 	return cmdata
 }
 
-func (c InCommand) compareMD5s(filepaths []string, expectedMD5s map[string]string) error {
-	c.logger.Info("Calcuating MD5 for downloaded files")
+func (c InCommand) compareSHA256sOrMD5s(filepaths []string, expectedSHA256s map[string]string, expectedMD5s map[string]string) error {
+	c.logger.Info("Calcuating SHA256 or MD5 for downloaded files")
 
 	for _, downloadPath := range filepaths {
 		_, f := filepath.Split(downloadPath)
 
-		actualMD5, err := c.fileSummer.SumFile(downloadPath)
-		if err != nil {
-			return err
-		}
+		expectedSHA256 := expectedSHA256s[f]
+		if expectedSHA256 != "" {
+			actualSHA256, err := c.sha256FileSummer.SumFile(downloadPath)
+			if err != nil {
+				return err
+			}
 
-		expectedMD5 := expectedMD5s[f]
-		if expectedMD5 != "" && expectedMD5 != actualMD5 {
-			return fmt.Errorf(
-				"MD5 comparison failed for downloaded file: '%s'. Expected (from pivnet): '%s' - actual (from file): '%s'",
-				downloadPath,
-				expectedMD5,
-				actualMD5,
-			)
+			if expectedSHA256 != actualSHA256 {
+				return fmt.Errorf(
+					"SHA256 comparison failed for downloaded file: '%s'. Expected (from pivnet): '%s' - actual (from file): '%s'",
+					downloadPath,
+					expectedSHA256,
+					actualSHA256,
+				)
+			}
+		} else {
+			expectedMD5 := expectedMD5s[f]
+
+			actualMD5, err := c.md5FileSummer.SumFile(downloadPath)
+			if err != nil {
+				return err
+			}
+
+			if expectedMD5 != "" && expectedMD5 != actualMD5 {
+				return fmt.Errorf(
+					"MD5 comparison failed for downloaded file: '%s'. Expected (from pivnet): '%s' - actual (from file): '%s'",
+					downloadPath,
+					expectedMD5,
+					actualMD5,
+				)
+			}
 		}
 	}
 
-	c.logger.Info("MD5 matched for all downloaded files")
+	c.logger.Info("SHA256 or MD5 matched for all downloaded files")
 
 	c.logger.Info("Get complete")
 

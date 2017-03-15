@@ -25,11 +25,12 @@ var _ = Describe("In", func() {
 	var (
 		fakeLogger logger.Logger
 
-		fakeFilter       *infakes.FakeFilter
-		fakeDownloader   *infakes.FakeDownloader
-		fakePivnetClient *infakes.FakePivnetClient
-		fakeFileSummer   *infakes.FakeFileSummer
-		fakeFileWriter   *infakes.FakeFileWriter
+		fakeFilter           *infakes.FakeFilter
+		fakeDownloader       *infakes.FakeDownloader
+		fakePivnetClient     *infakes.FakePivnetClient
+		fakeSHA256FileSummer *infakes.FakeFileSummer
+		fakeMD5FileSummer    *infakes.FakeFileSummer
+		fakeFileWriter       *infakes.FakeFileWriter
 
 		fileGroups []pivnet.FileGroup
 
@@ -56,9 +57,10 @@ var _ = Describe("In", func() {
 		inRequest concourse.InRequest
 		inCommand *in.InCommand
 
-		release           pivnet.Release
-		downloadFilepaths []string
-		fileContentsMD5s  []string
+		release             pivnet.Release
+		downloadFilepaths   []string
+		fileContentsSHA256s []string
+		fileContentsMD5s    []string
 
 		getReleaseErr           error
 		acceptEULAErr           error
@@ -66,6 +68,7 @@ var _ = Describe("In", func() {
 		productFileErr          error
 		downloadErr             error
 		filterErr               error
+		sha256sumErr            error
 		md5sumErr               error
 		releaseDependenciesErr  error
 		dependencySpecifiersErr error
@@ -77,7 +80,8 @@ var _ = Describe("In", func() {
 		fakeFilter = &infakes.FakeFilter{}
 		fakeDownloader = &infakes.FakeDownloader{}
 		fakePivnetClient = &infakes.FakePivnetClient{}
-		fakeFileSummer = &infakes.FakeFileSummer{}
+		fakeSHA256FileSummer = &infakes.FakeFileSummer{}
+		fakeMD5FileSummer = &infakes.FakeFileSummer{}
 		fakeFileWriter = &infakes.FakeFileWriter{}
 
 		getReleaseErr = nil
@@ -86,6 +90,7 @@ var _ = Describe("In", func() {
 		productFileErr = nil
 		filterErr = nil
 		downloadErr = nil
+		sha256sumErr = nil
 		md5sumErr = nil
 		releaseDependenciesErr = nil
 		dependencySpecifiersErr = nil
@@ -95,6 +100,13 @@ var _ = Describe("In", func() {
 		version = "C"
 		fingerprint = "fingerprint-0"
 		actualFingerprint = fingerprint
+
+		fileContentsSHA256s = []string{
+			"some-sha256 1234",
+			"some-sha256 3456",
+			"some-sha256 4567",
+			"some-sha256 5678",
+		}
 
 		fileContentsMD5s = []string{
 			"some-md5 1234",
@@ -156,6 +168,7 @@ var _ = Describe("In", func() {
 			AWSObjectKey:       releaseProductFiles[0].AWSObjectKey,
 			FileType:           pivnet.FileTypeSoftware,
 			FileVersion:        "some-file-version 1234",
+			SHA256:             fileContentsSHA256s[0],
 			MD5:                fileContentsMD5s[0],
 			DocsURL:            "some-url",
 			SystemRequirements: []string{"req1", "req2"},
@@ -173,6 +186,7 @@ var _ = Describe("In", func() {
 			AWSObjectKey:       releaseProductFiles[1].AWSObjectKey,
 			FileType:           pivnet.FileTypeSoftware,
 			FileVersion:        "some-file-version 3456",
+			SHA256:             fileContentsSHA256s[1],
 			MD5:                fileContentsMD5s[1],
 			DocsURL:            "some-url",
 			SystemRequirements: []string{"req1", "req2"},
@@ -190,6 +204,7 @@ var _ = Describe("In", func() {
 			AWSObjectKey:       fileGroup1ProductFiles[0].AWSObjectKey,
 			FileType:           pivnet.FileTypeSoftware,
 			FileVersion:        "some-file-version 4567",
+			SHA256:             fileContentsSHA256s[2],
 			MD5:                fileContentsMD5s[2],
 			DocsURL:            "some-url",
 			SystemRequirements: []string{"req1", "req2"},
@@ -207,6 +222,7 @@ var _ = Describe("In", func() {
 			AWSObjectKey:       fileGroup2ProductFiles[0].AWSObjectKey,
 			FileType:           pivnet.FileTypeSoftware,
 			FileVersion:        "some-file-version 5678",
+			SHA256:             fileContentsSHA256s[3],
 			MD5:                fileContentsMD5s[3],
 			DocsURL:            "some-url",
 			SystemRequirements: []string{"req1", "req2"},
@@ -338,7 +354,21 @@ var _ = Describe("In", func() {
 
 		fakeFilter.ProductFileKeysByGlobsReturns(filteredProductFiles, filterErr)
 		fakeDownloader.DownloadReturns(downloadFilepaths, downloadErr)
-		fakeFileSummer.SumFileStub = func(path string) (string, error) {
+		fakeSHA256FileSummer.SumFileStub = func(path string) (string, error) {
+			if sha256sumErr != nil {
+				return "", sha256sumErr
+			}
+
+			for i, f := range downloadFilepaths {
+				if strings.HasSuffix(path, f) {
+					return fileContentsSHA256s[i], nil
+				}
+			}
+
+			Fail(fmt.Sprintf("unexpected path: %s", path))
+			return "", nil
+		}
+		fakeMD5FileSummer.SumFileStub = func(path string) (string, error) {
 			if md5sumErr != nil {
 				return "", md5sumErr
 			}
@@ -361,7 +391,8 @@ var _ = Describe("In", func() {
 			fakePivnetClient,
 			fakeFilter,
 			fakeDownloader,
-			fakeFileSummer,
+			fakeSHA256FileSummer,
+			fakeMD5FileSummer,
 			fakeFileWriter,
 		)
 	})
@@ -433,7 +464,7 @@ var _ = Describe("In", func() {
 		invokedProductFiles, _, _ := fakeDownloader.DownloadArgsForCall(0)
 		Expect(invokedProductFiles).To(Equal(filteredProductFiles))
 
-		Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
+		Expect(fakeSHA256FileSummer.SumFileCallCount() + fakeMD5FileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
 	})
 
 	Context("when version is provided without fingerprint", func() {
@@ -542,30 +573,19 @@ var _ = Describe("In", func() {
 
 			Expect(fakeFilter.ProductFileKeysByGlobsCallCount()).To(Equal(1))
 			Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(filteredProductFiles)))
-			Expect(fakeFileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
-		})
-
-		It("includes md5 when invoking metadata writer", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(fakeFileWriter.WriteMetadataYAMLFileCallCount()).To(Equal(1))
-			invokedMetadata := fakeFileWriter.WriteMetadataYAMLFileArgsForCall(0)
-
-			Expect(invokedMetadata.Release).NotTo(BeNil())
-			Expect(invokedMetadata.Release.Version).To(Equal(version))
-			Expect(invokedMetadata.Release.EULASlug).To(Equal(eulaSlug))
-
-			validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
-			validateFileGroupsMetadata(invokedMetadata, fileGroups)
-			validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
-			validateDependencySpecifiersMetadata(invokedMetadata, dependencySpecifiers)
+			Expect(fakeSHA256FileSummer.SumFileCallCount() + fakeMD5FileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
 		})
 
 		Context("when the file type is not 'Software'", func() {
 			BeforeEach(func() {
 				releaseProductFile2.FileType = "not software"
+				fileContentsSHA256s[1] = "this would fail if type was software"
 				fileContentsMD5s[1] = "this would fail if type was software"
+			})
+
+			It("ignores SHA256", func() {
+				_, err := inCommand.Run(inRequest)
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("ignores MD5", func() {
@@ -613,27 +633,74 @@ var _ = Describe("In", func() {
 			})
 		})
 
-		Context("when calculating md5 sum of file returns an error", func() {
+		Context("When SHA256 is supplied", func() {
 			BeforeEach(func() {
 				md5sumErr = fmt.Errorf("some md5 err error")
 			})
 
-			It("returns the error", func() {
+			It("ignores MD5", func() {
 				_, err := inCommand.Run(inRequest)
-				Expect(err).To(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
+			})
 
-				Expect(err).To(Equal(md5sumErr))
+			Context("when calculating sha256 sum of file returns an error", func() {
+				BeforeEach(func() {
+					sha256sumErr = fmt.Errorf("some sha256 err error")
+				})
+
+				It("returns the error", func() {
+					_, err := inCommand.Run(inRequest)
+					Expect(err).To(HaveOccurred())
+
+					Expect(err).To(Equal(sha256sumErr))
+				})
+			})
+
+			Context("when the SHA256 sum does not match", func() {
+				BeforeEach(func() {
+					fileContentsSHA256s[0] = "incorrect sha256"
+				})
+
+				It("returns an error", func() {
+					_, err := inCommand.Run(inRequest)
+					Expect(err).To(HaveOccurred())
+				})
 			})
 		})
 
-		Context("when the MD5 does not match", func() {
+		Context("When SHA256 is not supplied", func() {
 			BeforeEach(func() {
-				fileContentsMD5s[0] = "incorrect md5"
+				releaseProductFile1.SHA256 = ""
+				fileContentsSHA256s[0] = ""
 			})
 
-			It("returns an error", func() {
+			It("does not return an error", func() {
 				_, err := inCommand.Run(inRequest)
-				Expect(err).To(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Context("when calculating md5 sum of file returns an error", func() {
+				BeforeEach(func() {
+					md5sumErr = fmt.Errorf("some md5 err error")
+				})
+
+				It("returns the error", func() {
+					_, err := inCommand.Run(inRequest)
+					Expect(err).To(HaveOccurred())
+
+					Expect(err).To(Equal(md5sumErr))
+				})
+			})
+
+			Context("when the MD5 does not match", func() {
+				BeforeEach(func() {
+					fileContentsMD5s[0] = "incorrect md5"
+				})
+
+				It("returns an error", func() {
+					_, err := inCommand.Run(inRequest)
+					Expect(err).To(HaveOccurred())
+				})
 			})
 		})
 	})
@@ -718,6 +785,7 @@ var validateProductFilesMetadata = func(
 		Expect(writtenMetadata.ProductFiles[i].AWSObjectKey).To(Equal(p.AWSObjectKey))
 		Expect(writtenMetadata.ProductFiles[i].FileType).To(Equal(p.FileType))
 		Expect(writtenMetadata.ProductFiles[i].FileVersion).To(Equal(p.FileVersion))
+		Expect(writtenMetadata.ProductFiles[i].SHA256).To(Equal(p.SHA256))
 		Expect(writtenMetadata.ProductFiles[i].MD5).To(Equal(p.MD5))
 		Expect(writtenMetadata.ProductFiles[i].UploadAs).To(BeEmpty())
 		Expect(writtenMetadata.ProductFiles[i].DocsURL).To(Equal(p.DocsURL))

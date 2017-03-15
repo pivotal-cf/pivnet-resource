@@ -256,7 +256,8 @@ var _ = Describe("Lifecycle test", func() {
 						p.ID,
 					)
 					Expect(err).ShouldNot(HaveOccurred())
-					// Contents are fixed at 'some contents' so the MD5 is known.
+					// Contents are fixed at 'some contents'
+					Expect(productFile.SHA256).To(Equal("290f493c44f5d63d06b374d0a5abd292fae38b92cab2fae5efefe1b0e9347f56"))
 					Expect(productFile.MD5).To(Equal("9893532233caff98cd083a116b013c0b"))
 				}
 

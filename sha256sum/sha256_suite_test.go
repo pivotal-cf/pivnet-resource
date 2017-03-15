@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestMD5(t *testing.T) {
+func TestSHA256(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "SHA256 Suite")
 }
