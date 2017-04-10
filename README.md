@@ -258,12 +258,3 @@ S3_FILEPATH_PREFIX=Case-Sensitive-Path-eg-Pivotal-Diego-PCF \
 
 Please make all pull requests to the `develop` branch, and
 [ensure the tests pass locally](https://github.com/pivotal-cf/pivnet-resource#running-the-tests).
-
-### Project management
-
-The CI for this project can be found
-[here](https://p-concourse.wings.cf-app.com/teams/system-team-pivnet-resource-pivnet-resource-657d)
-and the scripts can be found in the
-[pivnet-resource-ci repo](https://github.com/pivotal-cf/pivnet-resource-ci).
-
-The roadmap is captured in [Pivotal Tracker](https://www.pivotaltracker.com/projects/1474244).
