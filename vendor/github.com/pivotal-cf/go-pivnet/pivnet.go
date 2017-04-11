@@ -32,17 +32,18 @@ type Client struct {
 
 	downloader download.Client
 
-	Auth                 *AuthService
-	EULA                 *EULAsService
-	ProductFiles         *ProductFilesService
-	FileGroups           *FileGroupsService
-	Releases             *ReleasesService
-	Products             *ProductsService
-	UserGroups           *UserGroupsService
-	ReleaseDependencies  *ReleaseDependenciesService
-	DependencySpecifiers *DependencySpecifiersService
-	ReleaseTypes         *ReleaseTypesService
-	ReleaseUpgradePaths  *ReleaseUpgradePathsService
+	Auth                  *AuthService
+	EULA                  *EULAsService
+	ProductFiles          *ProductFilesService
+	FileGroups            *FileGroupsService
+	Releases              *ReleasesService
+	Products              *ProductsService
+	UserGroups            *UserGroupsService
+	ReleaseTypes          *ReleaseTypesService
+	ReleaseDependencies   *ReleaseDependenciesService
+	DependencySpecifiers  *DependencySpecifiersService
+	ReleaseUpgradePaths   *ReleaseUpgradePathsService
+	UpgradePathSpecifiers *UpgradePathSpecifiersService
 }
 
 type ClientConfig struct {
@@ -91,10 +92,11 @@ func NewClient(
 	client.Releases = &ReleasesService{client: client, l: logger}
 	client.Products = &ProductsService{client: client, l: logger}
 	client.UserGroups = &UserGroupsService{client: client}
+	client.ReleaseTypes = &ReleaseTypesService{client: client}
 	client.ReleaseDependencies = &ReleaseDependenciesService{client: client}
 	client.DependencySpecifiers = &DependencySpecifiersService{client: client}
-	client.ReleaseTypes = &ReleaseTypesService{client: client}
 	client.ReleaseUpgradePaths = &ReleaseUpgradePathsService{client: client}
+	client.UpgradePathSpecifiers = &UpgradePathSpecifiersService{client: client}
 
 	return client
 }
