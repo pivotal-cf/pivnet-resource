@@ -226,6 +226,13 @@ func main() {
 		f,
 	)
 
+	upgradePathSpecifiersCreator := release.NewUpgradePathSpecifiersCreator(
+		ls,
+		client,
+		m,
+		input.Source.ProductSlug,
+	)
+
 	releaseFinalizer := release.NewFinalizer(
 		client,
 		ls,
@@ -236,20 +243,21 @@ func main() {
 	)
 
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
-		Logger:                      ls,
-		OutDir:                      outDir,
-		SourcesDir:                  sourcesDir,
-		GlobClient:                  globber,
-		Validation:                  validation,
-		Creator:                     releaseCreator,
-		Uploader:                    releaseUploader,
-		UserGroupsUpdater:           releaseUserGroupsUpdater,
-		ReleaseDependenciesAdder:    releaseDependenciesAdder,
-		DependencySpecifiersCreator: dependencySpecifiersCreator,
-		ReleaseUpgradePathsAdder:    releaseUpgradePathsAdder,
-		Finalizer:                   releaseFinalizer,
-		M:                           m,
-		SkipUpload:                  skipUpload,
+		Logger:                       ls,
+		OutDir:                       outDir,
+		SourcesDir:                   sourcesDir,
+		GlobClient:                   globber,
+		Validation:                   validation,
+		Creator:                      releaseCreator,
+		Uploader:                     releaseUploader,
+		UserGroupsUpdater:            releaseUserGroupsUpdater,
+		ReleaseDependenciesAdder:     releaseDependenciesAdder,
+		DependencySpecifiersCreator:  dependencySpecifiersCreator,
+		ReleaseUpgradePathsAdder:     releaseUpgradePathsAdder,
+		UpgradePathSpecifiersCreator: upgradePathSpecifiersCreator,
+		Finalizer:                    releaseFinalizer,
+		M:                            m,
+		SkipUpload:                   skipUpload,
 	})
 
 	response, err := outCmd.Run(input)

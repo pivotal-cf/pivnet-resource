@@ -45,9 +45,10 @@ var _ = Describe("In", func() {
 		fileGroup1ProductFile pivnet.ProductFile
 		fileGroup2ProductFile pivnet.ProductFile
 
-		releaseDependencies  []pivnet.ReleaseDependency
-		dependencySpecifiers []pivnet.DependencySpecifier
-		releaseUpgradePaths  []pivnet.ReleaseUpgradePath
+		releaseDependencies   []pivnet.ReleaseDependency
+		dependencySpecifiers  []pivnet.DependencySpecifier
+		releaseUpgradePaths   []pivnet.ReleaseUpgradePath
+		upgradePathSpecifiers []pivnet.UpgradePathSpecifier
 
 		version                string
 		fingerprint            string
@@ -62,18 +63,19 @@ var _ = Describe("In", func() {
 		fileContentsSHA256s []string
 		fileContentsMD5s    []string
 
-		getReleaseErr           error
-		acceptEULAErr           error
-		productFilesErr         error
-		productFileErr          error
-		downloadErr             error
-		filterErr               error
-		sha256sumErr            error
-		md5sumErr               error
-		releaseDependenciesErr  error
-		dependencySpecifiersErr error
-		releaseUpgradePathsErr  error
-		fileGroupsErr           error
+		getReleaseErr            error
+		acceptEULAErr            error
+		productFilesErr          error
+		productFileErr           error
+		downloadErr              error
+		filterErr                error
+		sha256sumErr             error
+		md5sumErr                error
+		releaseDependenciesErr   error
+		dependencySpecifiersErr  error
+		releaseUpgradePathsErr   error
+		upgradePathSpecifiersErr error
+		fileGroupsErr            error
 	)
 
 	BeforeEach(func() {
@@ -95,6 +97,7 @@ var _ = Describe("In", func() {
 		releaseDependenciesErr = nil
 		dependencySpecifiersErr = nil
 		releaseUpgradePathsErr = nil
+		upgradePathSpecifiersErr = nil
 		fileGroupsErr = nil
 
 		version = "C"
@@ -305,6 +308,13 @@ var _ = Describe("In", func() {
 			},
 		}
 
+		upgradePathSpecifiers = []pivnet.UpgradePathSpecifier{
+			{
+				ID:        56,
+				Specifier: "1.2.*",
+			},
+		}
+
 		inRequest = concourse.InRequest{
 			Source: concourse.Source{
 				APIToken:    "some-api-token",
@@ -326,6 +336,7 @@ var _ = Describe("In", func() {
 		fakePivnetClient.ReleaseDependenciesReturns(releaseDependencies, releaseDependenciesErr)
 		fakePivnetClient.DependencySpecifiersReturns(dependencySpecifiers, dependencySpecifiersErr)
 		fakePivnetClient.ReleaseUpgradePathsReturns(releaseUpgradePaths, releaseUpgradePathsErr)
+		fakePivnetClient.UpgradePathSpecifiersReturns(upgradePathSpecifiers, upgradePathSpecifiersErr)
 		fakePivnetClient.FileGroupsForReleaseReturns(fileGroups, fileGroupsErr)
 
 		fakePivnetClient.ProductFileForReleaseStub = func(
@@ -423,6 +434,7 @@ var _ = Describe("In", func() {
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateDependencySpecifiersMetadata(invokedMetadata, dependencySpecifiers)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
+		validateUpgradePathSpecifiersMetadata(invokedMetadata, upgradePathSpecifiers)
 	})
 
 	It("invokes the yaml metadata file writer with correct metadata", func() {
@@ -443,6 +455,7 @@ var _ = Describe("In", func() {
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateDependencySpecifiersMetadata(invokedMetadata, dependencySpecifiers)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
+		validateUpgradePathSpecifiersMetadata(invokedMetadata, upgradePathSpecifiers)
 	})
 
 	It("downloads all files (nil globs acts like *)", func() {
@@ -743,6 +756,19 @@ var _ = Describe("In", func() {
 			Expect(err).To(Equal(releaseUpgradePathsErr))
 		})
 	})
+
+	Context("when getting upgrade path specifiers returns an error", func() {
+		BeforeEach(func() {
+			upgradePathSpecifiersErr = fmt.Errorf("some upgrade path specifiers error")
+		})
+
+		It("returns the error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(upgradePathSpecifiersErr))
+		})
+	})
 })
 
 var validateFileGroupsMetadata = func(
@@ -829,5 +855,17 @@ var validateReleaseUpgradePathsMetadata = func(
 	for i, d := range upgradePaths {
 		Expect(writtenMetadata.UpgradePaths[i].ID).To(Equal(d.Release.ID))
 		Expect(writtenMetadata.UpgradePaths[i].Version).To(Equal(d.Release.Version))
+	}
+}
+
+var validateUpgradePathSpecifiersMetadata = func(
+	writtenMetadata metadata.Metadata,
+	upgradePathSpecifiers []pivnet.UpgradePathSpecifier,
+) {
+	Expect(writtenMetadata.UpgradePathSpecifiers).To(HaveLen(len(upgradePathSpecifiers)))
+
+	for i, d := range upgradePathSpecifiers {
+		Expect(writtenMetadata.UpgradePathSpecifiers[i].ID).To(Equal(d.ID))
+		Expect(writtenMetadata.UpgradePathSpecifiers[i].Specifier).To(Equal(d.Specifier))
 	}
 }
