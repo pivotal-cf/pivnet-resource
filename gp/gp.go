@@ -141,6 +141,14 @@ func (c Client) ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet
 	return c.client.ReleaseUpgradePaths.Get(productSlug, releaseID)
 }
 
+func (c Client) UpgradePathSpecifiers(productSlug string, releaseID int) ([]pivnet.UpgradePathSpecifier, error) {
+	return c.client.UpgradePathSpecifiers.List(productSlug, releaseID)
+}
+
+func (c Client) CreateUpgradePathSpecifier(productSlug string, releaseID int, specifier string) (pivnet.UpgradePathSpecifier, error) {
+	return c.client.UpgradePathSpecifiers.Create(productSlug, releaseID, specifier)
+}
+
 func (c Client) AddReleaseUpgradePath(productSlug string, releaseID int, previousReleaseID int) error {
 	return c.client.ReleaseUpgradePaths.Add(productSlug, releaseID, previousReleaseID)
 }

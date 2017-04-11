@@ -47,6 +47,7 @@ type pivnetClient interface {
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
 	DependencySpecifiers(productSlug string, releaseID int) ([]pivnet.DependencySpecifier, error)
 	ReleaseUpgradePaths(productSlug string, releaseID int) ([]pivnet.ReleaseUpgradePath, error)
+	UpgradePathSpecifiers(productSlug string, releaseID int) ([]pivnet.UpgradePathSpecifier, error)
 }
 
 type InCommand struct {
@@ -173,6 +174,13 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
+	c.logger.Info("Getting upgrade path specifiers")
+
+	upgradePathSpecifiers, err := c.pivnetClient.UpgradePathSpecifiers(productSlug, release.ID)
+	if err != nil {
+		return concourse.InResponse{}, err
+	}
+
 	c.logger.Info("Downloading files")
 
 	err = c.downloadFiles(input.Params.Globs, allProductFiles, productSlug, release.ID)
@@ -254,6 +262,13 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		mdata.UpgradePaths = append(mdata.UpgradePaths, metadata.UpgradePath{
 			ID:      d.Release.ID,
 			Version: d.Release.Version,
+		})
+	}
+
+	for _, d := range upgradePathSpecifiers {
+		mdata.UpgradePathSpecifiers = append(mdata.UpgradePathSpecifiers, metadata.UpgradePathSpecifier{
+			ID:        d.ID,
+			Specifier: d.Specifier,
 		})
 	}
 

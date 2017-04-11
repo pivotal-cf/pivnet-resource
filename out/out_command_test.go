@@ -21,16 +21,17 @@ var _ = Describe("Out", func() {
 		var (
 			fakeLogger logger.Logger
 
-			finalizer                   *outfakes.Finalizer
-			userGroupsUpdater           *outfakes.UserGroupsUpdater
-			releaseDependenciesAdder    *outfakes.ReleaseDependenciesAdder
-			dependencySpecifiersCreator *outfakes.DependencySpecifiersCreator
-			releaseUpgradePathsAdder    *outfakes.ReleaseUpgradePathsAdder
-			creator                     *outfakes.Creator
-			validator                   *outfakes.Validation
-			uploader                    *outfakes.Uploader
-			globber                     *outfakes.Globber
-			cmd                         out.OutCommand
+			finalizer                    *outfakes.Finalizer
+			userGroupsUpdater            *outfakes.UserGroupsUpdater
+			releaseDependenciesAdder     *outfakes.ReleaseDependenciesAdder
+			dependencySpecifiersCreator  *outfakes.DependencySpecifiersCreator
+			releaseUpgradePathsAdder     *outfakes.ReleaseUpgradePathsAdder
+			upgradePathSpecifiersCreator *outfakes.UpgradePathSpecifiersCreator
+			creator                      *outfakes.Creator
+			validator                    *outfakes.Validation
+			uploader                     *outfakes.Uploader
+			globber                      *outfakes.Globber
+			cmd                          out.OutCommand
 
 			skipUpload bool
 			request    concourse.OutRequest
@@ -39,15 +40,16 @@ var _ = Describe("Out", func() {
 
 			returnedExactGlobs []string
 
-			validateErr                   error
-			createErr                     error
-			exactGlobsErr                 error
-			uploadErr                     error
-			updateUserGroupErr            error
-			addReleaseDependenciesErr     error
-			createDependencySpecifiersErr error
-			addReleaseUpgradePathsErr     error
-			finalizeErr                   error
+			validateErr                    error
+			createErr                      error
+			exactGlobsErr                  error
+			uploadErr                      error
+			updateUserGroupErr             error
+			addReleaseDependenciesErr      error
+			createDependencySpecifiersErr  error
+			addReleaseUpgradePathsErr      error
+			createUpgradePathSpecifiersErr error
+			finalizeErr                    error
 		)
 
 		BeforeEach(func() {
@@ -59,6 +61,7 @@ var _ = Describe("Out", func() {
 			releaseDependenciesAdder = &outfakes.ReleaseDependenciesAdder{}
 			dependencySpecifiersCreator = &outfakes.DependencySpecifiersCreator{}
 			releaseUpgradePathsAdder = &outfakes.ReleaseUpgradePathsAdder{}
+			upgradePathSpecifiersCreator = &outfakes.UpgradePathSpecifiersCreator{}
 			creator = &outfakes.Creator{}
 			validator = &outfakes.Validation{}
 			uploader = &outfakes.Uploader{}
@@ -78,6 +81,7 @@ var _ = Describe("Out", func() {
 			addReleaseDependenciesErr = nil
 			createDependencySpecifiersErr = nil
 			addReleaseUpgradePathsErr = nil
+			createUpgradePathSpecifiersErr = nil
 			finalizeErr = nil
 		})
 
@@ -97,20 +101,21 @@ var _ = Describe("Out", func() {
 			}
 
 			config := out.OutCommandConfig{
-				Logger:                      fakeLogger,
-				OutDir:                      "some/out/dir",
-				SourcesDir:                  "some/sources/dir",
-				GlobClient:                  globber,
-				Validation:                  validator,
-				Creator:                     creator,
-				Finalizer:                   finalizer,
-				UserGroupsUpdater:           userGroupsUpdater,
-				ReleaseDependenciesAdder:    releaseDependenciesAdder,
-				DependencySpecifiersCreator: dependencySpecifiersCreator,
-				ReleaseUpgradePathsAdder:    releaseUpgradePathsAdder,
-				Uploader:                    uploader,
-				M:                           meta,
-				SkipUpload:                  skipUpload,
+				Logger:                       fakeLogger,
+				OutDir:                       "some/out/dir",
+				SourcesDir:                   "some/sources/dir",
+				GlobClient:                   globber,
+				Validation:                   validator,
+				Creator:                      creator,
+				Finalizer:                    finalizer,
+				UserGroupsUpdater:            userGroupsUpdater,
+				ReleaseDependenciesAdder:     releaseDependenciesAdder,
+				DependencySpecifiersCreator:  dependencySpecifiersCreator,
+				ReleaseUpgradePathsAdder:     releaseUpgradePathsAdder,
+				UpgradePathSpecifiersCreator: upgradePathSpecifiersCreator,
+				Uploader:                     uploader,
+				M:                            meta,
+				SkipUpload:                   skipUpload,
 			}
 
 			cmd = out.NewOutCommand(config)
@@ -126,6 +131,7 @@ var _ = Describe("Out", func() {
 			releaseDependenciesAdder.AddReleaseDependenciesReturns(addReleaseDependenciesErr)
 			dependencySpecifiersCreator.CreateDependencySpecifiersReturns(createDependencySpecifiersErr)
 			releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(addReleaseUpgradePathsErr)
+			upgradePathSpecifiersCreator.CreateUpgradePathSpecifiersReturns(createUpgradePathSpecifiersErr)
 
 			finalizer.FinalizeReturns(concourse.OutResponse{
 				Version: concourse.Version{
@@ -157,6 +163,7 @@ var _ = Describe("Out", func() {
 			Expect(releaseDependenciesAdder.AddReleaseDependenciesCallCount()).To(Equal(1))
 			Expect(dependencySpecifiersCreator.CreateDependencySpecifiersCallCount()).To(Equal(1))
 			Expect(releaseUpgradePathsAdder.AddReleaseUpgradePathsCallCount()).To(Equal(1))
+			Expect(upgradePathSpecifiersCreator.CreateUpgradePathSpecifiersCallCount()).To(Equal(1))
 
 			Expect(uploader.UploadCallCount()).To(Equal(1))
 			invokedPivnetRelease, invokedExactGlobs := uploader.UploadArgsForCall(0)
@@ -292,6 +299,17 @@ var _ = Describe("Out", func() {
 			It("returns an error", func() {
 				_, err := cmd.Run(request)
 				Expect(err).To(Equal(addReleaseUpgradePathsErr))
+			})
+		})
+
+		Context("when creating upgrade path specifiers returns an error", func() {
+			BeforeEach(func() {
+				createUpgradePathSpecifiersErr = errors.New("some upgrade path specifiers error")
+			})
+
+			It("returns an error", func() {
+				_, err := cmd.Run(request)
+				Expect(err).To(Equal(createUpgradePathSpecifiersErr))
 			})
 		})
 
