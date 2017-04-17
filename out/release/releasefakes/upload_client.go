@@ -4,26 +4,34 @@ package releasefakes
 import (
 	"sync"
 
-	go_pivnet "github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet"
 )
 
 type UploadClient struct {
-	FindProductForSlugStub        func(slug string) (go_pivnet.Product, error)
+	FindProductForSlugStub        func(slug string) (pivnet.Product, error)
 	findProductForSlugMutex       sync.RWMutex
 	findProductForSlugArgsForCall []struct {
 		slug string
 	}
 	findProductForSlugReturns struct {
-		result1 go_pivnet.Product
+		result1 pivnet.Product
 		result2 error
 	}
-	CreateProductFileStub        func(go_pivnet.CreateProductFileConfig) (go_pivnet.ProductFile, error)
+	findProductForSlugReturnsOnCall map[int]struct {
+		result1 pivnet.Product
+		result2 error
+	}
+	CreateProductFileStub        func(pivnet.CreateProductFileConfig) (pivnet.ProductFile, error)
 	createProductFileMutex       sync.RWMutex
 	createProductFileArgsForCall []struct {
-		arg1 go_pivnet.CreateProductFileConfig
+		arg1 pivnet.CreateProductFileConfig
 	}
 	createProductFileReturns struct {
-		result1 go_pivnet.ProductFile
+		result1 pivnet.ProductFile
+		result2 error
+	}
+	createProductFileReturnsOnCall map[int]struct {
+		result1 pivnet.ProductFile
 		result2 error
 	}
 	AddProductFileStub        func(productSlug string, releaseID int, productFileID int) error
@@ -36,41 +44,83 @@ type UploadClient struct {
 	addProductFileReturns struct {
 		result1 error
 	}
-	ProductFilesStub        func(productSlug string) ([]go_pivnet.ProductFile, error)
+	addProductFileReturnsOnCall map[int]struct {
+		result1 error
+	}
+	AddFileGroupStub        func(name string, releaseID int, fileGroupID int) error
+	addFileGroupMutex       sync.RWMutex
+	addFileGroupArgsForCall []struct {
+		name        string
+		releaseID   int
+		fileGroupID int
+	}
+	addFileGroupReturns struct {
+		result1 error
+	}
+	addFileGroupReturnsOnCall map[int]struct {
+		result1 error
+	}
+	CreateFileGroupStub        func(pivnet.CreateFileGroupConfig) (pivnet.FileGroup, error)
+	createFileGroupMutex       sync.RWMutex
+	createFileGroupArgsForCall []struct {
+		arg1 pivnet.CreateFileGroupConfig
+	}
+	createFileGroupReturns struct {
+		result1 pivnet.FileGroup
+		result2 error
+	}
+	createFileGroupReturnsOnCall map[int]struct {
+		result1 pivnet.FileGroup
+		result2 error
+	}
+	ProductFilesStub        func(productSlug string) ([]pivnet.ProductFile, error)
 	productFilesMutex       sync.RWMutex
 	productFilesArgsForCall []struct {
 		productSlug string
 	}
 	productFilesReturns struct {
-		result1 []go_pivnet.ProductFile
+		result1 []pivnet.ProductFile
 		result2 error
 	}
-	ProductFileStub        func(productSlug string, productFileID int) (go_pivnet.ProductFile, error)
+	productFilesReturnsOnCall map[int]struct {
+		result1 []pivnet.ProductFile
+		result2 error
+	}
+	ProductFileStub        func(productSlug string, productFileID int) (pivnet.ProductFile, error)
 	productFileMutex       sync.RWMutex
 	productFileArgsForCall []struct {
 		productSlug   string
 		productFileID int
 	}
 	productFileReturns struct {
-		result1 go_pivnet.ProductFile
+		result1 pivnet.ProductFile
 		result2 error
 	}
-	DeleteProductFileStub        func(productSlug string, releaseID int) (go_pivnet.ProductFile, error)
+	productFileReturnsOnCall map[int]struct {
+		result1 pivnet.ProductFile
+		result2 error
+	}
+	DeleteProductFileStub        func(productSlug string, releaseID int) (pivnet.ProductFile, error)
 	deleteProductFileMutex       sync.RWMutex
 	deleteProductFileArgsForCall []struct {
 		productSlug string
 		releaseID   int
 	}
 	deleteProductFileReturns struct {
-		result1 go_pivnet.ProductFile
+		result1 pivnet.ProductFile
+		result2 error
+	}
+	deleteProductFileReturnsOnCall map[int]struct {
+		result1 pivnet.ProductFile
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *UploadClient) FindProductForSlug(slug string) (go_pivnet.Product, error) {
+func (fake *UploadClient) FindProductForSlug(slug string) (pivnet.Product, error) {
 	fake.findProductForSlugMutex.Lock()
+	ret, specificReturn := fake.findProductForSlugReturnsOnCall[len(fake.findProductForSlugArgsForCall)]
 	fake.findProductForSlugArgsForCall = append(fake.findProductForSlugArgsForCall, struct {
 		slug string
 	}{slug})
@@ -78,9 +128,11 @@ func (fake *UploadClient) FindProductForSlug(slug string) (go_pivnet.Product, er
 	fake.findProductForSlugMutex.Unlock()
 	if fake.FindProductForSlugStub != nil {
 		return fake.FindProductForSlugStub(slug)
-	} else {
-		return fake.findProductForSlugReturns.result1, fake.findProductForSlugReturns.result2
 	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.findProductForSlugReturns.result1, fake.findProductForSlugReturns.result2
 }
 
 func (fake *UploadClient) FindProductForSlugCallCount() int {
@@ -95,26 +147,43 @@ func (fake *UploadClient) FindProductForSlugArgsForCall(i int) string {
 	return fake.findProductForSlugArgsForCall[i].slug
 }
 
-func (fake *UploadClient) FindProductForSlugReturns(result1 go_pivnet.Product, result2 error) {
+func (fake *UploadClient) FindProductForSlugReturns(result1 pivnet.Product, result2 error) {
 	fake.FindProductForSlugStub = nil
 	fake.findProductForSlugReturns = struct {
-		result1 go_pivnet.Product
+		result1 pivnet.Product
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *UploadClient) CreateProductFile(arg1 go_pivnet.CreateProductFileConfig) (go_pivnet.ProductFile, error) {
+func (fake *UploadClient) FindProductForSlugReturnsOnCall(i int, result1 pivnet.Product, result2 error) {
+	fake.FindProductForSlugStub = nil
+	if fake.findProductForSlugReturnsOnCall == nil {
+		fake.findProductForSlugReturnsOnCall = make(map[int]struct {
+			result1 pivnet.Product
+			result2 error
+		})
+	}
+	fake.findProductForSlugReturnsOnCall[i] = struct {
+		result1 pivnet.Product
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *UploadClient) CreateProductFile(arg1 pivnet.CreateProductFileConfig) (pivnet.ProductFile, error) {
 	fake.createProductFileMutex.Lock()
+	ret, specificReturn := fake.createProductFileReturnsOnCall[len(fake.createProductFileArgsForCall)]
 	fake.createProductFileArgsForCall = append(fake.createProductFileArgsForCall, struct {
-		arg1 go_pivnet.CreateProductFileConfig
+		arg1 pivnet.CreateProductFileConfig
 	}{arg1})
 	fake.recordInvocation("CreateProductFile", []interface{}{arg1})
 	fake.createProductFileMutex.Unlock()
 	if fake.CreateProductFileStub != nil {
 		return fake.CreateProductFileStub(arg1)
-	} else {
-		return fake.createProductFileReturns.result1, fake.createProductFileReturns.result2
 	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.createProductFileReturns.result1, fake.createProductFileReturns.result2
 }
 
 func (fake *UploadClient) CreateProductFileCallCount() int {
@@ -123,22 +192,37 @@ func (fake *UploadClient) CreateProductFileCallCount() int {
 	return len(fake.createProductFileArgsForCall)
 }
 
-func (fake *UploadClient) CreateProductFileArgsForCall(i int) go_pivnet.CreateProductFileConfig {
+func (fake *UploadClient) CreateProductFileArgsForCall(i int) pivnet.CreateProductFileConfig {
 	fake.createProductFileMutex.RLock()
 	defer fake.createProductFileMutex.RUnlock()
 	return fake.createProductFileArgsForCall[i].arg1
 }
 
-func (fake *UploadClient) CreateProductFileReturns(result1 go_pivnet.ProductFile, result2 error) {
+func (fake *UploadClient) CreateProductFileReturns(result1 pivnet.ProductFile, result2 error) {
 	fake.CreateProductFileStub = nil
 	fake.createProductFileReturns = struct {
-		result1 go_pivnet.ProductFile
+		result1 pivnet.ProductFile
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *UploadClient) CreateProductFileReturnsOnCall(i int, result1 pivnet.ProductFile, result2 error) {
+	fake.CreateProductFileStub = nil
+	if fake.createProductFileReturnsOnCall == nil {
+		fake.createProductFileReturnsOnCall = make(map[int]struct {
+			result1 pivnet.ProductFile
+			result2 error
+		})
+	}
+	fake.createProductFileReturnsOnCall[i] = struct {
+		result1 pivnet.ProductFile
 		result2 error
 	}{result1, result2}
 }
 
 func (fake *UploadClient) AddProductFile(productSlug string, releaseID int, productFileID int) error {
 	fake.addProductFileMutex.Lock()
+	ret, specificReturn := fake.addProductFileReturnsOnCall[len(fake.addProductFileArgsForCall)]
 	fake.addProductFileArgsForCall = append(fake.addProductFileArgsForCall, struct {
 		productSlug   string
 		releaseID     int
@@ -148,9 +232,11 @@ func (fake *UploadClient) AddProductFile(productSlug string, releaseID int, prod
 	fake.addProductFileMutex.Unlock()
 	if fake.AddProductFileStub != nil {
 		return fake.AddProductFileStub(productSlug, releaseID, productFileID)
-	} else {
-		return fake.addProductFileReturns.result1
 	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.addProductFileReturns.result1
 }
 
 func (fake *UploadClient) AddProductFileCallCount() int {
@@ -172,8 +258,122 @@ func (fake *UploadClient) AddProductFileReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *UploadClient) ProductFiles(productSlug string) ([]go_pivnet.ProductFile, error) {
+func (fake *UploadClient) AddProductFileReturnsOnCall(i int, result1 error) {
+	fake.AddProductFileStub = nil
+	if fake.addProductFileReturnsOnCall == nil {
+		fake.addProductFileReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.addProductFileReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *UploadClient) AddFileGroup(name string, releaseID int, fileGroupID int) error {
+	fake.addFileGroupMutex.Lock()
+	ret, specificReturn := fake.addFileGroupReturnsOnCall[len(fake.addFileGroupArgsForCall)]
+	fake.addFileGroupArgsForCall = append(fake.addFileGroupArgsForCall, struct {
+		name        string
+		releaseID   int
+		fileGroupID int
+	}{name, releaseID, fileGroupID})
+	fake.recordInvocation("AddFileGroup", []interface{}{name, releaseID, fileGroupID})
+	fake.addFileGroupMutex.Unlock()
+	if fake.AddFileGroupStub != nil {
+		return fake.AddFileGroupStub(name, releaseID, fileGroupID)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.addFileGroupReturns.result1
+}
+
+func (fake *UploadClient) AddFileGroupCallCount() int {
+	fake.addFileGroupMutex.RLock()
+	defer fake.addFileGroupMutex.RUnlock()
+	return len(fake.addFileGroupArgsForCall)
+}
+
+func (fake *UploadClient) AddFileGroupArgsForCall(i int) (string, int, int) {
+	fake.addFileGroupMutex.RLock()
+	defer fake.addFileGroupMutex.RUnlock()
+	return fake.addFileGroupArgsForCall[i].name, fake.addFileGroupArgsForCall[i].releaseID, fake.addFileGroupArgsForCall[i].fileGroupID
+}
+
+func (fake *UploadClient) AddFileGroupReturns(result1 error) {
+	fake.AddFileGroupStub = nil
+	fake.addFileGroupReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *UploadClient) AddFileGroupReturnsOnCall(i int, result1 error) {
+	fake.AddFileGroupStub = nil
+	if fake.addFileGroupReturnsOnCall == nil {
+		fake.addFileGroupReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.addFileGroupReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *UploadClient) CreateFileGroup(arg1 pivnet.CreateFileGroupConfig) (pivnet.FileGroup, error) {
+	fake.createFileGroupMutex.Lock()
+	ret, specificReturn := fake.createFileGroupReturnsOnCall[len(fake.createFileGroupArgsForCall)]
+	fake.createFileGroupArgsForCall = append(fake.createFileGroupArgsForCall, struct {
+		arg1 pivnet.CreateFileGroupConfig
+	}{arg1})
+	fake.recordInvocation("CreateFileGroup", []interface{}{arg1})
+	fake.createFileGroupMutex.Unlock()
+	if fake.CreateFileGroupStub != nil {
+		return fake.CreateFileGroupStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.createFileGroupReturns.result1, fake.createFileGroupReturns.result2
+}
+
+func (fake *UploadClient) CreateFileGroupCallCount() int {
+	fake.createFileGroupMutex.RLock()
+	defer fake.createFileGroupMutex.RUnlock()
+	return len(fake.createFileGroupArgsForCall)
+}
+
+func (fake *UploadClient) CreateFileGroupArgsForCall(i int) pivnet.CreateFileGroupConfig {
+	fake.createFileGroupMutex.RLock()
+	defer fake.createFileGroupMutex.RUnlock()
+	return fake.createFileGroupArgsForCall[i].arg1
+}
+
+func (fake *UploadClient) CreateFileGroupReturns(result1 pivnet.FileGroup, result2 error) {
+	fake.CreateFileGroupStub = nil
+	fake.createFileGroupReturns = struct {
+		result1 pivnet.FileGroup
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *UploadClient) CreateFileGroupReturnsOnCall(i int, result1 pivnet.FileGroup, result2 error) {
+	fake.CreateFileGroupStub = nil
+	if fake.createFileGroupReturnsOnCall == nil {
+		fake.createFileGroupReturnsOnCall = make(map[int]struct {
+			result1 pivnet.FileGroup
+			result2 error
+		})
+	}
+	fake.createFileGroupReturnsOnCall[i] = struct {
+		result1 pivnet.FileGroup
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *UploadClient) ProductFiles(productSlug string) ([]pivnet.ProductFile, error) {
 	fake.productFilesMutex.Lock()
+	ret, specificReturn := fake.productFilesReturnsOnCall[len(fake.productFilesArgsForCall)]
 	fake.productFilesArgsForCall = append(fake.productFilesArgsForCall, struct {
 		productSlug string
 	}{productSlug})
@@ -181,9 +381,11 @@ func (fake *UploadClient) ProductFiles(productSlug string) ([]go_pivnet.ProductF
 	fake.productFilesMutex.Unlock()
 	if fake.ProductFilesStub != nil {
 		return fake.ProductFilesStub(productSlug)
-	} else {
-		return fake.productFilesReturns.result1, fake.productFilesReturns.result2
 	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.productFilesReturns.result1, fake.productFilesReturns.result2
 }
 
 func (fake *UploadClient) ProductFilesCallCount() int {
@@ -198,16 +400,31 @@ func (fake *UploadClient) ProductFilesArgsForCall(i int) string {
 	return fake.productFilesArgsForCall[i].productSlug
 }
 
-func (fake *UploadClient) ProductFilesReturns(result1 []go_pivnet.ProductFile, result2 error) {
+func (fake *UploadClient) ProductFilesReturns(result1 []pivnet.ProductFile, result2 error) {
 	fake.ProductFilesStub = nil
 	fake.productFilesReturns = struct {
-		result1 []go_pivnet.ProductFile
+		result1 []pivnet.ProductFile
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *UploadClient) ProductFile(productSlug string, productFileID int) (go_pivnet.ProductFile, error) {
+func (fake *UploadClient) ProductFilesReturnsOnCall(i int, result1 []pivnet.ProductFile, result2 error) {
+	fake.ProductFilesStub = nil
+	if fake.productFilesReturnsOnCall == nil {
+		fake.productFilesReturnsOnCall = make(map[int]struct {
+			result1 []pivnet.ProductFile
+			result2 error
+		})
+	}
+	fake.productFilesReturnsOnCall[i] = struct {
+		result1 []pivnet.ProductFile
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *UploadClient) ProductFile(productSlug string, productFileID int) (pivnet.ProductFile, error) {
 	fake.productFileMutex.Lock()
+	ret, specificReturn := fake.productFileReturnsOnCall[len(fake.productFileArgsForCall)]
 	fake.productFileArgsForCall = append(fake.productFileArgsForCall, struct {
 		productSlug   string
 		productFileID int
@@ -216,9 +433,11 @@ func (fake *UploadClient) ProductFile(productSlug string, productFileID int) (go
 	fake.productFileMutex.Unlock()
 	if fake.ProductFileStub != nil {
 		return fake.ProductFileStub(productSlug, productFileID)
-	} else {
-		return fake.productFileReturns.result1, fake.productFileReturns.result2
 	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.productFileReturns.result1, fake.productFileReturns.result2
 }
 
 func (fake *UploadClient) ProductFileCallCount() int {
@@ -233,16 +452,31 @@ func (fake *UploadClient) ProductFileArgsForCall(i int) (string, int) {
 	return fake.productFileArgsForCall[i].productSlug, fake.productFileArgsForCall[i].productFileID
 }
 
-func (fake *UploadClient) ProductFileReturns(result1 go_pivnet.ProductFile, result2 error) {
+func (fake *UploadClient) ProductFileReturns(result1 pivnet.ProductFile, result2 error) {
 	fake.ProductFileStub = nil
 	fake.productFileReturns = struct {
-		result1 go_pivnet.ProductFile
+		result1 pivnet.ProductFile
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *UploadClient) DeleteProductFile(productSlug string, releaseID int) (go_pivnet.ProductFile, error) {
+func (fake *UploadClient) ProductFileReturnsOnCall(i int, result1 pivnet.ProductFile, result2 error) {
+	fake.ProductFileStub = nil
+	if fake.productFileReturnsOnCall == nil {
+		fake.productFileReturnsOnCall = make(map[int]struct {
+			result1 pivnet.ProductFile
+			result2 error
+		})
+	}
+	fake.productFileReturnsOnCall[i] = struct {
+		result1 pivnet.ProductFile
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *UploadClient) DeleteProductFile(productSlug string, releaseID int) (pivnet.ProductFile, error) {
 	fake.deleteProductFileMutex.Lock()
+	ret, specificReturn := fake.deleteProductFileReturnsOnCall[len(fake.deleteProductFileArgsForCall)]
 	fake.deleteProductFileArgsForCall = append(fake.deleteProductFileArgsForCall, struct {
 		productSlug string
 		releaseID   int
@@ -251,9 +485,11 @@ func (fake *UploadClient) DeleteProductFile(productSlug string, releaseID int) (
 	fake.deleteProductFileMutex.Unlock()
 	if fake.DeleteProductFileStub != nil {
 		return fake.DeleteProductFileStub(productSlug, releaseID)
-	} else {
-		return fake.deleteProductFileReturns.result1, fake.deleteProductFileReturns.result2
 	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.deleteProductFileReturns.result1, fake.deleteProductFileReturns.result2
 }
 
 func (fake *UploadClient) DeleteProductFileCallCount() int {
@@ -268,10 +504,24 @@ func (fake *UploadClient) DeleteProductFileArgsForCall(i int) (string, int) {
 	return fake.deleteProductFileArgsForCall[i].productSlug, fake.deleteProductFileArgsForCall[i].releaseID
 }
 
-func (fake *UploadClient) DeleteProductFileReturns(result1 go_pivnet.ProductFile, result2 error) {
+func (fake *UploadClient) DeleteProductFileReturns(result1 pivnet.ProductFile, result2 error) {
 	fake.DeleteProductFileStub = nil
 	fake.deleteProductFileReturns = struct {
-		result1 go_pivnet.ProductFile
+		result1 pivnet.ProductFile
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *UploadClient) DeleteProductFileReturnsOnCall(i int, result1 pivnet.ProductFile, result2 error) {
+	fake.DeleteProductFileStub = nil
+	if fake.deleteProductFileReturnsOnCall == nil {
+		fake.deleteProductFileReturnsOnCall = make(map[int]struct {
+			result1 pivnet.ProductFile
+			result2 error
+		})
+	}
+	fake.deleteProductFileReturnsOnCall[i] = struct {
+		result1 pivnet.ProductFile
 		result2 error
 	}{result1, result2}
 }
@@ -285,6 +535,10 @@ func (fake *UploadClient) Invocations() map[string][][]interface{} {
 	defer fake.createProductFileMutex.RUnlock()
 	fake.addProductFileMutex.RLock()
 	defer fake.addProductFileMutex.RUnlock()
+	fake.addFileGroupMutex.RLock()
+	defer fake.addFileGroupMutex.RUnlock()
+	fake.createFileGroupMutex.RLock()
+	defer fake.createFileGroupMutex.RUnlock()
 	fake.productFilesMutex.RLock()
 	defer fake.productFilesMutex.RUnlock()
 	fake.productFileMutex.RLock()

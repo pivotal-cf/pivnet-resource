@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"time"
 
-	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
+	pivnet "github.com/pivotal-cf/go-pivnet"
 )
 
 type ReleaseUploader struct {
@@ -27,7 +27,11 @@ type ReleaseUploader struct {
 type uploadClient interface {
 	FindProductForSlug(slug string) (pivnet.Product, error)
 	CreateProductFile(pivnet.CreateProductFileConfig) (pivnet.ProductFile, error)
+
 	AddProductFile(productSlug string, releaseID int, productFileID int) error
+	AddFileGroup(name string, releaseID int, fileGroupID int) error
+
+	CreateFileGroup(pivnet.CreateFileGroupConfig) (pivnet.FileGroup, error)
 	ProductFiles(productSlug string) ([]pivnet.ProductFile, error)
 	ProductFile(productSlug string, productFileID int) (pivnet.ProductFile, error)
 	DeleteProductFile(productSlug string, releaseID int) (pivnet.ProductFile, error)
@@ -175,6 +179,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			uploadAs,
 		))
 
+
 		productFile, err := u.pivnet.CreateProductFile(pivnet.CreateProductFileConfig{
 			ProductSlug:        u.productSlug,
 			Name:               uploadAs,
@@ -205,6 +210,22 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		}
 
 		err = u.pollForProductFile(productFile)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, group := range u.metadata.FileGroups {
+		fileGroup, err := u.pivnet.CreateFileGroup(pivnet.CreateFileGroupConfig{
+			ProductSlug:        u.productSlug,
+			Name:               group.Name,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		err = u.pivnet.AddFileGroup(u.productSlug, release.ID, fileGroup.ID)
 		if err != nil {
 			return err
 		}
