@@ -40,6 +40,7 @@ var _ = Describe("ReleaseUploader", func() {
 
 		existingProductFilesErr error
 		createProductFileErr    error
+		createFileGroupErr    	error
 		uploadFileErr           error
 		sha256SumFileErr        error
 		md5SumFileErr           error
@@ -76,6 +77,12 @@ var _ = Describe("ReleaseUploader", func() {
 					SystemRequirements: []string{"req1", "req2"},
 					Platforms:          []string{"Linux"},
 					IncludedFiles:      []string{"include1", "include2"},
+				},
+			},
+
+			FileGroups: []metadata.FileGroup{
+				{
+					Name: "file-group-1",
 				},
 			},
 		}
@@ -117,6 +124,8 @@ var _ = Describe("ReleaseUploader", func() {
 		md5Summer.SumFileReturns(actualMD5Sum, md5SumFileErr)
 		s3Client.UploadFileReturns(newAWSObjectKey, uploadFileErr)
 		uploadClient.CreateProductFileReturns(pivnet.ProductFile{ID: 13367}, createProductFileErr)
+		uploadClient.CreateFileGroupReturns(pivnet.FileGroup{ID: 8675309}, createFileGroupErr)
+
 		uploadClient.ProductFilesReturns(existingProductFiles, existingProductFilesErr)
 
 		invokeCount := 0
@@ -162,10 +171,22 @@ var _ = Describe("ReleaseUploader", func() {
 				IncludedFiles:      mdata.ProductFiles[0].IncludedFiles,
 			}))
 
+			Expect(uploadClient.AddProductFileCallCount()).To(Equal(1))
 			invokedProductSlug, releaseID, productFileID := uploadClient.AddProductFileArgsForCall(0)
 			Expect(invokedProductSlug).To(Equal(productSlug))
 			Expect(releaseID).To(Equal(1111))
 			Expect(productFileID).To(Equal(13367))
+
+			Expect(uploadClient.CreateFileGroupArgsForCall(0)).To(Equal(pivnet.CreateFileGroupConfig{
+				ProductSlug:        productSlug,
+				Name:               mdata.FileGroups[0].Name,
+			}))
+
+			Expect(uploadClient.AddFileGroupCallCount()).To(Equal(1))
+			invokedProductSlug, releaseID, fileGroupID := uploadClient.AddFileGroupArgsForCall(0)
+			Expect(invokedProductSlug).To(Equal(productSlug))
+			Expect(releaseID).To(Equal(1111))
+			Expect(fileGroupID).To(Equal(8675309))
 		})
 
 		Context("when a product file already exists with AWSObjectKey", func() {

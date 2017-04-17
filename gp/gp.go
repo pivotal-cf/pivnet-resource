@@ -113,6 +113,14 @@ func (c Client) AddProductFile(productSlug string, releaseID int, productFileID 
 	return c.client.ProductFiles.AddToRelease(productSlug, releaseID, productFileID)
 }
 
+func (c Client) CreateFileGroup(config pivnet.CreateFileGroupConfig) (pivnet.FileGroup, error) {
+	return c.client.FileGroups.Create(config)
+}
+
+func (c Client) AddFileGroup(productSlug string, releaseID int, fileGroupID int) error {
+	return c.client.FileGroups.AddToRelease(productSlug, releaseID, fileGroupID)
+}
+
 func (c Client) DownloadProductFile(writer *os.File, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error {
 	return c.client.ProductFiles.DownloadForRelease(writer, productSlug, releaseID, productFileID, progressWriter)
 }
