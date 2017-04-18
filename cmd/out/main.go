@@ -204,6 +204,13 @@ func main() {
 		input.Source.ProductSlug,
 	)
 
+	releaseFileGroupsAdder := release.NewReleaseFileGroupsAdder(
+		ls,
+		client,
+		m,
+		input.Source.ProductSlug,
+	)
+
 	releaseDependenciesAdder := release.NewReleaseDependenciesAdder(
 		ls,
 		client,
@@ -251,6 +258,7 @@ func main() {
 		Creator:                      releaseCreator,
 		Uploader:                     releaseUploader,
 		UserGroupsUpdater:            releaseUserGroupsUpdater,
+		ReleaseFileGroupsAdder:       releaseFileGroupsAdder,
 		ReleaseDependenciesAdder:     releaseDependenciesAdder,
 		DependencySpecifiersCreator:  dependencySpecifiersCreator,
 		ReleaseUpgradePathsAdder:     releaseUpgradePathsAdder,

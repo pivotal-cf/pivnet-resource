@@ -23,6 +23,7 @@ var _ = Describe("Out", func() {
 
 			finalizer                    *outfakes.Finalizer
 			userGroupsUpdater            *outfakes.UserGroupsUpdater
+			releaseFileGroupsAdder       *outfakes.ReleaseFileGroupsAdder
 			releaseDependenciesAdder     *outfakes.ReleaseDependenciesAdder
 			dependencySpecifiersCreator  *outfakes.DependencySpecifiersCreator
 			releaseUpgradePathsAdder     *outfakes.ReleaseUpgradePathsAdder
@@ -45,6 +46,7 @@ var _ = Describe("Out", func() {
 			exactGlobsErr                  error
 			uploadErr                      error
 			updateUserGroupErr             error
+			addReleaseFileGroupsErr        error
 			addReleaseDependenciesErr      error
 			createDependencySpecifiersErr  error
 			addReleaseUpgradePathsErr      error
@@ -58,6 +60,7 @@ var _ = Describe("Out", func() {
 
 			finalizer = &outfakes.Finalizer{}
 			userGroupsUpdater = &outfakes.UserGroupsUpdater{}
+			releaseFileGroupsAdder = &outfakes.ReleaseFileGroupsAdder{}
 			releaseDependenciesAdder = &outfakes.ReleaseDependenciesAdder{}
 			dependencySpecifiersCreator = &outfakes.DependencySpecifiersCreator{}
 			releaseUpgradePathsAdder = &outfakes.ReleaseUpgradePathsAdder{}
@@ -78,6 +81,7 @@ var _ = Describe("Out", func() {
 			exactGlobsErr = nil
 			uploadErr = nil
 			updateUserGroupErr = nil
+			addReleaseFileGroupsErr = nil
 			addReleaseDependenciesErr = nil
 			createDependencySpecifiersErr = nil
 			addReleaseUpgradePathsErr = nil
@@ -109,6 +113,7 @@ var _ = Describe("Out", func() {
 				Creator:                      creator,
 				Finalizer:                    finalizer,
 				UserGroupsUpdater:            userGroupsUpdater,
+				ReleaseFileGroupsAdder:       releaseFileGroupsAdder,
 				ReleaseDependenciesAdder:     releaseDependenciesAdder,
 				DependencySpecifiersCreator:  dependencySpecifiersCreator,
 				ReleaseUpgradePathsAdder:     releaseUpgradePathsAdder,
@@ -128,6 +133,7 @@ var _ = Describe("Out", func() {
 			userGroupsUpdater.UpdateUserGroupsReturns(pivnet.Release{ID: 1337, Availability: "none", Version: "some-version"}, updateUserGroupErr)
 
 			uploader.UploadReturns(uploadErr)
+			releaseFileGroupsAdder.AddReleaseFileGroupsReturns(addReleaseFileGroupsErr)
 			releaseDependenciesAdder.AddReleaseDependenciesReturns(addReleaseDependenciesErr)
 			dependencySpecifiersCreator.CreateDependencySpecifiersReturns(createDependencySpecifiersErr)
 			releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(addReleaseUpgradePathsErr)
@@ -160,6 +166,7 @@ var _ = Describe("Out", func() {
 
 			Expect(globber.ExactGlobsCallCount()).To(Equal(1))
 
+			Expect(releaseFileGroupsAdder.AddReleaseFileGroupsCallCount()).To(Equal(1))
 			Expect(releaseDependenciesAdder.AddReleaseDependenciesCallCount()).To(Equal(1))
 			Expect(dependencySpecifiersCreator.CreateDependencySpecifiersCallCount()).To(Equal(1))
 			Expect(releaseUpgradePathsAdder.AddReleaseUpgradePathsCallCount()).To(Equal(1))
