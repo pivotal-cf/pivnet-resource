@@ -17,6 +17,7 @@ type OutCommand struct {
 	validation                   validation
 	creator                      creator
 	userGroupsUpdater            userGroupsUpdater
+	releaseFileGroupsAdder       releaseFileGroupsAdder
 	releaseDependenciesAdder     releaseDependenciesAdder
 	dependencySpecifiersCreator  dependencySpecifiersCreator
 	releaseUpgradePathsAdder     releaseUpgradePathsAdder
@@ -35,6 +36,7 @@ type OutCommandConfig struct {
 	Validation                   validation
 	Creator                      creator
 	UserGroupsUpdater            userGroupsUpdater
+	ReleaseFileGroupsAdder       releaseFileGroupsAdder
 	ReleaseDependenciesAdder     releaseDependenciesAdder
 	DependencySpecifiersCreator  dependencySpecifiersCreator
 	ReleaseUpgradePathsAdder     releaseUpgradePathsAdder
@@ -54,6 +56,7 @@ func NewOutCommand(config OutCommandConfig) OutCommand {
 		validation:                   config.Validation,
 		creator:                      config.Creator,
 		userGroupsUpdater:            config.UserGroupsUpdater,
+		releaseFileGroupsAdder:       config.ReleaseFileGroupsAdder,
 		releaseDependenciesAdder:     config.ReleaseDependenciesAdder,
 		dependencySpecifiersCreator:  config.DependencySpecifiersCreator,
 		releaseUpgradePathsAdder:     config.ReleaseUpgradePathsAdder,
@@ -78,6 +81,11 @@ type uploader interface {
 //go:generate counterfeiter --fake-name UserGroupsUpdater . userGroupsUpdater
 type userGroupsUpdater interface {
 	UpdateUserGroups(release pivnet.Release) (pivnet.Release, error)
+}
+
+//go:generate counterfeiter --fake-name ReleaseFileGroupsAdder . releaseFileGroupsAdder
+type releaseFileGroupsAdder interface {
+	AddReleaseFileGroups(release pivnet.Release) error
 }
 
 //go:generate counterfeiter --fake-name ReleaseDependenciesAdder . releaseDependenciesAdder
@@ -167,6 +175,11 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		if err != nil {
 			return concourse.OutResponse{}, err
 		}
+	}
+
+	err = c.releaseFileGroupsAdder.AddReleaseFileGroups(pivnetRelease)
+	if err != nil {
+		return concourse.OutResponse{}, err
 	}
 
 	err = c.releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
