@@ -59,7 +59,7 @@ func (rf ReleaseFileGroupsAdder) AddReleaseFileGroups(release pivnet.Release) er
 			"Adding file group with ID: %d",
 			fileGroupID,
 		))
-		err := rf.pivnet.AddFileGroup(rf.productSlug, release.ID, fileGroup.ID)
+		err := rf.pivnet.AddFileGroup(rf.productSlug, release.ID, fileGroupID)
 		if err != nil {
 			return err
 		}
