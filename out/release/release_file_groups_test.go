@@ -10,9 +10,9 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/out/release"
 	"github.com/pivotal-cf/pivnet-resource/out/release/releasefakes"
 
+	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"fmt"
 )
 
 var _ = Describe("ReleaseFileGroupsAdder", func() {
@@ -72,10 +72,10 @@ var _ = Describe("ReleaseFileGroupsAdder", func() {
 			BeforeEach(func() {
 				mdata.FileGroups = []metadata.FileGroup{
 					{
-						ID:      9876,
+						ID: 9876,
 					},
 					{
-						ID:      1234,
+						ID:   1234,
 						Name: "new-file-group",
 					},
 				}

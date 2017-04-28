@@ -213,7 +213,7 @@ var _ = Describe("Lifecycle test", func() {
 				release, err := pivnetClient.GetRelease(productSlug, version)
 				Expect(err).NotTo(HaveOccurred())
 
-				expectedVersion, err := versions.CombineVersionAndFingerprint(release.Version, release.UpdatedAt)
+				expectedVersion, err := versions.CombineVersionAndFingerprint(release.Version, release.SoftwareFilesUpdatedAt)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
@@ -239,7 +239,7 @@ var _ = Describe("Lifecycle test", func() {
 				release, err = pivnetClient.GetRelease(productSlug, version)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				versionWithFingerprint, err := versions.CombineVersionAndFingerprint(release.Version, release.UpdatedAt)
+				versionWithFingerprint, err := versions.CombineVersionAndFingerprint(release.Version, release.SoftwareFilesUpdatedAt)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying release contains new product files")

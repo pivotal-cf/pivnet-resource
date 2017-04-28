@@ -46,7 +46,7 @@ var _ = Describe("In", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		versionWithFingerprint, err = versions.CombineVersionAndFingerprint(release.Version, release.UpdatedAt)
+		versionWithFingerprint, err = versions.CombineVersionAndFingerprint(release.Version, release.SoftwareFilesUpdatedAt)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Creating temp directory")

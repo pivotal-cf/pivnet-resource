@@ -177,7 +177,7 @@ var _ = Describe("Out", func() {
 			release, err := pivnetClient.GetRelease(productSlug, version)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedVersion, err := versions.CombineVersionAndFingerprint(release.Version, release.UpdatedAt)
+			expectedVersion, err := versions.CombineVersionAndFingerprint(release.Version, release.SoftwareFilesUpdatedAt)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
@@ -214,7 +214,7 @@ func versionsWithFingerprints(
 ) ([]string, error) {
 	var allVersions []string
 	for _, r := range releases {
-		version, err := versions.CombineVersionAndFingerprint(r.Version, r.UpdatedAt)
+		version, err := versions.CombineVersionAndFingerprint(r.Version, r.SoftwareFilesUpdatedAt)
 		if err != nil {
 			return nil, err
 		}

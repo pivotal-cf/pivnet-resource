@@ -67,28 +67,28 @@ var _ = Describe("Check", func() {
 
 		allReleases = []pivnet.Release{
 			{
-				ID:          1,
-				Version:     "1.2.3",
-				ReleaseType: releaseTypes[0],
-				UpdatedAt:   "time1",
+				ID:                     1,
+				Version:                "1.2.3",
+				ReleaseType:            releaseTypes[0],
+				SoftwareFilesUpdatedAt: "time1",
 			},
 			{
-				ID:          2,
-				Version:     "2.3.4",
-				ReleaseType: releaseTypes[1],
-				UpdatedAt:   "time2",
+				ID:                     2,
+				Version:                "2.3.4",
+				ReleaseType:            releaseTypes[1],
+				SoftwareFilesUpdatedAt: "time2",
 			},
 			{
-				ID:          3,
-				Version:     "1.2.4",
-				ReleaseType: releaseTypes[2],
-				UpdatedAt:   "time3",
+				ID:                     3,
+				Version:                "1.2.4",
+				ReleaseType:            releaseTypes[2],
+				SoftwareFilesUpdatedAt: "time3",
 			},
 		}
 
 		versionsWithFingerprints = make([]string, len(allReleases))
 		for i, r := range allReleases {
-			v, err := versions.CombineVersionAndFingerprint(r.Version, r.UpdatedAt)
+			v, err := versions.CombineVersionAndFingerprint(r.Version, r.SoftwareFilesUpdatedAt)
 			Expect(err).NotTo(HaveOccurred())
 			versionsWithFingerprints[i] = v
 		}

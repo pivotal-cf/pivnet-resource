@@ -48,7 +48,7 @@ func (rf ReleaseFinalizer) Finalize(productSlug string, releaseVersion string) (
 		return concourse.OutResponse{}, err
 	}
 
-	outputVersion, err := versions.CombineVersionAndFingerprint(newRelease.Version, newRelease.UpdatedAt)
+	outputVersion, err := versions.CombineVersionAndFingerprint(newRelease.Version, newRelease.SoftwareFilesUpdatedAt)
 	if err != nil {
 		return concourse.OutResponse{}, err // this will never return an error
 	}

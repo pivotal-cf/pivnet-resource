@@ -32,7 +32,7 @@ var _ = Describe("Check", func() {
 		By("Getting release versions")
 		releaseVersions = make([]string, len(releases))
 		for i, r := range releases {
-			releaseVersion, err := versions.CombineVersionAndFingerprint(r.Version, r.UpdatedAt)
+			releaseVersion, err := versions.CombineVersionAndFingerprint(r.Version, r.SoftwareFilesUpdatedAt)
 			Expect(err).NotTo(HaveOccurred())
 
 			releaseVersions[i] = releaseVersion

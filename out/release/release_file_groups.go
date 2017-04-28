@@ -1,10 +1,10 @@
 package release
 
 import (
+	"fmt"
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
-	"fmt"
 )
 
 type ReleaseFileGroupsAdder struct {
@@ -45,7 +45,7 @@ func (rf ReleaseFileGroupsAdder) AddReleaseFileGroups(release pivnet.Release) er
 
 			g, err := rf.pivnet.CreateFileGroup(pivnet.CreateFileGroupConfig{
 				ProductSlug: rf.productSlug,
-				Name: fileGroup.Name,
+				Name:        fileGroup.Name,
 			})
 
 			if err != nil {

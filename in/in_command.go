@@ -103,7 +103,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	}
 
 	if fingerprint != "" {
-		actualFingerprint := release.UpdatedAt
+		actualFingerprint := release.SoftwareFilesUpdatedAt
 		if actualFingerprint != fingerprint {
 			return concourse.InResponse{}, fmt.Errorf(
 				"provided fingerprint: '%s' does not match actual fingerprint (from pivnet): '%s' - %s",

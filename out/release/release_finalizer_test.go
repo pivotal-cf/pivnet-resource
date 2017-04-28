@@ -51,7 +51,7 @@ var _ = Describe("ReleaseFinalizer", func() {
 				EULA: &pivnet.EULA{
 					Slug: "a_eula_slug",
 				},
-				UpdatedAt: "some-new-time",
+				SoftwareFilesUpdatedAt: "some-new-time",
 			}
 
 			mdata = metadata.Metadata{

@@ -211,7 +211,7 @@ func releaseVersions(releases []pivnet.Release) ([]string, error) {
 
 	var err error
 	for i, r := range releases {
-		releaseVersions[i], err = versions.CombineVersionAndFingerprint(r.Version, r.UpdatedAt)
+		releaseVersions[i], err = versions.CombineVersionAndFingerprint(r.Version, r.SoftwareFilesUpdatedAt)
 		if err != nil {
 			return nil, err
 		}

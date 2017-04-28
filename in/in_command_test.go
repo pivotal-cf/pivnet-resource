@@ -261,9 +261,9 @@ var _ = Describe("In", func() {
 		}
 
 		release = pivnet.Release{
-			Version:   version,
-			UpdatedAt: actualFingerprint,
-			ID:        1234,
+			Version:                version,
+			SoftwareFilesUpdatedAt: actualFingerprint,
+			ID: 1234,
 			Links: &pivnet.Links{
 				ProductFiles: map[string]string{
 					"href": "some-file-path",
@@ -327,7 +327,7 @@ var _ = Describe("In", func() {
 	})
 
 	JustBeforeEach(func() {
-		release.UpdatedAt = actualFingerprint
+		release.SoftwareFilesUpdatedAt = actualFingerprint
 
 		fakePivnetClient.GetReleaseReturns(release, getReleaseErr)
 		fakePivnetClient.AcceptEULAReturns(acceptEULAErr)
