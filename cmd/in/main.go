@@ -89,6 +89,7 @@ func main() {
 		Host:      endpoint,
 		Token:     input.Source.APIToken,
 		UserAgent: useragent.UserAgent(version, "get", input.Source.ProductSlug),
+		SkipSSLValidation: input.Source.SkipSSLValidation,
 	}
 
 	client := gp.NewClient(

@@ -29,11 +29,12 @@ type NewClientConfig struct {
 
 	Logger logger.Logger
 	Stderr io.Writer
+	SkipSSLValidation bool
 }
 
 func NewClient(config NewClientConfig) *Client {
 	endpoint := ""
-	disableSSL := false
+	disableSSL := config.SkipSSLValidation
 
 	awsConfig := s3resource.NewAwsConfig(
 		config.AccessKeyID,
