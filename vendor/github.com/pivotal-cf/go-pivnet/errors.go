@@ -71,9 +71,9 @@ func (e ErrUnavailableForLegalReasons) Error() string {
 	return e.Message
 }
 
-func newErrUnavailableForLegalReasons() ErrUnavailableForLegalReasons {
+func newErrUnavailableForLegalReasons(message string) ErrUnavailableForLegalReasons {
 	return ErrUnavailableForLegalReasons{
 		ResponseCode: http.StatusUnavailableForLegalReasons,
-		Message:      "The EULA has not been accepted.",
+		Message:      message,
 	}
 }

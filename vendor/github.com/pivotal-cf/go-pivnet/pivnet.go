@@ -200,7 +200,7 @@ func (c Client) handleUnexpectedResponse(resp *http.Response) error {
 	case http.StatusNotFound:
 		return newErrNotFound(pErr.Message)
 	case http.StatusUnavailableForLegalReasons:
-		return newErrUnavailableForLegalReasons()
+		return newErrUnavailableForLegalReasons(pErr.Message)
 	default:
 		return ErrPivnetOther{
 			ResponseCode: resp.StatusCode,
