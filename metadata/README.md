@@ -56,21 +56,17 @@ file_groups:
   name: "some file group"
   product_files:
   - id: 5432
-dependencies:
-- release:
-    id: 1234
-    version: v0.1.2
-    product:
-      id: 45
-      name: Some product
-      slug: Some product
 dependency_specifiers:
-- id: 2346
-  specifier: 1.8.*
+- specifier: 1.8.*
   product_slug: some-product
-upgrade_paths:
-- id: 2345
-  version: v3.1.2
+- specifier: ~>1.9.1
+  product_slug: some-product
+- specifier: 2.3.4
+  product_slug: some-product
+upgrade_path_specifiers:
+- specifier: 0.2.*
+- specifier: ~>0.0.5
+- specifier: 0.2.0-build.2050
 ```
 
 ## Release
@@ -188,22 +184,6 @@ The top-level `file_groups` key is written to during `in` but is not read from
 during `out`. Therefore it cannot be used to set file groups when creating
 or updating a release.
 
-## Dependencies
-
-**Configuring dependencies directly is deprecated - use dependency specifiers instead**
-
-The top-level `dependencies` key is optional.
-If provided, it is permitted to be an empty array.
-
-Each element in `dependencies` must have a non-empty value for the `release` key.
-Within each `release` element either:
-
-* `id` must be present and non-zero
-
-or:
-
-* `version` and `product.slug` must be present and non-empty.
-
 ## Dependency Specifiers
 
 The top-level `dependency_specifiers` key is optional.
@@ -212,19 +192,14 @@ If provided, it is permitted to be an empty array.
 Each element in `dependency_specifiers` must have a non-empty value for both
 the `specifier` key and the `product_slug` key.
 
-## Upgrade paths
+See supported specifier formats in the [Pivnet API docs](https://network.pivotal.io/docs/api#public/docs/api/v2/release_dependency_specifiers.md)
 
-The top-level `upgrade_paths` key is optional.
+## Upgrade Path Specifiers
+
+The top-level `upgrade_path_specifiers` key is optional.
 If provided, it is permitted to be an empty array.
 
-Each element in `upgrade_paths` must have either:
+Each element in `upgrade_path_specifiers` must have a non-empty value for
+the `specifier` key.
 
-* `id` - must be present and non-zero
-
-or:
-
-* `version` - must be present and non-empty.
-  - Regular expressions are permitted - all matching
-    upgrade paths will be added.
-  - If an upgrade path matches multiple regular expressions,
-    it will only be added once.
+See supported specifier formats in the [Pivnet API docs](https://network.pivotal.io/docs/api#public/docs/api/v2/release_upgrade_path_specifiers.md)
