@@ -47,6 +47,21 @@ resources:
 * `release_type`: *Optional.*
   Lock to a specific release type.
 
+* `copy_metadata`: *Optional.*
+  Set to `true` to copy metadata from the latest All Users release within the minor. Defaults to `false`.
+  The following metadata is copied:
+
+  * Release Notes URL
+  * End of General Support
+  * End of Technical Guidance
+  * End of Availability
+  * EULA
+  * License Exception
+  * ECCN
+  * Controlled
+  * Dependency Specifiers
+  * Upgrade Path Specifiers
+
 * `access_key_id`: *Optional.*
   AWS access key id.
 

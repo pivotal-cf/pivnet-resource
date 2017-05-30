@@ -30,6 +30,7 @@ var _ = Describe("ReleaseCreator", func() {
 		sourceReleaseType string
 		sourceVersion     string
 		sortBy            concourse.SortBy
+		copyMetadata      bool
 		releaseVersion    string
 		existingReleases  []pivnet.Release
 		eulaSlug          string
@@ -94,6 +95,7 @@ var _ = Describe("ReleaseCreator", func() {
 				ReleaseType:    sourceReleaseType,
 				ProductVersion: sourceVersion,
 				SortBy:         sortBy,
+				CopyMetadata:   copyMetadata,
 			}
 
 			creator = release.NewReleaseCreator(
@@ -252,6 +254,35 @@ var _ = Describe("ReleaseCreator", func() {
 					_, err := creator.Create()
 					Expect(err).To(Equal(expectedErr))
 				})
+			})
+		})
+
+		Context("When copying metadata", func() {
+			BeforeEach(func() {
+				copyMetadata = true
+			})
+
+			It("constructs the release", func() {
+				r, err := creator.Create()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(r).To(Equal(pivnet.Release{ID: 1337}))
+
+				Expect(pivnetClient.EULAsCallCount()).To(Equal(1))
+
+				Expect(pivnetClient.ReleasesForProductSlugArgsForCall(0)).To(Equal(productSlug))
+
+				Expect(pivnetClient.CreateReleaseArgsForCall(0)).To(Equal(pivnet.CreateReleaseConfig{
+					ProductSlug:     productSlug,
+					ReleaseType:     string(releaseType),
+					EULASlug:        eulaSlug,
+					Version:         releaseVersion,
+					Description:     "wow, a description",
+					ReleaseNotesURL: "some-url",
+					ReleaseDate:     "1/17/2016",
+					Controlled:      true,
+					CopyMetadata:    copyMetadata,
+				}))
 			})
 		})
 

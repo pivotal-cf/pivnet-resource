@@ -199,6 +199,7 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 		EndOfSupportDate:      rc.metadata.Release.EndOfSupportDate,
 		EndOfGuidanceDate:     rc.metadata.Release.EndOfGuidanceDate,
 		EndOfAvailabilityDate: rc.metadata.Release.EndOfAvailabilityDate,
+		CopyMetadata:          rc.source.CopyMetadata,
 	}
 
 	rc.logger.Info(fmt.Sprintf("Creating new release with config: %+v", config))
