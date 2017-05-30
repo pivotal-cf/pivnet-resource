@@ -18,6 +18,7 @@ type Source struct {
 	Region          string `json:"region"`
 	ReleaseType     string `json:"release_type"`
 	SortBy          SortBy `json:"sort_by"`
+	SkipSSLValidation bool `json:"skip_ssl_verification"`
 }
 
 type CheckRequest struct {
