@@ -16,7 +16,8 @@ type ReleasesService struct {
 }
 
 type createReleaseBody struct {
-	Release Release `json:"release"`
+	Release      Release `json:"release"`
+	CopyMetadata bool    `json:"copy_metadata"`
 }
 
 type ReleasesResponse struct {
@@ -62,6 +63,7 @@ type CreateReleaseConfig struct {
 	EndOfSupportDate      string
 	EndOfGuidanceDate     string
 	EndOfAvailabilityDate string
+	CopyMetadata          bool
 }
 
 func (r ReleasesService) List(productSlug string) ([]Release, error) {
@@ -122,6 +124,7 @@ func (r ReleasesService) Create(config CreateReleaseConfig) (Release, error) {
 			EndOfGuidanceDate:     config.EndOfGuidanceDate,
 			EndOfAvailabilityDate: config.EndOfAvailabilityDate,
 		},
+		CopyMetadata: config.CopyMetadata,
 	}
 
 	if config.ReleaseDate == "" {
