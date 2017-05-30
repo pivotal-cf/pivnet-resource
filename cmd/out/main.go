@@ -95,7 +95,6 @@ func main() {
 		Host:      endpoint,
 		Token:     input.Source.APIToken,
 		UserAgent: useragent.UserAgent(version, "put", input.Source.ProductSlug),
-		SkipSSLValidation: input.Source.SkipSSLValidation,
 	}
 
 	client := gp.NewClient(
@@ -120,7 +119,6 @@ func main() {
 		Bucket:          bucket,
 		Stderr:          os.Stderr,
 		Logger:          ls,
-		SkipSSLValidation: input.Source.SkipSSLValidation,
 	})
 
 	uploaderClient := uploader.NewClient(uploader.Config{
