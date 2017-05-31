@@ -69,9 +69,19 @@ func NewClient(
 		},
 	}
 
+	downloadClient := &http.Client{
+		Timeout: 0,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: config.SkipSSLValidation,
+			},
+			Proxy: http.ProxyFromEnvironment,
+		},
+	}
+
 	ranger := download.NewRanger(concurrentDownloads)
 	downloader := download.Client{
-		HTTPClient: http.DefaultClient,
+		HTTPClient: downloadClient,
 		Ranger:     ranger,
 		Logger:     logger,
 	}
