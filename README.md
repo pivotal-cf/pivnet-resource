@@ -59,8 +59,6 @@ resources:
   * License Exception
   * ECCN
   * Controlled
-  * Dependency Specifiers
-  * Upgrade Path Specifiers
 
 * `access_key_id`: *Optional.*
   AWS access key id.
