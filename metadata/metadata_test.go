@@ -148,47 +148,12 @@ var _ = Describe("Metadata", func() {
 				}
 			})
 
-			It("returns without error", func() {
+			It("returns error", func() {
 				_, err := data.Validate()
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			Context("when id is non-zero and version is empty", func() {
-				BeforeEach(func() {
-					data.UpgradePaths[0].Version = ""
-				})
-
-				It("returns without error", func() {
-					_, err := data.Validate()
-					Expect(err).NotTo(HaveOccurred())
-				})
-			})
-
-			Context("when id is 0 and version is non-empty", func() {
-				BeforeEach(func() {
-					data.UpgradePaths[0].ID = 0
-				})
-
-				It("returns without error", func() {
-					_, err := data.Validate()
-					Expect(err).NotTo(HaveOccurred())
-				})
-			})
-
-			Context("when id is 0 and version is empty", func() {
-				BeforeEach(func() {
-					data.UpgradePaths[0].ID = 0
-					data.UpgradePaths[0].Version = ""
-				})
-
-				It("returns an error", func() {
-					_, err := data.Validate()
-					Expect(err).To(HaveOccurred())
-
-					Expect(err.Error()).To(MatchRegexp(".*upgrade_paths\\[0\\]"))
-				})
+				Expect(err).To(MatchError(fmt.Sprint("'upgrade_paths' is deprecated. Please use 'upgrade_path_specifiers' to add all upgrade path metadata.")))
 			})
 		})
+
 		Context("when dependency specifiers are provided", func() {
 			BeforeEach(func() {
 				data.DependencySpecifiers = []metadata.DependencySpecifier{
@@ -228,6 +193,35 @@ var _ = Describe("Metadata", func() {
 					Expect(err).To(HaveOccurred())
 
 					Expect(err.Error()).To(MatchRegexp("Specifier.*dependency_specifiers\\[0\\]"))
+				})
+			})
+		})
+
+		Context("when upgrade path specifiers are provided", func() {
+			BeforeEach(func() {
+				data.UpgradePathSpecifiers = []metadata.UpgradePathSpecifier{
+					{
+						ID:        123,
+						Specifier: "1.2.3",
+					},
+				}
+			})
+
+			It("returns without error", func() {
+				_, err := data.Validate()
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Context("when specifier is empty", func() {
+				BeforeEach(func() {
+					data.UpgradePathSpecifiers[0].Specifier = ""
+				})
+
+				It("returns error", func() {
+					_, err := data.Validate()
+					Expect(err).To(HaveOccurred())
+
+					Expect(err.Error()).To(MatchRegexp("Specifier.*upgrade_path_specifiers\\[0\\]"))
 				})
 			})
 		})

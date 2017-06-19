@@ -153,13 +153,10 @@ func (m Metadata) Validate() ([]string, error) {
 		}
 	}
 
-	for i, u := range m.UpgradePaths {
-		if u.ID == 0 && u.Version == "" {
-			return nil, fmt.Errorf(
-				"Either id or version must be provided for upgrade_paths[%d]",
-				i,
-			)
-		}
+	if len(m.UpgradePaths) > 0 {
+		return nil, fmt.Errorf(
+			"'upgrade_paths' is deprecated. Please use 'upgrade_path_specifiers' to add all upgrade path metadata.",
+		)
 	}
 
 	var deprecations []string
