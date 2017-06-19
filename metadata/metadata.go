@@ -5,11 +5,13 @@ import "fmt"
 type Metadata struct {
 	Release               *Release               `yaml:"release,omitempty"`
 	ProductFiles          []ProductFile          `yaml:"product_files,omitempty"`
-	Dependencies          []Dependency           `yaml:"dependencies,omitempty"`
 	DependencySpecifiers  []DependencySpecifier  `yaml:"dependency_specifiers,omitempty"`
-	UpgradePaths          []UpgradePath          `yaml:"upgrade_paths,omitempty"`
 	UpgradePathSpecifiers []UpgradePathSpecifier `yaml:"upgrade_path_specifiers,omitempty"`
 	FileGroups            []FileGroup            `yaml:"file_groups,omitempty"`
+
+	// Deprecated
+	Dependencies []Dependency  `yaml:"dependencies,omitempty"`
+	UpgradePaths []UpgradePath `yaml:"upgrade_paths,omitempty"`
 }
 
 type Release struct {
@@ -132,18 +134,6 @@ func (m Metadata) Validate() ([]string, error) {
 		}
 	}
 
-	for i, d := range m.Dependencies {
-		dependentReleaseID := d.Release.ID
-		if dependentReleaseID == 0 {
-			if d.Release.Version == "" || d.Release.Product.Slug == "" {
-				return nil, fmt.Errorf(
-					"Either ReleaseID or release version and product slug must be provided for dependency[%d]",
-					i,
-				)
-			}
-		}
-	}
-
 	for i, d := range m.UpgradePathSpecifiers {
 		if d.Specifier == "" {
 			return nil, fmt.Errorf(
@@ -153,6 +143,12 @@ func (m Metadata) Validate() ([]string, error) {
 		}
 	}
 
+	if len(m.Dependencies) > 0 {
+		return nil, fmt.Errorf(
+			"'dependencies' is deprecated. Please use 'dependency_specifiers' to add all dependency metadata.",
+		)
+	}
+
 	if len(m.UpgradePaths) > 0 {
 		return nil, fmt.Errorf(
 			"'upgrade_paths' is deprecated. Please use 'upgrade_path_specifiers' to add all upgrade path metadata.",
@@ -160,12 +156,5 @@ func (m Metadata) Validate() ([]string, error) {
 	}
 
 	var deprecations []string
-	if len(m.Dependencies) > 0 {
-		deprecations = append(
-			deprecations,
-			"Use of 'dependencies' is deprecated - use 'dependency_specifiers' instead",
-		)
-	}
-
 	return deprecations, nil
 }

@@ -83,7 +83,7 @@ var _ = Describe("Metadata", func() {
 			})
 		})
 
-		Context("when dependencies exist with id 0", func() {
+		Context("when dependencies are provided", func() {
 			BeforeEach(func() {
 				data.Dependencies = []metadata.Dependency{
 					{
@@ -98,43 +98,9 @@ var _ = Describe("Metadata", func() {
 				}
 			})
 
-			It("returns without error", func() {
+			It("returns error", func() {
 				_, err := data.Validate()
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("returns deprecation warning", func() {
-				deprecations, err := data.Validate()
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(deprecations).To(HaveLen(1))
-				Expect(deprecations[0]).To(MatchRegexp(".*dependency_specifiers.*"))
-			})
-
-			Context("when release version is empty", func() {
-				BeforeEach(func() {
-					data.Dependencies[0].Release.Version = ""
-				})
-
-				It("returns an error", func() {
-					_, err := data.Validate()
-					Expect(err).To(HaveOccurred())
-
-					Expect(err.Error()).To(MatchRegexp(".*dependency\\[0\\]"))
-				})
-			})
-
-			Context("when product slug is empty", func() {
-				BeforeEach(func() {
-					data.Dependencies[0].Release.Product.Slug = ""
-				})
-
-				It("returns an error", func() {
-					_, err := data.Validate()
-					Expect(err).To(HaveOccurred())
-
-					Expect(err.Error()).To(MatchRegexp(".*dependency\\[0\\]"))
-				})
+				Expect(err).To(MatchError(fmt.Sprint("'dependencies' is deprecated. Please use 'dependency_specifiers' to add all dependency metadata.")))
 			})
 		})
 

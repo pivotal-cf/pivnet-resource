@@ -129,6 +129,7 @@ var _ = Describe("ReleaseCreator", func() {
 				ReleaseNotesURL: "some-url",
 				ReleaseDate:     "1/17/2016",
 				Controlled:      true,
+				CopyMetadata:    copyMetadata,
 			}))
 		})
 
