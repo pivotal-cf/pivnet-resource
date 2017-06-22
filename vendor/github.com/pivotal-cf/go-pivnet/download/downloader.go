@@ -64,6 +64,8 @@ func (c Client) Get(
 
 	contentURL = resp.Request.URL.String()
 
+	fmt.Errorf("here is the response: %s", resp)
+
 	ranges, err := c.Ranger.BuildRange(resp.ContentLength)
 	if err != nil {
 		return fmt.Errorf("failed to construct range: %s", err)
