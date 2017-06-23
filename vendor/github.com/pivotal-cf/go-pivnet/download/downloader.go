@@ -66,7 +66,7 @@ func (c Client) Get(
 
 	ranges, err := c.Ranger.BuildRange(resp.ContentLength)
 	if err != nil {
-		return fmt.Errorf("failed to construct range: %s", err)
+		return fmt.Errorf("failed to construct range: %s", resp)
 	}
 
 	c.Bar.SetOutput(progressWriter)
