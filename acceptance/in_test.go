@@ -122,7 +122,7 @@ var _ = Describe("In", func() {
 
 			By("Validating command exited with error")
 			Eventually(session, executableTimeout).Should(gexec.Exit(1))
-			Expect(session.Err).Should(gbytes.Say("api_token must be provided"))
+			Expect(session.Err).Should(gbytes.Say("username and password must be provided"))
 		})
 	})
 })

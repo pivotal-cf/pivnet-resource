@@ -1,0 +1,61 @@
+package uaa_test
+
+import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"github.com/pivotal-cf/pivnet-resource/uaa"
+	"github.com/onsi/gomega/ghttp"
+	"net/http"
+	"errors"
+)
+
+var _ = Describe("UAA", func() {
+	Describe("TokenFetcher", func() {
+		var (
+			server *ghttp.Server
+			tokenFetcher *uaa.TokenFetcher
+		)
+
+		BeforeEach(func() {
+			server = ghttp.NewServer()
+			tokenFetcher = uaa.NewTokenFetcher(server.URL(), "some-username", "some-password")
+		})
+
+		AfterEach(func() {
+			server.Close()
+		})
+
+		It("returns a UAA token without error", func() {
+			response := uaa.AuthResp{Token: "some-uaa-token"}
+
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", "/api/v2/authentication"),
+					ghttp.VerifyBody([]byte(`{"username":"some-username","password":"some-password"}`)),
+					ghttp.RespondWithJSONEncoded(http.StatusOK, response),
+				),
+			)
+
+			token, err := tokenFetcher.GetToken()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(token).To(Equal("some-uaa-token"))
+		})
+
+		Context("when UAA server responds with a non-200 status code", func() {
+			It("returns the error", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", "/api/v2/authentication"),
+						ghttp.VerifyBody([]byte(`{"username":"some-username","password":"some-password"}`)),
+						ghttp.RespondWithJSONEncoded(http.StatusTeapot, nil),
+					),
+				)
+
+				_, err := tokenFetcher.GetToken()
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError(errors.New("failed to fetch API token - received status 418")))
+			})
+		})
+
+	})
+})

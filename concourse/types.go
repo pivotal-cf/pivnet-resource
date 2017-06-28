@@ -8,18 +8,20 @@ const (
 )
 
 type Source struct {
-	APIToken        string `json:"api_token"`
-	ProductSlug     string `json:"product_slug"`
-	AccessKeyID     string `json:"access_key_id"`
-	ProductVersion  string `json:"product_version"`
-	SecretAccessKey string `json:"secret_access_key"`
-	Bucket          string `json:"bucket"`
-	Endpoint        string `json:"endpoint"`
-	Region          string `json:"region"`
-	ReleaseType     string `json:"release_type"`
-	SortBy          SortBy `json:"sort_by"`
-	SkipSSLValidation bool `json:"skip_ssl_verification"`
-	CopyMetadata    bool   `json:"copy_metadata"`
+	APIToken          string `json:"api_token"`
+	ProductSlug       string `json:"product_slug"`
+	AccessKeyID       string `json:"access_key_id"`
+	ProductVersion    string `json:"product_version"`
+	SecretAccessKey   string `json:"secret_access_key"`
+	Bucket            string `json:"bucket"`
+	Endpoint          string `json:"endpoint"`
+	Region            string `json:"region"`
+	ReleaseType       string `json:"release_type"`
+	SortBy            SortBy `json:"sort_by"`
+	SkipSSLValidation bool   `json:"skip_ssl_verification"`
+	CopyMetadata      bool   `json:"copy_metadata"`
+	Username          string `json:"username"`
+	Password          string `json:"password"`
 }
 
 type CheckRequest struct {

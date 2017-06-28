@@ -27,8 +27,8 @@ type NewClientConfig struct {
 	RegionName      string
 	Bucket          string
 
-	Logger logger.Logger
-	Stderr io.Writer
+	Logger            logger.Logger
+	Stderr            io.Writer
 	SkipSSLValidation bool
 }
 

@@ -92,9 +92,9 @@ func main() {
 	}
 
 	clientConfig := pivnet.ClientConfig{
-		Host:      endpoint,
-		Token:     input.Source.APIToken,
-		UserAgent: useragent.UserAgent(version, "put", input.Source.ProductSlug),
+		Host:              endpoint,
+		Token:             input.Source.APIToken,
+		UserAgent:         useragent.UserAgent(version, "put", input.Source.ProductSlug),
 		SkipSSLValidation: input.Source.SkipSSLValidation,
 	}
 
@@ -114,12 +114,12 @@ func main() {
 	}
 
 	s3Client := s3.NewClient(s3.NewClientConfig{
-		AccessKeyID:     input.Source.AccessKeyID,
-		SecretAccessKey: input.Source.SecretAccessKey,
-		RegionName:      region,
-		Bucket:          bucket,
-		Stderr:          os.Stderr,
-		Logger:          ls,
+		AccessKeyID:       input.Source.AccessKeyID,
+		SecretAccessKey:   input.Source.SecretAccessKey,
+		RegionName:        region,
+		Bucket:            bucket,
+		Stderr:            os.Stderr,
+		Logger:            ls,
 		SkipSSLValidation: input.Source.SkipSSLValidation,
 	})
 

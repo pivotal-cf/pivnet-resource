@@ -13,12 +13,16 @@ var _ = Describe("In Validator", func() {
 		inRequest concourse.InRequest
 		v         *validator.InValidator
 
+		username    string
+		password    string
 		apiToken    string
 		productSlug string
 		version     string
 	)
 
 	BeforeEach(func() {
+		username = "username"
+		password = "password"
 		apiToken = "some-api-token"
 		productSlug = "some-productSlug"
 		version = "some-product-version"
@@ -27,6 +31,8 @@ var _ = Describe("In Validator", func() {
 	JustBeforeEach(func() {
 		inRequest = concourse.InRequest{
 			Source: concourse.Source{
+				Username:    username,
+				Password:    password,
 				APIToken:    apiToken,
 				ProductSlug: productSlug,
 			},
@@ -44,15 +50,53 @@ var _ = Describe("In Validator", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	Context("when no api token is provided", func() {
+	Context("when no api token is provided but uaa credentials are provided", func() {
 		BeforeEach(func() {
+			apiToken = ""
+		})
+
+		It("returns without error", func() {
+			err := v.Validate()
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Context("when uaa credentials and api token are not provided", func() {
+		BeforeEach(func() {
+			username = ""
+			password = ""
 			apiToken = ""
 		})
 
 		It("returns an error", func() {
 			err := v.Validate()
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp(".*api_token.*provided"))
+			Expect(err.Error()).To(MatchRegexp("username and password must be provided"))
+		})
+	})
+
+	Context("when username is provided but password is not provided", func() {
+		BeforeEach(func() {
+			username = ""
+			apiToken = ""
+		})
+
+		It("returns an error", func() {
+			err := v.Validate()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(MatchRegexp("username and password must be provided"))
+		})
+	})
+
+	Context("when uaa credentials are not provided but api token is provided", func() {
+		BeforeEach(func() {
+			username = ""
+			password = ""
+		})
+
+		It("returns without error", func() {
+			err := v.Validate()
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 

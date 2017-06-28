@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-
 	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/check"
@@ -17,12 +16,17 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
+	"github.com/pivotal-cf/pivnet-resource/uaa"
 )
 
 var (
 	// version is deliberately left uninitialized so it can be set at compile-time
 	version string
 )
+
+type AuthResp struct {
+	Token string `json: "token"`
+}
 
 func main() {
 	if version == "" {
@@ -63,11 +67,25 @@ func main() {
 		endpoint = pivnet.DefaultHost
 	}
 
+	var usingUAAToken = false
+	apiToken := input.Source.APIToken
+
+	if input.Source.Username != "" {
+		usingUAAToken = true
+		tokenFetcher := uaa.NewTokenFetcher(input.Source.Endpoint, input.Source.Username, input.Source.Password)
+		apiToken, err = tokenFetcher.GetToken()
+
+		if err != nil {
+			log.Fatalf("Exiting with error: %s", err)
+		}
+	}
+
 	clientConfig := pivnet.ClientConfig{
-		Host:      endpoint,
-		Token:     input.Source.APIToken,
-		UserAgent: useragent.UserAgent(version, "check", input.Source.ProductSlug),
+		Host:              endpoint,
+		Token:             apiToken,
+		UserAgent:         useragent.UserAgent(version, "check", input.Source.ProductSlug),
 		SkipSSLValidation: input.Source.SkipSSLValidation,
+		UsingUAAToken: 	   usingUAAToken,
 	}
 	client := gp.NewClient(
 		clientConfig,

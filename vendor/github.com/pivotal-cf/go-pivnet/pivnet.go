@@ -27,6 +27,7 @@ type Client struct {
 	token     string
 	userAgent string
 	logger    logger.Logger
+	usingUAAToken bool
 
 	HTTP *http.Client
 
@@ -51,6 +52,7 @@ type ClientConfig struct {
 	Token             string
 	UserAgent         string
 	SkipSSLValidation bool
+	UsingUAAToken 	  bool
 }
 
 func NewClient(
@@ -90,6 +92,7 @@ func NewClient(
 		baseURL:    baseURL,
 		token:      config.Token,
 		userAgent:  config.UserAgent,
+		usingUAAToken: config.UsingUAAToken,
 		logger:     logger,
 		downloader: downloader,
 		HTTP:       httpClient,
@@ -130,8 +133,12 @@ func (c Client) CreateRequest(
 		return nil, err
 	}
 
+	if c.usingUAAToken {
+		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.token))
+	} else {
+		req.Header.Add("Authorization", fmt.Sprintf("Token %s", c.token))
+	}
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", fmt.Sprintf("Token %s", c.token))
 	req.Header.Add("User-Agent", c.userAgent)
 
 	return req, nil
