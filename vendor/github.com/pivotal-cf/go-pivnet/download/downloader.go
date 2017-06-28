@@ -2,12 +2,13 @@ package download
 
 import (
 	"fmt"
+	"github.com/pivotal-cf/go-pivnet/logger"
+	"golang.org/x/sync/errgroup"
 	"io"
 	"net"
 	"net/http"
 	"os"
-	"golang.org/x/sync/errgroup"
-	"github.com/pivotal-cf/go-pivnet/logger"
+	"strings"
 	"syscall"
 )
 
@@ -105,7 +106,7 @@ func (c Client) Get(
 	return nil
 }
 
-func (c Client) retryableRequest(contentURL string, rangeHeader http.Header, fileWriter *os.File, startingByte int64, downloadLinkFetcher downloadLinkFetcher) (error) {
+func (c Client) retryableRequest(contentURL string, rangeHeader http.Header, fileWriter *os.File, startingByte int64, downloadLinkFetcher downloadLinkFetcher) error {
 	currentURL := contentURL
 	defer fileWriter.Close()
 
@@ -160,8 +161,8 @@ Retry:
 			c.Bar.Add(int(-1 * bytesWritten))
 			goto Retry
 		}
-		operr, _ := err.(*net.OpError)
-		if operr.Err.Error() == syscall.ECONNRESET.Error() {
+		oe, _ := err.(*net.OpError)
+		if strings.Contains(oe.Err.Error(), syscall.ECONNRESET.Error()) {
 			c.Bar.Add(int(-1 * bytesWritten))
 			goto Retry
 		}
