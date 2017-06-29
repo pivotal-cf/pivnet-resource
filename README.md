@@ -121,8 +121,7 @@ Returned versions are optionally filtered and ordered by the `source` configurat
 
 ### `in`: Download the product from Pivotal Network.
 
-Downloads the provided product from Pivotal Network. **Any EULAs that have not
-already been accepted will be automatically accepted at this point.**
+Downloads the provided product from Pivotal Network. You will be required to accept a EULA for any product you're downloading for the first time.
 
 The metadata for the product is written to both `metadata.json` and
 `metadata.yaml` in the working directory (typically `/tmp/build/get`).
