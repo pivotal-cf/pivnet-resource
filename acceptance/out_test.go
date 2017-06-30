@@ -81,23 +81,6 @@ var _ = Describe("Out", func() {
 		By("Creating command object")
 		command = exec.Command(outPath, rootDir)
 
-		By("Creating default request")
-		outRequest = concourse.OutRequest{
-			Source: concourse.Source{
-				APIToken:        pivnetAPIToken,
-				AccessKeyID:     awsAccessKeyID,
-				SecretAccessKey: awsSecretAccessKey,
-				ProductSlug:     productSlug,
-				Endpoint:        endpoint,
-				Bucket:          pivnetBucketName,
-				Region:          pivnetRegion,
-			},
-			Params: concourse.OutParams{
-				FileGlob:       "",
-				FilepathPrefix: "",
-				MetadataFile:   metadataFile,
-			},
-		}
 	})
 
 	JustBeforeEach(func() {
@@ -112,98 +95,238 @@ var _ = Describe("Out", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	Describe("Argument validation", func() {
-		Context("when no root directory is provided via args", func() {
-			It("exits with error", func() {
-				command := exec.Command(outPath)
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).ShouldNot(HaveOccurred())
+	Context("when user supplies pivnet API token in source config", func() {
+		BeforeEach(func() {
+			By("Creating default request")
+			outRequest = concourse.OutRequest{
+				Source: concourse.Source{
+					APIToken:        pivnetAPIToken,
+					AccessKeyID:     awsAccessKeyID,
+					SecretAccessKey: awsSecretAccessKey,
+					ProductSlug:     productSlug,
+					Endpoint:        endpoint,
+					Bucket:          pivnetBucketName,
+					Region:          pivnetRegion,
+				},
+				Params: concourse.OutParams{
+					FileGlob:       "",
+					FilepathPrefix: "",
+					MetadataFile:   metadataFile,
+				},
+			}
+		})
 
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).Should(gbytes.Say("usage"))
+		Describe("Argument validation", func() {
+			Context("when no root directory is provided via args", func() {
+				It("exits with error", func() {
+					command := exec.Command(outPath)
+					session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					Eventually(session).Should(gexec.Exit(1))
+					Expect(session.Err).Should(gbytes.Say("usage"))
+				})
+			})
+
+			Context("when metadata file value is empty", func() {
+				BeforeEach(func() {
+					outRequest.Params.MetadataFile = ""
+				})
+
+				It("exits with error", func() {
+					session := run(command, stdinContents)
+
+					Eventually(session).Should(gexec.Exit(1))
+					Expect(session.Err).Should(gbytes.Say("metadata_file"))
+				})
 			})
 		})
 
-		Context("when metadata file value is empty", func() {
-			BeforeEach(func() {
-				outRequest.Params.MetadataFile = ""
-			})
+		Describe("Creating a new release", func() {
+			// We do not delete the release as it causes race conditions with other tests
 
-			It("exits with error", func() {
+			It("Successfully creates a release", func() {
+				var err error
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				By("Validating the new product version does not yet exist")
+				releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
+				Expect(err).NotTo(HaveOccurred())
+
+				releaseVersions, err := versionsWithFingerprints(releases)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(versionsWithoutFingerprints(releaseVersions)).NotTo(ContainElement(version))
+
+				By("Running the command")
 				session := run(command, stdinContents)
+				Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).Should(gbytes.Say("metadata_file"))
+				By("Validating new release exists on pivnet")
+				releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
+				Expect(err).NotTo(HaveOccurred())
+
+				releaseVersions, err = versionsWithFingerprints(releases)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(versionsWithoutFingerprints(releaseVersions)).To(ContainElement(version))
+
+				By("Outputting a valid json response")
+				response := concourse.OutResponse{}
+				err = json.Unmarshal(session.Out.Contents(), &response)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				By("Validating the release was created correctly")
+				release, err := pivnetClient.GetRelease(productSlug, version)
+				Expect(err).NotTo(HaveOccurred())
+
+				expectedVersion, err := versions.CombineVersionAndFingerprint(release.Version, release.SoftwareFilesUpdatedAt)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
+
+				Expect(release.ReleaseType).To(Equal(releaseType))
+				Expect(release.ReleaseDate).To(Equal(releaseDate))
+				Expect(release.EULA.Slug).To(Equal(eulaSlug))
+				Expect(release.Description).To(Equal(description))
+				Expect(release.ReleaseNotesURL).To(Equal(releaseNotesURL))
+
+				By("Validing the returned metadata")
+				metadataReleaseType, err := metadataValueForKey(response.Metadata, "release_type")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(metadataReleaseType).To(Equal(string(releaseType)))
+
+				metadataReleaseDate, err := metadataValueForKey(response.Metadata, "release_date")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(metadataReleaseDate).To(Equal(releaseDate))
+
+				metadataDescription, err := metadataValueForKey(response.Metadata, "description")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(metadataDescription).To(Equal(description))
+
+				metadataReleaseNotesURL, err := metadataValueForKey(response.Metadata, "release_notes_url")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(metadataReleaseNotesURL).To(Equal(releaseNotesURL))
 			})
 		})
 	})
 
-	Describe("Creating a new release", func() {
-		// We do not delete the release as it causes race conditions with other tests
+	Context("when user supplies UAA credentials in source config", func() {
+		BeforeEach(func() {
+			By("Creating default request")
+			outRequest = concourse.OutRequest{
+				Source: concourse.Source{
+					Username: 	 username,
+					Password:	 password,
+					AccessKeyID:     awsAccessKeyID,
+					SecretAccessKey: awsSecretAccessKey,
+					ProductSlug:     productSlug,
+					Endpoint:        endpoint,
+					Bucket:          pivnetBucketName,
+					Region:          pivnetRegion,
+				},
+				Params: concourse.OutParams{
+					FileGlob:       "",
+					FilepathPrefix: "",
+					MetadataFile:   metadataFile,
+				},
+			}
+		})
 
-		It("Successfully creates a release", func() {
-			var err error
-			stdinContents, err = json.Marshal(outRequest)
-			Expect(err).ShouldNot(HaveOccurred())
+		Describe("Argument validation", func() {
+			Context("when no root directory is provided via args", func() {
+				It("exits with error", func() {
+					command := exec.Command(outPath)
+					session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+					Expect(err).ShouldNot(HaveOccurred())
 
-			By("Validating the new product version does not yet exist")
-			releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
-			Expect(err).NotTo(HaveOccurred())
+					Eventually(session).Should(gexec.Exit(1))
+					Expect(session.Err).Should(gbytes.Say("usage"))
+				})
+			})
 
-			releaseVersions, err := versionsWithFingerprints(releases)
-			Expect(err).NotTo(HaveOccurred())
+			Context("when metadata file value is empty", func() {
+				BeforeEach(func() {
+					outRequest.Params.MetadataFile = ""
+				})
 
-			Expect(versionsWithoutFingerprints(releaseVersions)).NotTo(ContainElement(version))
+				It("exits with error", func() {
+					session := run(command, stdinContents)
 
-			By("Running the command")
-			session := run(command, stdinContents)
-			Eventually(session, executableTimeout).Should(gexec.Exit(0))
+					Eventually(session).Should(gexec.Exit(1))
+					Expect(session.Err).Should(gbytes.Say("metadata_file"))
+				})
+			})
+		})
 
-			By("Validating new release exists on pivnet")
-			releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
-			Expect(err).NotTo(HaveOccurred())
+		Describe("Creating a new release", func() {
+			// We do not delete the release as it causes race conditions with other tests
 
-			releaseVersions, err = versionsWithFingerprints(releases)
-			Expect(err).NotTo(HaveOccurred())
+			It("Successfully creates a release", func() {
+				var err error
+				stdinContents, err = json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
 
-			Expect(versionsWithoutFingerprints(releaseVersions)).To(ContainElement(version))
+				By("Validating the new product version does not yet exist")
+				releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
+				Expect(err).NotTo(HaveOccurred())
 
-			By("Outputting a valid json response")
-			response := concourse.OutResponse{}
-			err = json.Unmarshal(session.Out.Contents(), &response)
-			Expect(err).ShouldNot(HaveOccurred())
+				releaseVersions, err := versionsWithFingerprints(releases)
+				Expect(err).NotTo(HaveOccurred())
 
-			By("Validating the release was created correctly")
-			release, err := pivnetClient.GetRelease(productSlug, version)
-			Expect(err).NotTo(HaveOccurred())
+				Expect(versionsWithoutFingerprints(releaseVersions)).NotTo(ContainElement(version))
 
-			expectedVersion, err := versions.CombineVersionAndFingerprint(release.Version, release.SoftwareFilesUpdatedAt)
-			Expect(err).NotTo(HaveOccurred())
+				By("Running the command")
+				session := run(command, stdinContents)
+				Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
-			Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
+				By("Validating new release exists on pivnet")
+				releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
+				Expect(err).NotTo(HaveOccurred())
 
-			Expect(release.ReleaseType).To(Equal(releaseType))
-			Expect(release.ReleaseDate).To(Equal(releaseDate))
-			Expect(release.EULA.Slug).To(Equal(eulaSlug))
-			Expect(release.Description).To(Equal(description))
-			Expect(release.ReleaseNotesURL).To(Equal(releaseNotesURL))
+				releaseVersions, err = versionsWithFingerprints(releases)
+				Expect(err).NotTo(HaveOccurred())
 
-			By("Validing the returned metadata")
-			metadataReleaseType, err := metadataValueForKey(response.Metadata, "release_type")
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(metadataReleaseType).To(Equal(string(releaseType)))
+				Expect(versionsWithoutFingerprints(releaseVersions)).To(ContainElement(version))
 
-			metadataReleaseDate, err := metadataValueForKey(response.Metadata, "release_date")
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(metadataReleaseDate).To(Equal(releaseDate))
+				By("Outputting a valid json response")
+				response := concourse.OutResponse{}
+				err = json.Unmarshal(session.Out.Contents(), &response)
+				Expect(err).ShouldNot(HaveOccurred())
 
-			metadataDescription, err := metadataValueForKey(response.Metadata, "description")
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(metadataDescription).To(Equal(description))
+				By("Validating the release was created correctly")
+				release, err := pivnetClient.GetRelease(productSlug, version)
+				Expect(err).NotTo(HaveOccurred())
 
-			metadataReleaseNotesURL, err := metadataValueForKey(response.Metadata, "release_notes_url")
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(metadataReleaseNotesURL).To(Equal(releaseNotesURL))
+				expectedVersion, err := versions.CombineVersionAndFingerprint(release.Version, release.SoftwareFilesUpdatedAt)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
+
+				Expect(release.ReleaseType).To(Equal(releaseType))
+				Expect(release.ReleaseDate).To(Equal(releaseDate))
+				Expect(release.EULA.Slug).To(Equal(eulaSlug))
+				Expect(release.Description).To(Equal(description))
+				Expect(release.ReleaseNotesURL).To(Equal(releaseNotesURL))
+
+				By("Validing the returned metadata")
+				metadataReleaseType, err := metadataValueForKey(response.Metadata, "release_type")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(metadataReleaseType).To(Equal(string(releaseType)))
+
+				metadataReleaseDate, err := metadataValueForKey(response.Metadata, "release_date")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(metadataReleaseDate).To(Equal(releaseDate))
+
+				metadataDescription, err := metadataValueForKey(response.Metadata, "description")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(metadataDescription).To(Equal(description))
+
+				metadataReleaseNotesURL, err := metadataValueForKey(response.Metadata, "release_notes_url")
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(metadataReleaseNotesURL).To(Equal(releaseNotesURL))
+			})
 		})
 	})
 })
