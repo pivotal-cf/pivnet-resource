@@ -20,6 +20,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
+	"github.com/pivotal-cf/pivnet-resource/uaa"
 )
 
 var (
@@ -85,11 +86,25 @@ func main() {
 		endpoint = pivnet.DefaultHost
 	}
 
+	var usingUAAToken = false
+	apiToken := input.Source.APIToken
+
+	if input.Source.Username != "" {
+		usingUAAToken = true
+		tokenFetcher := uaa.NewTokenFetcher(input.Source.Endpoint, input.Source.Username, input.Source.Password)
+		apiToken, err = tokenFetcher.GetToken()
+
+		if err != nil {
+			log.Fatalf("Exiting with error: %s", err)
+		}
+	}
+
 	clientConfig := pivnet.ClientConfig{
 		Host:              endpoint,
-		Token:             input.Source.APIToken,
+		Token:             apiToken,
 		UserAgent:         useragent.UserAgent(version, "get", input.Source.ProductSlug),
 		SkipSSLValidation: input.Source.SkipSSLValidation,
+		UsingUAAToken:     usingUAAToken,
 	}
 
 	client := gp.NewClient(

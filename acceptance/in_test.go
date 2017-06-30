@@ -31,6 +31,7 @@ var _ = Describe("In", func() {
 		command       *exec.Cmd
 		inRequest     concourse.InRequest
 		stdinContents []byte
+		err error
 	)
 
 	BeforeEach(func() {
@@ -56,20 +57,6 @@ var _ = Describe("In", func() {
 		By("Creating command object")
 		command = exec.Command(inPath, filepath.Join(destDirectory, "my-resource"))
 
-		By("Creating default request")
-		inRequest = concourse.InRequest{
-			Source: concourse.Source{
-				APIToken:    pivnetAPIToken,
-				ProductSlug: productSlug,
-				Endpoint:    endpoint,
-			},
-			Version: concourse.Version{
-				ProductVersion: versionWithFingerprint,
-			},
-		}
-
-		stdinContents, err = json.Marshal(inRequest)
-		Expect(err).ShouldNot(HaveOccurred())
 	})
 
 	AfterEach(func() {
@@ -80,49 +67,134 @@ var _ = Describe("In", func() {
 		// We do not delete the release as it causes race conditions with other tests
 	})
 
-	It("returns valid json", func() {
-		By("Running the command")
-		session := run(command, stdinContents)
-		Eventually(session, executableTimeout).Should(gexec.Exit(0))
-
-		By("Outputting a valid json response")
-		response := concourse.InResponse{}
-		err := json.Unmarshal(session.Out.Contents(), &response)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		By("Validating output contains correct product version")
-		Expect(response.Version.ProductVersion).To(Equal(versionWithFingerprint))
-
-		By("Validing the returned metadata is present")
-		_, err = metadataValueForKey(response.Metadata, "release_type")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		_, err = metadataValueForKey(response.Metadata, "release_date")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		_, err = metadataValueForKey(response.Metadata, "description")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		_, err = metadataValueForKey(response.Metadata, "release_notes_url")
-		Expect(err).ShouldNot(HaveOccurred())
-	})
-
-	Context("when validation fails", func() {
+	Context("when user supplies pivnet API token in source config", func() {
 		BeforeEach(func() {
-			inRequest.Source.APIToken = ""
+			By("Creating default request")
+			inRequest = concourse.InRequest{
+				Source: concourse.Source{
+					APIToken:    pivnetAPIToken,
+					ProductSlug: productSlug,
+					Endpoint:    endpoint,
+				},
+				Version: concourse.Version{
+					ProductVersion: versionWithFingerprint,
+				},
+			}
 
-			var err error
 			stdinContents, err = json.Marshal(inRequest)
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
-		It("exits with error", func() {
+		It("returns valid json", func() {
 			By("Running the command")
 			session := run(command, stdinContents)
+			Eventually(session, executableTimeout).Should(gexec.Exit(0))
 
-			By("Validating command exited with error")
-			Eventually(session, executableTimeout).Should(gexec.Exit(1))
-			Expect(session.Err).Should(gbytes.Say("username and password must be provided"))
+			By("Outputting a valid json response")
+			response := concourse.InResponse{}
+			err := json.Unmarshal(session.Out.Contents(), &response)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			By("Validating output contains correct product version")
+			Expect(response.Version.ProductVersion).To(Equal(versionWithFingerprint))
+
+			By("Validing the returned metadata is present")
+			_, err = metadataValueForKey(response.Metadata, "release_type")
+			Expect(err).ShouldNot(HaveOccurred())
+
+			_, err = metadataValueForKey(response.Metadata, "release_date")
+			Expect(err).ShouldNot(HaveOccurred())
+
+			_, err = metadataValueForKey(response.Metadata, "description")
+			Expect(err).ShouldNot(HaveOccurred())
+
+			_, err = metadataValueForKey(response.Metadata, "release_notes_url")
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		Context("when validation fails", func() {
+			BeforeEach(func() {
+				inRequest.Source.APIToken = ""
+
+				var err error
+				stdinContents, err = json.Marshal(inRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("exits with error", func() {
+				By("Running the command")
+				session := run(command, stdinContents)
+
+				By("Validating command exited with error")
+				Eventually(session, executableTimeout).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("username and password must be provided"))
+			})
+		})
+	})
+
+	Context("when user supplies UAA credentials in source config", func() {
+		BeforeEach(func() {
+			By("Creating default request")
+			inRequest = concourse.InRequest{
+				Source: concourse.Source{
+					Username:    username,
+					Password:    password,
+					ProductSlug: productSlug,
+					Endpoint:    endpoint,
+				},
+				Version: concourse.Version{
+					ProductVersion: versionWithFingerprint,
+				},
+			}
+
+			stdinContents, err = json.Marshal(inRequest)
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		It("returns valid json", func() {
+			By("Running the command")
+			session := run(command, stdinContents)
+			Eventually(session, executableTimeout).Should(gexec.Exit(0))
+
+			By("Outputting a valid json response")
+			response := concourse.InResponse{}
+			err := json.Unmarshal(session.Out.Contents(), &response)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			By("Validating output contains correct product version")
+			Expect(response.Version.ProductVersion).To(Equal(versionWithFingerprint))
+
+			By("Validing the returned metadata is present")
+			_, err = metadataValueForKey(response.Metadata, "release_type")
+			Expect(err).ShouldNot(HaveOccurred())
+
+			_, err = metadataValueForKey(response.Metadata, "release_date")
+			Expect(err).ShouldNot(HaveOccurred())
+
+			_, err = metadataValueForKey(response.Metadata, "description")
+			Expect(err).ShouldNot(HaveOccurred())
+
+			_, err = metadataValueForKey(response.Metadata, "release_notes_url")
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		Context("when validation fails", func() {
+			BeforeEach(func() {
+				inRequest.Source.Username = ""
+
+				var err error
+				stdinContents, err = json.Marshal(inRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("exits with error", func() {
+				By("Running the command")
+				session := run(command, stdinContents)
+
+				By("Validating command exited with error")
+				Eventually(session, executableTimeout).Should(gexec.Exit(1))
+				Expect(session.Err).Should(gbytes.Say("username and password must be provided"))
+			})
 		})
 	})
 })
