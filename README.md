@@ -38,8 +38,11 @@ resources:
     product_slug: p-mysql
 ```
 
-* `api_token`: *Required.*
-  Token from your pivnet profile.
+* `username`: *Required.*
+  Email address used to log into Pivotal Network.
+
+* `password`: *Required.*
+  Password used to log into Pivotal Network.
 
 * `product_slug`: *Required.*
   Name of product on Pivotal Network.

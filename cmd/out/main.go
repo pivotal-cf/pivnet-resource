@@ -103,6 +103,8 @@ func main() {
 		if err != nil {
 			log.Fatalf("Exiting with error: %s", err)
 		}
+	} else {
+		uiPrinter.PrintDeprecationln("The use of static API tokens is deprecated and will be removed. Please see https://github.com/pivotal-cf/pivnet-resource#source-configuration for details.")
 	}
 
 	clientConfig := pivnet.ClientConfig{
