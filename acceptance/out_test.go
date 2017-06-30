@@ -217,8 +217,8 @@ var _ = Describe("Out", func() {
 			By("Creating default request")
 			outRequest = concourse.OutRequest{
 				Source: concourse.Source{
-					Username: 	 username,
-					Password:	 password,
+					Username:        username,
+					Password:        password,
 					AccessKeyID:     awsAccessKeyID,
 					SecretAccessKey: awsSecretAccessKey,
 					ProductSlug:     productSlug,

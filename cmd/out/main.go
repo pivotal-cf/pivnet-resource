@@ -24,12 +24,12 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/s3"
 	"github.com/pivotal-cf/pivnet-resource/semver"
 	"github.com/pivotal-cf/pivnet-resource/sha256sum"
+	"github.com/pivotal-cf/pivnet-resource/uaa"
 	"github.com/pivotal-cf/pivnet-resource/ui"
 	"github.com/pivotal-cf/pivnet-resource/uploader"
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
-	"github.com/pivotal-cf/pivnet-resource/uaa"
 )
 
 const (

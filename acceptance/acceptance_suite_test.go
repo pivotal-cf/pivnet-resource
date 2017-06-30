@@ -30,8 +30,8 @@ var (
 	pivnetRegion       string
 	pivnetBucketName   string
 	s3FilepathPrefix   string
-	username string
-	password string
+	username           string
+	password           string
 
 	pivnetClient *gp.Client
 )
@@ -100,8 +100,8 @@ var _ = BeforeSuite(func() {
 		pivnetAPIToken:     "***sanitized-api-token***",
 		awsAccessKeyID:     "***sanitized-aws-access-key-id***",
 		awsSecretAccessKey: "***sanitized-aws-secret-access-key***",
-		username: "***sanitized-username***",
-		password: "***sanitized-password***",
+		username:           "***sanitized-username***",
+		password:           "***sanitized-password***",
 	}
 	sanitizedWriter := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
 	GinkgoWriter = sanitizedWriter

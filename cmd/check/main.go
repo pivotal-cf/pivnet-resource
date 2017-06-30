@@ -2,9 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"log"
-	"os"
 	"github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/check"
@@ -13,10 +10,13 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/gp"
 	"github.com/pivotal-cf/pivnet-resource/semver"
 	"github.com/pivotal-cf/pivnet-resource/sorter"
+	"github.com/pivotal-cf/pivnet-resource/uaa"
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
-	"github.com/pivotal-cf/pivnet-resource/uaa"
+	"io/ioutil"
+	"log"
+	"os"
 )
 
 var (
@@ -85,7 +85,7 @@ func main() {
 		Token:             apiToken,
 		UserAgent:         useragent.UserAgent(version, "check", input.Source.ProductSlug),
 		SkipSSLValidation: input.Source.SkipSSLValidation,
-		UsingUAAToken: 	   usingUAAToken,
+		UsingUAAToken:     usingUAAToken,
 	}
 	client := gp.NewClient(
 		clientConfig,

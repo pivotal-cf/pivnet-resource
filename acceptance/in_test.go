@@ -31,7 +31,7 @@ var _ = Describe("In", func() {
 		command       *exec.Cmd
 		inRequest     concourse.InRequest
 		stdinContents []byte
-		err error
+		err           error
 	)
 
 	BeforeEach(func() {

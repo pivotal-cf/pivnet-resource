@@ -13,16 +13,16 @@ import (
 
 var _ = Describe("Check", func() {
 	var (
-		productSlug = "pivnet-resource-test"
+		productSlug          = "pivnet-resource-test"
 		oldestReleaseVersion = "0.0.1-piv-res-test-fixture#2017-06-30T15:41:17.119Z"
 
-		command         *exec.Cmd
-		checkRequest    concourse.CheckRequest
-		stdinContents   []byte
+		command       *exec.Cmd
+		checkRequest  concourse.CheckRequest
+		stdinContents []byte
 	)
 
-	Context("when user provides UAA credentials", func(){
-		BeforeEach(func(){
+	Context("when user provides UAA credentials", func() {
+		BeforeEach(func() {
 			By("Creating command object")
 			command = exec.Command(checkPath)
 
@@ -62,7 +62,7 @@ var _ = Describe("Check", func() {
 		})
 	})
 
-	Context("when user provides pivnet api token", func(){
+	Context("when user provides pivnet api token", func() {
 		BeforeEach(func() {
 			By("Creating command object")
 			command = exec.Command(checkPath)

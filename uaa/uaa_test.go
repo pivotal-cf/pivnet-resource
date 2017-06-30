@@ -1,18 +1,18 @@
 package uaa_test
 
 import (
+	"errors"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/pivnet-resource/uaa"
 	"github.com/onsi/gomega/ghttp"
+	"github.com/pivotal-cf/pivnet-resource/uaa"
 	"net/http"
-	"errors"
 )
 
 var _ = Describe("UAA", func() {
 	Describe("TokenFetcher", func() {
 		var (
-			server *ghttp.Server
+			server       *ghttp.Server
 			tokenFetcher *uaa.TokenFetcher
 		)
 
