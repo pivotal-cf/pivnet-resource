@@ -16,7 +16,7 @@ release:
   release_date: 1997-12-31
   eula_slug: "pivotal_beta_eula"
   description: |
-    "wow this is a long description for this product"
+    "wow this is a long description for this product (150 chars max)"
   release_notes_url: http://example.com
   availability: Selected User Groups Only
   product_files:
