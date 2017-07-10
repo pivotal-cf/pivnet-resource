@@ -10,7 +10,8 @@ resources:
 - name: stemcells
   type: pivnet
   source:
-    api_token: my-api-token
+    username: ((my-username))
+    password: ((my-password))
     product_slug: stemcells
 
 jobs:

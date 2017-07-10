@@ -34,15 +34,16 @@ resources:
 - name: p-mysql
   type: pivnet
   source:
-    api_token: {{api-token}}
+    username: ((my-username))
+    password: ((my-password))
     product_slug: p-mysql
 ```
 
 * `username`: *Required.*
-  Email address used to log into Pivotal Network.
+  Email address used to log into Pivotal Network. Please see [Credential Security](#credential-security).
 
 * `password`: *Required.*
-  Password used to log into Pivotal Network.
+  Password used to log into Pivotal Network. Please see [Credential Security](#credential-security).
 
 * `product_slug`: *Required.*
   Name of product on Pivotal Network.
@@ -110,6 +111,10 @@ or downloads and uploads may fail.**
 For example, the default values of `endpoint: https://network.pivotal.io`,
 `bucket: pivotalnetwork` and `region: eu-west-1`
 are consistent with the production instance of Pivotal Network.
+
+## Credential Security
+
+We recommend that you not check your Pivotal Network credentials into any Git repo.  Instead, please use [template variables](http://concourse.ci/fly-set-pipeline.html#parameters) or the Concourse [Vault integration](http://concourse.ci/creds.html).
 
 ## Example Pipeline Configuration
 
@@ -214,7 +219,8 @@ resources:
 - name: p-mysql
   type: pivnet
   source:
-    api_token: {{api-token}}
+    username: ((my-username))
+    password: ((my-password))
     product_slug: p-mysql
     endpoint: https://pivnet-integration.cfapps.io
     bucket: pivotal-network-staging
@@ -242,7 +248,7 @@ Install the ginkgo executable with:
 go get -u github.com/onsi/ginkgo/ginkgo
 ```
 
-The tests require a valid Pivotal Network API token and valid AWS S3 configuration.
+The tests require valid Pivotal Network credentials and valid AWS S3 configuration.
 
 Refer to the
 [official docs](https://network.pivotal.io/docs/api#how-to-authenticate)
@@ -262,6 +268,8 @@ Run the tests with the following command:
 ```
 PRODUCT_SLUG=my-product-slug-eg-pivotal-diego-pcf \
 API_TOKEN=my-token \
+PIVNET_RESOURCE_USERNAME=my-email \
+PIVNET_RESOURCE_PASSWORD=my-password \
 AWS_ACCESS_KEY_ID=my-aws-access-key-id \
 AWS_SECRET_ACCESS_KEY=my-aws-secret-access-key \
 PIVNET_S3_REGION=region-of-pivnet-eg-us-east-1 \
@@ -273,5 +281,5 @@ S3_FILEPATH_PREFIX=Case-Sensitive-Path-eg-Pivotal-Diego-PCF \
 
 ### Contributing
 
-Please make all pull requests to the `develop` branch, and
+Please make all pull requests to the `master` branch, and
 [ensure the tests pass locally](https://github.com/pivotal-cf/pivnet-resource#running-the-tests).

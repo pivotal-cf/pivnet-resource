@@ -10,10 +10,11 @@ resources:
 - name: p-mysql
   type: pivnet
   source:
-    api_token: my-api-token
+    username: ((my-username))
+    password: ((my-password))
     product_slug: p-mysql
-    access_key_id: my-aws-access-key-id
-    secret_access_key: my-aws-secret-access-key
+    access_key_id: ((my-aws-access-key-id))
+    secret_access_key: ((my-aws-secret-access-key))
 
 jobs:
 - name: create-p-mysql-pivnet
