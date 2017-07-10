@@ -193,6 +193,10 @@ func (c Client) handleUnexpectedResponse(resp *http.Response) error {
 		return err
 	}
 
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return newErrTooManyRequests()
+	}
+
 	// We have to handle 500 differently because it has a different structure
 	if resp.StatusCode == http.StatusInternalServerError {
 		var internalServerError pivnetInternalServerErr

@@ -77,3 +77,19 @@ func newErrUnavailableForLegalReasons(message string) ErrUnavailableForLegalReas
 		Message:      message,
 	}
 }
+
+type ErrTooManyRequests struct {
+	ResponseCode int    `json:"response_code" yaml:"response_code"`
+	Message      string `json:"message" yaml:"message"`
+}
+
+func (e ErrTooManyRequests) Error() string {
+	return e.Message
+}
+
+func newErrTooManyRequests() ErrTooManyRequests {
+	return ErrTooManyRequests{
+		ResponseCode: http.StatusTooManyRequests,
+		Message: "You have hit a rate limit for this request",
+	}
+}
