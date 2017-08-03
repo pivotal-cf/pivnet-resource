@@ -39,11 +39,8 @@ resources:
     product_slug: p-mysql
 ```
 
-* `username`: *Required.*
-  Email address used to log into Pivotal Network. Please see [Credential Security](#credential-security).
-
-* `password`: *Required.*
-  Password used to log into Pivotal Network. Please see [Credential Security](#credential-security).
+* `api_token`: *Required.*
+  Token from your pivnet profile.
 
 * `product_slug`: *Required.*
   Name of product on Pivotal Network.
