@@ -420,6 +420,7 @@ func (c InCommand) compareSHA256sOrMD5s(filepaths []string, expectedSHA256s map[
 					actualSHA256,
 				)
 			}
+			c.logger.Info("%s SHA256 is: %s", downloadPath, actualSHA256)
 		} else {
 			expectedMD5 := expectedMD5s[f]
 
@@ -436,6 +437,7 @@ func (c InCommand) compareSHA256sOrMD5s(filepaths []string, expectedSHA256s map[
 					actualMD5,
 				)
 			}
+			c.logger.Info("%s MD5 is: %s", downloadPath, actualMD5)
 		}
 	}
 
