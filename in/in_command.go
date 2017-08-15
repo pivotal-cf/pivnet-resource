@@ -400,7 +400,7 @@ func (c InCommand) addReleaseMetadata(
 }
 
 func (c InCommand) compareSHA256sOrMD5s(filepaths []string, expectedSHA256s map[string]string, expectedMD5s map[string]string) error {
-	c.logger.Info("Calcuating SHA256 or MD5 for downloaded files")
+	c.logger.Info("Calculating SHA256 or MD5 for downloaded files")
 
 	for _, downloadPath := range filepaths {
 		_, f := filepath.Split(downloadPath)
