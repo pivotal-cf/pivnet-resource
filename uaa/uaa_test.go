@@ -18,7 +18,7 @@ var _ = Describe("UAA", func() {
 
 		BeforeEach(func() {
 			server = ghttp.NewServer()
-			tokenFetcher = uaa.NewTokenFetcher(server.URL(), "some-username", "some-password")
+			tokenFetcher = uaa.NewTokenFetcher(server.URL(), "some-refresh-token")
 		})
 
 		AfterEach(func() {
@@ -30,8 +30,8 @@ var _ = Describe("UAA", func() {
 
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("POST", "/api/v2/authentication"),
-					ghttp.VerifyBody([]byte(`{"username":"some-username","password":"some-password"}`)),
+					ghttp.VerifyRequest("POST", "/api/v2/access_tokens"),
+					ghttp.VerifyBody([]byte(`{"refresh_token":"some-refresh-token"}`)),
 					ghttp.RespondWithJSONEncoded(http.StatusOK, response),
 				),
 			)
@@ -45,8 +45,8 @@ var _ = Describe("UAA", func() {
 			It("returns the error", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", "/api/v2/authentication"),
-						ghttp.VerifyBody([]byte(`{"username":"some-username","password":"some-password"}`)),
+						ghttp.VerifyRequest("POST", "/api/v2/access_tokens"),
+						ghttp.VerifyBody([]byte(`{"refresh_token":"some-refresh-token"}`)),
 						ghttp.RespondWithJSONEncoded(http.StatusTeapot, nil),
 					),
 				)

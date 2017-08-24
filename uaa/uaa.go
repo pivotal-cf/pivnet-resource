@@ -9,33 +9,34 @@ import (
 )
 
 type AuthResp struct {
-	Token string `json: "token"`
+	Token string `json:"access_token"`
 }
 
 type TokenFetcher struct {
-	Endpoint string
-	Username string
-	Password string
+	Endpoint     string
+	RefreshToken string
 }
 
-func NewTokenFetcher(endpoint, username, password string) *TokenFetcher {
-	return &TokenFetcher{endpoint, username, password}
+func NewTokenFetcher(endpoint, refresh_token string) *TokenFetcher {
+	return &TokenFetcher{endpoint, refresh_token}
 }
 
 func (t TokenFetcher) GetToken() (string, error) {
 	httpClient := &http.Client{}
-	body := pivnet.AuthBody{Username: t.Username, Password: t.Password}
+	body := pivnet.AuthBody{RefreshToken: t.RefreshToken}
 	b, err := json.Marshal(body)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal API token request body: %s", err.Error())
 	}
 
-	req, err := http.NewRequest("POST", t.Endpoint+"/api/v2/authentication", bytes.NewReader(b))
+	req, err := http.NewRequest("POST", t.Endpoint+"/api/v2/access_tokens", bytes.NewReader(b))
 	if err != nil {
 		return "", fmt.Errorf("failed to construct API token request: %s", err.Error())
 	}
 
 	resp, err := httpClient.Do(req)
+	defer resp.Body.Close()
+
 	if err != nil {
 		return "", fmt.Errorf("API token request failed: %s", err.Error())
 	}

@@ -127,18 +127,17 @@ var _ = Describe("In", func() {
 
 				By("Validating command exited with error")
 				Eventually(session, executableTimeout).Should(gexec.Exit(1))
-				Expect(session.Err).Should(gbytes.Say("username and password must be provided"))
+				Expect(session.Err).Should(gbytes.Say("api_token must be provided"))
 			})
 		})
 	})
 
-	Context("when user supplies UAA credentials in source config", func() {
+	Context("when user supplies UAA refresh token in source config", func() {
 		BeforeEach(func() {
 			By("Creating default request")
 			inRequest = concourse.InRequest{
 				Source: concourse.Source{
-					Username:    username,
-					Password:    password,
+					APIToken:    refreshToken,
 					ProductSlug: productSlug,
 					Endpoint:    endpoint,
 				},
@@ -180,7 +179,7 @@ var _ = Describe("In", func() {
 
 		Context("when validation fails", func() {
 			BeforeEach(func() {
-				inRequest.Source.Username = ""
+				inRequest.Source.APIToken = "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"
 
 				var err error
 				stdinContents, err = json.Marshal(inRequest)
@@ -193,7 +192,7 @@ var _ = Describe("In", func() {
 
 				By("Validating command exited with error")
 				Eventually(session, executableTimeout).Should(gexec.Exit(1))
-				Expect(session.Err).Should(gbytes.Say("username and password must be provided"))
+				Expect(session.Err).Should(gbytes.Say("failed to fetch API token"))
 			})
 		})
 	})

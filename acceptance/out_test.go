@@ -212,13 +212,12 @@ var _ = Describe("Out", func() {
 		})
 	})
 
-	Context("when user supplies UAA credentials in source config", func() {
+	Context("when user supplies UAA refresh token in source config", func() {
 		BeforeEach(func() {
 			By("Creating default request")
 			outRequest = concourse.OutRequest{
 				Source: concourse.Source{
-					Username:        username,
-					Password:        password,
+					APIToken:        refreshToken,
 					AccessKeyID:     awsAccessKeyID,
 					SecretAccessKey: awsSecretAccessKey,
 					ProductSlug:     productSlug,
@@ -254,7 +253,7 @@ var _ = Describe("Out", func() {
 				It("exits with error", func() {
 					session := run(command, stdinContents)
 
-					Eventually(session).Should(gexec.Exit(1))
+					Eventually(session, 2 * time.Second).Should(gexec.Exit(1))
 					Expect(session.Err).Should(gbytes.Say("metadata_file"))
 				})
 			})

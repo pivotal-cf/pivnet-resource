@@ -19,6 +19,10 @@ import (
 	"os"
 )
 
+const (
+	legacyAPITokenLength = 20
+)
+
 var (
 	// version is deliberately left uninitialized so it can be set at compile-time
 	version string
@@ -70,9 +74,9 @@ func main() {
 	var usingUAAToken = false
 	apiToken := input.Source.APIToken
 
-	if input.Source.Username != "" {
+	if len(apiToken) > legacyAPITokenLength {
 		usingUAAToken = true
-		tokenFetcher := uaa.NewTokenFetcher(input.Source.Endpoint, input.Source.Username, input.Source.Password)
+		tokenFetcher := uaa.NewTokenFetcher(input.Source.Endpoint, apiToken)
 		apiToken, err = tokenFetcher.GetToken()
 
 		if err != nil {

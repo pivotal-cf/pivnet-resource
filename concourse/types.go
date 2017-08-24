@@ -20,8 +20,6 @@ type Source struct {
 	SortBy            SortBy `json:"sort_by"`
 	SkipSSLValidation bool   `json:"skip_ssl_verification"`
 	CopyMetadata      bool   `json:"copy_metadata"`
-	Username          string `json:"username"`
-	Password          string `json:"password"`
 }
 
 type CheckRequest struct {

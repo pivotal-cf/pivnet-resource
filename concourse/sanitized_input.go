@@ -12,12 +12,6 @@ func SanitizedSource(source Source) map[string]string {
 	if source.SecretAccessKey != "" {
 		s[source.SecretAccessKey] = "***REDACTED-AWS_SECRET_ACCESS_KEY***"
 	}
-	if source.Username != "" {
-		s[source.Username] = "***REDACTED-UAA_USERNAME***"
-	}
-	if source.Password != "" {
-		s[source.Password] = "***REDACTED-UAA_PASSWORD***"
-	}
 
 	return s
 }

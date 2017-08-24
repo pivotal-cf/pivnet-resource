@@ -33,8 +33,9 @@ import (
 )
 
 const (
-	defaultBucket = "pivotalnetwork"
-	defaultRegion = "eu-west-1"
+	defaultBucket        = "pivotalnetwork"
+	defaultRegion        = "eu-west-1"
+	legacyAPITokenLength = 20
 )
 
 var (
@@ -95,9 +96,9 @@ func main() {
 	var usingUAAToken = false
 	apiToken := input.Source.APIToken
 
-	if input.Source.Username != "" {
+	if len(apiToken) > legacyAPITokenLength {
 		usingUAAToken = true
-		tokenFetcher := uaa.NewTokenFetcher(input.Source.Endpoint, input.Source.Username, input.Source.Password)
+		tokenFetcher := uaa.NewTokenFetcher(input.Source.Endpoint, apiToken)
 		apiToken, err = tokenFetcher.GetToken()
 
 		if err != nil {

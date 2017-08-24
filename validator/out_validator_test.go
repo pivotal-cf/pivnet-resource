@@ -17,9 +17,6 @@ var _ = Describe("Out Validator", func() {
 		fileGlob         string
 		s3FilepathPrefix string
 
-		username string
-		password string
-
 		outRequest concourse.OutRequest
 		v          *validator.OutValidator
 	)
@@ -29,8 +26,6 @@ var _ = Describe("Out Validator", func() {
 		secretAccessKey = "some-secret-access-key"
 		apiToken = "some-api-token"
 		productSlug = "some-product"
-		username = "username"
-		password = "password"
 
 		fileGlob = ""
 		s3FilepathPrefix = ""
@@ -39,8 +34,6 @@ var _ = Describe("Out Validator", func() {
 	JustBeforeEach(func() {
 		outRequest = concourse.OutRequest{
 			Source: concourse.Source{
-				Username:        username,
-				Password:        password,
 				APIToken:        apiToken,
 				ProductSlug:     productSlug,
 				AccessKeyID:     accessKeyID,
@@ -59,39 +52,19 @@ var _ = Describe("Out Validator", func() {
 		Expect(v.Validate()).NotTo(HaveOccurred())
 	})
 
-	Context("when uaa credentials and api token are not provided", func() {
+	Context("when neither UAA refresh token nor legacy API token are provided", func() {
 		BeforeEach(func() {
-			username = ""
-			password = ""
 			apiToken = ""
 		})
 
 		It("returns an error", func() {
 			err := v.Validate()
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("username and password must be provided"))
+			Expect(err.Error()).To(MatchRegexp("api_token must be provided"))
 		})
 	})
 
-	Context("when username is provided but password is not provided", func() {
-		BeforeEach(func() {
-			username = ""
-			apiToken = ""
-		})
-
-		It("returns an error", func() {
-			err := v.Validate()
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("username and password must be provided"))
-		})
-	})
-
-	Context("when uaa credentials are not provided but api token is provided", func() {
-		BeforeEach(func() {
-			username = ""
-			password = ""
-		})
-
+	Context("when UAA reresh token or legacy API token is provided", func() {
 		It("returns without error", func() {
 			err := v.Validate()
 			Expect(err).NotTo(HaveOccurred())

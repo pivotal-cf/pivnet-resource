@@ -46,10 +46,10 @@ func (e AuthService) Check() (bool, error) {
 	}
 }
 
-func (e AuthService) FetchUAAToken(username, password string) (UAATokenResponse, error) {
+func (e AuthService) FetchUAAToken(refresh_token string) (UAATokenResponse, error) {
 	url := "/authentication"
 
-	body := AuthBody{Username: username, Password: password}
+	body := AuthBody{RefreshToken: refresh_token}
 	b, err := json.Marshal(body)
 	if err != nil {
 		return UAATokenResponse{}, err
@@ -79,6 +79,5 @@ func (e AuthService) FetchUAAToken(username, password string) (UAATokenResponse,
 }
 
 type AuthBody struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	RefreshToken string `json:"refresh_token"`
 }

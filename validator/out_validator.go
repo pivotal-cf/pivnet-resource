@@ -17,8 +17,8 @@ func NewOutValidator(input concourse.OutRequest) *OutValidator {
 }
 
 func (v OutValidator) Validate() error {
-	if v.input.Source.APIToken == "" && (v.input.Source.Username == "" || v.input.Source.Password == "") {
-		return fmt.Errorf("%s must be provided", "username and password")
+	if v.input.Source.APIToken == "" {
+		return fmt.Errorf("%s must be provided", "api_token")
 	}
 
 	if v.input.Source.ProductSlug == "" {

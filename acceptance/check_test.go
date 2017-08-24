@@ -21,7 +21,7 @@ var _ = Describe("Check", func() {
 		stdinContents []byte
 	)
 
-	Context("when user provides UAA credentials", func() {
+	Context("when user provides a UAA refresh token", func() {
 		BeforeEach(func() {
 			By("Creating command object")
 			command = exec.Command(checkPath)
@@ -29,8 +29,7 @@ var _ = Describe("Check", func() {
 			By("Creating default request")
 			checkRequest = concourse.CheckRequest{
 				Source: concourse.Source{
-					Username:    username,
-					Password:    password,
+					APIToken:    refreshToken,
 					ProductSlug: productSlug,
 					Endpoint:    endpoint,
 				},

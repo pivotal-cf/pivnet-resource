@@ -30,8 +30,7 @@ var (
 	pivnetRegion       string
 	pivnetBucketName   string
 	s3FilepathPrefix   string
-	username           string
-	password           string
+	refreshToken       string
 
 	pivnetClient *gp.Client
 )
@@ -75,13 +74,9 @@ var _ = BeforeSuite(func() {
 	endpoint = os.Getenv("PIVNET_ENDPOINT")
 	Expect(endpoint).NotTo(BeEmpty(), "$PIVNET_ENDPOINT must be provided")
 
-	By("Getting username from environment variables")
-	username = os.Getenv("PIVNET_RESOURCE_USERNAME")
-	Expect(username).NotTo(BeEmpty(), "$PIVNET_RESOURCE_USERNAME must be provided")
-
-	By("Getting password from environment variables")
-	password = os.Getenv("PIVNET_RESOURCE_PASSWORD")
-	Expect(password).NotTo(BeEmpty(), "$PIVNET_RESOURCE_PASSWORD must be provided")
+	By("Getting refresh token from environment variables")
+	refreshToken = os.Getenv("PIVNET_RESOURCE_REFRESH_TOKEN")
+	Expect(refreshToken).NotTo(BeEmpty(), "$PIVNET_RESOURCE_REFRESH_TOKEN must be provided")
 
 	By("Compiling check binary")
 	checkPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/check", "-race")
@@ -100,8 +95,7 @@ var _ = BeforeSuite(func() {
 		pivnetAPIToken:     "***sanitized-api-token***",
 		awsAccessKeyID:     "***sanitized-aws-access-key-id***",
 		awsSecretAccessKey: "***sanitized-aws-secret-access-key***",
-		username:           "***sanitized-username***",
-		password:           "***sanitized-password***",
+		refreshToken:       "***sanitized-refresh-token***",
 	}
 	sanitizedWriter := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
 	GinkgoWriter = sanitizedWriter
