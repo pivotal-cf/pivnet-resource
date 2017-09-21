@@ -30,7 +30,7 @@ var _ = Describe("UAA", func() {
 
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("POST", "/api/v2/access_tokens"),
+					ghttp.VerifyRequest("POST", "/api/v2/authentication/access_tokens"),
 					ghttp.VerifyBody([]byte(`{"refresh_token":"some-refresh-token"}`)),
 					ghttp.RespondWithJSONEncoded(http.StatusOK, response),
 				),
@@ -45,7 +45,7 @@ var _ = Describe("UAA", func() {
 			It("returns the error", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", "/api/v2/access_tokens"),
+						ghttp.VerifyRequest("POST", "/api/v2/authentication/access_tokens"),
 						ghttp.VerifyBody([]byte(`{"refresh_token":"some-refresh-token"}`)),
 						ghttp.RespondWithJSONEncoded(http.StatusTeapot, nil),
 					),

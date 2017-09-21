@@ -29,7 +29,7 @@ func (t TokenFetcher) GetToken() (string, error) {
 		return "", fmt.Errorf("failed to marshal API token request body: %s", err.Error())
 	}
 
-	req, err := http.NewRequest("POST", t.Endpoint+"/api/v2/access_tokens", bytes.NewReader(b))
+	req, err := http.NewRequest("POST", t.Endpoint+"/api/v2/authentication/access_tokens", bytes.NewReader(b))
 	if err != nil {
 		return "", fmt.Errorf("failed to construct API token request: %s", err.Error())
 	}
