@@ -1,11 +1,15 @@
 package s3resource
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
+
+	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -21,7 +25,7 @@ type S3Client interface {
 	BucketFiles(bucketName string, prefixHint string) ([]string, error)
 	BucketFileVersions(bucketName string, remotePath string) ([]string, error)
 
-	UploadFile(bucketName string, remotePath string, localPath string, acl string) (string, error)
+	UploadFile(bucketName string, remotePath string, localPath string, options UploadFileOptions) (string, error)
 	DownloadFile(bucketName string, remotePath string, versionID string, localPath string) error
 
 	DeleteFile(bucketName string, remotePath string) error
@@ -41,12 +45,30 @@ type s3client struct {
 	progressOutput io.Writer
 }
 
+type UploadFileOptions struct {
+	Acl                  string
+	ServerSideEncryption string
+	KmsKeyId             string
+	ContentType          string
+}
+
+func NewUploadFileOptions() UploadFileOptions {
+	return UploadFileOptions{
+		Acl: "private",
+	}
+}
+
 func NewS3Client(
 	progressOutput io.Writer,
 	awsConfig *aws.Config,
+	useV2Signing bool,
 ) S3Client {
 	sess := session.New(awsConfig)
 	client := s3.New(sess, awsConfig)
+
+	if useV2Signing {
+		setv2Handlers(client)
+	}
 
 	return &s3client{
 		client:  client,
@@ -62,6 +84,7 @@ func NewAwsConfig(
 	regionName string,
 	endpoint string,
 	disableSSL bool,
+	skipSSLVerification bool,
 ) *aws.Config {
 	var creds *credentials.Credentials
 
@@ -75,12 +98,22 @@ func NewAwsConfig(
 		regionName = "us-east-1"
 	}
 
+	var httpClient *http.Client
+	if skipSSLVerification {
+		httpClient = &http.Client{Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}}
+	} else {
+		httpClient = http.DefaultClient
+	}
+
 	awsConfig := &aws.Config{
 		Region:           aws.String(regionName),
 		Credentials:      creds,
 		S3ForcePathStyle: aws.Bool(true),
 		MaxRetries:       aws.Int(maxRetries),
 		DisableSSL:       aws.Bool(disableSSL),
+		HTTPClient:       httpClient,
 	}
 
 	if len(endpoint) != 0 {
@@ -131,8 +164,13 @@ func (client *s3client) BucketFileVersions(bucketName string, remotePath string)
 	return versions, nil
 }
 
-func (client *s3client) UploadFile(bucketName string, remotePath string, localPath string, acl string) (string, error) {
-	uploader := s3manager.NewUploader(client.session)
+func (client *s3client) UploadFile(bucketName string, remotePath string, localPath string, options UploadFileOptions) (string, error) {
+	uploader := s3manager.NewUploaderWithClient(client.client)
+
+	if client.isGCSHost() {
+		// GCS returns `InvalidArgument` on multipart uploads
+		uploader.MaxUploadParts = 1
+	}
 
 	stat, err := os.Stat(localPath)
 	if err != nil {
@@ -151,12 +189,23 @@ func (client *s3client) UploadFile(bucketName string, remotePath string, localPa
 	progress.Start()
 	defer progress.Finish()
 
-	uploadOutput, err := uploader.Upload(&s3manager.UploadInput{
+	uploadInput := s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(remotePath),
-		Body:   progressSeekReaderAt{localFile, progress},
-		ACL:    aws.String(acl),
-	})
+		Body:   progressReader{localFile, progress},
+		ACL:    aws.String(options.Acl),
+	}
+	if options.ServerSideEncryption != "" {
+		uploadInput.ServerSideEncryption = aws.String(options.ServerSideEncryption)
+	}
+	if options.KmsKeyId != "" {
+		uploadInput.SSEKMSKeyId = aws.String(options.KmsKeyId)
+	}
+	if options.ContentType != "" {
+		uploadInput.ContentType = aws.String(options.ContentType)
+	}
+
+	uploadOutput, err := uploader.Upload(&uploadInput)
 	if err != nil {
 		return "", err
 	}
@@ -185,7 +234,7 @@ func (client *s3client) DownloadFile(bucketName string, remotePath string, versi
 
 	progress := client.newProgressBar(*object.ContentLength)
 
-	downloader := s3manager.NewDownloader(client.session)
+	downloader := s3manager.NewDownloaderWithClient(client.client)
 
 	localFile, err := os.Create(localPath)
 	if err != nil {
@@ -280,6 +329,7 @@ func (client *s3client) getBucketContents(bucketName string, prefix string) (map
 		}
 
 		if *listObjectsResponse.IsTruncated {
+			prevMarker := marker
 			if listObjectsResponse.NextMarker == nil {
 				// From the s3 docs: If response does not include the
 				// NextMarker and it is truncated, you can use the value of the
@@ -288,6 +338,9 @@ func (client *s3client) getBucketContents(bucketName string, prefix string) (map
 				marker = lastKey
 			} else {
 				marker = *listObjectsResponse.NextMarker
+			}
+			if marker == prevMarker {
+				return nil, errors.New("Unable to list all bucket objects; perhaps this is a CloudFront S3 bucket that needs its `Query String Forwarding and Caching` set to `Forward all, cache based on all`?")
 			}
 		} else {
 			break
@@ -377,4 +430,8 @@ func (client *s3client) newProgressBar(total int64) *pb.ProgressBar {
 	progress.NotPrint = true
 
 	return progress.SetWidth(80)
+}
+
+func (client *s3client) isGCSHost() bool {
+	return (client.session.Config.Endpoint != nil && strings.Contains(*client.session.Config.Endpoint, "storage.googleapis.com"))
 }

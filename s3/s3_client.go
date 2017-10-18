@@ -42,11 +42,13 @@ func NewClient(config NewClientConfig) *Client {
 		config.RegionName,
 		endpoint,
 		disableSSL,
+		config.SkipSSLValidation,
 	)
 
 	s3client := s3resource.NewS3Client(
 		config.Stderr,
 		awsConfig,
+		false,
 	)
 
 	return &Client{
@@ -82,7 +84,7 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 	localPath := matches[0]
 	remotePath := filepath.Join(to, filepath.Base(localPath))
 
-	acl := "private"
+	options := s3resource.NewUploadFileOptions()
 
 	c.logger.Info(fmt.Sprintf(
 		"Uploading %s to s3://%s/%s",
@@ -95,7 +97,7 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 		c.bucket,
 		remotePath,
 		localPath,
-		acl,
+		options,
 	)
 	if err != nil {
 		return err
