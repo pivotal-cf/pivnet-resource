@@ -194,6 +194,84 @@ release creation will fail.
   See [metadata](https://github.com/pivotal-cf/pivnet-resource/blob/master/metadata)
   for more details on the structure of the metadata file.
 
+### Some Common Gotchas
+
+#### Using Glob Patterns Instead of Regex Patterns
+
+We commonly see `product_version` patterns that look something like these:
+
+```yaml
+product_version: Go*          # Go Buildpack
+#....
+product_version: 1\.12\.*       # ERT
+```
+
+These superficially resemble Globs, not Regexes. They will generally work, but not because they
+are a glob. They work because the regex will also match.
+
+For example, the first pattern, `Go*` will match "Go Buildpack 1.1.1". But it would also match
+"Goooooooo" or "Go Tell It On A Mountain". The second pattern, `1\.12\.*`, will match "1.12.0".
+But it will also match "1.12........." and "1.12.notanumber"
+
+Instead, try patterns like:
+
+```yaml
+product_version: Go.*\d+\.\d+\.\d+  # Go Buildpack
+#....
+product_version: 1\.12\.\d+         # ERT
+```
+
+Note that [the regex syntax is Go's, which is slightly limited](https://github.com/google/re2/wiki/Syntax)
+compared to PCRE and other popular syntaxes.
+
+#### Using `check-resource` for sorted but non-sequential releases (eg. Buildpacks, Stemcells)
+
+When doing a `check`, pivnet-resource defaults to using the server-provided order. This works
+fine for simple cases where the response from the server is already in semver order. For example,
+imagine this order from a product:
+
+```
+1.12.3
+1.12.2
+1.12.1
+1.12.0
+1.11.4
+1.11.3
+1.11.2
+1.11.1
+1.11.0
+```
+
+This list is in descending semver order. All the 1.12 patch releases are together, followed
+by all the 1.11 patch releases and so on.
+
+Some products do not group into major or major.minor groups in their responses. This is usually
+because a product has multiple concurrent version releases. For example, Stemcells typically
+have multiple major versions available. When a CVE is announced affected them, multiple releases
+occur at once, giving a order like:
+
+```
+9999.21
+7777.19
+9999.20
+7777.18
+```
+
+In this example, the Stemcell versions 9999 and 7777 are _sorted_ but not _sequential_.
+
+To fix, use `sort_by: semver` in your resource definition.
+
+Note: Buildpack "versions" are actually a name and a version combined. You'll need to escape spaces
+in your `check-resource` command for it to work properly. Eg:
+
+```
+fly -t pivnet check-resource \
+  --resource pivnet-resource-bug-152616708/binary-buildpack \
+  --from product_version:Binary\ 1.0.11#2017-03-23T13:57:51.214Z
+```
+
+In this example we escaped the space between "Binary" and "1.0.11".
+
 ## Integration Environment
 
 The Pivotal Network team maintain an integration environment at
