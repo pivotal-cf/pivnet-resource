@@ -240,23 +240,25 @@ var _ = Describe("Check", func() {
 
 		Context("when the version is not the latest", func() {
 			BeforeEach(func() {
-				versionWithFingerprint := versionsWithFingerprints[2]
+				versionWithFingerprint := versionsWithFingerprints[2] // 1.2.4#time3
 
 				checkRequest.Version = concourse.Version{
 					ProductVersion: versionWithFingerprint,
 				}
 			})
 
-			It("returns the most recent version", func() {
+			It("returns the most recent versions, including the version specified", func() {
 				response, err := checkCommand.Run(checkRequest)
 				Expect(err).NotTo(HaveOccurred())
 
-				versionWithFingerprintA := versionsWithFingerprints[0]
-				versionWithFingerprintC := versionsWithFingerprints[1]
+				versionWithFingerprintA := versionsWithFingerprints[0] // 1.2.3#time1
+				versionWithFingerprintB := versionsWithFingerprints[1] // 2.3.4#time2
+				versionWithFingerprintC := versionsWithFingerprints[2] // 1.2.4#time3
 
-				Expect(response).To(HaveLen(2))
+				Expect(response).To(HaveLen(3))
 				Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintC))
-				Expect(response[1].ProductVersion).To(Equal(versionWithFingerprintA))
+				Expect(response[1].ProductVersion).To(Equal(versionWithFingerprintB))
+				Expect(response[2].ProductVersion).To(Equal(versionWithFingerprintA))
 			})
 		})
 	})
@@ -368,9 +370,10 @@ var _ = Describe("Check", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(response).To(HaveLen(2))
-			Expect(response[0].ProductVersion).To(Equal(versionsWithFingerprints[2]))
-			Expect(response[1].ProductVersion).To(Equal(versionsWithFingerprints[1]))
+			Expect(response).To(HaveLen(3))
+			Expect(response[0].ProductVersion).To(Equal(versionsWithFingerprints[0]))
+			Expect(response[1].ProductVersion).To(Equal(versionsWithFingerprints[2]))
+			Expect(response[2].ProductVersion).To(Equal(versionsWithFingerprints[1]))
 
 			Expect(fakeSorter.SortBySemverCallCount()).To(Equal(1))
 		})

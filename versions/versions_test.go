@@ -29,10 +29,11 @@ var _ = Describe("Versions", func() {
 				version = "1.2.3#abc"
 			})
 
-			It("returns empty array", func() {
+			It("returns the latest version", func() {
 				versions, _ := versions.Since(allVersions, version)
 
-				Expect(versions).To(HaveLen(0))
+				Expect(versions).To(HaveLen(1))
+				Expect(versions).To(Equal([]string{"1.2.3#abc"}))
 			})
 		})
 
@@ -45,7 +46,7 @@ var _ = Describe("Versions", func() {
 			It("returns new versions", func() {
 				versions, _ := versions.Since(allVersions, version)
 
-				Expect(versions).To(Equal([]string{"newest version", "middle version"}))
+				Expect(versions).To(Equal([]string{"newest version", "middle version", "older version"}))
 			})
 		})
 

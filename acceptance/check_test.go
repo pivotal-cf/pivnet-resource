@@ -53,11 +53,12 @@ var _ = Describe("Check", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			By("Validating all the expected elements were returned")
-			Expect(len(response)).Should(BeNumerically(">=", 2))
+			Expect(len(response)).Should(BeNumerically(">=", 3))
 
 			By("Validating the returned elements have the expected product release versions")
-			Expect(response[0].ProductVersion).To(ContainSubstring("1.2.3"))
-			Expect(response[1].ProductVersion).To(ContainSubstring("2.3.4"))
+			Expect(response[0].ProductVersion).To(ContainSubstring("0.0.1-piv-res-test-fixture"))
+			Expect(response[1].ProductVersion).To(ContainSubstring("1.2.3"))
+			Expect(response[2].ProductVersion).To(ContainSubstring("2.3.4"))
 		})
 	})
 
@@ -83,7 +84,7 @@ var _ = Describe("Check", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
-		It("returns all newer release versions than the provided version without error", func() {
+		It("returns all newer release versions including the provided version without error", func() {
 			By("Running the command")
 			session := run(command, stdinContents)
 			Eventually(session, executableTimeout).Should(gexec.Exit(0))
@@ -94,11 +95,12 @@ var _ = Describe("Check", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			By("Validating all the expected elements were returned")
-			Expect(len(response)).Should(BeNumerically(">=", 2))
+			Expect(len(response)).Should(BeNumerically(">=", 3))
 
 			By("Validating the returned elements have the expected product release versions")
-			Expect(response[0].ProductVersion).To(ContainSubstring("1.2.3"))
-			Expect(response[1].ProductVersion).To(ContainSubstring("2.3.4"))
+			Expect(response[0].ProductVersion).To(ContainSubstring("0.0.1-piv-res-test-fixture"))
+			Expect(response[1].ProductVersion).To(ContainSubstring("1.2.3"))
+			Expect(response[2].ProductVersion).To(ContainSubstring("2.3.4"))
 		})
 
 		Context("when validation fails", func() {
