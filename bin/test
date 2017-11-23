@@ -27,6 +27,7 @@ pushd "${base_dir}" > /dev/null
     -p \
     -randomizeAllSpecs \
     -randomizeSuites \
+    -keepGoing \
     -slowSpecThreshold="${SLOW_SPEC_THRESHOLD}" \
     "$@"
 popd > /dev/null
