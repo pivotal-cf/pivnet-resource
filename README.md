@@ -341,7 +341,7 @@ AWS_ACCESS_KEY_ID=my-aws-access-key-id \
 AWS_SECRET_ACCESS_KEY=my-aws-secret-access-key \
 PIVNET_S3_REGION=region-of-pivnet-eg-us-east-1 \
 PIVNET_BUCKET_NAME=bucket-of-pivnet-eg-pivnet-bucket \
-PIVNET_ENDPOINT= some-pivnet-endpoint \
+PIVNET_ENDPOINT=some-pivnet-endpoint \
 S3_FILEPATH_PREFIX=Case-Sensitive-Path-eg-Pivotal-Diego-PCF \
 ./bin/test
 ```
