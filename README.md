@@ -138,8 +138,9 @@ for more details on the structure of the metadata file.
   - The globs match on the actual *file names*, not the display names in Pivotal
   Network. This is to provide a more consistent experience between uploading and
   downloading files.
-  - If one or more globs fails to match any files the release download fails
+  - If the globs fail to match any files the release download fails
   with error.
+  - If one or more globs fails to match any files, only the matched files will be downloaded.
   - If `globs` is not provided (or is nil), **all files will be downloaded**.
   - If `globs` is not provided (or is nil), and there are no files to download
   - Setting `globs` to the empty array (i.e. `globs: []`) will not attempt to
