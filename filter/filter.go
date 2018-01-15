@@ -74,7 +74,7 @@ func (f Filter) ProductFileKeysByGlobs(
 
 	}
 
-	if len(filtered) == 0 {
+	if len(filtered) == 0 && len(globs) != 0 {
 		return nil, fmt.Errorf("no match for glob(s): '%s'", strings.Join(globs, ", "))
 	}
 
