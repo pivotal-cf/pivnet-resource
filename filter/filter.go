@@ -58,8 +58,6 @@ func (f Filter) ProductFileKeysByGlobs(
 
 	filtered := []pivnet.ProductFile{}
 	for _, pattern := range globs {
-		prevFilteredCount := len(filtered)
-
 		for _, p := range productFiles {
 			parts := strings.Split(p.AWSObjectKey, "/")
 			fileName := parts[len(parts)-1]
@@ -74,9 +72,10 @@ func (f Filter) ProductFileKeysByGlobs(
 			}
 		}
 
-		if len(filtered) == prevFilteredCount {
-			return nil, fmt.Errorf("no match for glob: '%s'", pattern)
-		}
+	}
+
+	if len(filtered) == 0 {
+		return nil, fmt.Errorf("no match for glob(s): '%s'", strings.Join(globs, ", "))
 	}
 
 	return filtered, nil

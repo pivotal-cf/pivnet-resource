@@ -247,6 +247,23 @@ var _ = Describe("Filter", func() {
 			Expect(filtered).To(Equal([]pivnet.ProductFile{productFiles[1], productFiles[2]}))
 		})
 
+		Describe("When a glob that matches a file and glob that does not match a file", func() {
+			BeforeEach(func() {
+				globs = []string{"file-1", "does-not-exist.txt"}
+			})
+
+			It("returns an error", func() {
+				filtered, err := f.ProductFileKeysByGlobs(
+					productFiles,
+					globs,
+				)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(filtered).To(HaveLen(1))
+				Expect(filtered).To(Equal([]pivnet.ProductFile{productFiles[1]}))
+			})
+		})
+
 		Context("when a bad pattern is passed", func() {
 			BeforeEach(func() {
 				globs = []string{"["}
@@ -273,23 +290,9 @@ var _ = Describe("Filter", func() {
 					globs,
 				)
 				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError("no match for glob(s): '*will-not-match*'"))
 
 				Expect(filtered).To(HaveLen(0))
-			})
-		})
-
-		Describe("When a glob that matches a file and glob that does not match a file", func() {
-			BeforeEach(func() {
-				globs = []string{"file-1", "does-not-exist.txt"}
-			})
-
-			It("returns an error", func() {
-				_, err := f.ProductFileKeysByGlobs(
-					productFiles,
-					globs,
-				)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError("no match for glob: 'does-not-exist.txt'"))
 			})
 		})
 	})
