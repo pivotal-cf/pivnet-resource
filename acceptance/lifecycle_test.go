@@ -349,7 +349,7 @@ var _ = Describe("Lifecycle test", func() {
 						Endpoint:    endpoint,
 					},
 					Params: concourse.InParams{
-						Globs: []string{filePrefix + "*", "badglob"},
+						Globs: []string{"badglob"},
 					},
 					Version: concourse.Version{
 						ProductVersion: versionWithFingerprint,
