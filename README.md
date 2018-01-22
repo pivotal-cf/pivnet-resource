@@ -39,7 +39,7 @@ resources:
 ```
 
 * `api_token`: *Required.*
-  Token from your pivnet profile.
+  Token from your Pivotal Network profile. Accepts either your Legacy API Token or UAA Refresh Token.
 
 * `product_slug`: *Required.*
   Name of product on Pivotal Network.
