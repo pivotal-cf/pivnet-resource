@@ -35,11 +35,11 @@ func (t TokenFetcher) GetToken() (string, error) {
 	}
 
 	resp, err := httpClient.Do(req)
-	defer resp.Body.Close()
-
 	if err != nil {
 		return "", fmt.Errorf("API token request failed: %s", err.Error())
 	}
+
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("failed to fetch API token - received status %v", resp.StatusCode)
