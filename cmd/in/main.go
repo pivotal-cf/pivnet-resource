@@ -96,7 +96,7 @@ func main() {
 
 	if len(apiToken) > legacyAPITokenLength {
 		usingUAAToken = true
-		tokenFetcher := uaa.NewTokenFetcher(input.Source.Endpoint, apiToken)
+		tokenFetcher := uaa.NewTokenFetcher(endpoint, apiToken)
 		apiToken, err = tokenFetcher.GetToken()
 
 		if err != nil {
