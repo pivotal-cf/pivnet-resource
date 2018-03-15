@@ -1,10 +1,9 @@
-package uaa
+package pivnet
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pivotal-cf/go-pivnet"
 	"net/http"
 )
 
@@ -23,13 +22,13 @@ func NewTokenFetcher(endpoint, refresh_token string) *TokenFetcher {
 
 func (t TokenFetcher) GetToken() (string, error) {
 	httpClient := &http.Client{}
-	body := pivnet.AuthBody{RefreshToken: t.RefreshToken}
+	body := AuthBody{RefreshToken: t.RefreshToken}
 	b, err := json.Marshal(body)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal API token request body: %s", err.Error())
 	}
-
-	req, err := http.NewRequest("POST", t.Endpoint+"/api/v2/authentication/access_tokens", bytes.NewReader(b))
+	req, err := http.NewRequest("POST", t.Endpoint+"/authentication/access_tokens", bytes.NewReader(b))
+	req.Header.Add("Content-Type", "application/json")
 	if err != nil {
 		return "", fmt.Errorf("failed to construct API token request: %s", err.Error())
 	}

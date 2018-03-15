@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"syscall"
+	"github.com/shirou/gopsutil/disk"
 )
 
 //go:generate counterfeiter -o ./fakes/ranger.go --fake-name Ranger . ranger
@@ -68,6 +69,15 @@ func (c Client) Get(
 	ranges, err := c.Ranger.BuildRange(resp.ContentLength)
 	if err != nil {
 		return fmt.Errorf("failed to construct range: %s", err)
+	}
+
+	diskStats, err := disk.Usage(location.Name())
+	if err != nil {
+		return fmt.Errorf("failed to get disk free space: %s", err)
+	}
+
+	if diskStats.Free < uint64(resp.ContentLength) {
+		return fmt.Errorf("file is too big to fit on this drive")
 	}
 
 	c.Bar.SetOutput(progressWriter)

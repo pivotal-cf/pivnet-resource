@@ -16,7 +16,6 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/in/filesystem"
 	"github.com/pivotal-cf/pivnet-resource/md5sum"
 	"github.com/pivotal-cf/pivnet-resource/sha256sum"
-	"github.com/pivotal-cf/pivnet-resource/uaa"
 	"github.com/pivotal-cf/pivnet-resource/ui"
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
@@ -128,28 +127,12 @@ func main() {
 	}
 }
 
-
 func NewPivnetClientWithToken(apiToken string, host string, skipSSLValidation bool, userAgent string, logger logger.Logger) *gp.Client {
-	const legacyAPITokenLength = 20
-	var usingUAAToken = false
-
-	if len(apiToken) > legacyAPITokenLength {
-		usingUAAToken = true
-		tokenFetcher := uaa.NewTokenFetcher(host, apiToken)
-		var err error
-		apiToken, err = tokenFetcher.GetToken()
-
-		if err != nil {
-			log.Fatalf("Exiting with error: %s", err)
-		}
-	}
-
 	clientConfig := pivnet.ClientConfig{
 		Host:              host,
 		Token:             apiToken,
 		UserAgent:         userAgent,
 		SkipSSLValidation: skipSSLValidation,
-		UsingUAAToken:     usingUAAToken,
 	}
 
 	return gp.NewClient(
