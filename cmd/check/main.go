@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/check"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
@@ -17,10 +18,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-)
-
-const (
-	legacyAPITokenLength = 20
 )
 
 var (
@@ -71,28 +68,13 @@ func main() {
 		endpoint = pivnet.DefaultHost
 	}
 
-	var usingUAAToken = false
 	apiToken := input.Source.APIToken
 
-	if len(apiToken) > legacyAPITokenLength {
-		usingUAAToken = true
-		tokenFetcher := uaa.NewTokenFetcher(endpoint, apiToken)
-		apiToken, err = tokenFetcher.GetToken()
-
-		if err != nil {
-			log.Fatalf("Exiting with error: %s", err)
-		}
-	}
-
-	clientConfig := pivnet.ClientConfig{
-		Host:              endpoint,
-		Token:             apiToken,
-		UserAgent:         useragent.UserAgent(version, "check", input.Source.ProductSlug),
-		SkipSSLValidation: input.Source.SkipSSLValidation,
-		UsingUAAToken:     usingUAAToken,
-	}
-	client := gp.NewClient(
-		clientConfig,
+	client := NewPivnetClientWithToken(
+		apiToken,
+		endpoint,
+		input.Source.SkipSSLValidation,
+		useragent.UserAgent(version, "check", input.Source.ProductSlug),
 		ls,
 	)
 
@@ -117,4 +99,33 @@ func main() {
 	if err != nil {
 		log.Fatalf("Exiting with error: %s", err)
 	}
+}
+
+func NewPivnetClientWithToken(apiToken string, host string, skipSSLValidation bool, userAgent string, logger logger.Logger) *gp.Client {
+	const legacyAPITokenLength = 20
+	var usingUAAToken = false
+
+	if len(apiToken) > legacyAPITokenLength {
+		usingUAAToken = true
+		tokenFetcher := uaa.NewTokenFetcher(host, apiToken)
+		var err error
+		apiToken, err = tokenFetcher.GetToken()
+
+		if err != nil {
+			log.Fatalf("Exiting with error: %s", err)
+		}
+	}
+
+	clientConfig := pivnet.ClientConfig{
+		Host:              host,
+		Token:             apiToken,
+		UserAgent:         userAgent,
+		SkipSSLValidation: skipSSLValidation,
+		UsingUAAToken:     usingUAAToken,
+	}
+
+	return gp.NewClient(
+		clientConfig,
+		logger,
+	)
 }

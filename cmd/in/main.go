@@ -21,10 +21,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
-)
-
-const (
-	legacyAPITokenLength = 20
+	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
 var (
@@ -91,29 +88,13 @@ func main() {
 		endpoint = pivnet.DefaultHost
 	}
 
-	var usingUAAToken = false
 	apiToken := input.Source.APIToken
 
-	if len(apiToken) > legacyAPITokenLength {
-		usingUAAToken = true
-		tokenFetcher := uaa.NewTokenFetcher(endpoint, apiToken)
-		apiToken, err = tokenFetcher.GetToken()
-
-		if err != nil {
-			log.Fatalf("Exiting with error: %s", err)
-		}
-	}
-
-	clientConfig := pivnet.ClientConfig{
-		Host:              endpoint,
-		Token:             apiToken,
-		UserAgent:         useragent.UserAgent(version, "get", input.Source.ProductSlug),
-		SkipSSLValidation: input.Source.SkipSSLValidation,
-		UsingUAAToken:     usingUAAToken,
-	}
-
-	client := gp.NewClient(
-		clientConfig,
+	client := NewPivnetClientWithToken(
+		apiToken,
+		endpoint,
+		input.Source.SkipSSLValidation,
+		useragent.UserAgent(version, "get", input.Source.ProductSlug),
 		ls,
 	)
 
@@ -146,3 +127,34 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+
+func NewPivnetClientWithToken(apiToken string, host string, skipSSLValidation bool, userAgent string, logger logger.Logger) *gp.Client {
+	const legacyAPITokenLength = 20
+	var usingUAAToken = false
+
+	if len(apiToken) > legacyAPITokenLength {
+		usingUAAToken = true
+		tokenFetcher := uaa.NewTokenFetcher(host, apiToken)
+		var err error
+		apiToken, err = tokenFetcher.GetToken()
+
+		if err != nil {
+			log.Fatalf("Exiting with error: %s", err)
+		}
+	}
+
+	clientConfig := pivnet.ClientConfig{
+		Host:              host,
+		Token:             apiToken,
+		UserAgent:         userAgent,
+		SkipSSLValidation: skipSSLValidation,
+		UsingUAAToken:     usingUAAToken,
+	}
+
+	return gp.NewClient(
+		clientConfig,
+		logger,
+	)
+}
+
