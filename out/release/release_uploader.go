@@ -23,6 +23,16 @@ type ReleaseUploader struct {
 	pollFrequency time.Duration
 }
 
+type ProductFileMetadata struct {
+	description        string
+	docsURL            string
+	systemRequirements []string
+	platforms          []string
+	includedFiles      []string
+	uploadAs           string
+	fileType           string
+}
+
 //go:generate counterfeiter --fake-name UploadClient . uploadClient
 type uploadClient interface {
 	FindProductForSlug(slug string) (pivnet.Product, error)
@@ -76,16 +86,6 @@ func NewReleaseUploader(
 
 func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) error {
 	for _, exactGlob := range exactGlobs {
-		fullFilepath := filepath.Join(u.sourcesDir, exactGlob)
-		fileContentsSHA256, err := u.sha256Summer.SumFile(fullFilepath)
-		if err != nil {
-			return err
-		}
-
-		fileContentsMD5, err := u.md5Summer.SumFile(fullFilepath)
-		if err != nil {
-			return err
-		}
 
 		u.logger.Info(fmt.Sprintf("uploading to s3: '%s'", exactGlob))
 
@@ -94,63 +94,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			return err
 		}
 
-		filename := filepath.Base(exactGlob)
-
-		var description string
-		var docsURL string
-		var systemRequirements []string
-		var platforms []string
-		var includedFiles []string
-
-		uploadAs := filename
-		fileType := "Software"
-
-		for _, f := range u.metadata.ProductFiles {
-			if f.File == exactGlob {
-				u.logger.Info(fmt.Sprintf(
-					"exact glob '%s' matches metadata file: '%s'",
-					exactGlob,
-					f.File,
-				))
-
-				if f.UploadAs != "" {
-					u.logger.Info(fmt.Sprintf(
-						"uploading '%s' to remote filename: '%s' instead",
-						exactGlob,
-						f.UploadAs,
-					))
-					uploadAs = f.UploadAs
-				}
-
-				description = f.Description
-
-				if f.FileType != "" {
-					fileType = f.FileType
-				}
-
-				if f.DocsURL != "" {
-					docsURL = f.DocsURL
-				}
-
-				if len(f.SystemRequirements) > 0 {
-					systemRequirements = f.SystemRequirements
-				}
-
-				if len(f.Platforms) > 0 {
-					platforms = f.Platforms
-				}
-
-				if len(f.IncludedFiles) > 0 {
-					includedFiles = f.IncludedFiles
-				}
-			} else {
-				u.logger.Info(fmt.Sprintf(
-					"exact glob '%s' does not match metadata file: '%s'",
-					exactGlob,
-					f.File,
-				))
-			}
-		}
+		fileData := u.getFileData(exactGlob)
 
 		productFiles, err := u.pivnet.ProductFiles(u.productSlug)
 		if err != nil {
@@ -172,30 +116,22 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		u.logger.Info(fmt.Sprintf(
 			"Creating product file with remote name: '%s'",
-			uploadAs,
+			fileData.uploadAs,
 		))
 
-		productFile, err := u.pivnet.CreateProductFile(pivnet.CreateProductFileConfig{
-			ProductSlug:        u.productSlug,
-			Name:               uploadAs,
-			AWSObjectKey:       awsObjectKey,
-			FileVersion:        release.Version,
-			SHA256:             fileContentsSHA256,
-			MD5:                fileContentsMD5,
-			Description:        description,
-			FileType:           fileType,
-			DocsURL:            docsURL,
-			SystemRequirements: systemRequirements,
-			Platforms:          platforms,
-			IncludedFiles:      includedFiles,
-		})
+		productFileConfig, err := u.getProductFileConfig(exactGlob, awsObjectKey, fileData, release)
+		if err != nil {
+			return err
+		}
+
+		productFile, err := u.pivnet.CreateProductFile(productFileConfig)
 		if err != nil {
 			return err
 		}
 
 		u.logger.Info(fmt.Sprintf(
 			"Adding product file: '%s' with ID: %d",
-			uploadAs,
+			fileData.uploadAs,
 			productFile.ID,
 		))
 
@@ -251,4 +187,96 @@ func (u ReleaseUploader) pollForProductFile(productFile pivnet.ProductFile) erro
 			))
 		}
 	}
+}
+
+func (u ReleaseUploader) getProductFileConfig(exactGlob string, awsObjectKey string, fileData ProductFileMetadata, release pivnet.Release) (pivnet.CreateProductFileConfig, error) {
+	fileContentsSHA256, fileContentsMD5, err := u.hasSameContent(exactGlob)
+	if err != nil {
+		return pivnet.CreateProductFileConfig{}, err
+	}
+
+	productFileConfig := pivnet.CreateProductFileConfig{
+		ProductSlug:        u.productSlug,
+		Name:               fileData.uploadAs,
+		AWSObjectKey:       awsObjectKey,
+		FileVersion:        release.Version,
+		SHA256:             fileContentsSHA256,
+		MD5:                fileContentsMD5,
+		Description:        fileData.description,
+		FileType:           fileData.fileType,
+		DocsURL:            fileData.docsURL,
+		SystemRequirements: fileData.systemRequirements,
+		Platforms:          fileData.platforms,
+		IncludedFiles:      fileData.includedFiles,
+	}
+	return productFileConfig, err
+}
+
+func (u ReleaseUploader) getFileData(exactGlob string) ProductFileMetadata {
+	var fileData ProductFileMetadata
+
+	fileData.uploadAs = filepath.Base(exactGlob)
+	fileData.fileType = "Software"
+
+	for _, f := range u.metadata.ProductFiles {
+		if f.File == exactGlob {
+			u.logger.Info(fmt.Sprintf(
+				"exact glob '%s' matches metadata file: '%s'",
+				exactGlob,
+				f.File,
+			))
+
+			if f.UploadAs != "" {
+				u.logger.Info(fmt.Sprintf(
+					"uploading '%s' to remote filename: '%s' instead",
+					exactGlob,
+					f.UploadAs,
+				))
+				fileData.uploadAs = f.UploadAs
+			}
+
+			fileData.description = f.Description
+
+			if f.FileType != "" {
+				fileData.fileType = f.FileType
+			}
+
+			if f.DocsURL != "" {
+				fileData.docsURL = f.DocsURL
+			}
+
+			if len(f.SystemRequirements) > 0 {
+				fileData.systemRequirements = f.SystemRequirements
+			}
+
+			if len(f.Platforms) > 0 {
+				fileData.platforms = f.Platforms
+			}
+
+			if len(f.IncludedFiles) > 0 {
+				fileData.includedFiles = f.IncludedFiles
+			}
+		} else {
+			u.logger.Info(fmt.Sprintf(
+				"exact glob '%s' does not match metadata file: '%s'",
+				exactGlob,
+				f.File,
+			))
+		}
+	}
+	return fileData
+}
+
+func (u ReleaseUploader) hasSameContent(fileName string) (string, string, error) {
+	fullFilepath := filepath.Join(u.sourcesDir, fileName)
+	fileContentsSHA256, err := u.sha256Summer.SumFile(fullFilepath)
+	if err != nil {
+		return "", "", err
+	}
+
+	fileContentsMD5, err := u.md5Summer.SumFile(fullFilepath)
+	if err != nil {
+		return "", "", err
+	}
+	return fileContentsSHA256, fileContentsMD5, nil
 }

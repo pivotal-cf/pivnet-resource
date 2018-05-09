@@ -294,4 +294,5 @@ var _ = Describe("ReleaseUploader", func() {
 			})
 		})
 	})
+
 })
