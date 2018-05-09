@@ -172,19 +172,34 @@ var _ = Describe("ReleaseUploader", func() {
 			BeforeEach(func() {
 				newAWSObjectKey = existingProductFiles[0].AWSObjectKey
 			})
+			Context("when the files have the same content", func() {
+				BeforeEach(func() {
+					existingProductFiles[0].SHA256 = actualSHA256Sum
+					existingProductFiles[0].MD5 = actualMD5Sum
+				})
+				It("should NOT delete the product", func() {
+					err := uploader.Upload(pivnetRelease, []string{"some/file"})
+					Expect(err).NotTo(HaveOccurred())
 
-			It("Deletes the product file before recreating", func() {
-				err := uploader.Upload(pivnetRelease, []string{""})
-				Expect(err).NotTo(HaveOccurred())
+					Expect(uploadClient.DeleteProductFileCallCount()).To(Equal(0))
+					Expect(uploadClient.CreateProductFileCallCount()).To(Equal(0))
+					Expect(uploadClient.AddProductFileCallCount()).To(Equal(1))
+				})
+			})
+			Context("when the files have different content", func() {
+				It("should delete the product before recreating", func() {
+					err := uploader.Upload(pivnetRelease, []string{"some/file"})
+					Expect(err).NotTo(HaveOccurred())
 
-				Expect(uploadClient.DeleteProductFileCallCount()).To(Equal(1))
+					Expect(uploadClient.DeleteProductFileCallCount()).To(Equal(1))
 
-				invokedProductSlug, invokedProductFileID := uploadClient.DeleteProductFileArgsForCall(0)
-				Expect(invokedProductSlug).To(Equal(productSlug))
-				Expect(invokedProductFileID).To(Equal(existingProductFiles[0].ID))
+					invokedProductSlug, invokedProductFileID := uploadClient.DeleteProductFileArgsForCall(0)
+					Expect(invokedProductSlug).To(Equal(productSlug))
+					Expect(invokedProductFileID).To(Equal(existingProductFiles[0].ID))
 
-				Expect(uploadClient.CreateProductFileCallCount()).To(Equal(1))
-				Expect(uploadClient.AddProductFileCallCount()).To(Equal(1))
+					Expect(uploadClient.CreateProductFileCallCount()).To(Equal(1))
+					Expect(uploadClient.AddProductFileCallCount()).To(Equal(1))
+				})
 			})
 
 			Context("when there is an error deleting the product file", func() {
@@ -293,6 +308,7 @@ var _ = Describe("ReleaseUploader", func() {
 				Expect(err.Error()).To(ContainSubstring("timed out"))
 			})
 		})
+
 	})
 
 })

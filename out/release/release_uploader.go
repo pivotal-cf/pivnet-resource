@@ -101,32 +101,55 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			return err
 		}
 
+		var productFile pivnet.ProductFile
+		var foundMatchingFile bool
+		var fileWasDeleted bool
 		for _, pf := range productFiles {
 			if pf.AWSObjectKey == awsObjectKey {
-				u.logger.Info(fmt.Sprintf("Deleting existing product file with AWSObjectKey: '%s'", pf.AWSObjectKey))
+				foundMatchingFile = true
+				u.logger.Info(fmt.Sprintf(
+					"Deleting existing product file with AWSObjectKey: '%s'",
+					pf.AWSObjectKey,
+				))
 
-				_, err = u.pivnet.DeleteProductFile(u.productSlug, pf.ID)
+				matched, err := u.hasSameFileContent(exactGlob, pf)
 				if err != nil {
 					return err
 				}
+				productFile = pf
 
-				break
+				if !matched {
+					_, err = u.pivnet.DeleteProductFile(u.productSlug, pf.ID)
+					if err != nil {
+						return err
+					}
+					fileWasDeleted = true
+
+					break
+				}
 			}
 		}
 
-		u.logger.Info(fmt.Sprintf(
-			"Creating product file with remote name: '%s'",
-			fileData.uploadAs,
-		))
+		if fileWasDeleted || !foundMatchingFile {
+			u.logger.Info(fmt.Sprintf(
+				"Creating product file with remote name: '%s'",
+				fileData.uploadAs,
+			))
 
-		productFileConfig, err := u.getProductFileConfig(exactGlob, awsObjectKey, fileData, release)
-		if err != nil {
-			return err
-		}
+			productFileConfig, err := u.getProductFileConfig(exactGlob, awsObjectKey, fileData, release)
+			if err != nil {
+				return err
+			}
 
-		productFile, err := u.pivnet.CreateProductFile(productFileConfig)
-		if err != nil {
-			return err
+			productFile, err = u.pivnet.CreateProductFile(productFileConfig)
+			if err != nil {
+				return err
+			}
+		} else {
+			u.logger.Info(fmt.Sprintf(
+				"File '%s' already exists, skipping creation",
+				fileData.uploadAs,
+			))
 		}
 
 		u.logger.Info(fmt.Sprintf(
@@ -189,8 +212,24 @@ func (u ReleaseUploader) pollForProductFile(productFile pivnet.ProductFile) erro
 	}
 }
 
+func (u ReleaseUploader) hasSameFileContent(fileName string, productFile pivnet.ProductFile) (bool, error) {
+	fileContentsSHA256, _, err := u.calculateHashes(fileName)
+	if err != nil {
+		return false, err
+	}
+
+	if productFile.SHA256 == fileContentsSHA256 {
+		u.logger.Debug(fmt.Sprintf(
+			"Found an existing product file (AWSObjectKey: '%s') that exactly matches the upload file. Skipping deletion and creation",
+			productFile.AWSObjectKey,
+		))
+		return true, nil
+	}
+	return false, nil
+}
+
 func (u ReleaseUploader) getProductFileConfig(exactGlob string, awsObjectKey string, fileData ProductFileMetadata, release pivnet.Release) (pivnet.CreateProductFileConfig, error) {
-	fileContentsSHA256, fileContentsMD5, err := u.hasSameContent(exactGlob)
+	fileContentsSHA256, fileContentsMD5, err := u.calculateHashes(exactGlob)
 	if err != nil {
 		return pivnet.CreateProductFileConfig{}, err
 	}
@@ -267,7 +306,7 @@ func (u ReleaseUploader) getFileData(exactGlob string) ProductFileMetadata {
 	return fileData
 }
 
-func (u ReleaseUploader) hasSameContent(fileName string) (string, string, error) {
+func (u ReleaseUploader) calculateHashes(fileName string) (string, string, error) {
 	fullFilepath := filepath.Join(u.sourcesDir, fileName)
 	fileContentsSHA256, err := u.sha256Summer.SumFile(fullFilepath)
 	if err != nil {
