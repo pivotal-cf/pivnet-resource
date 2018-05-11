@@ -107,10 +107,6 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 		for _, pf := range productFiles {
 			if pf.AWSObjectKey == awsObjectKey {
 				foundMatchingFile = true
-				u.logger.Info(fmt.Sprintf(
-					"Deleting existing product file with AWSObjectKey: '%s'",
-					pf.AWSObjectKey,
-				))
 
 				matched, err := u.hasSameFileContent(exactGlob, pf)
 				if err != nil {
@@ -119,6 +115,11 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 				productFile = pf
 
 				if !matched {
+					u.logger.Info(fmt.Sprintf(
+						"Deleting existing product file with AWSObjectKey: '%s'",
+						pf.AWSObjectKey,
+					))
+
 					_, err = u.pivnet.DeleteProductFile(u.productSlug, pf.ID)
 					if err != nil {
 						return err

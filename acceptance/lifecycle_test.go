@@ -29,14 +29,19 @@ var _ = Describe("Lifecycle test", func() {
 		description     = "this release is for automated-testing only."
 		releaseNotesURL = "https://example.com"
 
-		metadataFile = "metadata"
+		metadataFile =  "metadata"
+		metadataFile2 = "metadata2"
 		version      string
+		version2     string
 
 		filePrefix = "pivnet-resource-test-file"
 
 		command       *exec.Cmd
-		stdinContents []byte
+		command2      *exec.Cmd
+		stdinContents  []byte
+		stdinContents2 []byte
 		outRequest    concourse.OutRequest
+		outRequest2   concourse.OutRequest
 		rootDir       string
 	)
 
@@ -62,8 +67,24 @@ var _ = Describe("Lifecycle test", func() {
 			},
 		}
 
+		version2 = fmt.Sprintf("%d", time.Now().Nanosecond())
+
+		productMetadata2 := metadata.Metadata{
+			Release: &metadata.Release{
+				ReleaseType:     releaseType,
+				EULASlug:        eulaSlug,
+				ReleaseDate:     releaseDate,
+				Description:     description,
+				ReleaseNotesURL: releaseNotesURL,
+				Version:         version2,
+			},
+		}
+
+
 		By("Marshaling the metadata to yaml")
 		metadataBytes, err := yaml.Marshal(productMetadata)
+		Expect(err).ShouldNot(HaveOccurred())
+		metadataBytes2, err := yaml.Marshal(productMetadata2)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Writing the metadata to a file")
@@ -73,8 +94,15 @@ var _ = Describe("Lifecycle test", func() {
 			os.ModePerm)
 		Expect(err).ShouldNot(HaveOccurred())
 
+		err = ioutil.WriteFile(
+			filepath.Join(rootDir, metadataFile2),
+			metadataBytes2,
+			os.ModePerm)
+		Expect(err).ShouldNot(HaveOccurred())
+
 		By("Creating command object")
 		command = exec.Command(outPath, rootDir)
+		command2 = exec.Command(outPath, rootDir)
 
 		By("Creating default request")
 		outRequest = concourse.OutRequest{
@@ -95,6 +123,26 @@ var _ = Describe("Lifecycle test", func() {
 		}
 
 		stdinContents, err = json.Marshal(outRequest)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		outRequest2 = concourse.OutRequest{
+			Source: concourse.Source{
+				APIToken:        pivnetAPIToken,
+				AccessKeyID:     awsAccessKeyID,
+				SecretAccessKey: awsSecretAccessKey,
+				ProductSlug:     productSlug,
+				Endpoint:        endpoint,
+				Bucket:          pivnetBucketName,
+				Region:          pivnetRegion,
+			},
+			Params: concourse.OutParams{
+				FileGlob:       "*",
+				FilepathPrefix: s3FilepathPrefix,
+				MetadataFile:   metadataFile2,
+			},
+		}
+
+		stdinContents2, err = json.Marshal(outRequest2)
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
@@ -170,6 +218,13 @@ var _ = Describe("Lifecycle test", func() {
 
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
+
+				outRequest2.Params.FileGlob = fmt.Sprintf("%s/*", sourcesDir)
+				outRequest2.Params.FilepathPrefix = s3FilepathPrefix
+
+				stdinContents2, err = json.Marshal(outRequest2)
+				Expect(err).ShouldNot(HaveOccurred())
+
 			})
 
 			AfterEach(func() {
@@ -202,6 +257,7 @@ var _ = Describe("Lifecycle test", func() {
 					localDownloadPath := fmt.Sprintf("%s-downloaded", sourceFilePaths[i])
 					err := client.DownloadFile(pivnetBucketName, remotePaths[i], localDownloadPath)
 					Expect(err).ShouldNot(HaveOccurred())
+					os.Remove(localDownloadPath) //delete immediately so as to not pollute later tests
 				}
 
 				By("Outputting a valid json response")
@@ -239,11 +295,74 @@ var _ = Describe("Lifecycle test", func() {
 				release, err = pivnetClient.GetRelease(productSlug, version)
 				Expect(err).ShouldNot(HaveOccurred())
 
-				versionWithFingerprint, err := versions.CombineVersionAndFingerprint(release.Version, release.SoftwareFilesUpdatedAt)
+				expectedVersionWithFingerprint, err := versions.CombineVersionAndFingerprint(release.Version, release.SoftwareFilesUpdatedAt)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying release contains new product files")
 				productFilesFromRelease, err := pivnetClient.ProductFilesForRelease(productSlug, release.ID)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Expect(len(productFilesFromRelease)).To(Equal(totalFiles))
+				for _, p := range productFilesFromRelease {
+					Expect(sourceFileNames).To(ContainElement(p.Name))
+
+					productFile, err := pivnetClient.ProductFileForRelease(
+						productSlug,
+						release.ID,
+						p.ID,
+					)
+					Expect(err).ShouldNot(HaveOccurred())
+					// Contents are fixed at 'some contents'
+					Expect(productFile.SHA256).To(Equal("290f493c44f5d63d06b374d0a5abd292fae38b92cab2fae5efefe1b0e9347f56"))
+				}
+
+				By("Running a new command to create a second release with the same product files")
+				session2 := run(command2, stdinContents2)
+				Eventually(session2, executableTimeout).Should(gexec.Exit(0))
+
+				By("Outputting a valid json response for the second release")
+				response2 := concourse.OutResponse{}
+				err = json.Unmarshal(session2.Out.Contents(), &response2)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				By("Getting the newer release")
+				releaseWithExistingProductFiles, err := pivnetClient.GetRelease(productSlug, version2)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				expectedVersionWithFingerprint2, err := versions.CombineVersionAndFingerprint(releaseWithExistingProductFiles.Version, releaseWithExistingProductFiles.SoftwareFilesUpdatedAt)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Validating that the newer release was created correctly")
+				Expect(response2.Version.ProductVersion).To(Equal(expectedVersionWithFingerprint2))
+
+				By("Getting the updated list of product files for second release")
+				updatedProductFiles2, err := pivnetClient.ProductFiles(productSlug)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Verifying that the number of product files has not increased")
+				numProductFilesAdded := len(updatedProductFiles2) - len(updatedProductFiles)
+				Expect(numProductFilesAdded).To(Equal(0))
+
+				By("Verifying that the newer release contains existing product files")
+				productFilesFromRelease2, err := pivnetClient.ProductFilesForRelease(productSlug, releaseWithExistingProductFiles.ID)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				Expect(len(productFilesFromRelease2)).To(Equal(totalFiles))
+				for _, p := range productFilesFromRelease2 {
+					Expect(sourceFileNames).To(ContainElement(p.Name))
+
+					productFile, err := pivnetClient.ProductFileForRelease(
+						productSlug,
+						releaseWithExistingProductFiles.ID,
+						p.ID,
+					)
+					Expect(err).ShouldNot(HaveOccurred())
+					// Contents are fixed at 'some contents'
+					Expect(productFile.SHA256).To(Equal("290f493c44f5d63d06b374d0a5abd292fae38b92cab2fae5efefe1b0e9347f56"))
+				}
+
+				By("Verifying that the product files are still contained in the older release")
+				productFilesFromRelease, err = pivnetClient.ProductFilesForRelease(productSlug, release.ID)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				Expect(len(productFilesFromRelease)).To(Equal(totalFiles))
@@ -271,7 +390,7 @@ var _ = Describe("Lifecycle test", func() {
 						Globs: []string{"*"},
 					},
 					Version: concourse.Version{
-						ProductVersion: versionWithFingerprint,
+						ProductVersion: expectedVersionWithFingerprint,
 					},
 				}
 
@@ -309,7 +428,7 @@ var _ = Describe("Lifecycle test", func() {
 						Endpoint:    endpoint,
 					},
 					Version: concourse.Version{
-						ProductVersion: versionWithFingerprint,
+						ProductVersion: expectedVersionWithFingerprint,
 					},
 					Params: concourse.InParams{
 						Globs: []string{},
@@ -352,7 +471,7 @@ var _ = Describe("Lifecycle test", func() {
 						Globs: []string{"badglob"},
 					},
 					Version: concourse.Version{
-						ProductVersion: versionWithFingerprint,
+						ProductVersion: expectedVersionWithFingerprint,
 					},
 				}
 
