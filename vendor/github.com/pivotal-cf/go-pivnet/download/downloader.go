@@ -132,6 +132,7 @@ Retry:
 		return err
 	}
 
+	rangeHeader.Add("Referer", "https://go-pivnet.network.pivotal.io")
 	req.Header = rangeHeader
 
 	resp, err := c.HTTPClient.Do(req)
