@@ -59,6 +59,8 @@ func (c Client) Get(
 		return fmt.Errorf("failed to construct HEAD request: %s", err)
 	}
 
+	req.Header.Add("Referer","https://go-pivnet.network.pivotal.io")
+
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to make HEAD request: %s", err)
