@@ -102,7 +102,6 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		var productFile pivnet.ProductFile
 		var foundMatchingFile bool
-		var fileWasDeleted bool
 		for _, pf := range productFiles {
 			if pf.AWSObjectKey == awsObjectKey {
 				foundMatchingFile = true
@@ -114,26 +113,16 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 				productFile = pf
 
 				if !matched {
-					u.logger.Info(fmt.Sprintf(
-						"Deleting existing product file with AWSObjectKey: '%s'",
-						pf.AWSObjectKey,
-					))
-
-					_, err = u.pivnet.DeleteProductFile(u.productSlug, pf.ID)
-					if err != nil {
-						return err
-					}
-					fileWasDeleted = true
-
-					break
+					return fmt.Errorf("A different file with the same name '%s' already exists on S3. " +
+						"Please use another filename for your new file", exactGlob)
 				} else {
-					u.logger.Info(fmt.Sprintf("File already found on S3, skipping file upload. The existing file %s "+
+					u.logger.Info(fmt.Sprintf("An identical file was found on S3, skipping file upload. The existing file %s "+
 						"will be associated to this release.", awsObjectKey))
 				}
 			}
 		}
 
-		if fileWasDeleted || !foundMatchingFile {
+		if !foundMatchingFile {
 			u.logger.Info(fmt.Sprintf(
 				"Creating product file with remote name: '%s'",
 				fileData.uploadAs,

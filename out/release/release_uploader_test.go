@@ -194,34 +194,10 @@ var _ = Describe("ReleaseUploader", func() {
 				})
 			})
 			Context("when the files have different content", func() {
-				It("should delete the product before recreating and associate the new product file", func() {
+				It("should display error message", func() {
 					err := uploader.Upload(pivnetRelease, []string{"some/file"})
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(uploadClient.DeleteProductFileCallCount()).To(Equal(1))
-
-					invokedProductSlug, invokedProductFileID := uploadClient.DeleteProductFileArgsForCall(0)
-					Expect(invokedProductSlug).To(Equal(productSlug))
-					Expect(invokedProductFileID).To(Equal(existingProductFiles[0].ID))
-
-					Expect(uploadClient.CreateProductFileCallCount()).To(Equal(1))
-					Expect(uploadClient.AddProductFileCallCount()).To(Equal(1))
-				})
-			})
-
-			Context("when there is an error deleting the product file", func() {
-				var (
-					deleteProductFileErr error
-				)
-
-				BeforeEach(func() {
-					deleteProductFileErr = errors.New("delete product file error")
-					uploadClient.DeleteProductFileReturns(pivnet.ProductFile{}, deleteProductFileErr)
-				})
-
-				It("returns the error", func() {
-					err := uploader.Upload(pivnetRelease, []string{""})
-					Expect(err).To(Equal(deleteProductFileErr))
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("already exists on S3"))
 				})
 			})
 		})
