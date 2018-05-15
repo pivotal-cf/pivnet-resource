@@ -39,6 +39,28 @@ func (c Client) UploadFile(exactGlob string) (string, error) {
 		return "", fmt.Errorf("glob must not be empty")
 	}
 
+	remotePath, remoteDir, err := c.ComputeAWSObjectKey(exactGlob)
+	if err != nil {
+		return "", err
+	}
+
+	err = c.transport.Upload(
+		exactGlob,
+		remoteDir,
+		c.sourcesDir,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return remotePath, nil
+}
+
+func (c Client) ComputeAWSObjectKey(exactGlob string) (string, string, error) {
+	if exactGlob == "" {
+		return "", "", fmt.Errorf("glob must not be empty")
+	}
+
 	filename := filepath.Base(exactGlob)
 
 	var remoteDir string
@@ -52,15 +74,6 @@ func (c Client) UploadFile(exactGlob string) (string, error) {
 	}
 
 	remotePath := fmt.Sprintf("%s%s", remoteDir, filename)
+	return remotePath, remoteDir, nil
 
-	err := c.transport.Upload(
-		exactGlob,
-		remoteDir,
-		c.sourcesDir,
-	)
-	if err != nil {
-		return "", err
-	}
-
-	return remotePath, nil
 }

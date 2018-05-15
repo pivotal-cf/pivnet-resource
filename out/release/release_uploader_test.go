@@ -116,6 +116,7 @@ var _ = Describe("ReleaseUploader", func() {
 		sha256Summer.SumFileReturns(actualSHA256Sum, sha256SumFileErr)
 		md5Summer.SumFileReturns(actualMD5Sum, md5SumFileErr)
 		s3Client.UploadFileReturns(newAWSObjectKey, uploadFileErr)
+		s3Client.ComputeAWSObjectKeyReturns(newAWSObjectKey, "", uploadFileErr)
 		uploadClient.CreateProductFileReturns(pivnet.ProductFile{ID: 13367}, createProductFileErr)
 		uploadClient.ProductFilesReturns(existingProductFiles, existingProductFilesErr)
 
@@ -177,17 +178,23 @@ var _ = Describe("ReleaseUploader", func() {
 					existingProductFiles[0].SHA256 = actualSHA256Sum
 					existingProductFiles[0].MD5 = actualMD5Sum
 				})
-				It("should NOT delete the product", func() {
+
+				It("should not re-upload the file to S3", func() {
 					err := uploader.Upload(pivnetRelease, []string{"some/file"})
 					Expect(err).NotTo(HaveOccurred())
+					Expect(s3Client.UploadFileCallCount()).To(Equal(0))
+				})
 
+				It("should NOT delete the product and associate the existing product file", func() {
+					err := uploader.Upload(pivnetRelease, []string{"some/file"})
+					Expect(err).NotTo(HaveOccurred())
 					Expect(uploadClient.DeleteProductFileCallCount()).To(Equal(0))
 					Expect(uploadClient.CreateProductFileCallCount()).To(Equal(0))
 					Expect(uploadClient.AddProductFileCallCount()).To(Equal(1))
 				})
 			})
 			Context("when the files have different content", func() {
-				It("should delete the product before recreating", func() {
+				It("should delete the product before recreating and associate the new product file", func() {
 					err := uploader.Upload(pivnetRelease, []string{"some/file"})
 					Expect(err).NotTo(HaveOccurred())
 

@@ -45,6 +45,7 @@ type uploadClient interface {
 
 //go:generate counterfeiter --fake-name S3Client . s3Client
 type s3Client interface {
+	ComputeAWSObjectKey(string) (string, string, error)
 	UploadFile(string) (string, error)
 }
 
@@ -87,9 +88,7 @@ func NewReleaseUploader(
 func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) error {
 	for _, exactGlob := range exactGlobs {
 
-		u.logger.Info(fmt.Sprintf("uploading to s3: '%s'", exactGlob))
-
-		awsObjectKey, err := u.s3.UploadFile(exactGlob)
+		awsObjectKey, _, err := u.s3.ComputeAWSObjectKey(exactGlob)
 		if err != nil {
 			return err
 		}
@@ -127,6 +126,9 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 					fileWasDeleted = true
 
 					break
+				} else {
+					u.logger.Info(fmt.Sprintf("File already found on S3, skipping file upload. The existing file %s "+
+						"will be associated to this release.", awsObjectKey))
 				}
 			}
 		}
@@ -137,6 +139,8 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 				fileData.uploadAs,
 			))
 
+			_, err := u.s3.UploadFile(exactGlob)
+
 			productFileConfig, err := u.getProductFileConfig(exactGlob, awsObjectKey, fileData, release)
 			if err != nil {
 				return err
@@ -146,6 +150,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			if err != nil {
 				return err
 			}
+
 		} else {
 			u.logger.Info(fmt.Sprintf(
 				"File '%s' already exists, skipping creation",
