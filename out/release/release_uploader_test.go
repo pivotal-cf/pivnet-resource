@@ -115,7 +115,7 @@ var _ = Describe("ReleaseUploader", func() {
 
 		sha256Summer.SumFileReturns(actualSHA256Sum, sha256SumFileErr)
 		md5Summer.SumFileReturns(actualMD5Sum, md5SumFileErr)
-		s3Client.UploadFileReturns(newAWSObjectKey, uploadFileErr)
+		s3Client.UploadFileReturns(uploadFileErr)
 		s3Client.ComputeAWSObjectKeyReturns(newAWSObjectKey, "", uploadFileErr)
 		uploadClient.CreateProductFileReturns(pivnet.ProductFile{ID: 13367}, createProductFileErr)
 		uploadClient.ProductFilesReturns(existingProductFiles, existingProductFilesErr)

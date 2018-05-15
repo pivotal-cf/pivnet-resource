@@ -21,18 +21,16 @@ type S3Client struct {
 		result2 string
 		result3 error
 	}
-	UploadFileStub        func(string) (string, error)
+	UploadFileStub        func(string) error
 	uploadFileMutex       sync.RWMutex
 	uploadFileArgsForCall []struct {
 		arg1 string
 	}
 	uploadFileReturns struct {
-		result1 string
-		result2 error
+		result1 error
 	}
 	uploadFileReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
+		result1 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -92,7 +90,7 @@ func (fake *S3Client) ComputeAWSObjectKeyReturnsOnCall(i int, result1 string, re
 	}{result1, result2, result3}
 }
 
-func (fake *S3Client) UploadFile(arg1 string) (string, error) {
+func (fake *S3Client) UploadFile(arg1 string) error {
 	fake.uploadFileMutex.Lock()
 	ret, specificReturn := fake.uploadFileReturnsOnCall[len(fake.uploadFileArgsForCall)]
 	fake.uploadFileArgsForCall = append(fake.uploadFileArgsForCall, struct {
@@ -104,9 +102,9 @@ func (fake *S3Client) UploadFile(arg1 string) (string, error) {
 		return fake.UploadFileStub(arg1)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.uploadFileReturns.result1, fake.uploadFileReturns.result2
+	return fake.uploadFileReturns.result1
 }
 
 func (fake *S3Client) UploadFileCallCount() int {
@@ -121,26 +119,23 @@ func (fake *S3Client) UploadFileArgsForCall(i int) string {
 	return fake.uploadFileArgsForCall[i].arg1
 }
 
-func (fake *S3Client) UploadFileReturns(result1 string, result2 error) {
+func (fake *S3Client) UploadFileReturns(result1 error) {
 	fake.UploadFileStub = nil
 	fake.uploadFileReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *S3Client) UploadFileReturnsOnCall(i int, result1 string, result2 error) {
+func (fake *S3Client) UploadFileReturnsOnCall(i int, result1 error) {
 	fake.UploadFileStub = nil
 	if fake.uploadFileReturnsOnCall == nil {
 		fake.uploadFileReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
+			result1 error
 		})
 	}
 	fake.uploadFileReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *S3Client) Invocations() map[string][][]interface{} {

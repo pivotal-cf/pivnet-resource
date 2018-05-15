@@ -46,7 +46,7 @@ type uploadClient interface {
 //go:generate counterfeiter --fake-name S3Client . s3Client
 type s3Client interface {
 	ComputeAWSObjectKey(string) (string, string, error)
-	UploadFile(string) (string, error)
+	UploadFile(string) error
 }
 
 //go:generate counterfeiter --fake-name Sha256Summer . sha256Summer
@@ -113,7 +113,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 				productFile = pf
 
 				if !matched {
-					return fmt.Errorf("A different file with the same name '%s' already exists on S3. " +
+					return fmt.Errorf("A different file with the same name '%s' already exists on S3. "+
 						"Please use another filename for your new file", exactGlob)
 				} else {
 					u.logger.Info(fmt.Sprintf("An identical file was found on S3, skipping file upload. The existing file %s "+
@@ -128,7 +128,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 				fileData.uploadAs,
 			))
 
-			_, err := u.s3.UploadFile(exactGlob)
+			err := u.s3.UploadFile(exactGlob)
 
 			productFileConfig, err := u.getProductFileConfig(exactGlob, awsObjectKey, fileData, release)
 			if err != nil {

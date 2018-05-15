@@ -34,14 +34,11 @@ func NewClient(config Config) *Client {
 	}
 }
 
-func (c Client) UploadFile(exactGlob string) (string, error) {
-	if exactGlob == "" {
-		return "", fmt.Errorf("glob must not be empty")
-	}
-
-	remotePath, remoteDir, err := c.ComputeAWSObjectKey(exactGlob)
+func (c Client) UploadFile(exactGlob string) (error) {
+	
+	_, remoteDir, err := c.ComputeAWSObjectKey(exactGlob)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	err = c.transport.Upload(
@@ -50,10 +47,10 @@ func (c Client) UploadFile(exactGlob string) (string, error) {
 		c.sourcesDir,
 	)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return remotePath, nil
+	return nil
 }
 
 func (c Client) ComputeAWSObjectKey(exactGlob string) (string, string, error) {

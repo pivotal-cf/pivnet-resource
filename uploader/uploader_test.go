@@ -59,7 +59,7 @@ var _ = Describe("Uploader", func() {
 		})
 
 		It("invokes the transport", func() {
-			_, err := uploaderClient.UploadFile("my_files/file-0")
+			err := uploaderClient.UploadFile("my_files/file-0")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeTransport.UploadCallCount()).To(Equal(1))
@@ -71,7 +71,7 @@ var _ = Describe("Uploader", func() {
 		})
 
 		It("returns a map of filenames to remote paths", func() {
-			remotePath, err := uploaderClient.UploadFile("my_files/file-0")
+			remotePath, _, err := uploaderClient.ComputeAWSObjectKey("my_files/file-0")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(remotePath).To(Equal(
@@ -89,7 +89,7 @@ var _ = Describe("Uploader", func() {
 			})
 
 			It("invokes the transport with 'product_files'", func() {
-				_, err := uploaderClient.UploadFile("my_files/file-0")
+				err := uploaderClient.UploadFile("my_files/file-0")
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(fakeTransport.UploadCallCount()).To(Equal(1))
@@ -112,7 +112,7 @@ var _ = Describe("Uploader", func() {
 			})
 
 			It("invokes the transport with 'product-files'", func() {
-				_, err := uploaderClient.UploadFile("my_files/file-0")
+				err := uploaderClient.UploadFile("my_files/file-0")
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(fakeTransport.UploadCallCount()).To(Equal(1))
@@ -130,7 +130,7 @@ var _ = Describe("Uploader", func() {
 			})
 
 			It("propagates errors", func() {
-				_, err := uploaderClient.UploadFile("foo")
+				err := uploaderClient.UploadFile("foo")
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(ContainSubstring("some error"))
@@ -139,7 +139,7 @@ var _ = Describe("Uploader", func() {
 
 		Context("when the glob is empty", func() {
 			It("returns an error", func() {
-				_, err := uploaderClient.UploadFile("")
+				err := uploaderClient.UploadFile("")
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(ContainSubstring("glob"))
