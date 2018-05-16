@@ -113,8 +113,9 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 				productFile = pf
 
 				if !matched {
-					return fmt.Errorf("A different file with the same name '%s' already exists on S3. "+
-						"Please use another filename for your new file", exactGlob)
+					return fmt.Errorf("File conflict: the file '%s' could not be uploaded and associated to this release."+
+						"  A different file with the same name already exists on S3.  Please recreate the release using a different"+
+						" filename for this file or upload the file to this release manually", exactGlob)
 				} else {
 					u.logger.Info(fmt.Sprintf("An identical file was found on S3, skipping file upload. The existing file %s "+
 						"will be associated to this release.", awsObjectKey))
