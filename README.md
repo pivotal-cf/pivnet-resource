@@ -157,7 +157,11 @@ the provided `s3_filepath_prefix`, adding them both to Pivotal Network as well a
 to the newly-created release. The MD5 checksum of each file is taken locally,
 and added to the file metadata in Pivotal Network.
 
-**Existing product files with the same AWS key will be deleted and recreated.**
+**Existing product files with the same AWS key will no longer be deleted and recreated.**
+
+**If you want to associate an existing product file with a new release, you can do so by specifying the existing AWS key when creating the release. This will no longer break past release associations.**
+
+**If the AWS key matches an existing file, but the SHA does not match, you will now receive an error and need to rename the file.**
 
 **Existing releases with the same version will be deleted and recreated.**
 
