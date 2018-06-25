@@ -150,11 +150,11 @@ var _ = Describe("Check", func() {
 			allReleases = []pivnet.Release{}
 		})
 
-		It("returns empty response without error", func() {
-			response, err := checkCommand.Run(checkRequest)
-			Expect(err).NotTo(HaveOccurred())
+		It("returns an error", func() {
+			_, err := checkCommand.Run(checkRequest)
+			Expect(err).To(HaveOccurred())
 
-			Expect(response).To(BeEmpty())
+			Expect(err.Error()).To(ContainSubstring("cannot find specified release"))
 		})
 	})
 

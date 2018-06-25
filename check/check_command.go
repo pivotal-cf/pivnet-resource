@@ -114,7 +114,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 	}
 
 	if len(vs) == 0 {
-		return concourse.CheckResponse{}, nil
+		return concourse.CheckResponse{}, fmt.Errorf("cannot find specified release")
 	}
 
 	c.logger.Info("Gathering new versions")
