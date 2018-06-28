@@ -41,6 +41,7 @@ var _ = Describe("ReleaseUploader", func() {
 		existingProductFilesErr error
 		createProductFileErr    error
 		uploadFileErr           error
+		computeAWSObjectKeyError  error
 		sha256SumFileErr        error
 		md5SumFileErr           error
 		productFileErr          error
@@ -94,6 +95,7 @@ var _ = Describe("ReleaseUploader", func() {
 		existingProductFilesErr = nil
 		createProductFileErr = nil
 		uploadFileErr = nil
+		computeAWSObjectKeyError = nil
 		sha256SumFileErr = nil
 		md5SumFileErr = nil
 		productFileErr = nil
@@ -116,7 +118,7 @@ var _ = Describe("ReleaseUploader", func() {
 		sha256Summer.SumFileReturns(actualSHA256Sum, sha256SumFileErr)
 		md5Summer.SumFileReturns(actualMD5Sum, md5SumFileErr)
 		s3Client.UploadFileReturns(uploadFileErr)
-		s3Client.ComputeAWSObjectKeyReturns(newAWSObjectKey, "", uploadFileErr)
+		s3Client.ComputeAWSObjectKeyReturns(newAWSObjectKey, "", computeAWSObjectKeyError)
 		uploadClient.CreateProductFileReturns(pivnet.ProductFile{ID: 13367}, createProductFileErr)
 		uploadClient.ProductFilesReturns(existingProductFiles, existingProductFilesErr)
 
@@ -221,6 +223,17 @@ var _ = Describe("ReleaseUploader", func() {
 			It("returns an error", func() {
 				err := uploader.Upload(pivnetRelease, []string{""})
 				Expect(err).To(MatchError(errors.New("md5 error")))
+			})
+		})
+
+		Context("when computing the AWS Object Key fails", func() {
+			BeforeEach(func() {
+				computeAWSObjectKeyError = errors.New("AWS object key generation fails")
+			})
+
+			It("returns an error", func() {
+				err := uploader.Upload(pivnetRelease, []string{""})
+				Expect(err).To(Equal(computeAWSObjectKeyError))
 			})
 		})
 

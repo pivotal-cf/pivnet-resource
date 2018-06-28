@@ -130,6 +130,9 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 			))
 
 			err := u.s3.UploadFile(exactGlob)
+			if err != nil {
+				return err
+			}
 
 			productFileConfig, err := u.getProductFileConfig(exactGlob, awsObjectKey, fileData, release)
 			if err != nil {
