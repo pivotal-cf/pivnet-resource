@@ -36,6 +36,7 @@ var _ = Describe("ReleaseCreator", func() {
 		eulaSlug          string
 		productSlug       string
 		releaseType       pivnet.ReleaseType
+		params            concourse.OutParams
 	)
 
 	BeforeEach(func() {
@@ -69,6 +70,10 @@ var _ = Describe("ReleaseCreator", func() {
 	})
 
 	Describe("Create", func() {
+		BeforeEach(func() {
+			params = concourse.OutParams{}
+		})
+
 		JustBeforeEach(func() {
 			meta := metadata.Metadata{
 				Release: &metadata.Release{
@@ -88,8 +93,6 @@ var _ = Describe("ReleaseCreator", func() {
 					},
 				},
 			}
-
-			params := concourse.OutParams{}
 
 			source := concourse.Source{
 				ReleaseType:    sourceReleaseType,
@@ -206,32 +209,49 @@ var _ = Describe("ReleaseCreator", func() {
 				releaseVersion = existingReleases[0].Version
 			})
 
-			It("deletes the release", func() {
-				_, err := creator.Create()
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(pivnetClient.DeleteReleaseCallCount()).To(Equal(1))
-
-				invokedProductSlug, invokedRelease := pivnetClient.DeleteReleaseArgsForCall(0)
-				Expect(invokedProductSlug).To(Equal(productSlug))
-				Expect(invokedRelease).To(Equal(existingReleases[0]))
-			})
-
-			Context("when deleting the release returns an error", func() {
-				var (
-					expectedErr error
-				)
-
+			Context("when the Override parameter is set", func() {
 				BeforeEach(func() {
-					expectedErr = errors.New("some error")
-
-					pivnetClient.DeleteReleaseReturns(expectedErr)
+					params.Override = true
 				})
 
-				It("returns the error", func() {
+				It("deletes the release", func() {
 					_, err := creator.Create()
+					Expect(err).NotTo(HaveOccurred())
 
-					Expect(err).To(Equal(expectedErr))
+					Expect(pivnetClient.DeleteReleaseCallCount()).To(Equal(1))
+
+					invokedProductSlug, invokedRelease := pivnetClient.DeleteReleaseArgsForCall(0)
+					Expect(invokedProductSlug).To(Equal(productSlug))
+					Expect(invokedRelease).To(Equal(existingReleases[0]))
+				})
+
+				Context("when deleting the release returns an error", func() {
+					var (
+						expectedErr error
+					)
+
+					BeforeEach(func() {
+						expectedErr = errors.New("some error")
+
+						pivnetClient.DeleteReleaseReturns(expectedErr)
+					})
+
+					It("returns the error", func() {
+						_, err := creator.Create()
+
+						Expect(err).To(Equal(expectedErr))
+					})
+				})
+			})
+
+			Context("when the Override parameter is turned off", func() {
+				BeforeEach(func() {
+					params.Override = false
+				})
+
+				It("returns an error", func() {
+					_, err := creator.Create()
+					Expect(err).To(MatchError(fmt.Errorf("Release '%s' with version '%s' already exists.", productSlug, releaseVersion)))
 				})
 			})
 		})

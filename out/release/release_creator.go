@@ -172,15 +172,23 @@ func (rc ReleaseCreator) Create() (pivnet.Release, error) {
 
 	for _, r := range releases {
 		if r.Version == version {
-			rc.logger.Info(fmt.Sprintf(
-				"Deleting existing release: '%s' - id: '%d'",
-				r.Version,
-				r.ID,
-			))
+			if rc.params.Override {
+				rc.logger.Info(fmt.Sprintf(
+					"Deleting existing release: '%s' - id: '%d'",
+					r.Version,
+					r.ID,
+				))
 
-			err := rc.pivnet.DeleteRelease(rc.productSlug, r)
-			if err != nil {
-				return pivnet.Release{}, err
+				err := rc.pivnet.DeleteRelease(rc.productSlug, r)
+				if err != nil {
+					return pivnet.Release{}, err
+				}
+			} else {
+				return pivnet.Release{}, fmt.Errorf(
+					"Release '%s' with version '%s' already exists.",
+					rc.productSlug,
+					version,
+				)
 			}
 		}
 	}
