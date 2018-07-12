@@ -183,7 +183,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Info("Downloading files")
 
-	err = c.downloadFiles(input.Params.Globs, allProductFiles, productSlug, release.ID)
+	err = c.downloadFiles(input.Params.Globs, allProductFiles, productSlug, release.ID, input.Params.Unpack)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
@@ -321,6 +321,7 @@ func (c InCommand) downloadFiles(
 	productFiles []pivnet.ProductFile,
 	productSlug string,
 	releaseID int,
+	unpack bool,
 ) error {
 	c.logger.Info("Filtering download links by glob")
 
@@ -366,6 +367,20 @@ func (c InCommand) downloadFiles(
 	err = c.compareSHA256sOrMD5s(files, fileSHA256s, fileMD5s)
 	if err != nil {
 		return err
+	}
+
+	if unpack {
+		for _, destinationPath := range files {
+			mime := archiveMimetype(destinationPath)
+			if mime == "" {
+				return fmt.Errorf("not an archive: %s", destinationPath)
+			}
+
+			err = extractArchive(mime, destinationPath)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

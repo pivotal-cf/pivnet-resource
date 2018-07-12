@@ -7,6 +7,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/downloader"
@@ -20,14 +21,12 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
-	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
 var (
 	// version is deliberately left uninitialized so it can be set at compile-time
 	version string
 )
-
 
 func main() {
 	if version == "" {
@@ -144,4 +143,3 @@ func NewPivnetClientWithToken(apiToken string, host string, skipSSLValidation bo
 		logger,
 	)
 }
-
