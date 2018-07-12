@@ -112,6 +112,7 @@ var _ = Describe("Out", func() {
 					FileGlob:       "",
 					FilepathPrefix: "",
 					MetadataFile:   metadataFile,
+					Override:       false,
 				},
 			}
 		})
@@ -229,6 +230,7 @@ var _ = Describe("Out", func() {
 					FileGlob:       "",
 					FilepathPrefix: "",
 					MetadataFile:   metadataFile,
+					Override:       false,
 				},
 			}
 		})
@@ -325,6 +327,83 @@ var _ = Describe("Out", func() {
 				metadataReleaseNotesURL, err := metadataValueForKey(response.Metadata, "release_notes_url")
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(metadataReleaseNotesURL).To(Equal(releaseNotesURL))
+			})
+		})
+
+		Describe("Reuploading a release", func() {
+			BeforeEach(func() {
+				stdinContents, err := json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
+				Expect(err).NotTo(HaveOccurred())
+
+				releaseVersions, err := versionsWithFingerprints(releases)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(versionsWithoutFingerprints(releaseVersions)).NotTo(ContainElement(version))
+
+				session := run(command, stdinContents)
+				Eventually(session, executableTimeout).Should(gexec.Exit(0))
+			})
+
+			It("does not succeed", func() {
+				stdinContents, _ := json.Marshal(outRequest)
+				command = exec.Command(outPath, rootDir)
+				session := run(command, stdinContents)
+				Eventually(session, executableTimeout).Should(gexec.Exit(1))
+				Expect(session.Err).Should(
+					gbytes.Say(
+						fmt.Sprintf("Release '%s' with version '%s' already exists.", productSlug, version),
+					),
+				)
+			})
+
+			It("with 'override' true, it succeeds", func() {
+				outRequest.Params.Override = true
+				stdinContents, err := json.Marshal(outRequest)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				productMetadata = metadata.Metadata{
+					Release: &metadata.Release{
+						ReleaseType:     string(releaseType),
+						EULASlug:        eulaSlug,
+						ReleaseDate:     releaseDate,
+						Description:     description + "-updated",
+						ReleaseNotesURL: releaseNotesURL,
+						Version:         version,
+					},
+				}
+				metadataBytes, err := yaml.Marshal(productMetadata)
+				Expect(err).ShouldNot(HaveOccurred())
+				err = ioutil.WriteFile(
+					filepath.Join(rootDir, metadataFile),
+					metadataBytes,
+					os.ModePerm)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				command = exec.Command(outPath, rootDir)
+				session := run(command, stdinContents)
+				Eventually(session, executableTimeout).Should(gexec.Exit(0))
+
+				By("Validating the release was created correctly")
+				release, err := pivnetClient.GetRelease(productSlug, version)
+				Expect(err).NotTo(HaveOccurred())
+
+				response := concourse.OutResponse{}
+				err = json.Unmarshal(session.Out.Contents(), &response)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				expectedVersion, err := versions.CombineVersionAndFingerprint(release.Version, release.SoftwareFilesUpdatedAt)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
+
+				Expect(release.ReleaseType).To(Equal(releaseType))
+				Expect(release.ReleaseDate).To(Equal(releaseDate))
+				Expect(release.EULA.Slug).To(Equal(eulaSlug))
+				Expect(release.Description).To(Equal(description + "-updated"))
+				Expect(release.ReleaseNotesURL).To(Equal(releaseNotesURL))
 			})
 		})
 	})
