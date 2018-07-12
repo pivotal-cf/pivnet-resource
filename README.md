@@ -163,7 +163,8 @@ and added to the file metadata in Pivotal Network.
 
 **If the AWS key matches an existing file, but the SHA does not match, you will now receive an error and need to rename the file.**
 
-**Existing releases with the same version will be deleted and recreated.**
+**Existing releases with the same version will _not_ be deleted and recreated by
+default, and will instead result in an error.**
 
 See [metadata](https://github.com/pivotal-cf/pivnet-resource/blob/master/metadata)
 for more details on the structure of the metadata file.
@@ -197,6 +198,10 @@ release creation will fail.
 
   See [metadata](https://github.com/pivotal-cf/pivnet-resource/blob/master/metadata)
   for more details on the structure of the metadata file.
+
+* `override`: *Optional.*
+  Boolean. Forces re-upload of releases of releases and versions that are
+  already present on the Pivotal Network.
 
 ### Some Common Gotchas
 

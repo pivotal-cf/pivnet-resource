@@ -62,6 +62,7 @@ type OutParams struct {
 	FileGlob       string `json:"file_glob"`
 	FilepathPrefix string `json:"s3_filepath_prefix"`
 	MetadataFile   string `json:"metadata_file"`
+	Override       bool   `json:"override"`
 }
 
 type OutResponse struct {
