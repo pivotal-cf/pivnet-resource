@@ -77,6 +77,14 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/h2non/filetype",
+			"repository": "https://github.com/h2non/filetype",
+			"vcs": "git",
+			"revision": "3af83f124ffa7608154f68763a5d668359a20419",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/jessevdk/go-flags",
 			"repository": "https://github.com/jessevdk/go-flags",
 			"vcs": "git",
@@ -355,6 +363,24 @@
 			"vcs": "git",
 			"revision": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec",
 			"branch": "v1",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/h2non/filetype.v1/matchers",
+			"repository": "https://gopkg.in/h2non/filetype.v1",
+			"vcs": "git",
+			"revision": "cc14fdc9ca0e4c2bafad7458f6ff79fd3947cfbb",
+			"branch": "master",
+			"path": "/matchers",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/h2non/filetype.v1/types",
+			"repository": "https://gopkg.in/h2non/filetype.v1",
+			"vcs": "git",
+			"revision": "cc14fdc9ca0e4c2bafad7458f6ff79fd3947cfbb",
+			"branch": "master",
+			"path": "types",
 			"notests": true
 		},
 		{
