@@ -148,6 +148,8 @@ for more details on the structure of the metadata file.
   file names will be the same as they are on Pivotal Network - e.g. a file with
   name `some-file.txt` will be downloaded to `/tmp/build/get/some-file.txt`.
 
+* `unpack`: *Optional.* Whether to unpack the downloaded file
+
 ### `out`: Upload a product to Pivotal Network.
 
 Creates a new release on Pivotal Network with the provided version and metadata.
