@@ -733,10 +733,9 @@ var _ = Describe("In", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("downloads files and errors when file is not an archive", func() {
+		It("downloads files and continues when file is not an archive", func() {
 			_, err := inCommand.Run(inRequest)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).Should(BeEquivalentTo("not an archive: file-1234"))
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 

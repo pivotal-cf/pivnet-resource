@@ -381,8 +381,10 @@ func (c InCommand) downloadFiles(
 	if unpack {
 		for _, destinationPath := range files {
 			mime := c.archive.Mimetype(destinationPath)
+
 			if mime == "" {
-				return fmt.Errorf("not an archive: %s", destinationPath)
+				c.logger.Info(fmt.Sprintf("not an archive: %s", destinationPath))
+				continue
 			}
 
 			err = c.archive.Extract(mime, destinationPath)

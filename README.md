@@ -149,8 +149,6 @@ for more details on the structure of the metadata file.
   name `some-file.txt` will be downloaded to `/tmp/build/get/some-file.txt`.
 
 * `unpack`: *Optional.* Whether to unpack the downloaded file.  
-  If set all glob patterns that are downloaded must be able to be unpacked or this will fail.
-
   This can be used to use a root filesystem that is packaged as a archive file on network.pivotal.io as the image to run a given concourse task
 
   Example of how to unpack with `get` and pass as image to task definition
