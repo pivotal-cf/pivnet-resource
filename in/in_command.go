@@ -50,6 +50,12 @@ type pivnetClient interface {
 	UpgradePathSpecifiers(productSlug string, releaseID int) ([]pivnet.UpgradePathSpecifier, error)
 }
 
+//go:generate counterfeiter --fake-name FakeArchive . archive
+type archive interface {
+	Mimetype(filename string) string
+	Extract(mime, filename string) error
+}
+
 type InCommand struct {
 	logger           logger.Logger
 	downloadDir      string
@@ -59,6 +65,7 @@ type InCommand struct {
 	sha256FileSummer fileSummer
 	md5FileSummer    fileSummer
 	fileWriter       fileWriter
+	archive          archive
 }
 
 func NewInCommand(
@@ -69,6 +76,7 @@ func NewInCommand(
 	sha256FileSummer fileSummer,
 	md5FileSummer fileSummer,
 	fileWriter fileWriter,
+	archive archive,
 ) *InCommand {
 	return &InCommand{
 		logger:           logger,
@@ -78,6 +86,7 @@ func NewInCommand(
 		sha256FileSummer: sha256FileSummer,
 		md5FileSummer:    md5FileSummer,
 		fileWriter:       fileWriter,
+		archive:          archive,
 	}
 }
 
@@ -371,12 +380,12 @@ func (c InCommand) downloadFiles(
 
 	if unpack {
 		for _, destinationPath := range files {
-			mime := c.archiveMimetype(destinationPath)
+			mime := c.archive.Mimetype(destinationPath)
 			if mime == "" {
 				return fmt.Errorf("not an archive: %s", destinationPath)
 			}
 
-			err = c.extractArchive(mime, destinationPath)
+			err = c.archive.Extract(mime, destinationPath)
 			if err != nil {
 				return err
 			}

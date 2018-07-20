@@ -20,28 +20,16 @@ var archiveMimetypes = []string{
 	"application/zip",
 }
 
-func (c *InCommand) mimetype(r *bufio.Reader) (string, error) {
-	bs, err := r.Peek(512)
-	if err != nil && err != io.EOF {
-		return "", err
-	}
+type Archive struct{}
 
-	kind, err := filetype.Match(bs)
-	if err != nil {
-		return "", err
-	}
-
-	return kind.MIME.Value, nil
-}
-
-func (c *InCommand) archiveMimetype(filename string) string {
+func (a *Archive) Mimetype(filename string) string {
 	f, err := os.Open(filename)
 	if err != nil {
 		return ""
 	}
 	defer f.Close()
 
-	mime, err := c.mimetype(bufio.NewReader(f))
+	mime, err := mimetype(bufio.NewReader(f))
 	if err != nil {
 		return ""
 	}
@@ -55,7 +43,38 @@ func (c *InCommand) archiveMimetype(filename string) string {
 	return ""
 }
 
-func (c *InCommand) inflate(mime, path, destination string) error {
+func (a *Archive) Extract(mime, filename string) error {
+	destDir := filepath.Dir(filename)
+
+	err := inflate(mime, filename, destDir)
+	if err != nil {
+		return fmt.Errorf("failed to extract archive: %s with mimetype %s", err.Error(), mime)
+	}
+
+	if mime == "application/gzip" || mime == "application/x-gzip" {
+		fileInfos, err := ioutil.ReadDir(destDir)
+		if err != nil {
+			return fmt.Errorf("failed to read dir: %s", err)
+		}
+
+		if len(fileInfos) != 1 {
+			return fmt.Errorf("%d files found after gunzip; expected 1", len(fileInfos))
+		}
+
+		filename = filepath.Join(destDir, fileInfos[0].Name())
+		mime = a.Mimetype(filename)
+		if mime == "application/x-tar" {
+			err = inflate(mime, filename, destDir)
+			if err != nil {
+				return fmt.Errorf("failed to extract archive x-tar: %s", err.Error())
+			}
+		}
+	}
+
+	return nil
+}
+
+func inflate(mime, path, destination string) error {
 	var cmd *exec.Cmd
 
 	switch mime {
@@ -77,33 +96,16 @@ func (c *InCommand) inflate(mime, path, destination string) error {
 	return cmd.Run()
 }
 
-func (c *InCommand) extractArchive(mime, filename string) error {
-	destDir := filepath.Dir(filename)
+func mimetype(r *bufio.Reader) (string, error) {
+	bs, err := r.Peek(512)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
 
-	err := c.inflate(mime, filename, destDir)
+	kind, err := filetype.Match(bs)
 	if err != nil {
-		return fmt.Errorf("failed to extract archive: %s with mimetype %s", err.Error(), mime)
+		return "", err
 	}
 
-	if mime == "application/gzip" || mime == "application/x-gzip" {
-		fileInfos, err := ioutil.ReadDir(destDir)
-		if err != nil {
-			return fmt.Errorf("failed to read dir: %s", err)
-		}
-
-		if len(fileInfos) != 1 {
-			return fmt.Errorf("%d files found after gunzip; expected 1", len(fileInfos))
-		}
-
-		filename = filepath.Join(destDir, fileInfos[0].Name())
-		mime = c.archiveMimetype(filename)
-		if mime == "application/x-tar" {
-			err = c.inflate(mime, filename, destDir)
-			if err != nil {
-				return fmt.Errorf("failed to extract archive x-tar: %s", err.Error())
-			}
-		}
-	}
-
-	return nil
+	return kind.MIME.Value, nil
 }

@@ -108,6 +108,7 @@ func main() {
 	f := filter.NewFilter(ls)
 
 	fileWriter := filesystem.NewFileWriter(downloadDir, ls)
+	archive := &in.Archive{}
 
 	response, err := in.NewInCommand(
 		ls,
@@ -117,6 +118,7 @@ func main() {
 		fs,
 		md5fs,
 		fileWriter,
+		archive,
 	).Run(input)
 	if err != nil {
 		uiPrinter.PrintErrorln(err)

@@ -1,13 +1,8 @@
 package in_test
 
 import (
-	"archive/tar"
-	"compress/gzip"
 	"fmt"
-	"io"
 	"log"
-	"os"
-	"path"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -36,6 +31,7 @@ var _ = Describe("In", func() {
 		fakeSHA256FileSummer *infakes.FakeFileSummer
 		fakeMD5FileSummer    *infakes.FakeFileSummer
 		fakeFileWriter       *infakes.FakeFileWriter
+		fakeArchive          *infakes.FakeArchive
 
 		fileGroups []pivnet.FileGroup
 
@@ -90,6 +86,7 @@ var _ = Describe("In", func() {
 		fakeSHA256FileSummer = &infakes.FakeFileSummer{}
 		fakeMD5FileSummer = &infakes.FakeFileSummer{}
 		fakeFileWriter = &infakes.FakeFileWriter{}
+		fakeArchive = &infakes.FakeArchive{}
 
 		getReleaseErr = nil
 		acceptEULAErr = nil
@@ -410,6 +407,7 @@ var _ = Describe("In", func() {
 			fakeSHA256FileSummer,
 			fakeMD5FileSummer,
 			fakeFileWriter,
+			fakeArchive,
 		)
 	})
 
@@ -724,21 +722,14 @@ var _ = Describe("In", func() {
 	})
 
 	Describe("when unpack is set", func() {
-		var tempDir = path.Join(os.TempDir(), "unpack")
 		BeforeEach(func() {
 			inRequest.Params.Unpack = true
 
 		})
 
-		AfterEach(func() {
-			os.RemoveAll(tempDir)
-		})
-
 		It("downloads files and extracts archive", func() {
-			downloadFile, err := CreateTar(tempDir, "image.tgz")
-			downloadFilepaths = []string{downloadFile}
-			fakeDownloader.DownloadReturns(downloadFilepaths, nil)
-			_, err = inCommand.Run(inRequest)
+			fakeArchive.MimetypeReturns("application/gzip")
+			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -899,21 +890,4 @@ var validateUpgradePathSpecifiersMetadata = func(
 		Expect(writtenMetadata.UpgradePathSpecifiers[i].ID).To(Equal(d.ID))
 		Expect(writtenMetadata.UpgradePathSpecifiers[i].Specifier).To(Equal(d.Specifier))
 	}
-}
-
-func CreateTar(directory, name string) (string, error) {
-	downloadFile := path.Join(directory, name)
-	os.Mkdir(directory, 0755)
-	file, err := os.Create(downloadFile)
-	Expect(err).NotTo(HaveOccurred())
-
-	mw := io.MultiWriter(file)
-
-	gzw := gzip.NewWriter(mw)
-	defer gzw.Close()
-
-	tw := tar.NewWriter(gzw)
-	defer tw.Close()
-
-	return downloadFile, nil
 }
