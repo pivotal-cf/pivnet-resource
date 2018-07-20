@@ -371,12 +371,12 @@ func (c InCommand) downloadFiles(
 
 	if unpack {
 		for _, destinationPath := range files {
-			mime := archiveMimetype(destinationPath)
+			mime := c.archiveMimetype(destinationPath)
 			if mime == "" {
 				return fmt.Errorf("not an archive: %s", destinationPath)
 			}
 
-			err = extractArchive(mime, destinationPath)
+			err = c.extractArchive(mime, destinationPath)
 			if err != nil {
 				return err
 			}

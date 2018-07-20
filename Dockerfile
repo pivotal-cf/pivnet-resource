@@ -1,11 +1,16 @@
-FROM golang:alpine as builder
-COPY . /go/src/github.com/pivotal-cf/pivnet-resource
-ENV CGO_ENABLED 0
-RUN go build -o /assets/in github.com/pivotal-cf/pivnet-resource/cmd/in
-RUN go build -o /assets/out github.com/pivotal-cf/pivnet-resource/cmd/out
-RUN go build -o /assets/check github.com/pivotal-cf/pivnet-resource/cmd/check
+FROM concourse/buildroot:git
 
-FROM alpine:edge AS resource
-RUN apk add --no-cache bash tzdata ca-certificates unzip zip gzip tar
-COPY --from=builder assets/ /opt/resource/
+RUN \
+  cd /usr/bin/ && \
+  curl \
+    -L \
+    -O \
+    https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && \
+  mv jq-linux64 jq && \
+  chmod +x jq
+
+ADD cmd/check/check /opt/resource/check
+ADD cmd/in/in /opt/resource/in
+ADD cmd/out/out /opt/resource/out
+
 RUN chmod +x /opt/resource/*

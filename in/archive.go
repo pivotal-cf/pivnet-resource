@@ -20,7 +20,7 @@ var archiveMimetypes = []string{
 	"application/zip",
 }
 
-func mimetype(r *bufio.Reader) (string, error) {
+func (c *InCommand) mimetype(r *bufio.Reader) (string, error) {
 	bs, err := r.Peek(512)
 	if err != nil && err != io.EOF {
 		return "", err
@@ -34,14 +34,14 @@ func mimetype(r *bufio.Reader) (string, error) {
 	return kind.MIME.Value, nil
 }
 
-func archiveMimetype(filename string) string {
+func (c *InCommand) archiveMimetype(filename string) string {
 	f, err := os.Open(filename)
 	if err != nil {
 		return ""
 	}
 	defer f.Close()
 
-	mime, err := mimetype(bufio.NewReader(f))
+	mime, err := c.mimetype(bufio.NewReader(f))
 	if err != nil {
 		return ""
 	}
@@ -55,12 +55,12 @@ func archiveMimetype(filename string) string {
 	return ""
 }
 
-func inflate(mime, path, destination string) error {
+func (c *InCommand) inflate(mime, path, destination string) error {
 	var cmd *exec.Cmd
 
 	switch mime {
 	case "application/zip":
-		cmd = exec.Command("unzip", "-P", "", "-d", destination, path)
+		cmd = exec.Command("unzip", "-d", destination, path)
 		defer os.Remove(path)
 
 	case "application/x-tar":
@@ -77,12 +77,12 @@ func inflate(mime, path, destination string) error {
 	return cmd.Run()
 }
 
-func extractArchive(mime, filename string) error {
+func (c *InCommand) extractArchive(mime, filename string) error {
 	destDir := filepath.Dir(filename)
 
-	err := inflate(mime, filename, destDir)
+	err := c.inflate(mime, filename, destDir)
 	if err != nil {
-		return fmt.Errorf("failed to extract archive: %s", err)
+		return fmt.Errorf("failed to extract archive: %s with mimetype %s", err.Error(), mime)
 	}
 
 	if mime == "application/gzip" || mime == "application/x-gzip" {
@@ -96,11 +96,11 @@ func extractArchive(mime, filename string) error {
 		}
 
 		filename = filepath.Join(destDir, fileInfos[0].Name())
-		mime = archiveMimetype(filename)
+		mime = c.archiveMimetype(filename)
 		if mime == "application/x-tar" {
-			err = inflate(mime, filename, destDir)
+			err = c.inflate(mime, filename, destDir)
 			if err != nil {
-				return fmt.Errorf("failed to extract archive: %s", err)
+				return fmt.Errorf("failed to extract archive x-tar: %s", err.Error())
 			}
 		}
 	}
