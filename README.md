@@ -148,7 +148,37 @@ for more details on the structure of the metadata file.
   file names will be the same as they are on Pivotal Network - e.g. a file with
   name `some-file.txt` will be downloaded to `/tmp/build/get/some-file.txt`.
 
-* `unpack`: *Optional.* Whether to unpack the downloaded file
+* `unpack`: *Optional.* Whether to unpack the downloaded file.  
+  If set all glob patterns that are downloaded must be able to be unpacked or this will fail.
+
+  This can be used to use a root filesystem that is packaged as a archive file on network.pivotal.io as the image to run a given concourse task
+
+  Example of how to unpack with `get` and pass as image to task definition
+
+  ```yaml
+  resource:
+  - name: image
+    type: pivnet
+    source:
+      api_token: {{pivnet_token}}
+      product_slug: {{image-slug}}
+      product_version: 0\.0\..*
+
+  jobs:
+  - name: sample
+    serial: true
+    plan:
+    - get: tasks
+    - get: image
+      resource: pcf-automation
+      params:
+        globs: ["image-*.tar"]
+        unpack: true
+
+    - task: say hello
+      image: image
+      file: tasks/say-hello.yml
+  ```
 
 ### `out`: Upload a product to Pivotal Network.
 
