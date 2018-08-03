@@ -50,6 +50,12 @@ type pivnetClient interface {
 	UpgradePathSpecifiers(productSlug string, releaseID int) ([]pivnet.UpgradePathSpecifier, error)
 }
 
+//go:generate counterfeiter --fake-name FakeArchive . archive
+type archive interface {
+	Mimetype(filename string) string
+	Extract(mime, filename string) error
+}
+
 type InCommand struct {
 	logger           logger.Logger
 	downloadDir      string
@@ -59,6 +65,7 @@ type InCommand struct {
 	sha256FileSummer fileSummer
 	md5FileSummer    fileSummer
 	fileWriter       fileWriter
+	archive          archive
 }
 
 func NewInCommand(
@@ -69,6 +76,7 @@ func NewInCommand(
 	sha256FileSummer fileSummer,
 	md5FileSummer fileSummer,
 	fileWriter fileWriter,
+	archive archive,
 ) *InCommand {
 	return &InCommand{
 		logger:           logger,
@@ -78,6 +86,7 @@ func NewInCommand(
 		sha256FileSummer: sha256FileSummer,
 		md5FileSummer:    md5FileSummer,
 		fileWriter:       fileWriter,
+		archive:          archive,
 	}
 }
 
@@ -183,7 +192,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Info("Downloading files")
 
-	err = c.downloadFiles(input.Params.Globs, allProductFiles, productSlug, release.ID)
+	err = c.downloadFiles(input.Params.Globs, allProductFiles, productSlug, release.ID, input.Params.Unpack)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
@@ -321,6 +330,7 @@ func (c InCommand) downloadFiles(
 	productFiles []pivnet.ProductFile,
 	productSlug string,
 	releaseID int,
+	unpack bool,
 ) error {
 	c.logger.Info("Filtering download links by glob")
 
@@ -366,6 +376,22 @@ func (c InCommand) downloadFiles(
 	err = c.compareSHA256sOrMD5s(files, fileSHA256s, fileMD5s)
 	if err != nil {
 		return err
+	}
+
+	if unpack {
+		for _, destinationPath := range files {
+			mime := c.archive.Mimetype(destinationPath)
+
+			if mime == "" {
+				c.logger.Info(fmt.Sprintf("not an archive: %s", destinationPath))
+				continue
+			}
+
+			err = c.archive.Extract(mime, destinationPath)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

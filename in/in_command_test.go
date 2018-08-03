@@ -31,6 +31,7 @@ var _ = Describe("In", func() {
 		fakeSHA256FileSummer *infakes.FakeFileSummer
 		fakeMD5FileSummer    *infakes.FakeFileSummer
 		fakeFileWriter       *infakes.FakeFileWriter
+		fakeArchive          *infakes.FakeArchive
 
 		fileGroups []pivnet.FileGroup
 
@@ -85,6 +86,7 @@ var _ = Describe("In", func() {
 		fakeSHA256FileSummer = &infakes.FakeFileSummer{}
 		fakeMD5FileSummer = &infakes.FakeFileSummer{}
 		fakeFileWriter = &infakes.FakeFileWriter{}
+		fakeArchive = &infakes.FakeArchive{}
 
 		getReleaseErr = nil
 		acceptEULAErr = nil
@@ -405,6 +407,7 @@ var _ = Describe("In", func() {
 			fakeSHA256FileSummer,
 			fakeMD5FileSummer,
 			fakeFileWriter,
+			fakeArchive,
 		)
 	})
 
@@ -715,6 +718,24 @@ var _ = Describe("In", func() {
 					Expect(err).To(HaveOccurred())
 				})
 			})
+		})
+	})
+
+	Describe("when unpack is set", func() {
+		BeforeEach(func() {
+			inRequest.Params.Unpack = true
+
+		})
+
+		It("downloads files and extracts archive", func() {
+			fakeArchive.MimetypeReturns("application/gzip")
+			_, err := inCommand.Run(inRequest)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("downloads files and continues when file is not an archive", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 

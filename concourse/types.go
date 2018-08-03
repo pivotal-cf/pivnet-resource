@@ -40,7 +40,8 @@ type InRequest struct {
 }
 
 type InParams struct {
-	Globs []string `json:"globs"`
+	Globs  []string `json:"globs"`
+	Unpack bool     `json:"unpack"`
 }
 
 type InResponse struct {
