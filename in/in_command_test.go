@@ -41,11 +41,6 @@ var _ = Describe("In", func() {
 
 		filteredProductFiles []pivnet.ProductFile
 
-		releaseProductFile1   pivnet.ProductFile
-		releaseProductFile2   pivnet.ProductFile
-		fileGroup1ProductFile pivnet.ProductFile
-		fileGroup2ProductFile pivnet.ProductFile
-
 		releaseDependencies   []pivnet.ReleaseDependency
 		dependencySpecifiers  []pivnet.DependencySpecifier
 		releaseUpgradePaths   []pivnet.ReleaseUpgradePath
@@ -67,7 +62,6 @@ var _ = Describe("In", func() {
 		getReleaseErr            error
 		acceptEULAErr            error
 		productFilesErr          error
-		productFileErr           error
 		downloadErr              error
 		filterErr                error
 		sha256sumErr             error
@@ -91,7 +85,6 @@ var _ = Describe("In", func() {
 		getReleaseErr = nil
 		acceptEULAErr = nil
 		productFilesErr = nil
-		productFileErr = nil
 		filterErr = nil
 		downloadErr = nil
 		sha256sumErr = nil
@@ -137,14 +130,30 @@ var _ = Describe("In", func() {
 			{
 				ID:           1234,
 				Name:         "product file 1234",
-				Description:  "some product file 1234",
 				AWSObjectKey: downloadFilepaths[0],
+				FileType:           pivnet.FileTypeSoftware,
+				FileVersion:        "some-file-version 1234",
+				SHA256:             fileContentsSHA256s[0],
+				MD5:                fileContentsMD5s[0],
+				Links: &pivnet.Links{
+					Download: map[string]string{
+						"href": "foo",
+					},
+				},
 			},
 			{
 				ID:           3456,
 				Name:         "product file 3456",
-				Description:  "some product file 3456",
 				AWSObjectKey: downloadFilepaths[1],
+				FileType:           pivnet.FileTypeSoftware,
+				FileVersion:        "some-file-version 3456",
+				SHA256:             fileContentsSHA256s[1],
+				MD5:                fileContentsMD5s[1],
+				Links: &pivnet.Links{
+					Download: map[string]string{
+						"href": "bar",
+					},
+				},
 			},
 		}
 
@@ -152,8 +161,16 @@ var _ = Describe("In", func() {
 			{
 				ID:           4567,
 				Name:         "product file 4567",
-				Description:  "some product file 4567",
 				AWSObjectKey: downloadFilepaths[2],
+				FileType:           pivnet.FileTypeSoftware,
+				FileVersion:        "some-file-version 4567",
+				SHA256:             fileContentsSHA256s[2],
+				MD5:                fileContentsMD5s[2],
+				Links: &pivnet.Links{
+					Download: map[string]string{
+						"href": "bar",
+					},
+				},
 			},
 		}
 
@@ -161,88 +178,24 @@ var _ = Describe("In", func() {
 			{
 				ID:           5678,
 				Name:         "product file 5678",
-				Description:  "some product file 5678",
 				AWSObjectKey: downloadFilepaths[3],
-			},
-		}
-
-		releaseProductFile1 = pivnet.ProductFile{
-			ID:                 releaseProductFiles[0].ID,
-			Name:               releaseProductFiles[0].Name,
-			Description:        releaseProductFiles[0].Description,
-			AWSObjectKey:       releaseProductFiles[0].AWSObjectKey,
-			FileType:           pivnet.FileTypeSoftware,
-			FileVersion:        "some-file-version 1234",
-			SHA256:             fileContentsSHA256s[0],
-			MD5:                fileContentsMD5s[0],
-			DocsURL:            "some-url",
-			SystemRequirements: []string{"req1", "req2"},
-			Links: &pivnet.Links{
-				Download: map[string]string{
-					"href": "foo",
-				},
-			},
-		}
-
-		releaseProductFile2 = pivnet.ProductFile{
-			ID:                 releaseProductFiles[1].ID,
-			Name:               releaseProductFiles[1].Name,
-			Description:        releaseProductFiles[1].Description,
-			AWSObjectKey:       releaseProductFiles[1].AWSObjectKey,
-			FileType:           pivnet.FileTypeSoftware,
-			FileVersion:        "some-file-version 3456",
-			SHA256:             fileContentsSHA256s[1],
-			MD5:                fileContentsMD5s[1],
-			DocsURL:            "some-url",
-			SystemRequirements: []string{"req1", "req2"},
-			Links: &pivnet.Links{
-				Download: map[string]string{
-					"href": "bar",
-				},
-			},
-		}
-
-		fileGroup1ProductFile = pivnet.ProductFile{
-			ID:                 fileGroup1ProductFiles[0].ID,
-			Name:               fileGroup1ProductFiles[0].Name,
-			Description:        fileGroup1ProductFiles[0].Description,
-			AWSObjectKey:       fileGroup1ProductFiles[0].AWSObjectKey,
-			FileType:           pivnet.FileTypeSoftware,
-			FileVersion:        "some-file-version 4567",
-			SHA256:             fileContentsSHA256s[2],
-			MD5:                fileContentsMD5s[2],
-			DocsURL:            "some-url",
-			SystemRequirements: []string{"req1", "req2"},
-			Links: &pivnet.Links{
-				Download: map[string]string{
-					"href": "bar",
-				},
-			},
-		}
-
-		fileGroup2ProductFile = pivnet.ProductFile{
-			ID:                 fileGroup2ProductFiles[0].ID,
-			Name:               fileGroup2ProductFiles[0].Name,
-			Description:        fileGroup2ProductFiles[0].Description,
-			AWSObjectKey:       fileGroup2ProductFiles[0].AWSObjectKey,
-			FileType:           pivnet.FileTypeSoftware,
-			FileVersion:        "some-file-version 5678",
-			SHA256:             fileContentsSHA256s[3],
-			MD5:                fileContentsMD5s[3],
-			DocsURL:            "some-url",
-			SystemRequirements: []string{"req1", "req2"},
-			Links: &pivnet.Links{
-				Download: map[string]string{
-					"href": "bar",
+				FileType:           pivnet.FileTypeSoftware,
+				FileVersion:        "some-file-version 5678",
+				SHA256:             fileContentsSHA256s[3],
+				MD5:                fileContentsMD5s[3],
+				Links: &pivnet.Links{
+					Download: map[string]string{
+						"href": "bar",
+					},
 				},
 			},
 		}
 
 		filteredProductFiles = []pivnet.ProductFile{
-			releaseProductFile1,
-			releaseProductFile2,
-			fileGroup1ProductFile,
-			fileGroup2ProductFile,
+			releaseProductFiles[0],
+			releaseProductFiles[1],
+			fileGroup1ProductFiles[0],
+			fileGroup2ProductFiles[0],
 		}
 
 		fileGroups = []pivnet.FileGroup{
@@ -250,14 +203,14 @@ var _ = Describe("In", func() {
 				ID:   4321,
 				Name: "fg1",
 				ProductFiles: []pivnet.ProductFile{
-					fileGroup1ProductFile,
+					fileGroup1ProductFiles[0],
 				},
 			},
 			{
 				ID:   5432,
 				Name: "fg2",
 				ProductFiles: []pivnet.ProductFile{
-					fileGroup2ProductFile,
+					fileGroup2ProductFiles[0],
 				},
 			},
 		}
@@ -340,30 +293,6 @@ var _ = Describe("In", func() {
 		fakePivnetClient.ReleaseUpgradePathsReturns(releaseUpgradePaths, releaseUpgradePathsErr)
 		fakePivnetClient.UpgradePathSpecifiersReturns(upgradePathSpecifiers, upgradePathSpecifiersErr)
 		fakePivnetClient.FileGroupsForReleaseReturns(fileGroups, fileGroupsErr)
-
-		fakePivnetClient.ProductFileForReleaseStub = func(
-			productSlug string,
-			releaseID int,
-			productFileID int,
-		) (pivnet.ProductFile, error) {
-			if productFileErr != nil {
-				return pivnet.ProductFile{}, productFileErr
-			}
-
-			switch productFileID {
-			case releaseProductFile1.ID:
-				return releaseProductFile1, nil
-			case releaseProductFile2.ID:
-				return releaseProductFile2, nil
-			case fileGroup1ProductFile.ID:
-				return fileGroup1ProductFile, nil
-			case fileGroup2ProductFile.ID:
-				return fileGroup2ProductFile, nil
-			}
-
-			Fail(fmt.Sprintf("unexpected productFileID: %d", productFileID))
-			return pivnet.ProductFile{}, nil
-		}
 
 		fakeFilter.ProductFileKeysByGlobsReturns(filteredProductFiles, filterErr)
 		fakeDownloader.DownloadReturns(downloadFilepaths, downloadErr)
@@ -471,11 +400,9 @@ var _ = Describe("In", func() {
 		Expect(fakeFilter.ProductFileKeysByGlobsCallCount()).To(Equal(0))
 
 		expectedProductFiles := releaseProductFiles
-		expectedProductFiles = append(expectedProductFiles, fileGroup1ProductFile)
-		expectedProductFiles = append(expectedProductFiles, fileGroup2ProductFile)
-
-		Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(expectedProductFiles)))
-
+		expectedProductFiles = append(expectedProductFiles, fileGroup1ProductFiles[0])
+		expectedProductFiles = append(expectedProductFiles, fileGroup2ProductFiles[0])
+		
 		Expect(fakeDownloader.DownloadCallCount()).To(Equal(1))
 		invokedProductFiles, _, _ := fakeDownloader.DownloadArgsForCall(0)
 		Expect(invokedProductFiles).To(Equal(filteredProductFiles))
@@ -565,19 +492,6 @@ var _ = Describe("In", func() {
 		})
 	})
 
-	Context("when getting individual product file returns error", func() {
-		BeforeEach(func() {
-			productFileErr = fmt.Errorf("some product file error")
-		})
-
-		It("returns error", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err).To(Equal(productFileErr))
-		})
-	})
-
 	Describe("when globs are provided", func() {
 		BeforeEach(func() {
 			inRequest.Params.Globs = []string{"some*glob", "other*glob"}
@@ -588,13 +502,12 @@ var _ = Describe("In", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeFilter.ProductFileKeysByGlobsCallCount()).To(Equal(1))
-			Expect(fakePivnetClient.ProductFileForReleaseCallCount()).To(Equal(len(filteredProductFiles)))
 			Expect(fakeSHA256FileSummer.SumFileCallCount() + fakeMD5FileSummer.SumFileCallCount()).To(Equal(len(downloadFilepaths)))
 		})
 
 		Context("when the file type is not 'Software'", func() {
 			BeforeEach(func() {
-				releaseProductFile2.FileType = "not software"
+				releaseProductFiles[1].FileType = "not software"
 				fileContentsSHA256s[1] = "this would fail if type was software"
 				fileContentsMD5s[1] = "this would fail if type was software"
 			})
@@ -607,19 +520,6 @@ var _ = Describe("In", func() {
 			It("ignores MD5", func() {
 				_, err := inCommand.Run(inRequest)
 				Expect(err).NotTo(HaveOccurred())
-			})
-		})
-
-		Context("when getting a product file returns error", func() {
-			BeforeEach(func() {
-				productFileErr = fmt.Errorf("some product file error")
-			})
-
-			It("returns error", func() {
-				_, err := inCommand.Run(inRequest)
-				Expect(err).To(HaveOccurred())
-
-				Expect(err).To(Equal(productFileErr))
 			})
 		})
 
@@ -686,7 +586,7 @@ var _ = Describe("In", func() {
 
 		Context("When SHA256 is not supplied", func() {
 			BeforeEach(func() {
-				releaseProductFile1.SHA256 = ""
+				releaseProductFiles[0].SHA256 = ""
 				fileContentsSHA256s[0] = ""
 			})
 
