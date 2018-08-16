@@ -21,7 +21,6 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
-	"fmt"
 )
 
 var (
