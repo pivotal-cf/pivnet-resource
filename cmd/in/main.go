@@ -21,6 +21,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
+	"fmt"
 )
 
 var (
@@ -62,9 +63,10 @@ func main() {
 	sanitized := concourse.SanitizedSource(input.Source)
 	logger.SetOutput(sanitizer.NewSanitizer(sanitized, logWriter))
 
-	verbose := false
+	verbose := input.Source.Verbose
 	ls := logshim.NewLogShim(logger, logger, verbose)
 
+	ls.Debug("Verbose output enabled")
 	logger.Printf("Creating download directory: %s", downloadDir)
 
 	err = os.MkdirAll(downloadDir, os.ModePerm)
