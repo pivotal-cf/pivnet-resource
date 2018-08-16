@@ -132,6 +132,32 @@ var _ = Describe("In", func() {
 		})
 	})
 
+	Context("when user specifies verbose output", func() {
+		BeforeEach(func() {
+			By("Creating default request")
+			inRequest = concourse.InRequest{
+				Source: concourse.Source{
+					APIToken:    pivnetAPIToken,
+					ProductSlug: productSlug,
+					Endpoint:    endpoint,
+					Verbose:     true,
+				},
+				Version: concourse.Version{
+					ProductVersion: versionWithFingerprint,
+				},
+			}
+
+			stdinContents, err = json.Marshal(inRequest)
+			Expect(err).ShouldNot(HaveOccurred())
+
+		})
+
+		It("prints verbose output", func() {
+			session := run(command, stdinContents)
+			Expect(session.Err.Contents()).To(ContainSubstring("Verbose output enabled"))
+		})
+	})
+
 	Context("when user supplies UAA refresh token in source config", func() {
 		BeforeEach(func() {
 			By("Creating default request")
