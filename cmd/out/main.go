@@ -82,8 +82,9 @@ func main() {
 	sanitized := concourse.SanitizedSource(input.Source)
 	logger.SetOutput(sanitizer.NewSanitizer(sanitized, logWriter))
 
-	verbose := false
+	verbose := input.Source.Verbose
 	ls := logshim.NewLogShim(logger, logger, verbose)
+	ls.Debug("Verbose output enabled")
 
 	var endpoint string
 	if input.Source.Endpoint != "" {

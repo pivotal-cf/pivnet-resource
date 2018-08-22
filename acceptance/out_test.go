@@ -213,6 +213,57 @@ var _ = Describe("Out", func() {
 		})
 	})
 
+	Describe("verbose flag", func() {
+		BeforeEach(func() {
+			By("Creating default request")
+			outRequest = concourse.OutRequest{
+				Source: concourse.Source{
+					APIToken:        pivnetAPIToken,
+					AccessKeyID:     awsAccessKeyID,
+					SecretAccessKey: awsSecretAccessKey,
+					ProductSlug:     productSlug,
+					Endpoint:        endpoint,
+					Bucket:          pivnetBucketName,
+					Region:          pivnetRegion,
+					Verbose:	     false,
+				},
+				Params: concourse.OutParams{
+					FileGlob:       "",
+					FilepathPrefix: "",
+					MetadataFile:   metadataFile,
+					Override:       false,
+				},
+			}
+		})
+
+		JustBeforeEach(func() {
+			var err error
+			stdinContents, err = json.Marshal(outRequest)
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		Context("when user does not specify verbose output", func() {
+			It("does not print verbose output", func() {
+				session := run(command, stdinContents)
+				Eventually(session, executableTimeout).Should(gexec.Exit(0))
+				Expect(string(session.Err.Contents())).NotTo(ContainSubstring("Verbose output enabled"))
+			})
+		})
+
+		Context("when user specifies verbose output", func() {
+			BeforeEach(func() {
+				outRequest.Source.Verbose = true
+			})
+
+			It("prints verbose output", func() {
+				session := run(command, stdinContents)
+				Eventually(session, executableTimeout).Should(gexec.Exit(0))
+				Expect(string(session.Err.Contents())).To(ContainSubstring("Verbose output enabled"))
+			})
+		})
+
+	})
+
 	Context("when user supplies UAA refresh token in source config", func() {
 		BeforeEach(func() {
 			By("Creating default request")
