@@ -240,6 +240,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 				Version: d.Release.Version,
 				Product: metadata.Product{
 					ID:   d.Release.Product.ID,
+					Slug: d.Release.Product.Slug,
 					Name: d.Release.Product.Name,
 				},
 			},

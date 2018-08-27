@@ -238,6 +238,7 @@ var _ = Describe("In", func() {
 					Version: "dependent release 56",
 					Product: pivnet.Product{
 						ID:   67,
+						Slug: "some-slug",
 						Name: "some product",
 					},
 				},
@@ -750,6 +751,7 @@ var validateReleaseDependenciesMetadata = func(
 		Expect(writtenMetadata.Dependencies[i].Release.ID).To(Equal(d.Release.ID))
 		Expect(writtenMetadata.Dependencies[i].Release.Version).To(Equal(d.Release.Version))
 		Expect(writtenMetadata.Dependencies[i].Release.Product.ID).To(Equal(d.Release.Product.ID))
+		Expect(writtenMetadata.Dependencies[i].Release.Product.Slug).To(Equal(d.Release.Product.Slug))
 		Expect(writtenMetadata.Dependencies[i].Release.Product.Name).To(Equal(d.Release.Product.Name))
 	}
 }
