@@ -18,7 +18,6 @@ var _ = Describe("Filter", func() {
 
 		f *filter.Filter
 
-		releases []pivnet.Release
 	)
 
 	BeforeEach(func() {
@@ -26,24 +25,6 @@ var _ = Describe("Filter", func() {
 		fakeLogger = logshim.NewLogShim(logger, logger, true)
 
 		f = filter.NewFilter(fakeLogger)
-
-		releases = []pivnet.Release{
-			{
-				ID:          1,
-				Version:     "version1",
-				ReleaseType: pivnet.ReleaseType("foo"),
-			},
-			{
-				ID:          2,
-				Version:     "version2",
-				ReleaseType: pivnet.ReleaseType("bar"),
-			},
-			{
-				ID:          3,
-				Version:     "version3",
-				ReleaseType: pivnet.ReleaseType("foo"),
-			},
-		}
 	})
 
 	Describe("ReleasesByReleaseType", func() {

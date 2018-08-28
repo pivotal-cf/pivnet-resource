@@ -15,15 +15,12 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/ghttp"
 )
 
 var _ = Describe("Downloader", func() {
 	var (
 		fakeClient *downloaderfakes.FakeClient
 		d          *downloader.Downloader
-		server     *ghttp.Server
-		apiAddress string
 		dir        string
 		fakeLogger logger.Logger
 	)
@@ -31,8 +28,6 @@ var _ = Describe("Downloader", func() {
 	BeforeEach(func() {
 		fakeClient = &downloaderfakes.FakeClient{}
 
-		server = ghttp.NewServer()
-		apiAddress = server.URL()
 		logger := log.New(GinkgoWriter, "", log.LstdFlags)
 		fakeLogger = logshim.NewLogShim(logger, logger, true)
 
