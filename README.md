@@ -388,5 +388,5 @@ S3_FILEPATH_PREFIX=Case-Sensitive-Path-eg-Pivotal-Diego-PCF \
 
 ### Contributing
 
-Please make all pull requests to the `develop` branch, and
+Please make all pull requests to the `master` branch, and
 [ensure the tests pass locally](https://github.com/pivotal-cf/pivnet-resource#running-the-tests).
