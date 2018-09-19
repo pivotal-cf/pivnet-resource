@@ -124,6 +124,29 @@ var _ = Describe("Uploader", func() {
 			})
 		})
 
+		Context("when the filepathPrefix begins with 'partner-product-files'", func() {
+			var (
+				oldFilepathPrefix string
+			)
+
+			BeforeEach(func() {
+				oldFilepathPrefix = filepathPrefix
+				filepathPrefix = fmt.Sprintf("partner-product-files/%s", filepathPrefix)
+			})
+
+			It("invokes the transport with 'partner-product-files'", func() {
+				err := uploaderClient.UploadFile("my_files/file-0")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeTransport.UploadCallCount()).To(Equal(1))
+
+				glob0, remoteDir, sourcesDir := fakeTransport.UploadArgsForCall(0)
+				Expect(glob0).To(Equal("my_files/file-0"))
+				Expect(remoteDir).To(Equal(fmt.Sprintf("partner-product-files/%s/", oldFilepathPrefix)))
+				Expect(sourcesDir).To(Equal(tempDir))
+			})
+		})
+
 		Context("when the transport exits with error", func() {
 			BeforeEach(func() {
 				fakeTransport.UploadReturns(errors.New("some error"))

@@ -66,6 +66,8 @@ func (c Client) ComputeAWSObjectKey(exactGlob string) (string, string, error) {
 		remoteDir = c.filepathPrefix + "/"
 	case strings.HasPrefix(c.filepathPrefix, "product_files"):
 		remoteDir = c.filepathPrefix + "/"
+	case strings.HasPrefix(c.filepathPrefix, "partner-product-files"):
+		remoteDir = c.filepathPrefix + "/"
 	default:
 		remoteDir = "product_files/" + c.filepathPrefix + "/"
 	}
