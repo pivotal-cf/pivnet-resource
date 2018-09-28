@@ -13,10 +13,15 @@ type ProductsService struct {
 	l      logger.Logger
 }
 
+type S3Directory struct {
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+}
+
 type Product struct {
 	ID   int    `json:"id,omitempty" yaml:"id,omitempty"`
 	Slug string `json:"slug,omitempty" yaml:"slug,omitempty"`
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	S3Directory *S3Directory `json:"s3_directory,omitempty" yaml:"s3_directory,omitempty"`
 }
 
 type ProductsResponse struct {
