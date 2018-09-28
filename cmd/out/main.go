@@ -127,10 +127,17 @@ func main() {
 		SkipSSLValidation: input.Source.SkipSSLValidation,
 	})
 
+	prefixFetcher := uploader.NewPrefixFetcher(client, input.Source.ProductSlug)
+	filePrefix, err := prefixFetcher.GetPrefix()
+	if err != nil {
+		uiPrinter.PrintErrorlnf("Could not find product prefix")
+		os.Exit(1)
+	}
+
 	uploaderClient := uploader.NewClient(uploader.Config{
-		FilepathPrefix: input.Params.FilepathPrefix,
-		SourcesDir:     sourcesDir,
-		Transport:      s3Client,
+		FilepathPrefix: 	filePrefix,
+		SourcesDir:     	sourcesDir,
+		Transport:      	s3Client,
 	})
 
 	globber := globs.NewGlobber(globs.GlobberConfig{
@@ -139,7 +146,7 @@ func main() {
 		Logger:     ls,
 	})
 
-	skipUpload := input.Params.FileGlob == "" && input.Params.FilepathPrefix == ""
+	skipUpload := input.Params.FileGlob == ""
 
 	var m metadata.Metadata
 	if input.Params.MetadataFile == "" {

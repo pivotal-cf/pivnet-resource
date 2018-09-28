@@ -110,7 +110,6 @@ var _ = Describe("Out", func() {
 				},
 				Params: concourse.OutParams{
 					FileGlob:       "",
-					FilepathPrefix: "",
 					MetadataFile:   metadataFile,
 					Override:       false,
 				},
@@ -229,7 +228,6 @@ var _ = Describe("Out", func() {
 				},
 				Params: concourse.OutParams{
 					FileGlob:       "",
-					FilepathPrefix: "",
 					MetadataFile:   metadataFile,
 					Override:       false,
 				},
@@ -279,7 +277,6 @@ var _ = Describe("Out", func() {
 				},
 				Params: concourse.OutParams{
 					FileGlob:       "",
-					FilepathPrefix: "",
 					MetadataFile:   metadataFile,
 					Override:       false,
 				},

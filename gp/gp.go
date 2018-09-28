@@ -24,6 +24,15 @@ func (c Client) ReleaseTypes() ([]pivnet.ReleaseType, error) {
 	return c.client.ReleaseTypes.Get()
 }
 
+func (c Client) S3PrefixForProductSlug(productSlug string) (string, error) {
+	product, err := c.client.Products.Get(productSlug)
+	if err != nil {
+		return "", err
+	}
+
+	return product.S3Directory.Path, nil
+}
+
 func (c Client) ReleasesForProductSlug(productSlug string) ([]pivnet.Release, error) {
 	return c.client.Releases.List(productSlug)
 }

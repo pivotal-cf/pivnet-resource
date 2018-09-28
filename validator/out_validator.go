@@ -25,7 +25,7 @@ func (v OutValidator) Validate() error {
 		return fmt.Errorf("%s must be provided", "product_slug")
 	}
 
-	if v.input.Params.FileGlob != "" || v.input.Params.FilepathPrefix != "" {
+	if v.input.Params.FileGlob != "" {
 		if v.input.Source.AccessKeyID == "" {
 			return fmt.Errorf("%s must be provided", "access_key_id")
 		}
@@ -36,10 +36,6 @@ func (v OutValidator) Validate() error {
 
 		if v.input.Params.FileGlob == "" {
 			return fmt.Errorf("%s must be provided", "file glob")
-		}
-
-		if v.input.Params.FilepathPrefix == "" {
-			return fmt.Errorf("%s must be provided", "s3_filepath_prefix")
 		}
 	}
 
