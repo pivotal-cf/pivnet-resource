@@ -182,10 +182,7 @@ for more details on the structure of the metadata file.
 
 Creates a new release on Pivotal Network with the provided version and metadata.
 
-Also optionally uploads one or more files to Pivotal Network bucket under
-the provided `s3_filepath_prefix`, adding them both to Pivotal Network as well as
-to the newly-created release. The MD5 checksum of each file is taken locally,
-and added to the file metadata in Pivotal Network.
+It can also upload one or more files to Pivotal Network bucket and calculate the MD5 checksum locally for each file in order to add MD5 checksum to the file metadata in Pivotal Network.
 
 **Existing product files with the same AWS key will no longer be deleted and recreated.**
 
@@ -201,27 +198,9 @@ for more details on the structure of the metadata file.
 
 #### Parameters
 
-It is valid to provide both `file_glob` and `s3_filepath_prefix` or to provide
-neither. If only one is present, release creation will fail. If neither are
-present, file uploading is skipped.
+* `file_glob`: *Optional.* Glob for matching files to upload.
 
-If both `file_glob` and `s3_filepath_prefix` are present, then the source
-configuration must also have `access_key_id` and `secret_access_key` or
-release creation will fail.
-
-* `file_glob`: *Optional.* Glob matching files to upload.
-
-  If multiple files are matched by the glob, they are all uploaded.
-  If no files are matched, release creation fails with error.
-
-* `s3_filepath_prefix`: *Optional.* Case-sensitive prefix of the
-  path in the S3 bucket. If the value for `s3_filepath_prefix` starts with
-  anything other than `product_files` or `product-files`, it will be prefixed
-  with `product_files`.
-
-  Generally related to `product_slug`. For example, a `product_slug` might be
-  `pivotal-diego-pcf` (lower-case) but the corresponding `s3_filepath_prefix`
-  could be `product-files/Pivotal-Diego-PCF` (mixed-case).
+  When you are uploading a new file with the release, if you provide `file_glob`, then you need to include `access_key_id` and `secret_access_key`. The `access_key_id` and `secret_access_key` are used to upload the files based on the `file_glob` to s3. If multiple files are matched by the glob, they are all uploaded. If no files are matched, release creation fails with an error.
 
 * `metadata_file`: *Optional.*
   File containing metadata for releases and product files.
@@ -382,7 +361,6 @@ PIVNET_S3_REGION=region-of-pivnet-eg-us-east-1 \
 PIVNET_BUCKET_NAME=bucket-of-pivnet-eg-pivnet-bucket \
 PIVNET_ENDPOINT=some-pivnet-endpoint \
 PIVNET_RESOURCE_REFRESH_TOKEN=some-pivnet-resource-token \
-S3_FILEPATH_PREFIX=Case-Sensitive-Path-eg-Pivotal-Diego-PCF \
 ./bin/test
 ```
 
