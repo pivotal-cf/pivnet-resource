@@ -117,7 +117,6 @@ var _ = Describe("Lifecycle test", func() {
 			},
 			Params: concourse.OutParams{
 				FileGlob:       "*",
-				FilepathPrefix: s3FilepathPrefix,
 				MetadataFile:   metadataFile,
 			},
 		}
@@ -137,7 +136,6 @@ var _ = Describe("Lifecycle test", func() {
 			},
 			Params: concourse.OutParams{
 				FileGlob:       "*",
-				FilepathPrefix: s3FilepathPrefix,
 				MetadataFile:   metadataFile2,
 			},
 		}
@@ -214,13 +212,11 @@ var _ = Describe("Lifecycle test", func() {
 				}
 
 				outRequest.Params.FileGlob = fmt.Sprintf("%s/*", sourcesDir)
-				outRequest.Params.FilepathPrefix = s3FilepathPrefix
 
 				stdinContents, err = json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 
 				outRequest2.Params.FileGlob = fmt.Sprintf("%s/*", sourcesDir)
-				outRequest2.Params.FilepathPrefix = s3FilepathPrefix
 
 				stdinContents2, err = json.Marshal(outRequest2)
 				Expect(err).ShouldNot(HaveOccurred())

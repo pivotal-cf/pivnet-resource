@@ -169,7 +169,7 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 
 	if c.skipUpload {
 		c.logger.Info(
-			"file glob and s3_filepath_prefix not provided - skipping upload to s3")
+			"file glob not provided - skipping upload to s3")
 	} else {
 		err = c.uploader.Upload(pivnetRelease, exactGlobs)
 		if err != nil {

@@ -1,150 +1,55 @@
 package uploader_test
 
 import (
-	"errors"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/pivnet-resource/uploader"
 	"github.com/pivotal-cf/pivnet-resource/uploader/uploaderfakes"
+	"errors"
+	"fmt"
 )
 
 var _ = Describe("Uploader", func() {
+	var (
+		fakeTransport  *uploaderfakes.FakeTransport
+		uploaderConfig uploader.Config
+		uploaderClient *uploader.Client
+
+		exactGlob string
+		tempDir    string
+
+		filepathPrefix string
+	)
+
+	BeforeEach(func() {
+		fakeTransport = &uploaderfakes.FakeTransport{}
+
+		filepathPrefix = "product-files/my-product-slug"
+		exactGlob = "my-product-file"
+		tempDir = "my/temp/dir"
+	})
+
+	JustBeforeEach(func() {
+		uploaderConfig = uploader.Config{
+			FilepathPrefix: filepathPrefix,
+			Transport:      fakeTransport,
+			SourcesDir:     tempDir,
+		}
+
+		uploaderClient = uploader.NewClient(uploaderConfig)
+	})
+
 	Describe("UploadFile", func() {
-		var (
-			fakeTransport  *uploaderfakes.FakeTransport
-			uploaderConfig uploader.Config
-			uploaderClient *uploader.Client
-
-			tempDir    string
-			myFilesDir string
-
-			filepathPrefix string
-		)
-
-		BeforeEach(func() {
-			fakeTransport = &uploaderfakes.FakeTransport{}
-
-			filepathPrefix = "Some-Filepath-Prefix"
-
-			var err error
-			tempDir, err = ioutil.TempDir("", "pivnet-resource")
-			Expect(err).NotTo(HaveOccurred())
-
-			myFilesDir = filepath.Join(tempDir, "my_files")
-			err = os.Mkdir(myFilesDir, os.ModePerm)
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = os.Create(filepath.Join(myFilesDir, "file-0"))
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		JustBeforeEach(func() {
-			uploaderConfig = uploader.Config{
-				FilepathPrefix: filepathPrefix,
-				Transport:      fakeTransport,
-				SourcesDir:     tempDir,
-			}
-
-			uploaderClient = uploader.NewClient(uploaderConfig)
-		})
-
-		AfterEach(func() {
-			err := os.RemoveAll(tempDir)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("invokes the transport", func() {
-			err := uploaderClient.UploadFile("my_files/file-0")
+		It("invokes the transport with correct args", func() {
+			err := uploaderClient.UploadFile(exactGlob)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeTransport.UploadCallCount()).To(Equal(1))
 
-			glob0, remoteDir, sourcesDir := fakeTransport.UploadArgsForCall(0)
-			Expect(glob0).To(Equal("my_files/file-0"))
-			Expect(remoteDir).To(Equal(fmt.Sprintf("product_files/%s/", filepathPrefix)))
+			glob, remoteDir, sourcesDir := fakeTransport.UploadArgsForCall(0)
+			Expect(glob).To(Equal(exactGlob))
+			Expect(remoteDir).To(Equal(filepathPrefix + "/"))
 			Expect(sourcesDir).To(Equal(tempDir))
-		})
-
-		It("returns a map of filenames to remote paths", func() {
-			remotePath, _, err := uploaderClient.ComputeAWSObjectKey("my_files/file-0")
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(remotePath).To(Equal(
-				fmt.Sprintf("product_files/%s/file-0", filepathPrefix)))
-		})
-
-		Context("when the filepathPrefix begins with 'product_files'", func() {
-			var (
-				oldFilepathPrefix string
-			)
-
-			BeforeEach(func() {
-				oldFilepathPrefix = filepathPrefix
-				filepathPrefix = fmt.Sprintf("product_files/%s", filepathPrefix)
-			})
-
-			It("invokes the transport with 'product_files'", func() {
-				err := uploaderClient.UploadFile("my_files/file-0")
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(fakeTransport.UploadCallCount()).To(Equal(1))
-
-				glob0, remoteDir, sourcesDir := fakeTransport.UploadArgsForCall(0)
-				Expect(glob0).To(Equal("my_files/file-0"))
-				Expect(remoteDir).To(Equal(fmt.Sprintf("product_files/%s/", oldFilepathPrefix)))
-				Expect(sourcesDir).To(Equal(tempDir))
-			})
-		})
-
-		Context("when the filepathPrefix begins with 'product-files'", func() {
-			var (
-				oldFilepathPrefix string
-			)
-
-			BeforeEach(func() {
-				oldFilepathPrefix = filepathPrefix
-				filepathPrefix = fmt.Sprintf("product-files/%s", filepathPrefix)
-			})
-
-			It("invokes the transport with 'product-files'", func() {
-				err := uploaderClient.UploadFile("my_files/file-0")
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(fakeTransport.UploadCallCount()).To(Equal(1))
-
-				glob0, remoteDir, sourcesDir := fakeTransport.UploadArgsForCall(0)
-				Expect(glob0).To(Equal("my_files/file-0"))
-				Expect(remoteDir).To(Equal(fmt.Sprintf("product-files/%s/", oldFilepathPrefix)))
-				Expect(sourcesDir).To(Equal(tempDir))
-			})
-		})
-
-		Context("when the filepathPrefix begins with 'partner-product-files'", func() {
-			var (
-				oldFilepathPrefix string
-			)
-
-			BeforeEach(func() {
-				oldFilepathPrefix = filepathPrefix
-				filepathPrefix = fmt.Sprintf("partner-product-files/%s", filepathPrefix)
-			})
-
-			It("invokes the transport with 'partner-product-files'", func() {
-				err := uploaderClient.UploadFile("my_files/file-0")
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(fakeTransport.UploadCallCount()).To(Equal(1))
-
-				glob0, remoteDir, sourcesDir := fakeTransport.UploadArgsForCall(0)
-				Expect(glob0).To(Equal("my_files/file-0"))
-				Expect(remoteDir).To(Equal(fmt.Sprintf("partner-product-files/%s/", oldFilepathPrefix)))
-				Expect(sourcesDir).To(Equal(tempDir))
-			})
 		})
 
 		Context("when the transport exits with error", func() {
@@ -164,8 +69,29 @@ var _ = Describe("Uploader", func() {
 			It("returns an error", func() {
 				err := uploaderClient.UploadFile("")
 				Expect(err).To(HaveOccurred())
-
 				Expect(err.Error()).To(ContainSubstring("glob"))
+			})
+		})
+	})
+
+	Describe("ComputeAWSObjectKey", func() {
+		It("computes the correct aws object key", func() {
+			remotePath, remoteDir, err := uploaderClient.ComputeAWSObjectKey(exactGlob)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(remotePath).To(Equal(fmt.Sprint(filepathPrefix, "/", exactGlob)))
+			Expect(remoteDir).To(Equal(fmt.Sprint(filepathPrefix, "/")))
+		})
+
+		Context("file path Prefix starts with a '/'", func() {
+			It("removes the '/' form the prefix", func() {
+				filepathPrefix = "/product-files/my-product-slug"
+				expectedFilePathPrefix := "product-files/my-product-slug"
+				remotePath, remoteDir, err := uploaderClient.ComputeAWSObjectKey(exactGlob)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(remotePath).To(Equal(fmt.Sprint(expectedFilePathPrefix, "/", exactGlob)))
+				Expect(remoteDir).To(Equal(fmt.Sprint(expectedFilePathPrefix, "/")))
 			})
 		})
 	})
