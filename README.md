@@ -20,7 +20,7 @@ resource_types:
 
 Using `tag: latest-final` will automatically pull the latest final release,
 which can be found on the
-[releases page](https://github.com/pivotal-cf/pivnet-resource/releases)
+[releases page](https://github.com/pivotal-cf/pivnet-resource/releases).
 
 **To avoid automatically upgrading, use a fixed tag instead e.g. `tag: v0.6.3`**
 
