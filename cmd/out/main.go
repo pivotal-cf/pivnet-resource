@@ -117,9 +117,16 @@ func main() {
 		region = defaultRegion
 	}
 
+	federationToken, err := client.GetFederationToken(input.Source.ProductSlug)
+	if err != nil {
+		uiPrinter.PrintErrorlnf("Unable to generate Federation Token")
+		os.Exit(1)
+	}
+
 	s3Client := s3.NewClient(s3.NewClientConfig{
-		AccessKeyID:       input.Source.AccessKeyID,
-		SecretAccessKey:   input.Source.SecretAccessKey,
+		AccessKeyID:       federationToken.AccessKeyID,
+		SecretAccessKey:   federationToken.SecretAccessKey,
+		SessionToken:      federationToken.SessionToken,
 		RegionName:        region,
 		Bucket:            bucket,
 		Stderr:            os.Stderr,

@@ -24,6 +24,7 @@ type Client struct {
 type NewClientConfig struct {
 	AccessKeyID     string
 	SecretAccessKey string
+	SessionToken    string
 	RegionName      string
 	Bucket          string
 
@@ -39,7 +40,7 @@ func NewClient(config NewClientConfig) *Client {
 	awsConfig := s3resource.NewAwsConfig(
 		config.AccessKeyID,
 		config.SecretAccessKey,
-		"",
+		config.SessionToken,
 		config.RegionName,
 		endpoint,
 		disableSSL,
