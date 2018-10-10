@@ -62,16 +62,6 @@ resources:
   * Dependency Specifiers
   * Upgrade Path Specifiers
 
-* `access_key_id`: *Optional.*
-  AWS access key id.
-
-  Required for uploading products via `out`.
-
-* `secret_access_key`: *Optional.*
-  AWS secret access key.
-
-  Required for uploading products via `out`.
-
 * `endpoint`: *Optional.*
   Endpoint of Pivotal Network.
 
@@ -200,7 +190,7 @@ for more details on the structure of the metadata file.
 
 * `file_glob`: *Optional.* Glob for matching files to upload.
 
-  When you are uploading a new file with the release, if you provide `file_glob`, then you need to include `access_key_id` and `secret_access_key`. The `access_key_id` and `secret_access_key` are used to upload the files based on the `file_glob` to s3. If multiple files are matched by the glob, they are all uploaded. If no files are matched, release creation fails with an error.
+  If multiple files are matched by the glob, they are all uploaded. If no files are matched, release creation fails with an error.
 
 * `metadata_file`: *Optional.*
   File containing metadata for releases and product files.
@@ -355,8 +345,6 @@ Run the tests with the following command:
 ```
 PRODUCT_SLUG=my-product-slug-eg-pivotal-diego-pcf \
 API_TOKEN=my-token \
-AWS_ACCESS_KEY_ID=my-aws-access-key-id \
-AWS_SECRET_ACCESS_KEY=my-aws-secret-access-key \
 PIVNET_S3_REGION=region-of-pivnet-eg-us-east-1 \
 PIVNET_BUCKET_NAME=bucket-of-pivnet-eg-pivnet-bucket \
 PIVNET_ENDPOINT=some-pivnet-endpoint \
