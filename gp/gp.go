@@ -20,6 +20,10 @@ func NewClient(config pivnet.ClientConfig, logger logger.Logger) *Client {
 	}
 }
 
+func (c Client) GetFederationToken(productSlug string) (pivnet.FederationToken, error) {
+	return c.client.FederationToken.GenerateFederationToken(productSlug)
+}
+
 func (c Client) ReleaseTypes() ([]pivnet.ReleaseType, error) {
 	return c.client.ReleaseTypes.Get()
 }
