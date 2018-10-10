@@ -5,11 +5,12 @@ import (
 	"os"
 
 	"fmt"
+	"net/url"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/concourse/s3-resource"
 	"github.com/concourse/s3-resource/in"
-	"net/url"
-	"strings"
 )
 
 func main() {
@@ -20,12 +21,13 @@ func main() {
 
 	destinationDir := os.Args[1]
 
-	var request in.InRequest
+	var request in.Request
 	inputRequest(&request)
 
 	awsConfig := s3resource.NewAwsConfig(
 		request.Source.AccessKeyID,
 		request.Source.SecretAccessKey,
+		request.Source.SessionToken,
 		request.Source.RegionName,
 		request.Source.Endpoint,
 		request.Source.DisableSSL,
@@ -54,7 +56,7 @@ func main() {
 		request.Source.UseV2Signing,
 	)
 
-	command := in.NewInCommand(client)
+	command := in.NewCommand(client)
 
 	response, err := command.Run(destinationDir, request)
 	if err != nil {
@@ -64,13 +66,13 @@ func main() {
 	outputResponse(response)
 }
 
-func inputRequest(request *in.InRequest) {
+func inputRequest(request *in.Request) {
 	if err := json.NewDecoder(os.Stdin).Decode(request); err != nil {
 		s3resource.Fatal("reading request from stdin", err)
 	}
 }
 
-func outputResponse(response in.InResponse) {
+func outputResponse(response in.Response) {
 	if err := json.NewEncoder(os.Stdout).Encode(response); err != nil {
 		s3resource.Fatal("writing response to stdout", err)
 	}
