@@ -108,8 +108,6 @@ var _ = Describe("Lifecycle test", func() {
 		outRequest = concourse.OutRequest{
 			Source: concourse.Source{
 				APIToken:        pivnetAPIToken,
-				AccessKeyID:     awsAccessKeyID,
-				SecretAccessKey: awsSecretAccessKey,
 				ProductSlug:     productSlug,
 				Endpoint:        endpoint,
 				Bucket:          pivnetBucketName,
@@ -127,8 +125,6 @@ var _ = Describe("Lifecycle test", func() {
 		outRequest2 = concourse.OutRequest{
 			Source: concourse.Source{
 				APIToken:        pivnetAPIToken,
-				AccessKeyID:     awsAccessKeyID,
-				SecretAccessKey: awsSecretAccessKey,
 				ProductSlug:     productSlug,
 				Endpoint:        endpoint,
 				Bucket:          pivnetBucketName,
@@ -155,8 +151,6 @@ var _ = Describe("Lifecycle test", func() {
 
 		Context("when S3 source and params are configured correctly", func() {
 			var (
-				client *s3client
-
 				sourcesDir      = "sources"
 				sourceFileNames []string
 				sourceFilePaths []string
@@ -166,15 +160,7 @@ var _ = Describe("Lifecycle test", func() {
 			)
 
 			BeforeEach(func() {
-				By("Creating aws client")
 				var err error
-				client, err = NewS3Client(
-					awsAccessKeyID,
-					awsSecretAccessKey,
-					pivnetRegion,
-					pivnetBucketName,
-				)
-				Expect(err).ShouldNot(HaveOccurred())
 
 				By("Creating a temporary sources dir")
 				sourcesFullPath := filepath.Join(rootDir, sourcesDir)
@@ -205,8 +191,7 @@ var _ = Describe("Lifecycle test", func() {
 					Expect(err).ShouldNot(HaveOccurred())
 
 					remotePaths[i] = fmt.Sprintf(
-						"%s/%s",
-						s3FilepathPrefix,
+						"%s",
 						sourceFileNames[i],
 					)
 				}
@@ -221,13 +206,6 @@ var _ = Describe("Lifecycle test", func() {
 				stdinContents2, err = json.Marshal(outRequest2)
 				Expect(err).ShouldNot(HaveOccurred())
 
-			})
-
-			AfterEach(func() {
-				By("Removing uploaded file")
-				for i := 0; i < totalFiles; i++ {
-					client.DeleteFile(pivnetBucketName, remotePaths[i])
-				}
 			})
 
 			It("uploads files to s3 and creates files on pivnet", func() {
@@ -247,14 +225,6 @@ var _ = Describe("Lifecycle test", func() {
 				By("Running the command")
 				session := run(command, stdinContents)
 				Eventually(session, executableTimeout).Should(gexec.Exit(0))
-
-				By("Verifying uploaded files can be downloaded directly from S3")
-				for i := 0; i < totalFiles; i++ {
-					localDownloadPath := fmt.Sprintf("%s-downloaded", sourceFilePaths[i])
-					err := client.DownloadFile(pivnetBucketName, remotePaths[i], localDownloadPath)
-					Expect(err).ShouldNot(HaveOccurred())
-					os.Remove(localDownloadPath) //delete immediately so as to not pollute later tests
-				}
 
 				By("Outputting a valid json response")
 				response := concourse.OutResponse{}

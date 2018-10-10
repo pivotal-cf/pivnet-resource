@@ -10,9 +10,6 @@ import (
 )
 
 type Client struct {
-	accessKeyID     string
-	secretAccessKey string
-	regionName      string
 	bucket          string
 
 	logger logger.Logger
@@ -54,9 +51,6 @@ func NewClient(config NewClientConfig) *Client {
 	)
 
 	return &Client{
-		accessKeyID:     config.AccessKeyID,
-		secretAccessKey: config.SecretAccessKey,
-		regionName:      config.RegionName,
 		bucket:          config.Bucket,
 		stderr:          config.Stderr,
 		logger:          config.Logger,
