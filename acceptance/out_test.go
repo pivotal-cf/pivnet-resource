@@ -101,8 +101,6 @@ var _ = Describe("Out", func() {
 			outRequest = concourse.OutRequest{
 				Source: concourse.Source{
 					APIToken:        pivnetAPIToken,
-					AccessKeyID:     awsAccessKeyID,
-					SecretAccessKey: awsSecretAccessKey,
 					ProductSlug:     productSlug,
 					Endpoint:        endpoint,
 					Bucket:          pivnetBucketName,
@@ -218,8 +216,6 @@ var _ = Describe("Out", func() {
 			outRequest = concourse.OutRequest{
 				Source: concourse.Source{
 					APIToken:        pivnetAPIToken,
-					AccessKeyID:     awsAccessKeyID,
-					SecretAccessKey: awsSecretAccessKey,
 					ProductSlug:     productSlug,
 					Endpoint:        endpoint,
 					Bucket:          pivnetBucketName,
@@ -268,8 +264,6 @@ var _ = Describe("Out", func() {
 			outRequest = concourse.OutRequest{
 				Source: concourse.Source{
 					APIToken:        refreshToken,
-					AccessKeyID:     awsAccessKeyID,
-					SecretAccessKey: awsSecretAccessKey,
 					ProductSlug:     productSlug,
 					Endpoint:        endpoint,
 					Bucket:          pivnetBucketName,

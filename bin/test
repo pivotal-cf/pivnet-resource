@@ -3,8 +3,6 @@
 set -eu
 
 API_TOKEN="${API_TOKEN:?"API_TOKEN must be provided"}"
-AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:?"AWS_ACCESS_KEY_ID must be provided"}"
-AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:?"AWS_SECRET_ACCESS_KEY must be provided"}"
 
 set -x
 

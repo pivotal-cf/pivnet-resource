@@ -25,11 +25,8 @@ var (
 
 	productSlug        string
 	pivnetAPIToken     string
-	awsAccessKeyID     string
-	awsSecretAccessKey string
 	pivnetRegion       string
 	pivnetBucketName   string
-	s3FilepathPrefix   string
 	refreshToken       string
 
 	pivnetClient *gp.Client
@@ -50,14 +47,6 @@ var _ = BeforeSuite(func() {
 	pivnetAPIToken = os.Getenv("API_TOKEN")
 	Expect(pivnetAPIToken).NotTo(BeEmpty(), "$API_TOKEN must be provided")
 
-	By("Getting aws access key id from environment variables")
-	awsAccessKeyID = os.Getenv("AWS_ACCESS_KEY_ID")
-	Expect(awsAccessKeyID).NotTo(BeEmpty(), "$AWS_ACCESS_KEY_ID must be provided")
-
-	By("Getting aws secret access key from environment variables")
-	awsSecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
-	Expect(awsSecretAccessKey).NotTo(BeEmpty(), "$AWS_SECRET_ACCESS_KEY must be provided")
-
 	By("Getting pivnet region from environment variables")
 	pivnetRegion = os.Getenv("PIVNET_S3_REGION")
 	Expect(pivnetRegion).NotTo(BeEmpty(), "$PIVNET_S3_REGION must be provided")
@@ -65,10 +54,6 @@ var _ = BeforeSuite(func() {
 	By("Getting pivnet bucket name from environment variables")
 	pivnetBucketName = os.Getenv("PIVNET_BUCKET_NAME")
 	Expect(pivnetBucketName).NotTo(BeEmpty(), "$PIVNET_BUCKET_NAME must be provided")
-
-	By("Getting s3 filepath prefix from environment variables")
-	s3FilepathPrefix = os.Getenv("S3_FILEPATH_PREFIX")
-	Expect(s3FilepathPrefix).NotTo(BeEmpty(), "$S3_FILEPATH_PREFIX must be provided")
 
 	By("Getting endpoint from environment variables")
 	endpoint = os.Getenv("PIVNET_ENDPOINT")
@@ -93,8 +78,6 @@ var _ = BeforeSuite(func() {
 	By("Sanitizing acceptance test output")
 	sanitized := map[string]string{
 		pivnetAPIToken:     "***sanitized-api-token***",
-		awsAccessKeyID:     "***sanitized-aws-access-key-id***",
-		awsSecretAccessKey: "***sanitized-aws-secret-access-key***",
 		refreshToken:       "***sanitized-refresh-token***",
 	}
 	sanitizedWriter := sanitizer.NewSanitizer(sanitized, GinkgoWriter)

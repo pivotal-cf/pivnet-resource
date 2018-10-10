@@ -9,8 +9,6 @@ import (
 
 var _ = Describe("Out Validator", func() {
 	var (
-		accessKeyID     string
-		secretAccessKey string
 
 		apiToken         string
 		productSlug      string
@@ -21,8 +19,6 @@ var _ = Describe("Out Validator", func() {
 	)
 
 	BeforeEach(func() {
-		accessKeyID = "some-access-key"
-		secretAccessKey = "some-secret-access-key"
 		apiToken = "some-api-token"
 		productSlug = "some-product"
 
@@ -34,8 +30,6 @@ var _ = Describe("Out Validator", func() {
 			Source: concourse.Source{
 				APIToken:        apiToken,
 				ProductSlug:     productSlug,
-				AccessKeyID:     accessKeyID,
-				SecretAccessKey: secretAccessKey,
 			},
 			Params: concourse.OutParams{
 				FileGlob:       fileGlob,
@@ -89,38 +83,6 @@ var _ = Describe("Out Validator", func() {
 		It("returns without error", func() {
 			err := v.Validate()
 			Expect(err).NotTo(HaveOccurred())
-		})
-	})
-
-	Context("when file glob is present", func() {
-		BeforeEach(func() {
-			fileGlob = "some-file-glob"
-		})
-
-		Context("when no aws access key id is provided", func() {
-			BeforeEach(func() {
-				accessKeyID = ""
-			})
-
-			It("returns an error", func() {
-				err := v.Validate()
-				Expect(err).To(HaveOccurred())
-
-				Expect(err.Error()).To(MatchRegexp(".*access_key_id.*provided"))
-			})
-		})
-
-		Context("when no aws secret access key is provided", func() {
-			BeforeEach(func() {
-				secretAccessKey = ""
-			})
-
-			It("returns an error", func() {
-				err := v.Validate()
-				Expect(err).To(HaveOccurred())
-
-				Expect(err.Error()).To(MatchRegexp(".*secret_access_key.*provided"))
-			})
 		})
 	})
 

@@ -25,19 +25,5 @@ func (v OutValidator) Validate() error {
 		return fmt.Errorf("%s must be provided", "product_slug")
 	}
 
-	if v.input.Params.FileGlob != "" {
-		if v.input.Source.AccessKeyID == "" {
-			return fmt.Errorf("%s must be provided", "access_key_id")
-		}
-
-		if v.input.Source.SecretAccessKey == "" {
-			return fmt.Errorf("%s must be provided", "secret_access_key")
-		}
-
-		if v.input.Params.FileGlob == "" {
-			return fmt.Errorf("%s must be provided", "file glob")
-		}
-	}
-
 	return nil
 }
