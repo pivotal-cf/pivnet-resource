@@ -70,6 +70,8 @@ func (c Client) Get(
 		return fmt.Errorf("failed to make HEAD request: %s", err)
 	}
 
+	c.Logger.Debug(fmt.Sprintf("HEAD response content size: %d", resp.ContentLength))
+
 	contentURL = resp.Request.URL.String()
 
 	ranges, err := c.Ranger.BuildRange(resp.ContentLength)
