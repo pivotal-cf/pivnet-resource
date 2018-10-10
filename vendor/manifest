@@ -21,7 +21,7 @@
 			"importpath": "github.com/concourse/s3-resource",
 			"repository": "https://github.com/concourse/s3-resource",
 			"vcs": "git",
-			"revision": "9f3e4abe968c2adffa89eeeea667a65d5d07841d",
+			"revision": "2bbfea544f02363c923cac4aefc15b9ea10febbd",
 			"branch": "master",
 			"notests": true
 		},

@@ -81,6 +81,7 @@ func NewS3Client(
 func NewAwsConfig(
 	accessKey string,
 	secretKey string,
+	sessionToken string,
 	regionName string,
 	endpoint string,
 	disableSSL bool,
@@ -91,7 +92,7 @@ func NewAwsConfig(
 	if accessKey == "" && secretKey == "" {
 		creds = credentials.AnonymousCredentials
 	} else {
-		creds = credentials.NewStaticCredentials(accessKey, secretKey, "")
+		creds = credentials.NewStaticCredentials(accessKey, secretKey, sessionToken)
 	}
 
 	if len(regionName) == 0 {
@@ -183,8 +184,18 @@ func (client *s3client) UploadFile(bucketName string, remotePath string, localPa
 	}
 
 	defer localFile.Close()
+	
+	// Automatically adjust partsize for larger files.
+	fSize := stat.Size()
+	if fSize > int64(uploader.MaxUploadParts) * uploader.PartSize {
+		partSize := fSize / int64(uploader.MaxUploadParts)
+		if fSize % int64(uploader.MaxUploadParts) != 0 {
+			partSize++
+		}
+		uploader.PartSize = partSize
+	}
 
-	progress := client.newProgressBar(stat.Size())
+	progress := client.newProgressBar(fSize)
 
 	progress.Start()
 	defer progress.Finish()
@@ -375,10 +386,12 @@ func (client *s3client) getVersionedBucketContents(bucketName string, prefix str
 
 		params := &s3.ListObjectVersionsInput{
 			Bucket:    aws.String(bucketName),
-			KeyMarker: aws.String(keyMarker),
 			Prefix:    aws.String(prefix),
 		}
 
+		if keyMarker != "" {
+			params.KeyMarker = aws.String(keyMarker)
+		}
 		if versionMarker != "" {
 			params.VersionIdMarker = aws.String(versionMarker)
 		}

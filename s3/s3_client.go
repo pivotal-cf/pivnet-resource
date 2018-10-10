@@ -39,6 +39,7 @@ func NewClient(config NewClientConfig) *Client {
 	awsConfig := s3resource.NewAwsConfig(
 		config.AccessKeyID,
 		config.SecretAccessKey,
+		"",
 		config.RegionName,
 		endpoint,
 		disableSSL,
