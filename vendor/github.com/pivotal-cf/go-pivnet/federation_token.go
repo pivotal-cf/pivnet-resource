@@ -1,10 +1,10 @@
 package pivnet
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"encoding/json"
-	"bytes"
 )
 
 type FederationTokenService struct {
@@ -12,15 +12,16 @@ type FederationTokenService struct {
 }
 
 type FederationToken struct {
-	AccessKeyID     string      `json:"access_key_id,omitempty" yaml:"access_key_id,omitempty"`
-	SecretAccessKey string      `json:"secret_access_key,omitempty" yaml:"secret_access_key,omitempty"`
-	SessionToken    string      `json:"session_token,omitempty" yaml:"session_token,omitempty"`
+	AccessKeyID     string `json:"access_key_id,omitempty" yaml:"access_key_id,omitempty"`
+	SecretAccessKey string `json:"secret_access_key,omitempty" yaml:"secret_access_key,omitempty"`
+	SessionToken    string `json:"session_token,omitempty" yaml:"session_token,omitempty"`
+	Bucket          string `json:"bucket,omitempty" yaml:"bucket,omitempty"`
+	Region          string `json:"region,omitempty" yaml:"region,omitempty"`
 }
 
 type createFederationTokenBody struct {
-	 ProductID string `json:"product_id"`
+	ProductID string `json:"product_id"`
 }
-
 
 func (f FederationTokenService) GenerateFederationToken(productSlug string) (FederationToken, error) {
 	url := fmt.Sprintf("/federation_token")
