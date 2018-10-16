@@ -67,16 +67,6 @@ resources:
 
   Defaults to `https://network.pivotal.io`.
 
-* `bucket`: *Optional.*
-  AWS S3 bucket name used by Pivotal Network.
-
-  Defaults to `pivotalnetwork`.
-
-* `region`: *Optional.*
-  AWS S3 region where the bucket is located.
-
-  Defaults to `eu-west-1`.
-
 * `product_version`: *Optional.*
   Regex to match product version e.g. `1\.2\..*`.
 
@@ -90,13 +80,6 @@ resources:
   Other permissible values for `sort_by` include:
   - `semver` - this will order the releases by semantic version,
     returning the release with the highest-valued version.
-
-**Values for the `endpoint`, `bucket` and `region` must be consistent
-or downloads and uploads may fail.**
-
-For example, the default values of `endpoint: https://network.pivotal.io`,
-`bucket: pivotalnetwork` and `region: eu-west-1`
-are consistent with the production instance of Pivotal Network.
 
 ## Example Pipeline Configuration
 
@@ -284,8 +267,6 @@ In this example we escaped the space between "Binary" and "1.0.11".
 
 The Pivotal Network team maintain an integration environment at
 `https://pivnet-integration.cfapps.io/`.
-The credentials for this environment are the same as for production, and the
-corresponding S3 bucket is `pivotal-network-staging`.
 
 This environment is useful for teams to develop against, as changes to products
 in this account are separated from the live account.
@@ -300,7 +281,6 @@ resources:
     api_token: {{api-token}}
     product_slug: p-mysql
     endpoint: https://pivnet-integration.cfapps.io
-    bucket: pivotal-network-staging
 ```
 
 ## Developing
@@ -329,22 +309,14 @@ Refer to the
 [official docs](https://network.pivotal.io/docs/api#how-to-authenticate)
 for more details on obtaining a Pivotal Network API token.
 
-For the AWS S3 configuration, as the tests will actually upload a few small test
-files to the specified S3 bucket, ensure the bucket is already created and
-permissions are set correctly such that the user associated with the provided
-credentials can upload, download and delete.
-
 It is advised to run the acceptance tests against the Pivotal Network integration
-environment endpoint `https://pivnet-integration.cfapps.io` and to use the
-corresponding S3 bucket `pivotal-network-staging`.
+environment endpoint `https://pivnet-integration.cfapps.io`.
 
 Run the tests with the following command:
 
 ```
 PRODUCT_SLUG=my-product-slug-eg-pivotal-diego-pcf \
 API_TOKEN=my-token \
-PIVNET_S3_REGION=region-of-pivnet-eg-us-east-1 \
-PIVNET_BUCKET_NAME=bucket-of-pivnet-eg-pivnet-bucket \
 PIVNET_ENDPOINT=some-pivnet-endpoint \
 PIVNET_RESOURCE_REFRESH_TOKEN=some-pivnet-resource-token \
 ./bin/test
