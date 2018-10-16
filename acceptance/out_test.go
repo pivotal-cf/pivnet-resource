@@ -103,8 +103,6 @@ var _ = Describe("Out", func() {
 					APIToken:        pivnetAPIToken,
 					ProductSlug:     productSlug,
 					Endpoint:        endpoint,
-					Bucket:          pivnetBucketName,
-					Region:          pivnetRegion,
 				},
 				Params: concourse.OutParams{
 					FileGlob:       "",
@@ -218,8 +216,6 @@ var _ = Describe("Out", func() {
 					APIToken:        pivnetAPIToken,
 					ProductSlug:     productSlug,
 					Endpoint:        endpoint,
-					Bucket:          pivnetBucketName,
-					Region:          pivnetRegion,
 					Verbose:	     false,
 				},
 				Params: concourse.OutParams{
@@ -266,8 +262,6 @@ var _ = Describe("Out", func() {
 					APIToken:        refreshToken,
 					ProductSlug:     productSlug,
 					Endpoint:        endpoint,
-					Bucket:          pivnetBucketName,
-					Region:          pivnetRegion,
 				},
 				Params: concourse.OutParams{
 					FileGlob:       "",

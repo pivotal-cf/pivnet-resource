@@ -110,8 +110,6 @@ var _ = Describe("Lifecycle test", func() {
 				APIToken:        pivnetAPIToken,
 				ProductSlug:     productSlug,
 				Endpoint:        endpoint,
-				Bucket:          pivnetBucketName,
-				Region:          pivnetRegion,
 			},
 			Params: concourse.OutParams{
 				FileGlob:       "*",
@@ -127,8 +125,6 @@ var _ = Describe("Lifecycle test", func() {
 				APIToken:        pivnetAPIToken,
 				ProductSlug:     productSlug,
 				Endpoint:        endpoint,
-				Bucket:          pivnetBucketName,
-				Region:          pivnetRegion,
 			},
 			Params: concourse.OutParams{
 				FileGlob:       "*",

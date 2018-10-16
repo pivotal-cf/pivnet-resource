@@ -25,8 +25,6 @@ var (
 
 	productSlug        string
 	pivnetAPIToken     string
-	pivnetRegion       string
-	pivnetBucketName   string
 	refreshToken       string
 
 	pivnetClient *gp.Client
@@ -46,14 +44,6 @@ var _ = BeforeSuite(func() {
 	By("Getting API token from environment variables")
 	pivnetAPIToken = os.Getenv("API_TOKEN")
 	Expect(pivnetAPIToken).NotTo(BeEmpty(), "$API_TOKEN must be provided")
-
-	By("Getting pivnet region from environment variables")
-	pivnetRegion = os.Getenv("PIVNET_S3_REGION")
-	Expect(pivnetRegion).NotTo(BeEmpty(), "$PIVNET_S3_REGION must be provided")
-
-	By("Getting pivnet bucket name from environment variables")
-	pivnetBucketName = os.Getenv("PIVNET_BUCKET_NAME")
-	Expect(pivnetBucketName).NotTo(BeEmpty(), "$PIVNET_BUCKET_NAME must be provided")
 
 	By("Getting endpoint from environment variables")
 	endpoint = os.Getenv("PIVNET_ENDPOINT")
