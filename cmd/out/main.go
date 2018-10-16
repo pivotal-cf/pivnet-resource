@@ -32,11 +32,6 @@ import (
 	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
-const (
-	defaultBucket        = "pivotalnetwork"
-	defaultRegion        = "eu-west-1"
-)
-
 var (
 	// version is deliberately left uninitialized so it can be set at compile-time
 	version string
@@ -107,16 +102,6 @@ func main() {
 		ls,
 	)
 
-	bucket := input.Source.Bucket
-	if bucket == "" {
-		bucket = defaultBucket
-	}
-
-	region := input.Source.Region
-	if region == "" {
-		region = defaultRegion
-	}
-
 	federationToken, err := client.GetFederationToken(input.Source.ProductSlug)
 	if err != nil {
 		uiPrinter.PrintErrorlnf("Unable to generate Federation Token")
@@ -127,8 +112,8 @@ func main() {
 		AccessKeyID:       federationToken.AccessKeyID,
 		SecretAccessKey:   federationToken.SecretAccessKey,
 		SessionToken:      federationToken.SessionToken,
-		RegionName:        region,
-		Bucket:            bucket,
+		RegionName:        federationToken.Region,
+		Bucket:            federationToken.Bucket,
 		Stderr:            os.Stderr,
 		Logger:            ls,
 		SkipSSLValidation: input.Source.SkipSSLValidation,

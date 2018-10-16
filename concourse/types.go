@@ -11,9 +11,7 @@ type Source struct {
 	APIToken          string `json:"api_token"`
 	ProductSlug       string `json:"product_slug"`
 	ProductVersion    string `json:"product_version"`
-	Bucket            string `json:"bucket"`
 	Endpoint          string `json:"endpoint"`
-	Region            string `json:"region"`
 	ReleaseType       string `json:"release_type"`
 	SortBy            SortBy `json:"sort_by"`
 	SkipSSLValidation bool   `json:"skip_ssl_verification"`
