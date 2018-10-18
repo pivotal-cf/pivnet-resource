@@ -312,7 +312,7 @@ versions may also work.
 
 ### Dependencies
 
-We use [go modules](https://github.com/golang/go/wiki/Modules) for dependencies, so you will have to make sure to turn them on with `GO111MODULES=on`.
+We use [go modules](https://github.com/golang/go/wiki/Modules) for dependencies, so you will have to make sure to turn them on with `GO111MODULE=on`.
 
 
 ### Running the tests
