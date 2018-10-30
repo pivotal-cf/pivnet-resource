@@ -191,7 +191,7 @@ func (u ReleaseUploader) pollForProductFile(productFile pivnet.ProductFile) erro
 				return err
 			}
 
-			if pf.FileTransferStatus == "complete" {
+			if pf.FileTransferStatus != "in_progress" {
 				u.logger.Info(fmt.Sprintf(
 					"Product file: '%s' async transfer complete",
 					productFile.Name,
@@ -200,7 +200,11 @@ func (u ReleaseUploader) pollForProductFile(productFile pivnet.ProductFile) erro
 				timeoutTimer.Stop()
 				pollTicker.Stop()
 
-				return nil
+				if pf.FileTransferStatus != "complete" {
+					return fmt.Errorf("%s", pf.FileTransferStatus)
+				} else {
+					return nil
+				}
 			}
 
 			u.logger.Info(fmt.Sprintf(

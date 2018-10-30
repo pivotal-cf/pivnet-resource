@@ -37,6 +37,7 @@ var _ = Describe("ReleaseUploader", func() {
 		actualSHA256Sum      string
 		actualMD5Sum         string
 		newAWSObjectKey      string
+		productFileTransferStatus string
 
 		existingProductFilesErr error
 		createProductFileErr    error
@@ -91,6 +92,7 @@ var _ = Describe("ReleaseUploader", func() {
 		actualSHA256Sum = "madeupsha256"
 		actualMD5Sum = "madeupmd5"
 		newAWSObjectKey = "s3-remote-path"
+		productFileTransferStatus = "complete"
 
 		existingProductFilesErr = nil
 		createProductFileErr = nil
@@ -133,10 +135,11 @@ var _ = Describe("ReleaseUploader", func() {
 			invokeCount += 1
 
 			if invokeCount == 1 {
+				productFile.FileTransferStatus = "in_progress"
 				return productFile, nil
 			}
 
-			productFile.FileTransferStatus = "complete"
+			productFile.FileTransferStatus = productFileTransferStatus
 			return productFile, nil
 		}
 	})
@@ -282,13 +285,29 @@ var _ = Describe("ReleaseUploader", func() {
 		})
 
 		Context("when polling for the product file returns an error", func() {
-			BeforeEach(func() {
-				productFileErr = errors.New("product file error")
+			Context("when getting product file from pivnet fails", func() {
+				BeforeEach(func() {
+					productFileErr = errors.New("product file error")
+				})
+
+				It("returns an error", func() {
+					err := uploader.Upload(pivnetRelease, []string{""})
+					Expect(err).To(Equal(productFileErr))
+				})
 			})
 
-			It("returns an error", func() {
-				err := uploader.Upload(pivnetRelease, []string{""})
-				Expect(err).To(Equal(productFileErr))
+			Context("When file_transfer_status returns an error", func() {
+				It("returns a file_transfer_status that is a failed_sha256_check", func() {
+					productFileTransferStatus = "failed_sha256_check"
+					err := uploader.Upload(pivnetRelease, []string{""})
+					Expect(err).To(MatchError(errors.New("failed_sha256_check")))
+				})
+
+				It("returns a file_transfer_status that is a failed_md5_check", func() {
+					productFileTransferStatus = "failed_md5_check"
+					err := uploader.Upload(pivnetRelease, []string{""})
+					Expect(err).To(MatchError(errors.New("failed_md5_check")))
+				})
 			})
 		})
 
