@@ -117,8 +117,22 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 						"  A different file with the same name already exists on S3.  Please recreate the release using a different"+
 						" filename for this file or upload the file to this release manually", exactGlob)
 				} else {
-					u.logger.Info(fmt.Sprintf("An identical file was found on S3, skipping file upload. The existing file %s "+
-						"will be associated to this release.", awsObjectKey))
+					foundMatch := false
+					for _, mpf := range u.metadata.ProductFiles {
+						if mpf.UploadAs == pf.Name {
+							u.logger.Info(fmt.Sprintf("An identical file was found on S3, skipping file upload. The existing file %s "+
+								"will be associated to this release.", awsObjectKey))
+							foundMatch = true
+							break
+						}
+					}
+
+					if !foundMatch {
+						return fmt.Errorf("A file with the same name was found.\n"+
+							"File name in AWS: %s\n"+
+							"File name in Pivnet: %s\n"+
+							"UploadAs metadata value: Unknown. Could not find a matching value in user provided metadata\n", pf.AWSObjectKey, pf.Name)
+					}
 				}
 			}
 		}

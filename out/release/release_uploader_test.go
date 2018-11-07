@@ -72,7 +72,7 @@ var _ = Describe("ReleaseUploader", func() {
 				{
 					File:               "some/file",
 					Description:        "a description",
-					UploadAs:           "a file",
+					UploadAs:           "upload as",
 					FileType:           "something",
 					DocsURL:            "some-docs-url",
 					SystemRequirements: []string{"req1", "req2"},
@@ -86,6 +86,7 @@ var _ = Describe("ReleaseUploader", func() {
 			{
 				ID:           1234,
 				AWSObjectKey: "some-existing-aws-object-key",
+				Name: mdata.ProductFiles[0].UploadAs,
 			},
 		}
 
@@ -196,6 +197,21 @@ var _ = Describe("ReleaseUploader", func() {
 					Expect(uploadClient.DeleteProductFileCallCount()).To(Equal(0))
 					Expect(uploadClient.CreateProductFileCallCount()).To(Equal(0))
 					Expect(uploadClient.AddProductFileCallCount()).To(Equal(1))
+				})
+
+				Context("when the UploadAs metadata differes from the product file name in pivnet", func() {
+					BeforeEach(func() {
+						existingProductFiles[0].Name = "different_name"
+					})
+
+					It("should display an error", func() {
+						err := uploader.Upload(pivnetRelease, []string{"some/file"})
+						Expect(err).To(HaveOccurred())
+						Expect(err.Error()).To(ContainSubstring("A file with the same name was found"))
+						Expect(err.Error()).To(ContainSubstring(existingProductFiles[0].Name))
+						Expect(err.Error()).To(ContainSubstring("UploadAs metadata value: Unknown"))
+						Expect(err.Error()).To(ContainSubstring(existingProductFiles[0].AWSObjectKey))
+					})
 				})
 			})
 			Context("when the files have different content", func() {
