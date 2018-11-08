@@ -10,7 +10,6 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 
-	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
