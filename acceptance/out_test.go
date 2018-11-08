@@ -262,6 +262,7 @@ var _ = Describe("Out", func() {
 					APIToken:        refreshToken,
 					ProductSlug:     productSlug,
 					Endpoint:        endpoint,
+					Verbose:		 true,
 				},
 				Params: concourse.OutParams{
 					FileGlob:       "",
@@ -291,7 +292,7 @@ var _ = Describe("Out", func() {
 				It("exits with error", func() {
 					session := run(command, stdinContents)
 
-					Eventually(session, 2 * time.Second).Should(gexec.Exit(1))
+					Eventually(session, 1 * time.Second).Should(gexec.Exit(1))
 					Expect(session.Err).Should(gbytes.Say("metadata_file"))
 				})
 			})
