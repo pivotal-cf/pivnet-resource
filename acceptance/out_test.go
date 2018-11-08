@@ -292,8 +292,11 @@ var _ = Describe("Out", func() {
 				It("exits with error", func() {
 					session := run(command, stdinContents)
 
+					GinkgoWriter.Write([]byte("waiting to finish"))
 					Eventually(session, 1 * time.Second).Should(gexec.Exit(1))
+					GinkgoWriter.Write([]byte("about to do assertion"))
 					Expect(session.Err).Should(gbytes.Say("metadata_file"))
+					GinkgoWriter.Write([]byte("finished assertion"))
 				})
 			})
 		})
