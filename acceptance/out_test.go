@@ -262,7 +262,6 @@ var _ = Describe("Out", func() {
 					APIToken:        refreshToken,
 					ProductSlug:     productSlug,
 					Endpoint:        endpoint,
-					Verbose:		 true,
 				},
 				Params: concourse.OutParams{
 					FileGlob:       "",
