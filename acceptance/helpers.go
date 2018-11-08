@@ -3,6 +3,7 @@ package acceptance
 import (
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -14,12 +15,12 @@ import (
 )
 
 func run(command *exec.Cmd, stdinContents []byte) *gexec.Session {
-	fmt.Fprintf(GinkgoWriter, "input: %s\n", stdinContents)
+	fmt.Fprintf(os.Stdout, "input: %s\n", stdinContents)
 
 	stdin, err := command.StdinPipe()
 	Expect(err).ShouldNot(HaveOccurred())
 
-	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+	session, err := gexec.Start(command, os.Stdout, os.Stdout)
 	Expect(err).NotTo(HaveOccurred())
 
 	_, err = io.WriteString(stdin, string(stdinContents))
