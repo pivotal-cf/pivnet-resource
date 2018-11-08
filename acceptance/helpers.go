@@ -3,23 +3,23 @@ package acceptance
 import (
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 func run(command *exec.Cmd, stdinContents []byte) *gexec.Session {
-	fmt.Fprintf(os.Stdout, "input: %s\n", stdinContents)
+	fmt.Fprintf(GinkgoWriter, "input: %s\n", stdinContents)
 
 	stdin, err := command.StdinPipe()
 	Expect(err).ShouldNot(HaveOccurred())
 
-	session, err := gexec.Start(command, os.Stdout, os.Stdout)
+	session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 
 	_, err = io.WriteString(stdin, string(stdinContents))
