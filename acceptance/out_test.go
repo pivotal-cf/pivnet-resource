@@ -291,7 +291,7 @@ var _ = Describe("Out", func() {
 				It("exits with error", func() {
 					session := run(command, stdinContents)
 
-					Eventually(session, 2 * time.Second).Should(gexec.Exit(1))
+					Eventually(session, 6 * time.Second).Should(gexec.Exit(1))
 					Expect(session.Err).Should(gbytes.Say("metadata_file"))
 				})
 			})
