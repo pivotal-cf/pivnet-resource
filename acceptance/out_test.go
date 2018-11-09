@@ -90,6 +90,7 @@ var _ = Describe("Out", func() {
 	})
 
 	AfterEach(func() {
+		fmt.Println("In the AfterEach")
 		By("Removing local temp files")
 		err := os.RemoveAll(rootDir)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -289,9 +290,16 @@ var _ = Describe("Out", func() {
 				})
 
 				It("exits with error", func() {
+					fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+					fmt.Println("Hello i am going to run the command with")
+					o, _ := json.Marshal(stdinContents)
+					fmt.Println(string(o))
+
 					session := run(command, stdinContents)
 
+					fmt.Println("About to run the eventually")
 					Eventually(session, 2 * time.Second).Should(gexec.Exit(1))
+					fmt.Println("We have run the eventually")
 					Expect(session.Err).Should(gbytes.Say("metadata_file"))
 				})
 			})
