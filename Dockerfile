@@ -1,13 +1,4 @@
-FROM concourse/buildroot:git
-
-RUN \
-  cd /usr/bin/ && \
-  curl \
-    -L \
-    -O \
-    https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && \
-  mv jq-linux64 jq && \
-  chmod +x jq
+FROM alpine:latest
 
 ADD cmd/check/check /opt/resource/check
 ADD cmd/in/in /opt/resource/in
