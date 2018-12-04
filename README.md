@@ -312,7 +312,7 @@ for more details on obtaining a Pivotal Network API token.
 It is advised to run the acceptance tests against the Pivotal Network integration
 environment endpoint `https://pivnet-integration.cfapps.io`.
 
-Run the tests with the following command:
+Run the tests with the following command (dummy values must be replaced by user):
 
 ```
 PRODUCT_SLUG=my-product-slug-eg-pivotal-diego-pcf \
