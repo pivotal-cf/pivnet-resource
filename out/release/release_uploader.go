@@ -25,6 +25,7 @@ type ReleaseUploader struct {
 
 type ProductFileMetadata struct {
 	description        string
+	fileVersion        string
 	docsURL            string
 	systemRequirements []string
 	platforms          []string
@@ -237,11 +238,15 @@ func (u ReleaseUploader) getProductFileConfig(exactGlob string, awsObjectKey str
 		return pivnet.CreateProductFileConfig{}, err
 	}
 
+	fileVersion := release.Version
+	if fileData.fileVersion != "" {
+		fileVersion = fileData.fileVersion
+	}
 	productFileConfig := pivnet.CreateProductFileConfig{
 		ProductSlug:        u.productSlug,
 		Name:               fileData.uploadAs,
 		AWSObjectKey:       awsObjectKey,
-		FileVersion:        release.Version,
+		FileVersion:        fileVersion,
 		SHA256:             fileContentsSHA256,
 		MD5:                fileContentsMD5,
 		Description:        fileData.description,
@@ -281,6 +286,10 @@ func (u ReleaseUploader) getFileData(exactGlob string) ProductFileMetadata {
 
 			if f.FileType != "" {
 				fileData.fileType = f.FileType
+			}
+
+			if f.FileVersion != "" {
+				fileData.fileVersion = f.FileVersion
 			}
 
 			if f.DocsURL != "" {
