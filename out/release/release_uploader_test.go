@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/pivotal-cf/go-pivnet"
+	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/logger"
 	"github.com/pivotal-cf/go-pivnet/logshim"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
@@ -33,19 +33,19 @@ var _ = Describe("ReleaseUploader", func() {
 
 		mdata metadata.Metadata
 
-		existingProductFiles []pivnet.ProductFile
-		actualSHA256Sum      string
-		actualMD5Sum         string
-		newAWSObjectKey      string
+		existingProductFiles      []pivnet.ProductFile
+		actualSHA256Sum           string
+		actualMD5Sum              string
+		newAWSObjectKey           string
 		productFileTransferStatus string
 
-		existingProductFilesErr error
-		createProductFileErr    error
-		uploadFileErr           error
-		computeAWSObjectKeyError  error
-		sha256SumFileErr        error
-		md5SumFileErr           error
-		productFileErr          error
+		existingProductFilesErr  error
+		createProductFileErr     error
+		uploadFileErr            error
+		computeAWSObjectKeyError error
+		sha256SumFileErr         error
+		md5SumFileErr            error
+		productFileErr           error
 	)
 
 	BeforeEach(func() {
@@ -204,6 +204,20 @@ var _ = Describe("ReleaseUploader", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("already exists on S3"))
 				})
+			})
+		})
+
+		Context("when `file_version` is specified", func() {
+			BeforeEach(func() {
+				mdata.ProductFiles[0].FileVersion = "some-file-version"
+			})
+
+			It("uploads the product file with the specified version", func() {
+				err := uploader.Upload(pivnetRelease, []string{"some/file"})
+				Expect(err).NotTo(HaveOccurred())
+
+				createArgs := uploadClient.CreateProductFileArgsForCall(0)
+				Expect(createArgs.FileVersion).To(Equal("some-file-version"))
 			})
 		})
 

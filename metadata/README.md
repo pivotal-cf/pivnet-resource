@@ -156,6 +156,10 @@ All other keys are optional. The purpose of the keys is as follows:
 * `description` *Optional.* The file description
   (also known as _File Notes_ in Pivotal Network).
 
+* `file_version` *Optional.* The version number which will be displayed next to
+  the filename in Pivotal Network. Defaults to `release.version` if not
+  specified.
+
 * `upload_as` *Optional.* The display name for the file in Pivotal Network.
   This affects only the display name; the filename of the uploaded file remains
   the same as that of the local file.
