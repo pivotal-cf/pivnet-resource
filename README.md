@@ -175,7 +175,7 @@ for more details on the structure of the metadata file.
 
   If multiple files are matched by the glob, they are all uploaded. If no files are matched, release creation fails with an error.
 
-* `metadata_file`: *Optional.*
+* `metadata_file`: *Required.*
   File containing metadata for releases and product files.
 
   See [metadata](https://github.com/pivotal-cf/pivnet-resource/blob/master/metadata)
