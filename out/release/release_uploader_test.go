@@ -306,7 +306,7 @@ var _ = Describe("ReleaseUploader", func() {
 
 				It("returns an error", func() {
 					err := uploader.Upload(pivnetRelease, []string{""})
-					Expect(err).To(Equal(productFileErr))
+					Expect(err.Error()).To(ContainSubstring(productFileErr.Error()))
 				})
 			})
 
@@ -314,13 +314,13 @@ var _ = Describe("ReleaseUploader", func() {
 				It("returns a file_transfer_status that is a failed_sha256_check", func() {
 					productFileTransferStatus = "failed_sha256_check"
 					err := uploader.Upload(pivnetRelease, []string{""})
-					Expect(err).To(MatchError(errors.New("failed_sha256_check")))
+					Expect(err.Error()).To(ContainSubstring("failed_sha256_check"))
 				})
 
 				It("returns a file_transfer_status that is a failed_md5_check", func() {
 					productFileTransferStatus = "failed_md5_check"
 					err := uploader.Upload(pivnetRelease, []string{""})
-					Expect(err).To(MatchError(errors.New("failed_md5_check")))
+					Expect(err.Error()).To(ContainSubstring("failed_md5_check"))
 				})
 			})
 		})
