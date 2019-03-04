@@ -182,12 +182,6 @@ All other keys are optional. The purpose of the keys is as follows:
 
 * `included_files` *Optional.* A list of files or components included with this file.
 
-## File Groups
-
-The top-level `file_groups` key is written to during `in` but is not read from
-during `out`. Therefore it cannot be used to set file groups when creating
-or updating a release.
-
 ## Dependency Specifiers
 
 The top-level `dependency_specifiers` key is optional.
