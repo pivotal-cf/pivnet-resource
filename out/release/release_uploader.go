@@ -165,7 +165,7 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 
 		err = u.pollForProductFile(productFile)
 		if err != nil {
-			return err
+			return fmt.Errorf("error while polling: %s", err)
 		}
 	}
 
@@ -202,7 +202,7 @@ func (u ReleaseUploader) pollForProductFile(productFile pivnet.ProductFile) erro
 				pollTicker.Stop()
 
 				if pf.FileTransferStatus != "complete" {
-					return fmt.Errorf("%s", pf.FileTransferStatus)
+					return fmt.Errorf("file_transfer_status: %s", pf.FileTransferStatus)
 				} else {
 					return nil
 				}
