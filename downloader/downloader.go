@@ -9,11 +9,12 @@ import (
 
 	pivnet "github.com/pivotal-cf/go-pivnet"
 	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/download"
 )
 
 //go:generate counterfeiter --fake-name FakeClient . client
 type client interface {
-	DownloadProductFile(writer *os.File, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error
+	DownloadProductFile(writer *download.FileInfo, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error
 }
 
 type Downloader struct {
@@ -62,13 +63,18 @@ func (d Downloader) Download(
 			return nil, err
 		}
 
+		fileInfo, err := download.NewFileInfo(file)
+		if err != nil {
+			return nil, err
+		}
+
 		d.logger.Info(fmt.Sprintf(
 			"Downloading: '%s' to file: '%s'",
 			pf.Name,
 			downloadPath,
 		))
 
-		err = d.client.DownloadProductFile(file, productSlug, releaseID, pf.ID, d.progressWriter)
+		err = d.client.DownloadProductFile(fileInfo, productSlug, releaseID, pf.ID, d.progressWriter)
 		if err != nil {
 			d.logger.Info(fmt.Sprintf("Download failed: %s",
 				err.Error(),

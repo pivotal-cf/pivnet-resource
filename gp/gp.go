@@ -2,12 +2,11 @@ package gp
 
 import (
 	"fmt"
+	"github.com/pivotal-cf/go-pivnet"
+	"github.com/pivotal-cf/go-pivnet/download"
+	"github.com/pivotal-cf/go-pivnet/logger"
 	"io"
 	"net/http"
-	"os"
-
-	pivnet "github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf/go-pivnet/logger"
 )
 
 type Client struct {
@@ -134,7 +133,7 @@ func (c Client) AddFileGroup(productSlug string, releaseID int, fileGroupID int)
 	return c.client.FileGroups.AddToRelease(productSlug, releaseID, fileGroupID)
 }
 
-func (c Client) DownloadProductFile(writer *os.File, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error {
+func (c Client) DownloadProductFile(writer *download.FileInfo, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error {
 	return c.client.ProductFiles.DownloadForRelease(writer, productSlug, releaseID, productFileID, progressWriter)
 }
 

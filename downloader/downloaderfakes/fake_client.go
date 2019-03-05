@@ -2,16 +2,16 @@
 package downloaderfakes
 
 import (
+	"github.com/pivotal-cf/go-pivnet/download"
 	"io"
-	"os"
 	"sync"
 )
 
 type FakeClient struct {
-	DownloadProductFileStub        func(writer *os.File, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error
+	DownloadProductFileStub        func(writer *download.FileInfo, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error
 	downloadProductFileMutex       sync.RWMutex
 	downloadProductFileArgsForCall []struct {
-		writer         *os.File
+		writer         *download.FileInfo
 		productSlug    string
 		releaseID      int
 		productFileID  int
@@ -24,10 +24,10 @@ type FakeClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeClient) DownloadProductFile(writer *os.File, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error {
+func (fake *FakeClient) DownloadProductFile(writer *download.FileInfo, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error {
 	fake.downloadProductFileMutex.Lock()
 	fake.downloadProductFileArgsForCall = append(fake.downloadProductFileArgsForCall, struct {
-		writer         *os.File
+		writer         *download.FileInfo
 		productSlug    string
 		releaseID      int
 		productFileID  int
@@ -48,7 +48,7 @@ func (fake *FakeClient) DownloadProductFileCallCount() int {
 	return len(fake.downloadProductFileArgsForCall)
 }
 
-func (fake *FakeClient) DownloadProductFileArgsForCall(i int) (*os.File, string, int, int, io.Writer) {
+func (fake *FakeClient) DownloadProductFileArgsForCall(i int) (*download.FileInfo, string, int, int, io.Writer) {
 	fake.downloadProductFileMutex.RLock()
 	defer fake.downloadProductFileMutex.RUnlock()
 	return fake.downloadProductFileArgsForCall[i].writer, fake.downloadProductFileArgsForCall[i].productSlug, fake.downloadProductFileArgsForCall[i].releaseID, fake.downloadProductFileArgsForCall[i].productFileID, fake.downloadProductFileArgsForCall[i].progressWriter
