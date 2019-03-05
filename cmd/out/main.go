@@ -200,6 +200,7 @@ func main() {
 		input.Source.ProductSlug,
 		asyncTimeout,
 		pollFrequency,
+		input.Params.SkipProductFilePolling,
 	)
 
 	releaseUserGroupsUpdater := release.NewUserGroupsUpdater(

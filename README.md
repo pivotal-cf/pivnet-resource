@@ -181,6 +181,11 @@ for more details on the structure of the metadata file.
   See [metadata](https://github.com/pivotal-cf/pivnet-resource/blob/master/metadata)
   for more details on the structure of the metadata file.
 
+* `skip_product_file_polling`: *Optional.*
+  Boolean. Skip product file validation checks after upload. Pivotal Network still validates the files asynchronously
+  but _waiting_ for the results will not happen as part of the `put:` process. **Note:** All associated product files
+  in a release must still clear validation before the release can be promoted from _Admins Only_ visibility.
+
 * `override`: *Optional.*
   Boolean. Forces re-upload of releases of releases and versions that are
   already present on the Pivotal Network.

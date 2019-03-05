@@ -46,6 +46,8 @@ var _ = Describe("ReleaseUploader", func() {
 		sha256SumFileErr         error
 		md5SumFileErr            error
 		productFileErr           error
+
+		skipPolling bool
 	)
 
 	BeforeEach(func() {
@@ -101,6 +103,8 @@ var _ = Describe("ReleaseUploader", func() {
 		sha256SumFileErr = nil
 		md5SumFileErr = nil
 		productFileErr = nil
+
+		skipPolling = false
 	})
 
 	JustBeforeEach(func() {
@@ -115,6 +119,7 @@ var _ = Describe("ReleaseUploader", func() {
 			productSlug,
 			asyncTimeout,
 			pollFrequency,
+			skipPolling,
 		)
 
 		sha256Summer.SumFileReturns(actualSHA256Sum, sha256SumFileErr)
@@ -335,6 +340,18 @@ var _ = Describe("ReleaseUploader", func() {
 				Expect(err).To(HaveOccurred())
 
 				Expect(err.Error()).To(ContainSubstring("timed out"))
+			})
+		})
+
+		Context("when the skipPolling argument is passed in", func() {
+			BeforeEach(func() {
+				asyncTimeout = pollFrequency / 2
+				skipPolling = true
+			})
+
+			It("ignores ", func() {
+				err := uploader.Upload(pivnetRelease, []string{""})
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
