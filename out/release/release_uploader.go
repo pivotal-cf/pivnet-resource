@@ -21,6 +21,7 @@ type ReleaseUploader struct {
 	productSlug   string
 	asyncTimeout  time.Duration
 	pollFrequency time.Duration
+	skipPolling   bool
 }
 
 type ProductFileMetadata struct {
@@ -71,6 +72,7 @@ func NewReleaseUploader(
 	productSlug string,
 	asyncTimeout time.Duration,
 	pollFrequency time.Duration,
+	skipPolling bool,
 ) ReleaseUploader {
 	return ReleaseUploader{
 		s3:            s3,
@@ -83,6 +85,7 @@ func NewReleaseUploader(
 		productSlug:   productSlug,
 		asyncTimeout:  asyncTimeout,
 		pollFrequency: pollFrequency,
+		skipPolling:   skipPolling,
 	}
 }
 
@@ -173,6 +176,14 @@ func (u ReleaseUploader) Upload(release pivnet.Release, exactGlobs []string) err
 }
 
 func (u ReleaseUploader) pollForProductFile(productFile pivnet.ProductFile) error {
+	if u.skipPolling {
+		u.logger.Info(fmt.Sprintf(
+			"Skipping polling for product file: '%s'",
+			productFile.Name,
+		))
+		return nil
+	}
+
 	u.logger.Info(fmt.Sprintf(
 		"Polling product file: '%s' for async transfer - will wait up to %v",
 		productFile.Name,

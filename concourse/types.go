@@ -57,9 +57,10 @@ type OutRequest struct {
 }
 
 type OutParams struct {
-	FileGlob       string `json:"file_glob"`
-	MetadataFile   string `json:"metadata_file"`
-	Override       bool   `json:"override"`
+	FileGlob               string `json:"file_glob"`
+	MetadataFile           string `json:"metadata_file"`
+	SkipProductFilePolling bool   `json:"skip_product_file_polling"`
+	Override               bool   `json:"override"`
 }
 
 type OutResponse struct {
