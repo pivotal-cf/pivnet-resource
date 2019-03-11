@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -44,6 +45,22 @@ var _ = Describe("Lifecycle test", func() {
 		outRequest2   concourse.OutRequest
 		rootDir       string
 	)
+
+	additionalBeforeSuite = func() {
+		By("Clean up product-files")
+
+		By("Get product files")
+		productFiles, err := pivnetClient.ProductFiles(productSlug)
+		Expect(err).NotTo(HaveOccurred())
+
+		By("Deleting created files on pivnet")
+		for _, p := range productFiles {
+			if strings.Contains(p.Name, filePrefix) {
+				_, err := pivnetClient.DeleteProductFile(productSlug, p.ID)
+				Expect(err).ShouldNot(HaveOccurred())
+			}
+		}
+	}
 
 	BeforeEach(func() {
 		var err error

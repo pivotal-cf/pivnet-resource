@@ -28,6 +28,7 @@ var (
 	refreshToken       string
 
 	pivnetClient *gp.Client
+	additionalBeforeSuite func()
 )
 
 func TestAcceptance(t *testing.T) {
@@ -86,6 +87,10 @@ var _ = BeforeSuite(func() {
 	}
 
 	pivnetClient = gp.NewClient(clientConfig, ls)
+
+	if additionalBeforeSuite != nil {
+		additionalBeforeSuite()
+	}
 })
 
 var _ = AfterSuite(func() {
