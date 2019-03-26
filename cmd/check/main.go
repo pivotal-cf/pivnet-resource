@@ -68,9 +68,10 @@ func main() {
 	}
 
 	apiToken := input.Source.APIToken
+	token := pivnet.NewAccessTokenOrLegacyToken(apiToken, endpoint)
 
 	client := NewPivnetClientWithToken(
-		apiToken,
+		token,
 		endpoint,
 		input.Source.SkipSSLValidation,
 		useragent.UserAgent(version, "check", input.Source.ProductSlug),
@@ -100,15 +101,15 @@ func main() {
 	}
 }
 
-func NewPivnetClientWithToken(apiToken string, host string, skipSSLValidation bool, userAgent string, logger logger.Logger) *gp.Client {
+func NewPivnetClientWithToken(token pivnet.AccessTokenOrLegacyToken, host string, skipSSLValidation bool, userAgent string, logger logger.Logger) *gp.Client {
 	clientConfig := pivnet.ClientConfig{
 		Host:              host,
-		Token:             apiToken,
 		UserAgent:         userAgent,
 		SkipSSLValidation: skipSSLValidation,
 	}
 
 	return gp.NewClient(
+		token,
 		clientConfig,
 		logger,
 	)

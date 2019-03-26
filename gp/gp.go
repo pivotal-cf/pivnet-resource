@@ -13,9 +13,9 @@ type Client struct {
 	client pivnet.Client
 }
 
-func NewClient(config pivnet.ClientConfig, logger logger.Logger) *Client {
+func NewClient(token pivnet.AccessTokenService, config pivnet.ClientConfig, logger logger.Logger) *Client {
 	return &Client{
-		client: pivnet.NewClient(config, logger),
+		client: pivnet.NewClient(token, config, logger),
 	}
 }
 
