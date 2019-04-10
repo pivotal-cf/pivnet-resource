@@ -16,7 +16,7 @@ require (
 	github.com/mitchellh/colorstring v0.0.0-20150917214807-8631ce90f286 // indirect
 	github.com/onsi/ginkgo v1.7.0
 	github.com/onsi/gomega v1.4.2
-	github.com/pivotal-cf/go-pivnet v0.0.53
+	github.com/pivotal-cf/go-pivnet v1.0.0
 	github.com/robdimsdale/sanitizer v0.0.0-20160522134901-ab2334cb7539
 	github.com/shirou/gopsutil v2.17.12+incompatible // indirect
 	github.com/smartystreets/assertions v0.0.0-20170925172151-0b37b35ec743 // indirect
