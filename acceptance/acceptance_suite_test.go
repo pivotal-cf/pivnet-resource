@@ -85,7 +85,7 @@ var _ = BeforeSuite(func() {
 		UserAgent: "pivnet-resource/integration-test",
 	}
 
-	pivnetClient = gp.NewClient(pivnet.AccessTokenOrLegacyToken{}, clientConfig, ls)
+	pivnetClient = gp.NewClient(pivnet.NewAccessTokenOrLegacyToken(pivnetAPIToken, endpoint), clientConfig, ls)
 
 	if additionalBeforeSuite != nil {
 		additionalBeforeSuite()
