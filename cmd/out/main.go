@@ -118,6 +118,7 @@ func main() {
 		Stderr:            os.Stderr,
 		Logger:            ls,
 		SkipSSLValidation: input.Source.SkipSSLValidation,
+		FileSizeGetter:    s3.FileSizeGetter{},
 	})
 
 	prefixFetcher := uploader.NewPrefixFetcher(client, input.Source.ProductSlug)

@@ -1,13 +1,31 @@
 package s3
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 
 	"github.com/concourse/s3-resource"
 	"github.com/pivotal-cf/go-pivnet/logger"
 )
+
+//go:generate counterfeiter --fake-name FakeFileSizeGetter . fileSizeGetter
+type fileSizeGetter interface {
+	FileSize (localPath string) (int64, error)
+}
+
+type FileSizeGetter struct {}
+
+func (f FileSizeGetter) FileSize(localPath string) (int64, error) {
+	fileInfo, err := os.Lstat(localPath)
+	if err != nil {
+		return 0, err
+	}
+
+	return fileInfo.Size(), nil
+}
 
 type Client struct {
 	bucket          string
@@ -16,6 +34,7 @@ type Client struct {
 	stderr io.Writer
 
 	s3client s3resource.S3Client
+	fileSizeGetter fileSizeGetter
 }
 
 type NewClientConfig struct {
@@ -28,6 +47,7 @@ type NewClientConfig struct {
 	Logger            logger.Logger
 	Stderr            io.Writer
 	SkipSSLValidation bool
+	FileSizeGetter fileSizeGetter
 }
 
 func NewClient(config NewClientConfig) *Client {
@@ -55,6 +75,7 @@ func NewClient(config NewClientConfig) *Client {
 		stderr:          config.Stderr,
 		logger:          config.Logger,
 		s3client:        s3client,
+		fileSizeGetter:  config.FileSizeGetter,
 	}
 }
 
@@ -78,6 +99,16 @@ func (c Client) Upload(fileGlob string, to string, sourcesDir string) error {
 	}
 
 	localPath := matches[0]
+
+	fileSize, err := c.fileSizeGetter.FileSize(localPath)
+	if err != nil {
+		return err
+	}
+
+	if fileSize > 20000000000 {
+		return errors.New("file size exceeds 20 gb limit")
+	}
+
 	remotePath := filepath.Join(to, filepath.Base(localPath))
 
 	options := s3resource.NewUploadFileOptions()
