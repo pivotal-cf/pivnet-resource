@@ -68,7 +68,11 @@ func main() {
 	}
 
 	apiToken := input.Source.APIToken
-	token := pivnet.NewAccessTokenOrLegacyToken(apiToken, endpoint)
+	uaaEndpoint, err := concourse.UaaEndpoint(endpoint)
+	if err != nil {
+		log.Fatalf("Exiting with error: %s", err)
+	}
+	token := pivnet.NewAccessTokenOrLegacyToken(apiToken, uaaEndpoint)
 
 	client := NewPivnetClientWithToken(
 		token,
