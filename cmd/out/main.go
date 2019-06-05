@@ -89,7 +89,7 @@ func main() {
 	}
 
 	apiToken := input.Source.APIToken
-	token := pivnet.NewAccessTokenOrLegacyToken(apiToken, endpoint)
+	token := pivnet.NewAccessTokenOrLegacyToken(apiToken, endpoint, "Pivnet Resource")
 
 	if len(apiToken) < 20 {
 		uiPrinter.PrintDeprecationln("The use of static Pivnet API tokens is deprecated and will be removed. Please see https://network.pivotal.io/docs/api#how-to-authenticate for details.")
