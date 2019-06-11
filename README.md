@@ -99,7 +99,7 @@ Returned versions are optionally filtered and ordered by the `source` configurat
 
 ### `in`: download the product from Pivotal Network
 
-Downloads the provided product from Pivotal Network. You will be required to accept an
+Downloads the provided product from Pivotal Network. You will be required to accept a
 EULA for any product you're downloading for the first time, as well as if the terms and
 conditions associated with the product change.
 
