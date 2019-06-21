@@ -118,6 +118,50 @@ var _ = Describe("ReleaseFileGroupsAdder", func() {
 						Expect(err).To(Equal(expectedErr))
 					})
 				})
+
+				Context("when the new file group has some product files to be attached", func() {
+					BeforeEach(func() {
+						mdata.FileGroups[1] = metadata.FileGroup{
+							ID: 0,
+							Name: "new-file-group",
+							ProductFiles: []metadata.FileGroupProductFile{
+								{
+									ID: 1212,
+								},
+								{
+									ID: 2121,
+								},
+							},
+						}
+					})
+
+					It("should create new file group and attach the provided product files", func() {
+						err := releaseFileGroupsAdder.AddReleaseFileGroups(pivnetRelease)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(pivnetClient.AddFileGroupCallCount()).To(Equal(2))
+						Expect(pivnetClient.CreateFileGroupCallCount()).To(Equal(1))
+						Expect(pivnetClient.AddToFileGroupCallCount()).To(Equal(2))
+					})
+
+					Context("when attaching a product file returns an error", func() {
+						var (
+							expectedErr error
+						)
+
+						BeforeEach(func() {
+							expectedErr = fmt.Errorf("some attach product file error")
+							pivnetClient.AddToFileGroupReturns(expectedErr)
+						})
+
+						It("forwards the error", func() {
+							err := releaseFileGroupsAdder.AddReleaseFileGroups(pivnetRelease)
+							Expect(err).To(HaveOccurred())
+
+							Expect(err).To(Equal(expectedErr))
+						})
+					})
+				})
 			})
 		})
 	})

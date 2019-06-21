@@ -129,6 +129,10 @@ func (c Client) CreateFileGroup(config pivnet.CreateFileGroupConfig) (pivnet.Fil
 	return c.client.FileGroups.Create(config)
 }
 
+func (c Client) AddToFileGroup(productSlug string, fileGroupID int, productFileID int) error {
+	return c.client.ProductFiles.AddToFileGroup(productSlug, fileGroupID, productFileID)
+}
+
 func (c Client) AddFileGroup(productSlug string, releaseID int, fileGroupID int) error {
 	return c.client.FileGroups.AddToRelease(productSlug, releaseID, fileGroupID)
 }

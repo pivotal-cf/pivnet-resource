@@ -182,6 +182,18 @@ All other keys are optional. The purpose of the keys is as follows:
 
 * `included_files` *Optional.* A list of files or components included with this file.
 
+## File Groups
+
+The top-level `file_groups` key is optional.
+If provided, it is permitted to be an empty array.
+
+* `id` *Optional.* If provided, it will add the existing file group to the release.
+
+* `name` *Optional.* Ignored if `id` is provided. Required otherwise. Creates a new file group with the name.
+
+* `product_files` *Optional.* Ignored if `id` is provided. Creates a new file group with
+  the provided product file ids attached to it. The ids listed must be of existing product files.
+
 ## Dependency Specifiers
 
 The top-level `dependency_specifiers` key is optional.

@@ -32,6 +32,7 @@ func NewReleaseFileGroupsAdder(
 type releaseFileGroupsAdderClient interface {
 	AddFileGroup(productSlug string, releaseID int, fileGroupID int) error
 	CreateFileGroup(config pivnet.CreateFileGroupConfig) (pivnet.FileGroup, error)
+	AddToFileGroup(productSlug string, fileGroupID int, productFileID int) error
 }
 
 func (rf ReleaseFileGroupsAdder) AddReleaseFileGroups(release pivnet.Release) error {
@@ -53,6 +54,20 @@ func (rf ReleaseFileGroupsAdder) AddReleaseFileGroups(release pivnet.Release) er
 			}
 
 			fileGroupID = g.ID
+
+			for _, pf := range fileGroup.ProductFiles {
+				rf.logger.Info(fmt.Sprintf(
+					"Adding product file %d to file group with ID: %d",
+					pf.ID,
+					fileGroupID,
+				))
+
+				err := rf.pivnet.AddToFileGroup(rf.productSlug, fileGroupID, pf.ID)
+
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		rf.logger.Info(fmt.Sprintf(
