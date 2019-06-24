@@ -234,7 +234,7 @@ var _ = Describe("In", func() {
 				session := run(command, stdinContents)
 
 				By("Validating command exited with error")
-				Eventually(session, executableTimeout).Should(gexec.Exit(1))
+				Eventually(session, executableTimeout).ShouldNot(gexec.Exit(0))
 				Expect(session.Err).Should(gbytes.Say("failed to fetch API token"))
 			})
 		})
