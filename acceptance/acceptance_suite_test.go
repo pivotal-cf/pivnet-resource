@@ -23,9 +23,8 @@ var (
 
 	endpoint string
 
-	productSlug        string
-	pivnetAPIToken     string
-	refreshToken       string
+	productSlug  string
+	refreshToken string
 
 	pivnetClient *gp.Client
 	additionalBeforeSuite func()
@@ -41,10 +40,6 @@ var _ = BeforeSuite(func() {
 	By("Getting product slug from environment variables")
 	productSlug = os.Getenv("PRODUCT_SLUG")
 	Expect(productSlug).NotTo(BeEmpty(), "$PRODUCT_SLUG must be provided")
-
-	By("Getting API token from environment variables")
-	pivnetAPIToken = os.Getenv("API_TOKEN")
-	Expect(pivnetAPIToken).NotTo(BeEmpty(), "$API_TOKEN must be provided")
 
 	By("Getting endpoint from environment variables")
 	endpoint = os.Getenv("PIVNET_ENDPOINT")
@@ -68,8 +63,7 @@ var _ = BeforeSuite(func() {
 
 	By("Sanitizing acceptance test output")
 	sanitized := map[string]string{
-		pivnetAPIToken:     "***sanitized-api-token***",
-		refreshToken:       "***sanitized-refresh-token***",
+		refreshToken: "***sanitized-refresh-token***",
 	}
 	sanitizedWriter := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
 	GinkgoWriter = sanitizedWriter
@@ -85,7 +79,7 @@ var _ = BeforeSuite(func() {
 		UserAgent: "pivnet-resource/integration-test",
 	}
 
-	pivnetClient = gp.NewClient(pivnet.NewAccessTokenOrLegacyToken(pivnetAPIToken, endpoint), clientConfig, ls)
+	pivnetClient = gp.NewClient(pivnet.NewAccessTokenOrLegacyToken(refreshToken, endpoint), clientConfig, ls)
 
 	if additionalBeforeSuite != nil {
 		additionalBeforeSuite()

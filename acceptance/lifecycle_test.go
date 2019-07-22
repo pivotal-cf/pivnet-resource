@@ -124,7 +124,7 @@ var _ = Describe("Lifecycle test", func() {
 		By("Creating default request")
 		outRequest = concourse.OutRequest{
 			Source: concourse.Source{
-				APIToken:        pivnetAPIToken,
+				APIToken:        refreshToken,
 				ProductSlug:     productSlug,
 				Endpoint:        endpoint,
 			},
@@ -139,7 +139,7 @@ var _ = Describe("Lifecycle test", func() {
 
 		outRequest2 = concourse.OutRequest{
 			Source: concourse.Source{
-				APIToken:        pivnetAPIToken,
+				APIToken:        refreshToken,
 				ProductSlug:     productSlug,
 				Endpoint:        endpoint,
 			},
@@ -361,7 +361,7 @@ var _ = Describe("Lifecycle test", func() {
 				By("Downloading all files via in command and glob")
 				inRequest := concourse.InRequest{
 					Source: concourse.Source{
-						APIToken:    pivnetAPIToken,
+						APIToken:    refreshToken,
 						ProductSlug: productSlug,
 						Endpoint:    endpoint,
 					},
@@ -402,7 +402,7 @@ var _ = Describe("Lifecycle test", func() {
 				By("Downloading no files via in command and no glob")
 				inRequest = concourse.InRequest{
 					Source: concourse.Source{
-						APIToken:    pivnetAPIToken,
+						APIToken:    refreshToken,
 						ProductSlug: productSlug,
 						Endpoint:    endpoint,
 					},
@@ -442,7 +442,7 @@ var _ = Describe("Lifecycle test", func() {
 				By("Expecting error with in command and mismatched globs")
 				inRequest = concourse.InRequest{
 					Source: concourse.Source{
-						APIToken:    pivnetAPIToken,
+						APIToken:    refreshToken,
 						ProductSlug: productSlug,
 						Endpoint:    endpoint,
 					},

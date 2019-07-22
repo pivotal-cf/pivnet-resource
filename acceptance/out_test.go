@@ -95,125 +95,12 @@ var _ = Describe("Out", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	Context("when user supplies pivnet API token in source config", func() {
-		BeforeEach(func() {
-			By("Creating default request")
-			outRequest = concourse.OutRequest{
-				Source: concourse.Source{
-					APIToken:        pivnetAPIToken,
-					ProductSlug:     productSlug,
-					Endpoint:        endpoint,
-				},
-				Params: concourse.OutParams{
-					FileGlob:       "",
-					MetadataFile:   metadataFile,
-					Override:       false,
-				},
-			}
-		})
-
-		Describe("Argument validation", func() {
-			Context("when no root directory is provided via args", func() {
-				It("exits with error", func() {
-					command := exec.Command(outPath)
-					session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-					Expect(err).ShouldNot(HaveOccurred())
-
-					Eventually(session).Should(gexec.Exit(1))
-					Expect(session.Err).Should(gbytes.Say("usage"))
-				})
-			})
-
-			Context("when metadata file value is empty", func() {
-				BeforeEach(func() {
-					outRequest.Params.MetadataFile = ""
-				})
-
-				It("exits with error", func() {
-					session := run(command, stdinContents)
-
-					Eventually(session, 6 * time.Second).Should(gexec.Exit(1))
-					Expect(session.Err).Should(gbytes.Say("metadata_file"))
-				})
-			})
-		})
-
-		Describe("Creating a new release", func() {
-			// We do not delete the release as it causes race conditions with other tests
-
-			It("Successfully creates a release", func() {
-				var err error
-				stdinContents, err = json.Marshal(outRequest)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				By("Validating the new product version does not yet exist")
-				releases, err := pivnetClient.ReleasesForProductSlug(productSlug)
-				Expect(err).NotTo(HaveOccurred())
-
-				releaseVersions, err := versionsWithFingerprints(releases)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(versionsWithoutFingerprints(releaseVersions)).NotTo(ContainElement(version))
-
-				By("Running the command")
-				session := run(command, stdinContents)
-				Eventually(session, executableTimeout).Should(gexec.Exit(0))
-
-				By("Validating new release exists on pivnet")
-				releases, err = pivnetClient.ReleasesForProductSlug(productSlug)
-				Expect(err).NotTo(HaveOccurred())
-
-				releaseVersions, err = versionsWithFingerprints(releases)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(versionsWithoutFingerprints(releaseVersions)).To(ContainElement(version))
-
-				By("Outputting a valid json response")
-				response := concourse.OutResponse{}
-				err = json.Unmarshal(session.Out.Contents(), &response)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				By("Validating the release was created correctly")
-				release, err := pivnetClient.GetRelease(productSlug, version)
-				Expect(err).NotTo(HaveOccurred())
-
-				expectedVersion, err := versions.CombineVersionAndFingerprint(release.Version, release.SoftwareFilesUpdatedAt)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(response.Version.ProductVersion).To(Equal(expectedVersion))
-
-				Expect(release.ReleaseType).To(Equal(releaseType))
-				Expect(release.ReleaseDate).To(Equal(releaseDate))
-				Expect(release.EULA.Slug).To(Equal(eulaSlug))
-				Expect(release.Description).To(Equal(description))
-				Expect(release.ReleaseNotesURL).To(Equal(releaseNotesURL))
-
-				By("Validing the returned metadata")
-				metadataReleaseType, err := metadataValueForKey(response.Metadata, "release_type")
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(metadataReleaseType).To(Equal(string(releaseType)))
-
-				metadataReleaseDate, err := metadataValueForKey(response.Metadata, "release_date")
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(metadataReleaseDate).To(Equal(releaseDate))
-
-				metadataDescription, err := metadataValueForKey(response.Metadata, "description")
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(metadataDescription).To(Equal(description))
-
-				metadataReleaseNotesURL, err := metadataValueForKey(response.Metadata, "release_notes_url")
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(metadataReleaseNotesURL).To(Equal(releaseNotesURL))
-			})
-		})
-	})
-
 	Describe("verbose flag", func() {
 		BeforeEach(func() {
 			By("Creating default request")
 			outRequest = concourse.OutRequest{
 				Source: concourse.Source{
-					APIToken:        pivnetAPIToken,
+					APIToken:        refreshToken,
 					ProductSlug:     productSlug,
 					Endpoint:        endpoint,
 					Verbose:	     false,
