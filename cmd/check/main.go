@@ -68,7 +68,7 @@ func main() {
 	}
 
 	apiToken := input.Source.APIToken
-	token := pivnet.NewAccessTokenOrLegacyToken(apiToken, endpoint, "Pivnet Resource")
+	token := pivnet.NewAccessTokenOrLegacyToken(apiToken, endpoint, input.Source.SkipSSLValidation, "Pivnet Resource")
 
 	client := NewPivnetClientWithToken(
 		token,

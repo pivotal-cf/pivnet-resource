@@ -45,6 +45,7 @@ github.com/onsi/ginkgo v1.7.0 h1:WSHQ+IS43OoUrWtD1/bbclrwK8TTH5hzp+umCiuxHgs=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v1.4.2 h1:3mYCb7aPxS/RU7TI1y4rkEn1oKmPRjNJLNEXgw7MH2I=
 github.com/onsi/gomega v1.4.2/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
+github.com/pivotal-cf/go-pivnet v0.0.0-20190821161516-7ce0bc6ba787/go.mod h1:rvEzWli4NJQhX7Z3z0DiEQXsPwC+uE//eIKcpl7S1as=
 github.com/pivotal-cf/go-pivnet v0.0.53 h1:m2hFasKAI66MGKQzCGUP7oaG7xFClni2ruxmMLvkjP8=
 github.com/pivotal-cf/go-pivnet v0.0.53/go.mod h1:rvEzWli4NJQhX7Z3z0DiEQXsPwC+uE//eIKcpl7S1as=
 github.com/pivotal-cf/go-pivnet v1.0.0 h1:HSYvXNsTKC1tOzKOtVP1YGwLSbCFe0Li0Gx2fGUMTf0=
