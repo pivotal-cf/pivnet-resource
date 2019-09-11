@@ -4,7 +4,7 @@ package outfakes
 import (
 	"sync"
 
-	go_pivnet "github.com/pivotal-cf/go-pivnet"
+	go_pivnet "github.com/pivotal-cf/go-pivnet/v2"
 )
 
 type Creator struct {

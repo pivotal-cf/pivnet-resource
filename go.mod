@@ -16,20 +16,15 @@ require (
 	github.com/mitchellh/colorstring v0.0.0-20150917214807-8631ce90f286 // indirect
 	github.com/onsi/ginkgo v1.7.0
 	github.com/onsi/gomega v1.4.2
-	github.com/pivotal-cf/go-pivnet v0.0.0-20190828175943-03cc4b7808df
+	github.com/pivotal-cf/go-pivnet/v2 v2.0.2
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/robdimsdale/sanitizer v0.0.0-20160522134901-ab2334cb7539
 	github.com/shirou/gopsutil v2.17.12+incompatible // indirect
 	github.com/smartystreets/assertions v0.0.0-20170925172151-0b37b35ec743 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20170825221426-e5b2b7c91115 // indirect
 	github.com/smartystreets/gunit v0.0.0-20180314194857-6f0d6275bdcd // indirect
 	github.com/stretchr/testify v0.0.0-20171018052257-2aa2c176b9da // indirect
-	gopkg.in/VividCortex/ewma.v1 v1.1.1 // indirect
-	gopkg.in/cheggaaa/pb.v2 v2.0.6 // indirect
-	gopkg.in/fatih/color.v1 v1.7.0 // indirect
 	gopkg.in/h2non/filetype.v1 v1.0.5 // indirect
 	gopkg.in/ini.v1 v1.39.0 // indirect
-	gopkg.in/mattn/go-colorable.v0 v0.0.9 // indirect
-	gopkg.in/mattn/go-isatty.v0 v0.0.4 // indirect
-	gopkg.in/mattn/go-runewidth.v0 v0.0.3 // indirect
 	gopkg.in/yaml.v2 v2.2.1
 )

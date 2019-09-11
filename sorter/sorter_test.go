@@ -5,8 +5,8 @@ import (
 	"log"
 
 	bsemver "github.com/blang/semver"
-	"github.com/pivotal-cf/go-pivnet"
-	"github.com/pivotal-cf/go-pivnet/logshim"
+	"github.com/pivotal-cf/go-pivnet/v2"
+	"github.com/pivotal-cf/go-pivnet/v2/logshim"
 	"github.com/pivotal-cf/pivnet-resource/sorter"
 	"github.com/pivotal-cf/pivnet-resource/sorter/sorterfakes"
 

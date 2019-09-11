@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/concourse/s3-resource"
-	"github.com/pivotal-cf/go-pivnet/logger"
+	"github.com/pivotal-cf/go-pivnet/v2/logger"
 )
 
 //go:generate counterfeiter --fake-name FakeFileSizeGetter . fileSizeGetter
