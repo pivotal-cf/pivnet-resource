@@ -5,7 +5,7 @@ Interact with [Pivotal Network](https://network.pivotal.io) from concourse.
 ## Installing
 
 The recommended method to use this resource is with
-[resource_types](http://concourse.ci/configuring-resource-types.html) in the
+[resource_types](https://concourse-ci.org/resource-types.html) in the
 pipeline config as follows:
 
 ```yaml
