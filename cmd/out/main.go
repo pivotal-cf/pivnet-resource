@@ -219,6 +219,13 @@ func main() {
 		input.Source.ProductSlug,
 	)
 
+	releaseImageReferencesAdder := release.NewReleaseImageReferencesAdder(
+		ls,
+		client,
+		m,
+		input.Source.ProductSlug,
+	)
+
 	releaseDependenciesAdder := release.NewReleaseDependenciesAdder(
 		ls,
 		client,
@@ -267,6 +274,7 @@ func main() {
 		Uploader:                     releaseUploader,
 		UserGroupsUpdater:            releaseUserGroupsUpdater,
 		ReleaseFileGroupsAdder:       releaseFileGroupsAdder,
+		ReleaseImageReferencesAdder:  releaseImageReferencesAdder,
 		ReleaseDependenciesAdder:     releaseDependenciesAdder,
 		DependencySpecifiersCreator:  dependencySpecifiersCreator,
 		ReleaseUpgradePathsAdder:     releaseUpgradePathsAdder,

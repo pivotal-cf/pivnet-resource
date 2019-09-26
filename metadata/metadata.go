@@ -1,6 +1,8 @@
 package metadata
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Metadata struct {
 	Release               *Release               `yaml:"release,omitempty"`
@@ -8,6 +10,7 @@ type Metadata struct {
 	DependencySpecifiers  []DependencySpecifier  `yaml:"dependency_specifiers,omitempty"`
 	UpgradePathSpecifiers []UpgradePathSpecifier `yaml:"upgrade_path_specifiers,omitempty"`
 	FileGroups            []FileGroup            `yaml:"file_groups,omitempty"`
+	ImageReferences       []ImageReference       `yaml:"image_references,omitempty"`
 
 	// Deprecated
 	Dependencies []Dependency  `yaml:"dependencies,omitempty"`
@@ -58,6 +61,16 @@ type FileGroup struct {
 	ID           int                    `yaml:"id,omitempty"`
 	Name         string                 `yaml:"name,omitempty"`
 	ProductFiles []FileGroupProductFile `yaml:"product_files,omitempty"`
+}
+
+type ImageReference struct {
+	ID                 int      `yaml:"id,omitempty"`
+	Name               string   `yaml:"name,omitempty"`
+	ImagePath          string   `yaml:"image_path,omitempty"`
+	Digest             string   `yaml:"digest,omitempty"`
+	Description        string   `yaml:"description,omitempty"`
+	DocsURL            string   `yaml:"docs_url,omitempty"`
+	SystemRequirements []string `yaml:"system_requirements,omitempty"`
 }
 
 type FileGroupProductFile struct {

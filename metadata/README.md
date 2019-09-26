@@ -56,6 +56,17 @@ file_groups:
   name: "some file group"
   product_files:
   - id: 5432
+image_references:
+- id: 4567
+  name: my image
+  image_path: product_slug-staging/repo_name:tag
+  digest: sha256:mydigest
+  description: |
+    some
+    multi-line
+    description
+  docs_url: "http://foobar.com/readme.html"
+  system_requirements: ["requirement1", "requirement2"]
 dependency_specifiers:
 - specifier: 1.8.*
   product_slug: some-product
@@ -193,6 +204,27 @@ If provided, it is permitted to be an empty array.
 
 * `product_files` *Optional.* Ignored if `id` is provided. Creates a new file group with
   the provided product file ids attached to it. The ids listed must be of existing product files.
+
+## Image References
+
+This can only be used by products that use the harbor registry.
+
+The top-level `image_references` key is optional.
+If provided, it is permitted to be an empty array.
+
+* `id` *Optional.* If provided, it will add the existing image reference to the release.
+
+* `name` *Optional.* Ignored if `id` is provided. Required otherwise. Creates a new image reference with the name.
+
+* `image_path` *Optional.* Ignored if `id` is provided. Required otherwise. Path of the image in harbor.
+
+* `digest` *Optional.* Ignored if `id` is provided. Required otherwise. Digest must match the image digest on harbor.
+
+* `description` *Optional.* Ignored if `id` is provided. Creates a new image reference with the description.
+
+* `docs_url` *Optional.* Ignored if `id` is provided. A URL for documentation relevant to this image.
+
+* `system_requirements` *Optional.* Ignored if `id` is provided. Additional list of requirements for using this image reference.
 
 ## Dependency Specifiers
 

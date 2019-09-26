@@ -145,6 +145,14 @@ func (c Client) FileGroupsForRelease(productSlug string, releaseID int) ([]pivne
 	return c.client.FileGroups.ListForRelease(productSlug, releaseID)
 }
 
+func (c Client) CreateImageReference(config pivnet.CreateImageReferenceConfig) (pivnet.ImageReference, error) {
+	return c.client.ImageReferences.Create(config)
+}
+
+func (c Client) AddImageReference(productSlug string, releaseID int, imageReferenceID int) error {
+	return c.client.ImageReferences.AddToRelease(productSlug, releaseID, imageReferenceID)
+}
+
 func (c Client) ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error) {
 	return c.client.ReleaseDependencies.List(productSlug, releaseID)
 }
