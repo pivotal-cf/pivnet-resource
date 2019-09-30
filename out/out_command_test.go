@@ -24,6 +24,7 @@ var _ = Describe("Out", func() {
 			finalizer                    *outfakes.Finalizer
 			userGroupsUpdater            *outfakes.UserGroupsUpdater
 			releaseFileGroupsAdder       *outfakes.ReleaseFileGroupsAdder
+			releaseImageReferencesAdder  *outfakes.ReleaseImageReferencesAdder
 			releaseDependenciesAdder     *outfakes.ReleaseDependenciesAdder
 			dependencySpecifiersCreator  *outfakes.DependencySpecifiersCreator
 			releaseUpgradePathsAdder     *outfakes.ReleaseUpgradePathsAdder
@@ -47,6 +48,7 @@ var _ = Describe("Out", func() {
 			uploadErr                      error
 			updateUserGroupErr             error
 			addReleaseFileGroupsErr        error
+			addReleaseImageReferencesErr   error
 			addReleaseDependenciesErr      error
 			createDependencySpecifiersErr  error
 			addReleaseUpgradePathsErr      error
@@ -61,6 +63,7 @@ var _ = Describe("Out", func() {
 			finalizer = &outfakes.Finalizer{}
 			userGroupsUpdater = &outfakes.UserGroupsUpdater{}
 			releaseFileGroupsAdder = &outfakes.ReleaseFileGroupsAdder{}
+			releaseImageReferencesAdder = &outfakes.ReleaseImageReferencesAdder{}
 			releaseDependenciesAdder = &outfakes.ReleaseDependenciesAdder{}
 			dependencySpecifiersCreator = &outfakes.DependencySpecifiersCreator{}
 			releaseUpgradePathsAdder = &outfakes.ReleaseUpgradePathsAdder{}
@@ -82,6 +85,7 @@ var _ = Describe("Out", func() {
 			uploadErr = nil
 			updateUserGroupErr = nil
 			addReleaseFileGroupsErr = nil
+			addReleaseImageReferencesErr = nil
 			addReleaseDependenciesErr = nil
 			createDependencySpecifiersErr = nil
 			addReleaseUpgradePathsErr = nil
@@ -114,6 +118,7 @@ var _ = Describe("Out", func() {
 				Finalizer:                    finalizer,
 				UserGroupsUpdater:            userGroupsUpdater,
 				ReleaseFileGroupsAdder:       releaseFileGroupsAdder,
+				ReleaseImageReferencesAdder:  releaseImageReferencesAdder,
 				ReleaseDependenciesAdder:     releaseDependenciesAdder,
 				DependencySpecifiersCreator:  dependencySpecifiersCreator,
 				ReleaseUpgradePathsAdder:     releaseUpgradePathsAdder,
@@ -134,6 +139,7 @@ var _ = Describe("Out", func() {
 
 			uploader.UploadReturns(uploadErr)
 			releaseFileGroupsAdder.AddReleaseFileGroupsReturns(addReleaseFileGroupsErr)
+			releaseImageReferencesAdder.AddReleaseImageReferencesReturns(addReleaseImageReferencesErr)
 			releaseDependenciesAdder.AddReleaseDependenciesReturns(addReleaseDependenciesErr)
 			dependencySpecifiersCreator.CreateDependencySpecifiersReturns(createDependencySpecifiersErr)
 			releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(addReleaseUpgradePathsErr)
@@ -167,6 +173,7 @@ var _ = Describe("Out", func() {
 			Expect(globber.ExactGlobsCallCount()).To(Equal(1))
 
 			Expect(releaseFileGroupsAdder.AddReleaseFileGroupsCallCount()).To(Equal(1))
+			Expect(releaseImageReferencesAdder.AddReleaseImageReferencesCallCount()).To(Equal(1))
 			Expect(releaseDependenciesAdder.AddReleaseDependenciesCallCount()).To(Equal(1))
 			Expect(dependencySpecifiersCreator.CreateDependencySpecifiersCallCount()).To(Equal(1))
 			Expect(releaseUpgradePathsAdder.AddReleaseUpgradePathsCallCount()).To(Equal(1))
