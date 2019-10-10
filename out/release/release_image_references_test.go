@@ -75,10 +75,10 @@ var _ = Describe("ReleaseImageReferencesAdder", func() {
 						ID: 9876,
 					},
 					{
-						ID:   1234,
-						Name: "new-image-reference",
+						ID:        1234,
+						Name:      "new-image-reference",
 						ImagePath: "my/path:123",
-						Digest: "sha256:mydigest",
+						Digest:    "sha256:mydigest",
 					},
 				}
 			})
@@ -103,6 +103,30 @@ var _ = Describe("ReleaseImageReferencesAdder", func() {
 					Expect(pivnetClient.CreateImageReferenceCallCount()).To(Equal(1))
 				})
 
+				Context("when name, imagePath, and digest are the same as an existing image reference", func() {
+					BeforeEach(func() {
+						pivnetClient.ImageReferencesReturns(
+							[]pivnet.ImageReference{
+								{
+									ID:        1234,
+									Name:      "new-image-reference",
+									ImagePath: "my/path:123",
+									Digest:    "sha256:mydigest",
+								},
+							}, nil)
+					})
+
+					It("does uses the existing image reference", func() {
+						err := releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(pivnetClient.CreateImageReferenceCallCount()).To(Equal(0))
+						Expect(pivnetClient.AddImageReferenceCallCount()).To(Equal(2))
+						_, _, imageReferenceID := pivnetClient.AddImageReferenceArgsForCall(0)
+						Expect(imageReferenceID).To(Equal(9876))
+						_, _, imageReferenceID = pivnetClient.AddImageReferenceArgsForCall(1)
+						Expect(imageReferenceID).To(Equal(1234))
+					})
+				})
 				Context("when creating the image reference returns an error", func() {
 					var (
 						expectedErr error

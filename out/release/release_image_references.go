@@ -30,34 +30,66 @@ func NewReleaseImageReferencesAdder(
 
 //go:generate counterfeiter --fake-name ReleaseImageReferencesAdderClient . releaseImageReferencesAdderClient
 type releaseImageReferencesAdderClient interface {
+	ImageReferences(productSlug string) ([]pivnet.ImageReference, error)
 	AddImageReference(productSlug string, releaseID int, imageReferenceID int) error
 	CreateImageReference(config pivnet.CreateImageReferenceConfig) (pivnet.ImageReference, error)
 }
 
+type imageReferenceKey struct {
+	Name      string
+	ImagePath string
+	Digest    string
+}
+
 func (rf ReleaseImageReferencesAdder) AddReleaseImageReferences(release pivnet.Release) error {
+	productImageReferences, err := rf.pivnet.ImageReferences(rf.productSlug)
+	if err != nil {
+		return err
+	}
+
+	var productImageReferenceMap = map[imageReferenceKey]int{}
+	for _, productImageReference := range productImageReferences {
+		productImageReferenceMap[imageReferenceKey{
+			productImageReference.Name,
+			productImageReference.ImagePath,
+			productImageReference.Digest,
+		}] = productImageReference.ID
+	}
+
 	for _, imageReference := range rf.metadata.ImageReferences {
-		imageReferenceID := imageReference.ID
+		var imageReferenceID = imageReference.ID
+
 		if imageReferenceID == 0 {
-			rf.logger.Info(fmt.Sprintf(
-				"Creating image reference with name: %s",
+			foundImageReferenceId := productImageReferenceMap[imageReferenceKey{
 				imageReference.Name,
-			))
+				imageReference.ImagePath,
+				imageReference.Digest,
+			}]
 
-			ir, err := rf.pivnet.CreateImageReference(pivnet.CreateImageReferenceConfig{
-				ProductSlug:        rf.productSlug,
-				Name:               imageReference.Name,
-				ImagePath:          imageReference.ImagePath,
-				Digest:             imageReference.Digest,
-				Description:        imageReference.Description,
-				DocsURL:            imageReference.DocsURL,
-				SystemRequirements: imageReference.SystemRequirements,
-			})
+			if foundImageReferenceId != 0 {
+				imageReferenceID = foundImageReferenceId
+			} else {
+				rf.logger.Info(fmt.Sprintf(
+					"Creating image reference with name: %s",
+					imageReference.Name,
+				))
 
-			if err != nil {
-				return err
+				ir, err := rf.pivnet.CreateImageReference(pivnet.CreateImageReferenceConfig{
+					ProductSlug:        rf.productSlug,
+					Name:               imageReference.Name,
+					ImagePath:          imageReference.ImagePath,
+					Digest:             imageReference.Digest,
+					Description:        imageReference.Description,
+					DocsURL:            imageReference.DocsURL,
+					SystemRequirements: imageReference.SystemRequirements,
+				})
+
+				if err != nil {
+					return err
+				}
+
+				imageReferenceID = ir.ID
 			}
-
-			imageReferenceID = ir.ID
 		}
 
 		rf.logger.Info(fmt.Sprintf(
