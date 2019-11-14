@@ -9,8 +9,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/pivotal-cf/go-pivnet/v2/logger"
-	"github.com/pivotal-cf/go-pivnet/v2/logshim"
+	"github.com/pivotal-cf/go-pivnet/v3/logger"
+	"github.com/pivotal-cf/go-pivnet/v3/logshim"
 	"github.com/pivotal-cf/pivnet-resource/in/filesystem"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 

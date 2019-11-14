@@ -17,6 +17,7 @@ require (
 	github.com/onsi/ginkgo v1.7.0
 	github.com/onsi/gomega v1.4.2
 	github.com/pivotal-cf/go-pivnet/v2 v2.0.6
+	github.com/pivotal-cf/go-pivnet/v3 v3.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/robdimsdale/sanitizer v0.0.0-20160522134901-ab2334cb7539
 	github.com/shirou/gopsutil v2.17.12+incompatible // indirect

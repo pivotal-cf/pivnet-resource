@@ -4,7 +4,7 @@ package releasefakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet/v2"
+	"github.com/pivotal-cf/go-pivnet/v3"
 )
 
 type ReleaseFileGroupsAdderClient struct {
