@@ -16,8 +16,7 @@ require (
 	github.com/mitchellh/colorstring v0.0.0-20150917214807-8631ce90f286 // indirect
 	github.com/onsi/ginkgo v1.7.0
 	github.com/onsi/gomega v1.4.2
-	github.com/pivotal-cf/go-pivnet/v2 v2.0.6
-	github.com/pivotal-cf/go-pivnet/v3 v3.0.0 // indirect
+	github.com/pivotal-cf/go-pivnet/v3 v3.0.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/robdimsdale/sanitizer v0.0.0-20160522134901-ab2334cb7539
 	github.com/shirou/gopsutil v2.17.12+incompatible // indirect
@@ -29,3 +28,5 @@ require (
 	gopkg.in/ini.v1 v1.39.0 // indirect
 	gopkg.in/yaml.v2 v2.2.1
 )
+
+go 1.13
