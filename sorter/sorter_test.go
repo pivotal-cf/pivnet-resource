@@ -111,6 +111,51 @@ var _ = Describe("Sorter", func() {
 			})
 		})
 	})
+
+	Describe("Sort by last updated", func() {
+		It("should sort releases based on most recent updated at", func() {
+			pair1 := updatePair{"2019-03-12T12:23:45.430Z", "2019-04-07T06:23:13.430Z"}
+			pair2 := updatePair{"2019-02-20T18:21:13.430Z","2019-11-20T08:00:13.430Z"}
+			pair3 := updatePair{"2019-10-07T04:15:03.430Z", "2019-04-23T08:55:12.430Z"}
+
+			input := releasesWithLastUpdated(pair1, pair2, pair3)
+
+			returned, err := s.SortByLastUpdated(input)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lastUpdatedAtFromReleases(returned)).To(Equal([]updatePair{pair2, pair3, pair1}))
+		})
+
+		Context("when user group last updated at time is empty", func() {
+			It("should sort releases based on most recent updated at", func() {
+				pair1 := updatePair{"2019-03-12T12:23:45.430Z", "2019-04-07T06:23:13.430Z"}
+				pair2 := updatePair{"2019-02-20T18:21:13.430Z",""}
+				pair3 := updatePair{"2019-10-07T04:15:03.430Z", "2019-04-23T08:55:12.430Z"}
+
+				input := releasesWithLastUpdated(pair1, pair2, pair3)
+
+				returned, err := s.SortByLastUpdated(input)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lastUpdatedAtFromReleases(returned)).To(Equal([]updatePair{pair3, pair1, pair2}))
+			})
+		})
+
+		Context("when last updated at time is the same", func() {
+			It("should sort releases based on most recent updated at", func() {
+				pair1 := updatePair{"2019-11-20T08:00:13.430Z", "2019-04-07T06:23:13.430Z"}
+				pair2 := updatePair{"2019-02-20T18:21:13.430Z","2019-11-20T08:00:13.430Z"}
+				pair3 := updatePair{"2019-10-07T04:15:03.430Z", "2019-04-23T08:55:12.430Z"}
+
+				input := releasesWithLastUpdated(pair1, pair2, pair3)
+
+				returned, err := s.SortByLastUpdated(input)
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lastUpdatedAtFromReleases(returned)).To(Equal([]updatePair{pair1, pair2, pair3}))
+			})
+		})
+	})
 })
 
 func releasesWithVersions(versions ...string) []pivnet.Release {
@@ -127,4 +172,26 @@ func versionsFromReleases(releases []pivnet.Release) []string {
 		versions = append(versions, release.Version)
 	}
 	return versions
+}
+
+func releasesWithLastUpdated(lastUpdated ...updatePair) []pivnet.Release {
+	var releases []pivnet.Release
+	for _, timePair := range lastUpdated {
+		releases = append(releases, pivnet.Release{UpdatedAt: timePair.ReleaseUpdateAt, UserGroupsUpdatedAt: timePair.UserGroupsUpdateAt})
+	}
+	return releases
+}
+
+func lastUpdatedAtFromReleases(releases []pivnet.Release) []updatePair {
+	var updatePairs []updatePair
+	for _, release := range releases {
+		updatePairs = append(updatePairs, updatePair{release.UpdatedAt, release.UserGroupsUpdatedAt})
+	}
+
+	return updatePairs
+}
+
+type updatePair struct {
+	ReleaseUpdateAt    string
+	UserGroupsUpdateAt string
 }

@@ -3,8 +3,9 @@ package concourse
 type SortBy string
 
 const (
-	SortByNone   SortBy = "none"
-	SortBySemver SortBy = "semver"
+	SortByNone        SortBy = "none"
+	SortBySemver      SortBy = "semver"
+	SortByLastUpdated SortBy = "last_updated"
 )
 
 type Source struct {

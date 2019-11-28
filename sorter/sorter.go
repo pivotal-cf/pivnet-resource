@@ -2,9 +2,11 @@ package sorter
 
 import (
 	"fmt"
+	"sort"
+	"time"
 
 	"github.com/blang/semver"
-	pivnet "github.com/pivotal-cf/go-pivnet/v3"
+	"github.com/pivotal-cf/go-pivnet/v3"
 	"github.com/pivotal-cf/go-pivnet/v3/logger"
 )
 
@@ -64,6 +66,21 @@ func (s Sorter) SortBySemver(input []pivnet.Release) ([]pivnet.Release, error) {
 	return sortedReleases, nil
 }
 
+func (s Sorter) SortByLastUpdated(input []pivnet.Release) ([]pivnet.Release, error) {
+	releasesMap := make(map[int64][]pivnet.Release)
+
+	for _, release := range input {
+		t, err := getMostRecentTimestampFromRelease(release)
+		if err != nil {
+			return nil, err
+		}
+
+		releasesMap[t] = append(releasesMap[t], release)
+	}
+
+	return sortReleasesByTimestamp(releasesMap), nil
+}
+
 func toStrings(input semver.Versions) []string {
 	strings := make([]string, len(input))
 
@@ -72,4 +89,44 @@ func toStrings(input semver.Versions) []string {
 	}
 
 	return strings
+}
+
+func getMostRecentTimestampFromRelease(release pivnet.Release) (int64, error) {
+	updatedAtTimestamp, err := time.Parse(time.RFC3339, release.UpdatedAt)
+	if err != nil {
+		return 0, err
+	}
+
+	mostRecentTimestamp := updatedAtTimestamp.Unix()
+
+	if release.UserGroupsUpdatedAt != "" {
+		userGroupUpdatedAtTimestamp, err := time.Parse(time.RFC3339, release.UserGroupsUpdatedAt)
+		if err != nil {
+			return 0, err
+		}
+
+		if mostRecentTimestamp < userGroupUpdatedAtTimestamp.Unix() {
+			mostRecentTimestamp = userGroupUpdatedAtTimestamp.Unix()
+		}
+	}
+
+	return mostRecentTimestamp, nil
+}
+
+func sortReleasesByTimestamp(releasesMap map[int64][]pivnet.Release) (result []pivnet.Release) {
+	var keys []int64
+
+	for key := range releasesMap {
+		keys = append(keys, key)
+	}
+
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] > keys[j]
+	})
+
+	for _, key := range keys {
+		result = append(result, releasesMap[key]...)
+	}
+
+	return result
 }

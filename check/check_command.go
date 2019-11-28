@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v3"
+	"github.com/pivotal-cf/go-pivnet/v3"
 	"github.com/pivotal-cf/go-pivnet/v3/logger"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/versions"
@@ -21,6 +21,7 @@ type filter interface {
 //go:generate counterfeiter --fake-name FakeSorter . sorter
 type sorter interface {
 	SortBySemver([]pivnet.Release) ([]pivnet.Release, error)
+	SortByLastUpdated([]pivnet.Release) ([]pivnet.Release, error)
 }
 
 //go:generate counterfeiter --fake-name FakePivnetClient . pivnetClient
@@ -34,7 +35,7 @@ type CheckCommand struct {
 	binaryVersion string
 	filter        filter
 	pivnetClient  pivnetClient
-	semverSorter  sorter
+	sort          sorter
 	logFilePath   string
 }
 
@@ -43,7 +44,7 @@ func NewCheckCommand(
 	binaryVersion string,
 	filter filter,
 	pivnetClient pivnetClient,
-	semverSorter sorter,
+	sort sorter,
 	logFilePath string,
 ) *CheckCommand {
 	return &CheckCommand{
@@ -51,7 +52,7 @@ func NewCheckCommand(
 		binaryVersion: binaryVersion,
 		filter:        filter,
 		pivnetClient:  pivnetClient,
-		semverSorter:  semverSorter,
+		sort:          sort,
 		logFilePath:   logFilePath,
 	}
 }
@@ -101,7 +102,13 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	if input.Source.SortBy == concourse.SortBySemver {
 		c.logger.Info("Sorting all releases by semver")
-		releases, err = c.semverSorter.SortBySemver(releases)
+		releases, err = c.sort.SortBySemver(releases)
+		if err != nil {
+			return nil, err
+		}
+	} else if input.Source.SortBy == concourse.SortByLastUpdated {
+		c.logger.Info("Sorting all releases by release date")
+		releases, err = c.sort.SortByLastUpdated(releases)
 		if err != nil {
 			return nil, err
 		}
@@ -142,7 +149,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		out = append(out, concourse.Version{ProductVersion: vs[0]})
 	}
 
-	c.logger.Info("Finishing check and returning ouput")
+	c.logger.Info("Finishing check and returning output")
 
 	return out, nil
 }
