@@ -397,4 +397,54 @@ var _ = Describe("Check", func() {
 			})
 		})
 	})
+
+	Context("when sorting by last_updated", func() {
+		var (
+			releases []pivnet.Release
+		)
+
+		BeforeEach(func() {
+			checkRequest.Source.SortBy = concourse.SortByLastUpdated
+
+			releases = []pivnet.Release{
+				allReleases[1], // 2.3.4
+				allReleases[2], // 1.2.4
+				allReleases[0], // 1.2.3
+			}
+
+			checkRequest.Version = concourse.Version{
+				ProductVersion: versionsWithFingerprints[0], // 1.2.3#time1
+			}
+
+			fakeSorter.SortByLastUpdatedReturns(releases, nil)
+		})
+
+		It("returns invokes sort by update_at on sorter", func() {
+			Expect(fakeSorter.SortByLastUpdatedCallCount()).To(Equal(0))
+
+			_, err := checkCommand.Run(checkRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeSorter.SortByLastUpdatedCallCount()).To(Equal(1))
+		})
+
+		Context("when sorting by semver returns an error", func() {
+			var (
+				semverErr error
+			)
+
+			BeforeEach(func() {
+				semverErr = errors.New("semver error")
+
+				fakeSorter.SortByLastUpdatedReturns(nil, semverErr)
+			})
+
+			It("returns error", func() {
+				_, err := checkCommand.Run(checkRequest)
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(Equal(semverErr))
+			})
+		})
+	})
 })
