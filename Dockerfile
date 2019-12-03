@@ -1,6 +1,6 @@
 FROM ubuntu:bionic
 
-RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y unzip ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY cmd/check/check /opt/resource/check
 COPY cmd/in/in /opt/resource/in
