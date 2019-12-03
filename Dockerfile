@@ -1,4 +1,4 @@
-FROM pivnet/golang
+FROM ubuntu:bionic
 
 RUN apt update && apt install unzip
 
