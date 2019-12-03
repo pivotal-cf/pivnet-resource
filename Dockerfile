@@ -1,9 +1,7 @@
 FROM ubuntu:bionic
 
-RUN apt update && apt install unzip
+RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
 
-ADD cmd/check/check /opt/resource/check
-ADD cmd/in/in /opt/resource/in
-ADD cmd/out/out /opt/resource/out
-
-RUN chmod +x /opt/resource/*
+COPY cmd/check/check /opt/resource/check
+COPY cmd/in/in /opt/resource/in
+COPY cmd/out/out /opt/resource/out
