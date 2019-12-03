@@ -85,7 +85,7 @@ resources:
 
   - `none`: the order they come back from Pivotal Network.
   - `semver`: by semantic version, in descending order from the highest-valued version.
-  - `last_updated`: by last updated at time, in descending order from the most recently updated version.
+  - `last_updated`: by last updated at time, in descending order from the most recently updated version. Please note that if an earlier release is updated then the Pivnet Resource 'check' step will return it again. 
 
 ## Example pipeline configuration
 
