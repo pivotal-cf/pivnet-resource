@@ -157,6 +157,18 @@ func (c Client) AddImageReference(productSlug string, releaseID int, imageRefere
 	return c.client.ImageReferences.AddToRelease(productSlug, releaseID, imageReferenceID)
 }
 
+func (c Client) HelmChartReferences(productSlug string) ([]pivnet.HelmChartReference, error) {
+	return c.client.HelmChartReferences.List(productSlug)
+}
+
+func (c Client) CreateHelmChartReference(config pivnet.CreateHelmChartReferenceConfig) (pivnet.HelmChartReference, error) {
+	return c.client.HelmChartReferences.Create(config)
+}
+
+func (c Client) AddHelmChartReference(productSlug string, releaseID int, helmChartReferenceID int) error {
+	return c.client.HelmChartReferences.AddToRelease(productSlug, releaseID, helmChartReferenceID)
+}
+
 func (c Client) ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error) {
 	return c.client.ReleaseDependencies.List(productSlug, releaseID)
 }

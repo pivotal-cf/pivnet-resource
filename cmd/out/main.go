@@ -226,6 +226,13 @@ func main() {
 		input.Source.ProductSlug,
 	)
 
+	releaseHelmChartReferencesAdder := release.NewReleaseHelmChartReferencesAdder(
+		ls,
+		client,
+		m,
+		input.Source.ProductSlug,
+	)
+
 	releaseDependenciesAdder := release.NewReleaseDependenciesAdder(
 		ls,
 		client,
@@ -265,23 +272,24 @@ func main() {
 	)
 
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
-		Logger:                       ls,
-		OutDir:                       outDir,
-		SourcesDir:                   sourcesDir,
-		GlobClient:                   globber,
-		Validation:                   validation,
-		Creator:                      releaseCreator,
-		Uploader:                     releaseUploader,
-		UserGroupsUpdater:            releaseUserGroupsUpdater,
-		ReleaseFileGroupsAdder:       releaseFileGroupsAdder,
-		ReleaseImageReferencesAdder:  releaseImageReferencesAdder,
-		ReleaseDependenciesAdder:     releaseDependenciesAdder,
-		DependencySpecifiersCreator:  dependencySpecifiersCreator,
-		ReleaseUpgradePathsAdder:     releaseUpgradePathsAdder,
-		UpgradePathSpecifiersCreator: upgradePathSpecifiersCreator,
-		Finalizer:                    releaseFinalizer,
-		M:                            m,
-		SkipUpload:                   skipUpload,
+		Logger:                          ls,
+		OutDir:                          outDir,
+		SourcesDir:                      sourcesDir,
+		GlobClient:                      globber,
+		Validation:                      validation,
+		Creator:                         releaseCreator,
+		Uploader:                        releaseUploader,
+		UserGroupsUpdater:               releaseUserGroupsUpdater,
+		ReleaseFileGroupsAdder:          releaseFileGroupsAdder,
+		ReleaseImageReferencesAdder:     releaseImageReferencesAdder,
+		ReleaseHelmChartReferencesAdder: releaseHelmChartReferencesAdder,
+		ReleaseDependenciesAdder:        releaseDependenciesAdder,
+		DependencySpecifiersCreator:     dependencySpecifiersCreator,
+		ReleaseUpgradePathsAdder:        releaseUpgradePathsAdder,
+		UpgradePathSpecifiersCreator:    upgradePathSpecifiersCreator,
+		Finalizer:                       releaseFinalizer,
+		M:                               m,
+		SkipUpload:                      skipUpload,
 	})
 
 	response, err := outCmd.Run(input)

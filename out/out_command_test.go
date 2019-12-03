@@ -21,19 +21,20 @@ var _ = Describe("Out", func() {
 		var (
 			fakeLogger logger.Logger
 
-			finalizer                    *outfakes.Finalizer
-			userGroupsUpdater            *outfakes.UserGroupsUpdater
-			releaseFileGroupsAdder       *outfakes.ReleaseFileGroupsAdder
-			releaseImageReferencesAdder  *outfakes.ReleaseImageReferencesAdder
-			releaseDependenciesAdder     *outfakes.ReleaseDependenciesAdder
-			dependencySpecifiersCreator  *outfakes.DependencySpecifiersCreator
-			releaseUpgradePathsAdder     *outfakes.ReleaseUpgradePathsAdder
-			upgradePathSpecifiersCreator *outfakes.UpgradePathSpecifiersCreator
-			creator                      *outfakes.Creator
-			validator                    *outfakes.Validation
-			uploader                     *outfakes.Uploader
-			globber                      *outfakes.Globber
-			cmd                          out.OutCommand
+			finalizer                       *outfakes.Finalizer
+			userGroupsUpdater               *outfakes.UserGroupsUpdater
+			releaseFileGroupsAdder          *outfakes.ReleaseFileGroupsAdder
+			releaseImageReferencesAdder     *outfakes.ReleaseImageReferencesAdder
+			releaseHelmChartReferencesAdder *outfakes.ReleaseHelmChartReferencesAdder
+			releaseDependenciesAdder        *outfakes.ReleaseDependenciesAdder
+			dependencySpecifiersCreator     *outfakes.DependencySpecifiersCreator
+			releaseUpgradePathsAdder        *outfakes.ReleaseUpgradePathsAdder
+			upgradePathSpecifiersCreator    *outfakes.UpgradePathSpecifiersCreator
+			creator                         *outfakes.Creator
+			validator                       *outfakes.Validation
+			uploader                        *outfakes.Uploader
+			globber                         *outfakes.Globber
+			cmd                             out.OutCommand
 
 			skipUpload bool
 			request    concourse.OutRequest
@@ -42,18 +43,19 @@ var _ = Describe("Out", func() {
 
 			returnedExactGlobs []string
 
-			validateErr                    error
-			createErr                      error
-			exactGlobsErr                  error
-			uploadErr                      error
-			updateUserGroupErr             error
-			addReleaseFileGroupsErr        error
-			addReleaseImageReferencesErr   error
-			addReleaseDependenciesErr      error
-			createDependencySpecifiersErr  error
-			addReleaseUpgradePathsErr      error
-			createUpgradePathSpecifiersErr error
-			finalizeErr                    error
+			validateErr                      error
+			createErr                        error
+			exactGlobsErr                    error
+			uploadErr                        error
+			updateUserGroupErr               error
+			addReleaseFileGroupsErr          error
+			addReleaseImageReferencesErr     error
+			addReleaseHelmChartReferencesErr error
+			addReleaseDependenciesErr        error
+			createDependencySpecifiersErr    error
+			addReleaseUpgradePathsErr        error
+			createUpgradePathSpecifiersErr   error
+			finalizeErr                      error
 		)
 
 		BeforeEach(func() {
@@ -64,6 +66,7 @@ var _ = Describe("Out", func() {
 			userGroupsUpdater = &outfakes.UserGroupsUpdater{}
 			releaseFileGroupsAdder = &outfakes.ReleaseFileGroupsAdder{}
 			releaseImageReferencesAdder = &outfakes.ReleaseImageReferencesAdder{}
+			releaseHelmChartReferencesAdder = &outfakes.ReleaseHelmChartReferencesAdder{}
 			releaseDependenciesAdder = &outfakes.ReleaseDependenciesAdder{}
 			dependencySpecifiersCreator = &outfakes.DependencySpecifiersCreator{}
 			releaseUpgradePathsAdder = &outfakes.ReleaseUpgradePathsAdder{}
@@ -86,6 +89,7 @@ var _ = Describe("Out", func() {
 			updateUserGroupErr = nil
 			addReleaseFileGroupsErr = nil
 			addReleaseImageReferencesErr = nil
+			addReleaseHelmChartReferencesErr = nil
 			addReleaseDependenciesErr = nil
 			createDependencySpecifiersErr = nil
 			addReleaseUpgradePathsErr = nil
@@ -109,23 +113,24 @@ var _ = Describe("Out", func() {
 			}
 
 			config := out.OutCommandConfig{
-				Logger:                       fakeLogger,
-				OutDir:                       "some/out/dir",
-				SourcesDir:                   "some/sources/dir",
-				GlobClient:                   globber,
-				Validation:                   validator,
-				Creator:                      creator,
-				Finalizer:                    finalizer,
-				UserGroupsUpdater:            userGroupsUpdater,
-				ReleaseFileGroupsAdder:       releaseFileGroupsAdder,
-				ReleaseImageReferencesAdder:  releaseImageReferencesAdder,
-				ReleaseDependenciesAdder:     releaseDependenciesAdder,
-				DependencySpecifiersCreator:  dependencySpecifiersCreator,
-				ReleaseUpgradePathsAdder:     releaseUpgradePathsAdder,
-				UpgradePathSpecifiersCreator: upgradePathSpecifiersCreator,
-				Uploader:                     uploader,
-				M:                            meta,
-				SkipUpload:                   skipUpload,
+				Logger:                          fakeLogger,
+				OutDir:                          "some/out/dir",
+				SourcesDir:                      "some/sources/dir",
+				GlobClient:                      globber,
+				Validation:                      validator,
+				Creator:                         creator,
+				Finalizer:                       finalizer,
+				UserGroupsUpdater:               userGroupsUpdater,
+				ReleaseFileGroupsAdder:          releaseFileGroupsAdder,
+				ReleaseImageReferencesAdder:     releaseImageReferencesAdder,
+				ReleaseHelmChartReferencesAdder: releaseHelmChartReferencesAdder,
+				ReleaseDependenciesAdder:        releaseDependenciesAdder,
+				DependencySpecifiersCreator:     dependencySpecifiersCreator,
+				ReleaseUpgradePathsAdder:        releaseUpgradePathsAdder,
+				UpgradePathSpecifiersCreator:    upgradePathSpecifiersCreator,
+				Uploader:                        uploader,
+				M:                               meta,
+				SkipUpload:                      skipUpload,
 			}
 
 			cmd = out.NewOutCommand(config)
@@ -140,6 +145,7 @@ var _ = Describe("Out", func() {
 			uploader.UploadReturns(uploadErr)
 			releaseFileGroupsAdder.AddReleaseFileGroupsReturns(addReleaseFileGroupsErr)
 			releaseImageReferencesAdder.AddReleaseImageReferencesReturns(addReleaseImageReferencesErr)
+			releaseHelmChartReferencesAdder.AddReleaseHelmChartReferencesReturns(addReleaseHelmChartReferencesErr)
 			releaseDependenciesAdder.AddReleaseDependenciesReturns(addReleaseDependenciesErr)
 			dependencySpecifiersCreator.CreateDependencySpecifiersReturns(createDependencySpecifiersErr)
 			releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(addReleaseUpgradePathsErr)
@@ -174,6 +180,7 @@ var _ = Describe("Out", func() {
 
 			Expect(releaseFileGroupsAdder.AddReleaseFileGroupsCallCount()).To(Equal(1))
 			Expect(releaseImageReferencesAdder.AddReleaseImageReferencesCallCount()).To(Equal(1))
+			Expect(releaseHelmChartReferencesAdder.AddReleaseHelmChartReferencesCallCount()).To(Equal(1))
 			Expect(releaseDependenciesAdder.AddReleaseDependenciesCallCount()).To(Equal(1))
 			Expect(dependencySpecifiersCreator.CreateDependencySpecifiersCallCount()).To(Equal(1))
 			Expect(releaseUpgradePathsAdder.AddReleaseUpgradePathsCallCount()).To(Equal(1))

@@ -10,64 +10,67 @@ import (
 )
 
 type OutCommand struct {
-	logger                       logger.Logger
-	outDir                       string
-	sourcesDir                   string
-	globClient                   globber
-	validation                   validation
-	creator                      creator
-	userGroupsUpdater            userGroupsUpdater
-	releaseFileGroupsAdder       releaseFileGroupsAdder
-	releaseImageReferencesAdder  releaseImageReferencesAdder
-	releaseDependenciesAdder     releaseDependenciesAdder
-	dependencySpecifiersCreator  dependencySpecifiersCreator
-	releaseUpgradePathsAdder     releaseUpgradePathsAdder
-	upgradePathSpecifiersCreator upgradePathSpecifiersCreator
-	finalizer                    finalizer
-	uploader                     uploader
-	m                            metadata.Metadata
-	skipUpload                   bool
+	logger                          logger.Logger
+	outDir                          string
+	sourcesDir                      string
+	globClient                      globber
+	validation                      validation
+	creator                         creator
+	userGroupsUpdater               userGroupsUpdater
+	releaseFileGroupsAdder          releaseFileGroupsAdder
+	releaseImageReferencesAdder     releaseImageReferencesAdder
+	releaseHelmChartReferencesAdder releaseHelmChartReferencesAdder
+	releaseDependenciesAdder        releaseDependenciesAdder
+	dependencySpecifiersCreator     dependencySpecifiersCreator
+	releaseUpgradePathsAdder        releaseUpgradePathsAdder
+	upgradePathSpecifiersCreator    upgradePathSpecifiersCreator
+	finalizer                       finalizer
+	uploader                        uploader
+	m                               metadata.Metadata
+	skipUpload                      bool
 }
 
 type OutCommandConfig struct {
-	Logger                       logger.Logger
-	OutDir                       string
-	SourcesDir                   string
-	GlobClient                   globber
-	Validation                   validation
-	Creator                      creator
-	UserGroupsUpdater            userGroupsUpdater
-	ReleaseFileGroupsAdder       releaseFileGroupsAdder
-	ReleaseImageReferencesAdder  releaseImageReferencesAdder
-	ReleaseDependenciesAdder     releaseDependenciesAdder
-	DependencySpecifiersCreator  dependencySpecifiersCreator
-	ReleaseUpgradePathsAdder     releaseUpgradePathsAdder
-	UpgradePathSpecifiersCreator upgradePathSpecifiersCreator
-	Finalizer                    finalizer
-	Uploader                     uploader
-	M                            metadata.Metadata
-	SkipUpload                   bool
+	Logger                          logger.Logger
+	OutDir                          string
+	SourcesDir                      string
+	GlobClient                      globber
+	Validation                      validation
+	Creator                         creator
+	UserGroupsUpdater               userGroupsUpdater
+	ReleaseFileGroupsAdder          releaseFileGroupsAdder
+	ReleaseImageReferencesAdder     releaseImageReferencesAdder
+	ReleaseHelmChartReferencesAdder releaseHelmChartReferencesAdder
+	ReleaseDependenciesAdder        releaseDependenciesAdder
+	DependencySpecifiersCreator     dependencySpecifiersCreator
+	ReleaseUpgradePathsAdder        releaseUpgradePathsAdder
+	UpgradePathSpecifiersCreator    upgradePathSpecifiersCreator
+	Finalizer                       finalizer
+	Uploader                        uploader
+	M                               metadata.Metadata
+	SkipUpload                      bool
 }
 
 func NewOutCommand(config OutCommandConfig) OutCommand {
 	return OutCommand{
-		logger:                       config.Logger,
-		outDir:                       config.OutDir,
-		sourcesDir:                   config.SourcesDir,
-		globClient:                   config.GlobClient,
-		validation:                   config.Validation,
-		creator:                      config.Creator,
-		userGroupsUpdater:            config.UserGroupsUpdater,
-		releaseFileGroupsAdder:       config.ReleaseFileGroupsAdder,
-		releaseImageReferencesAdder:  config.ReleaseImageReferencesAdder,
-		releaseDependenciesAdder:     config.ReleaseDependenciesAdder,
-		dependencySpecifiersCreator:  config.DependencySpecifiersCreator,
-		releaseUpgradePathsAdder:     config.ReleaseUpgradePathsAdder,
-		upgradePathSpecifiersCreator: config.UpgradePathSpecifiersCreator,
-		finalizer:                    config.Finalizer,
-		uploader:                     config.Uploader,
-		m:                            config.M,
-		skipUpload:                   config.SkipUpload,
+		logger:                          config.Logger,
+		outDir:                          config.OutDir,
+		sourcesDir:                      config.SourcesDir,
+		globClient:                      config.GlobClient,
+		validation:                      config.Validation,
+		creator:                         config.Creator,
+		userGroupsUpdater:               config.UserGroupsUpdater,
+		releaseFileGroupsAdder:          config.ReleaseFileGroupsAdder,
+		releaseImageReferencesAdder:     config.ReleaseImageReferencesAdder,
+		releaseHelmChartReferencesAdder: config.ReleaseHelmChartReferencesAdder,
+		releaseDependenciesAdder:        config.ReleaseDependenciesAdder,
+		dependencySpecifiersCreator:     config.DependencySpecifiersCreator,
+		releaseUpgradePathsAdder:        config.ReleaseUpgradePathsAdder,
+		upgradePathSpecifiersCreator:    config.UpgradePathSpecifiersCreator,
+		finalizer:                       config.Finalizer,
+		uploader:                        config.Uploader,
+		m:                               config.M,
+		skipUpload:                      config.SkipUpload,
 	}
 }
 
@@ -94,6 +97,11 @@ type releaseFileGroupsAdder interface {
 //go:generate counterfeiter --fake-name ReleaseImageReferencesAdder . releaseImageReferencesAdder
 type releaseImageReferencesAdder interface {
 	AddReleaseImageReferences(release pivnet.Release) error
+}
+
+//go:generate counterfeiter --fake-name ReleaseHelmChartReferencesAdder . releaseHelmChartReferencesAdder
+type releaseHelmChartReferencesAdder interface {
+	AddReleaseHelmChartReferences(release pivnet.Release) error
 }
 
 //go:generate counterfeiter --fake-name ReleaseDependenciesAdder . releaseDependenciesAdder
@@ -191,6 +199,11 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 	}
 
 	err = c.releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+
+	err = c.releaseHelmChartReferencesAdder.AddReleaseHelmChartReferences(pivnetRelease)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
