@@ -4,7 +4,7 @@ package releasefakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet/v3"
+	"github.com/pivotal-cf/go-pivnet/v4"
 )
 
 type UploadClient struct {

@@ -8,9 +8,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pivotal-cf/go-pivnet/v3"
-	"github.com/pivotal-cf/go-pivnet/v3/logger"
-	"github.com/pivotal-cf/go-pivnet/v3/logshim"
+	"github.com/pivotal-cf/go-pivnet/v4"
+	"github.com/pivotal-cf/go-pivnet/v4/logger"
+	"github.com/pivotal-cf/go-pivnet/v4/logshim"
 	"github.com/pivotal-cf/pivnet-resource/check"
 	"github.com/pivotal-cf/pivnet-resource/check/checkfakes"
 	"github.com/pivotal-cf/pivnet-resource/concourse"

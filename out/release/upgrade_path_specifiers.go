@@ -2,8 +2,8 @@ package release
 
 import (
 	"fmt"
-	pivnet "github.com/pivotal-cf/go-pivnet/v3"
-	"github.com/pivotal-cf/go-pivnet/v3/logger"
+	pivnet "github.com/pivotal-cf/go-pivnet/v4"
+	"github.com/pivotal-cf/go-pivnet/v4/logger"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 )
 

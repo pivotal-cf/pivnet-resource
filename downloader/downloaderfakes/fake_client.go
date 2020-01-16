@@ -2,7 +2,7 @@
 package downloaderfakes
 
 import (
-	"github.com/pivotal-cf/go-pivnet/v3/download"
+	"github.com/pivotal-cf/go-pivnet/v4/download"
 	"io"
 	"sync"
 )

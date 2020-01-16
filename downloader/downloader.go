@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v3"
-	"github.com/pivotal-cf/go-pivnet/v3/logger"
-	"github.com/pivotal-cf/go-pivnet/v3/download"
+	pivnet "github.com/pivotal-cf/go-pivnet/v4"
+	"github.com/pivotal-cf/go-pivnet/v4/logger"
+	"github.com/pivotal-cf/go-pivnet/v4/download"
 )
 
 //go:generate counterfeiter --fake-name FakeClient . client

@@ -4,7 +4,7 @@ package checkfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v3"
+	pivnet "github.com/pivotal-cf/go-pivnet/v4"
 )
 
 type FakePivnetClient struct {
