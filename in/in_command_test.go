@@ -41,6 +41,9 @@ var _ = Describe("In", func() {
 
 		filteredProductFiles []pivnet.ProductFile
 
+		imageReferences     []pivnet.ImageReference
+		helmChartReferences []pivnet.HelmChartReference
+
 		releaseDependencies   []pivnet.ReleaseDependency
 		dependencySpecifiers  []pivnet.DependencySpecifier
 		releaseUpgradePaths   []pivnet.ReleaseUpgradePath
@@ -71,6 +74,8 @@ var _ = Describe("In", func() {
 		releaseUpgradePathsErr   error
 		upgradePathSpecifiersErr error
 		fileGroupsErr            error
+		imageReferencesErr       error
+		helmChartReferencesErr   error
 	)
 
 	BeforeEach(func() {
@@ -94,6 +99,8 @@ var _ = Describe("In", func() {
 		releaseUpgradePathsErr = nil
 		upgradePathSpecifiersErr = nil
 		fileGroupsErr = nil
+		imageReferencesErr = nil
+		helmChartReferencesErr = nil
 
 		version = "C"
 		fingerprint = "fingerprint-0"
@@ -215,6 +222,46 @@ var _ = Describe("In", func() {
 			},
 		}
 
+		imageReferences = []pivnet.ImageReference{
+			{
+				ID:                 101,
+				Name:               "image1",
+				ImagePath:          "my/path:1",
+				Digest:             "mydigest1",
+				Description:        "my description 1",
+				DocsURL:            "my.docs.url:1",
+				SystemRequirements: []string{"a", "b", "c"},
+			},
+			{
+				ID:                 102,
+				Name:               "image2",
+				ImagePath:          "my/path:2",
+				Digest:             "mydigest2",
+				Description:        "my description 2",
+				DocsURL:            "my.docs.url:2",
+				SystemRequirements: []string{"d", "e", "f"},
+			},
+		}
+
+		helmChartReferences = []pivnet.HelmChartReference{
+			{
+				ID:                 201,
+				Name:               "chart1",
+				Version:            "v1",
+				Description:        "my description 1",
+				DocsURL:            "my.docs.url:1",
+				SystemRequirements: []string{"g", "h", "i"},
+			},
+			{
+				ID:                 202,
+				Name:               "chart2",
+				Version:            "v2",
+				Description:        "my description 2",
+				DocsURL:            "my.docs.url:2",
+				SystemRequirements: []string{"j", "k", "l"},
+			},
+		}
+
 		release = pivnet.Release{
 			Version:                version,
 			SoftwareFilesUpdatedAt: actualFingerprint,
@@ -294,6 +341,8 @@ var _ = Describe("In", func() {
 		fakePivnetClient.ReleaseUpgradePathsReturns(releaseUpgradePaths, releaseUpgradePathsErr)
 		fakePivnetClient.UpgradePathSpecifiersReturns(upgradePathSpecifiers, upgradePathSpecifiersErr)
 		fakePivnetClient.FileGroupsForReleaseReturns(fileGroups, fileGroupsErr)
+		fakePivnetClient.ImageReferencesForReleaseReturns(imageReferences, imageReferencesErr)
+		fakePivnetClient.HelmChartReferencesForReleaseReturns(helmChartReferences, helmChartReferencesErr)
 
 		fakeFilter.ProductFileKeysByGlobsReturns(filteredProductFiles, filterErr)
 		fakeDownloader.DownloadReturns(downloadFilepaths, downloadErr)
@@ -364,6 +413,8 @@ var _ = Describe("In", func() {
 		validateReleaseProductFilesMetadata(invokedMetadata, releaseProductFiles)
 		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateFileGroupsMetadata(invokedMetadata, fileGroups)
+		validateImageReferencesMetadata(invokedMetadata, imageReferences)
+		validateHelmChartReferencesMetadata(invokedMetadata, helmChartReferences)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateDependencySpecifiersMetadata(invokedMetadata, dependencySpecifiers)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
@@ -385,6 +436,8 @@ var _ = Describe("In", func() {
 		validateReleaseProductFilesMetadata(invokedMetadata, releaseProductFiles)
 		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateFileGroupsMetadata(invokedMetadata, fileGroups)
+		validateImageReferencesMetadata(invokedMetadata, imageReferences)
+		validateHelmChartReferencesMetadata(invokedMetadata, helmChartReferences)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateDependencySpecifiersMetadata(invokedMetadata, dependencySpecifiers)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
@@ -477,6 +530,32 @@ var _ = Describe("In", func() {
 			Expect(err).To(HaveOccurred())
 
 			Expect(err).To(Equal(fileGroupsErr))
+		})
+	})
+
+	Context("when getting image references returns error", func() {
+		BeforeEach(func() {
+			imageReferencesErr = fmt.Errorf("some image reference error")
+		})
+
+		It("returns error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(imageReferencesErr))
+		})
+	})
+
+	Context("when getting helm chart references returns error", func() {
+		BeforeEach(func() {
+			helmChartReferencesErr = fmt.Errorf("some helm chart reference error")
+		})
+
+		It("returns error", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(Equal(helmChartReferencesErr))
 		})
 	})
 
@@ -738,6 +817,39 @@ var validateProductFilesMetadata = func(
 		Expect(writtenMetadata.ProductFiles[i].UploadAs).To(BeEmpty())
 		Expect(writtenMetadata.ProductFiles[i].DocsURL).To(Equal(p.DocsURL))
 		Expect(writtenMetadata.ProductFiles[i].SystemRequirements).To(Equal(p.SystemRequirements))
+	}
+}
+
+var validateImageReferencesMetadata = func(
+	writtenMetadata metadata.Metadata,
+	imageReferences []pivnet.ImageReference,
+) {
+	Expect(writtenMetadata.ImageReferences).To(HaveLen(len(imageReferences)))
+
+	for i, imageReference := range imageReferences {
+		Expect(writtenMetadata.ImageReferences[i].ID).To(Equal(imageReference.ID))
+		Expect(writtenMetadata.ImageReferences[i].Name).To(Equal(imageReference.Name))
+		Expect(writtenMetadata.ImageReferences[i].ImagePath).To(Equal(imageReference.ImagePath))
+		Expect(writtenMetadata.ImageReferences[i].Digest).To(Equal(imageReference.Digest))
+		Expect(writtenMetadata.ImageReferences[i].Description).To(Equal(imageReference.Description))
+		Expect(writtenMetadata.ImageReferences[i].DocsURL).To(Equal(imageReference.DocsURL))
+		Expect(writtenMetadata.ImageReferences[i].SystemRequirements).To(Equal(imageReference.SystemRequirements))
+	}
+}
+
+var validateHelmChartReferencesMetadata = func(
+	writtenMetadata metadata.Metadata,
+	helmChartReferences []pivnet.HelmChartReference,
+) {
+	Expect(writtenMetadata.HelmChartReferences).To(HaveLen(len(helmChartReferences)))
+
+	for i, helmChartReference := range helmChartReferences {
+		Expect(writtenMetadata.HelmChartReferences[i].ID).To(Equal(helmChartReference.ID))
+		Expect(writtenMetadata.HelmChartReferences[i].Name).To(Equal(helmChartReference.Name))
+		Expect(writtenMetadata.HelmChartReferences[i].Version).To(Equal(helmChartReference.Version))
+		Expect(writtenMetadata.HelmChartReferences[i].Description).To(Equal(helmChartReference.Description))
+		Expect(writtenMetadata.HelmChartReferences[i].DocsURL).To(Equal(helmChartReference.DocsURL))
+		Expect(writtenMetadata.HelmChartReferences[i].SystemRequirements).To(Equal(helmChartReference.SystemRequirements))
 	}
 }
 
