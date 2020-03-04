@@ -14,9 +14,9 @@ require (
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
 	github.com/mitchellh/colorstring v0.0.0-20150917214807-8631ce90f286 // indirect
-	github.com/onsi/ginkgo v1.7.0
-	github.com/onsi/gomega v1.4.2
-	github.com/pivotal-cf/go-pivnet/v4 v4.0.0
+	github.com/onsi/ginkgo v1.12.0
+	github.com/onsi/gomega v1.7.1
+	github.com/pivotal-cf/go-pivnet/v4 v4.0.1
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/robdimsdale/sanitizer v0.0.0-20160522134901-ab2334cb7539
 	github.com/shirou/gopsutil v2.17.12+incompatible // indirect
@@ -26,7 +26,7 @@ require (
 	github.com/stretchr/testify v0.0.0-20171018052257-2aa2c176b9da // indirect
 	gopkg.in/h2non/filetype.v1 v1.0.5 // indirect
 	gopkg.in/ini.v1 v1.39.0 // indirect
-	gopkg.in/yaml.v2 v2.2.1
+	gopkg.in/yaml.v2 v2.2.4
 )
 
 go 1.13
