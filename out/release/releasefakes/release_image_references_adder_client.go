@@ -34,6 +34,20 @@ type ReleaseImageReferencesAdderClient struct {
 		result1 pivnet.ImageReference
 		result2 error
 	}
+	GetImageReferenceStub        func(string, int) (pivnet.ImageReference, error)
+	getImageReferenceMutex       sync.RWMutex
+	getImageReferenceArgsForCall []struct {
+		arg1 string
+		arg2 int
+	}
+	getImageReferenceReturns struct {
+		result1 pivnet.ImageReference
+		result2 error
+	}
+	getImageReferenceReturnsOnCall map[int]struct {
+		result1 pivnet.ImageReference
+		result2 error
+	}
 	ImageReferencesStub        func(string) ([]pivnet.ImageReference, error)
 	imageReferencesMutex       sync.RWMutex
 	imageReferencesArgsForCall []struct {
@@ -176,6 +190,70 @@ func (fake *ReleaseImageReferencesAdderClient) CreateImageReferenceReturnsOnCall
 	}{result1, result2}
 }
 
+func (fake *ReleaseImageReferencesAdderClient) GetImageReference(arg1 string, arg2 int) (pivnet.ImageReference, error) {
+	fake.getImageReferenceMutex.Lock()
+	ret, specificReturn := fake.getImageReferenceReturnsOnCall[len(fake.getImageReferenceArgsForCall)]
+	fake.getImageReferenceArgsForCall = append(fake.getImageReferenceArgsForCall, struct {
+		arg1 string
+		arg2 int
+	}{arg1, arg2})
+	fake.recordInvocation("GetImageReference", []interface{}{arg1, arg2})
+	fake.getImageReferenceMutex.Unlock()
+	if fake.GetImageReferenceStub != nil {
+		return fake.GetImageReferenceStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.getImageReferenceReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *ReleaseImageReferencesAdderClient) GetImageReferenceCallCount() int {
+	fake.getImageReferenceMutex.RLock()
+	defer fake.getImageReferenceMutex.RUnlock()
+	return len(fake.getImageReferenceArgsForCall)
+}
+
+func (fake *ReleaseImageReferencesAdderClient) GetImageReferenceCalls(stub func(string, int) (pivnet.ImageReference, error)) {
+	fake.getImageReferenceMutex.Lock()
+	defer fake.getImageReferenceMutex.Unlock()
+	fake.GetImageReferenceStub = stub
+}
+
+func (fake *ReleaseImageReferencesAdderClient) GetImageReferenceArgsForCall(i int) (string, int) {
+	fake.getImageReferenceMutex.RLock()
+	defer fake.getImageReferenceMutex.RUnlock()
+	argsForCall := fake.getImageReferenceArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *ReleaseImageReferencesAdderClient) GetImageReferenceReturns(result1 pivnet.ImageReference, result2 error) {
+	fake.getImageReferenceMutex.Lock()
+	defer fake.getImageReferenceMutex.Unlock()
+	fake.GetImageReferenceStub = nil
+	fake.getImageReferenceReturns = struct {
+		result1 pivnet.ImageReference
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ReleaseImageReferencesAdderClient) GetImageReferenceReturnsOnCall(i int, result1 pivnet.ImageReference, result2 error) {
+	fake.getImageReferenceMutex.Lock()
+	defer fake.getImageReferenceMutex.Unlock()
+	fake.GetImageReferenceStub = nil
+	if fake.getImageReferenceReturnsOnCall == nil {
+		fake.getImageReferenceReturnsOnCall = make(map[int]struct {
+			result1 pivnet.ImageReference
+			result2 error
+		})
+	}
+	fake.getImageReferenceReturnsOnCall[i] = struct {
+		result1 pivnet.ImageReference
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *ReleaseImageReferencesAdderClient) ImageReferences(arg1 string) ([]pivnet.ImageReference, error) {
 	fake.imageReferencesMutex.Lock()
 	ret, specificReturn := fake.imageReferencesReturnsOnCall[len(fake.imageReferencesArgsForCall)]
@@ -246,6 +324,8 @@ func (fake *ReleaseImageReferencesAdderClient) Invocations() map[string][][]inte
 	defer fake.addImageReferenceMutex.RUnlock()
 	fake.createImageReferenceMutex.RLock()
 	defer fake.createImageReferenceMutex.RUnlock()
+	fake.getImageReferenceMutex.RLock()
+	defer fake.getImageReferenceMutex.RUnlock()
 	fake.imageReferencesMutex.RLock()
 	defer fake.imageReferencesMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

@@ -224,6 +224,8 @@ func main() {
 		client,
 		m,
 		input.Source.ProductSlug,
+		5 * time.Second,
+		time.Hour,
 	)
 
 	releaseHelmChartReferencesAdder := release.NewReleaseHelmChartReferencesAdder(
@@ -231,6 +233,8 @@ func main() {
 		client,
 		m,
 		input.Source.ProductSlug,
+		5 * time.Second,
+		time.Hour,
 	)
 
 	releaseDependenciesAdder := release.NewReleaseDependenciesAdder(

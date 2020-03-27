@@ -59,6 +59,8 @@ github.com/pivotal-cf/go-pivnet/v4 v4.0.0 h1:tyxpKIoT/6r9Yx58cnezQWyGe6g2nd1VDHS
 github.com/pivotal-cf/go-pivnet/v4 v4.0.0/go.mod h1:48g0MmX0mWJjMbSOsOtH7/lg6qRn063nJeS4U9/XMBs=
 github.com/pivotal-cf/go-pivnet/v4 v4.0.1 h1:RHUCiziGeWtUxiMXffP0yavS5tiUZMoR2dy5WQAoioQ=
 github.com/pivotal-cf/go-pivnet/v4 v4.0.1/go.mod h1:Oeom+lR9SwTfshcxHZ3UbYVAFPXtIlryCX28PhbsQ/M=
+github.com/pivotal-cf/go-pivnet/v4 v4.0.3 h1:pN0j98yYULUqOSTLoxZXRsih5xYsVagx3Yd6N7stt9I=
+github.com/pivotal-cf/go-pivnet/v4 v4.0.3/go.mod h1:Oeom+lR9SwTfshcxHZ3UbYVAFPXtIlryCX28PhbsQ/M=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/robdimsdale/sanitizer v0.0.0-20160522134901-ab2334cb7539 h1:h3AVw1v3JIE9Y1HyjYyiPTG73ywlF4754oiIjkxPjNk=

@@ -5,6 +5,7 @@ import (
 	pivnet "github.com/pivotal-cf/go-pivnet/v4"
 	"github.com/pivotal-cf/go-pivnet/v4/logger"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
+	"time"
 )
 
 type ReleaseHelmChartReferencesAdder struct {
@@ -12,6 +13,8 @@ type ReleaseHelmChartReferencesAdder struct {
 	pivnet      releaseHelmChartReferencesAdderClient
 	metadata    metadata.Metadata
 	productSlug string
+	pollFrequency time.Duration
+	asyncTimeout time.Duration
 }
 
 func NewReleaseHelmChartReferencesAdder(
@@ -19,12 +22,16 @@ func NewReleaseHelmChartReferencesAdder(
 	pivnetClient releaseHelmChartReferencesAdderClient,
 	metadata metadata.Metadata,
 	productSlug string,
+	pollFrequency time.Duration,
+	asyncTimeout time.Duration,
 ) ReleaseHelmChartReferencesAdder {
 	return ReleaseHelmChartReferencesAdder{
 		logger:      logger,
 		pivnet:      pivnetClient,
 		metadata:    metadata,
 		productSlug: productSlug,
+		pollFrequency: pollFrequency,
+		asyncTimeout: asyncTimeout,
 	}
 }
 
@@ -33,6 +40,7 @@ type releaseHelmChartReferencesAdderClient interface {
 	HelmChartReferences(productSlug string) ([]pivnet.HelmChartReference, error)
 	AddHelmChartReference(productSlug string, releaseID int, helmChartReferenceID int) error
 	CreateHelmChartReference(config pivnet.CreateHelmChartReferenceConfig) (pivnet.HelmChartReference, error)
+	GetHelmChartReference(productSlug string, helmChartReferenceID int) (pivnet.HelmChartReference, error)
 }
 
 type helmChartReferenceKey struct {
@@ -54,7 +62,8 @@ func (rf ReleaseHelmChartReferencesAdder) AddReleaseHelmChartReferences(release 
 		}] = productHelmChartReference.ID
 	}
 
-	for _, helmChartReference := range rf.metadata.HelmChartReferences {
+	// add references to product
+	for i, helmChartReference := range rf.metadata.HelmChartReferences {
 		var helmChartReferenceID = helmChartReference.ID
 
 		if helmChartReferenceID == 0 {
@@ -86,7 +95,45 @@ func (rf ReleaseHelmChartReferencesAdder) AddReleaseHelmChartReferences(release 
 
 				helmChartReferenceID = ir.ID
 			}
+			rf.metadata.HelmChartReferences[i].ID = helmChartReferenceID
 		}
+	}
+
+	pollTicker := time.NewTicker(rf.pollFrequency)
+	for _, helmChartReference := range rf.metadata.HelmChartReferences {
+		var helmChartReferenceID = helmChartReference.ID
+
+		rf.logger.Info(fmt.Sprintf(
+			"Checking replication status of helm chart reference with name: %s",
+			helmChartReference.Name,
+		))
+		timeoutTimer := time.NewTimer(rf.asyncTimeout)
+
+		for {
+			replicated := false
+			select {
+			case <-timeoutTimer.C:
+				return fmt.Errorf("timed out replicating helm chart reference with name: %s", helmChartReference.Name)
+			case <-pollTicker.C:
+				ref, err := rf.pivnet.GetHelmChartReference(rf.productSlug, helmChartReferenceID)
+
+				if err != nil {
+					return err
+				} else if ref.ReplicationStatus == pivnet.FailedToReplicate {
+					return fmt.Errorf("helm chart reference with name %s failed to replicate", ref.Name)
+				} else if ref.ReplicationStatus == pivnet.Complete {
+					replicated = true
+				}
+			}
+			if replicated {
+				break
+			}
+		}
+	}
+
+	// add references to release
+	for _, helmChartReference := range rf.metadata.HelmChartReferences {
+		var helmChartReferenceID = helmChartReference.ID
 
 		rf.logger.Info(fmt.Sprintf(
 			"Adding helm chart reference with ID: %d",
