@@ -74,6 +74,31 @@ func main() {
 		os.Exit(1)
 	}
 
+	var m metadata.Metadata
+	if input.Params.MetadataFile == "" {
+		uiPrinter.PrintErrorlnf("params.metadata_file must be provided")
+		os.Exit(1)
+	}
+
+	metadataFilepath := filepath.Join(sourcesDir, input.Params.MetadataFile)
+	metadataBytes, err := ioutil.ReadFile(metadataFilepath)
+	if err != nil {
+		uiPrinter.PrintErrorlnf("params.metadata_file could not be read: %s", err.Error())
+		os.Exit(1)
+	}
+
+	err = yaml.Unmarshal(metadataBytes, &m)
+	if err != nil {
+		uiPrinter.PrintErrorlnf("params.metadata_file could not be parsed: %s", err.Error())
+		os.Exit(1)
+	}
+
+	deprecations, err := m.Validate()
+	if err != nil {
+		uiPrinter.PrintErrorlnf("params.metadata_file is invalid: %s", err.Error())
+		os.Exit(1)
+	}
+
 	sanitized := concourse.SanitizedSource(input.Source)
 	logger.SetOutput(sanitizer.NewSanitizer(sanitized, logWriter))
 
@@ -141,31 +166,6 @@ func main() {
 	})
 
 	skipUpload := input.Params.FileGlob == ""
-
-	var m metadata.Metadata
-	if input.Params.MetadataFile == "" {
-		uiPrinter.PrintErrorlnf("params.metadata_file must be provided")
-		os.Exit(1)
-	}
-
-	metadataFilepath := filepath.Join(sourcesDir, input.Params.MetadataFile)
-	metadataBytes, err := ioutil.ReadFile(metadataFilepath)
-	if err != nil {
-		uiPrinter.PrintErrorlnf("params.metadata_file could not be read: %s", err.Error())
-		os.Exit(1)
-	}
-
-	err = yaml.Unmarshal(metadataBytes, &m)
-	if err != nil {
-		uiPrinter.PrintErrorlnf("params.metadata_file could not be parsed: %s", err.Error())
-		os.Exit(1)
-	}
-
-	deprecations, err := m.Validate()
-	if err != nil {
-		uiPrinter.PrintErrorlnf("params.metadata_file is invalid: %s", err.Error())
-		os.Exit(1)
-	}
 
 	for _, deprecation := range deprecations {
 		uiPrinter.PrintDeprecationln(deprecation)
