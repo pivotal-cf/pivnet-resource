@@ -23,9 +23,16 @@ var (
 	outPath   string
 
 	endpoint string
+	refreshToken string
 
 	productSlug  string
-	refreshToken string
+
+	imageName string
+	imagePath string
+	imageDigest string
+
+	helmChartName string
+	helmChartVersion string
 
 	pivnetClient                      *gp.Client
 	additionalSynchronizedBeforeSuite func(SuiteEnv)
@@ -42,9 +49,16 @@ type SuiteEnv struct {
 	OutPath   string
 
 	Endpoint string
+	RefreshToken string
 
 	ProductSlug  string
-	RefreshToken string
+
+	ImageName string
+	ImagePath string
+	ImageDigest string
+
+	HelmChartName string
+	HelmChartVersion string
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
@@ -53,6 +67,26 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	By("Getting product slug from environment variables")
 	suiteEnv.ProductSlug = os.Getenv("PRODUCT_SLUG")
 	Expect(suiteEnv.ProductSlug).NotTo(BeEmpty(), "$PRODUCT_SLUG must be provided")
+
+	By("Getting image name from environment variables")
+	suiteEnv.ImageName = os.Getenv("IMAGE_NAME")
+	Expect(suiteEnv.ImageName).NotTo(BeEmpty(), "$IMAGE_NAME must be provided")
+
+	By("Getting image path from environment variables")
+	suiteEnv.ImagePath = os.Getenv("IMAGE_PATH")
+	Expect(suiteEnv.ImagePath).NotTo(BeEmpty(), "$IMAGE_PATH must be provided")
+
+	By("Getting image digest from environment variables")
+	suiteEnv.ImageDigest = os.Getenv("IMAGE_DIGEST")
+	Expect(suiteEnv.ImageDigest).NotTo(BeEmpty(), "$IMAGE_DIGEST must be provided")
+
+	By("Getting helm chart name from environment variables")
+	suiteEnv.HelmChartName = os.Getenv("HELM_CHART_NAME")
+	Expect(suiteEnv.HelmChartName).NotTo(BeEmpty(), "$HELM_CHART_NAME must be provided")
+
+	By("Getting helm chart version from environment variables")
+	suiteEnv.HelmChartVersion = os.Getenv("HELM_CHART_VERSION")
+	Expect(suiteEnv.HelmChartVersion).NotTo(BeEmpty(), "$HELM_CHART_VERSION must be provided")
 
 	By("Getting endpoint from environment variables")
 	suiteEnv.Endpoint = os.Getenv("PIVNET_ENDPOINT")
@@ -96,8 +130,13 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	checkPath = suiteEnv.CheckPath
 	outPath = suiteEnv.OutPath
 	endpoint = suiteEnv.Endpoint
-	productSlug = suiteEnv.ProductSlug
 	refreshToken = suiteEnv.RefreshToken
+	productSlug = suiteEnv.ProductSlug
+	imageName = suiteEnv.ImageName
+	imagePath = suiteEnv.ImagePath
+	imageDigest = suiteEnv.ImageDigest
+	helmChartName = suiteEnv.HelmChartName
+	helmChartVersion = suiteEnv.HelmChartVersion
 
 	By("Sanitizing acceptance test output")
 	ls := getLogShim()

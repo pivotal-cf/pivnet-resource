@@ -41,6 +41,7 @@ type releaseImageReferencesAdderClient interface {
 	AddImageReference(productSlug string, releaseID int, imageReferenceID int) error
 	CreateImageReference(config pivnet.CreateImageReferenceConfig) (pivnet.ImageReference, error)
 	GetImageReference(productSlug string, imageReferenceID int) (pivnet.ImageReference, error)
+	DeleteImageReference(productSlug string, imageReferenceID int) (pivnet.ImageReference, error)
 }
 
 type imageReferenceKey struct {

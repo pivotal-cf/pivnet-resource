@@ -60,6 +60,22 @@ var _ = Describe("Lifecycle test", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 			}
 		}
+
+		By("Deleting image references on pivnet")
+		imageRefs, err := pivnetClient.ImageReferences(suiteEnv.ProductSlug)
+		Expect(err).ShouldNot(HaveOccurred())
+		for _, i := range imageRefs {
+			_, err := pivnetClient.DeleteImageReference(suiteEnv.ProductSlug, i.ID)
+			Expect(err).ShouldNot(HaveOccurred())
+		}
+
+		By("Deleting helm chart references on pivnet")
+		helmChartRefs, err := pivnetClient.HelmChartReferences(suiteEnv.ProductSlug)
+		Expect(err).ShouldNot(HaveOccurred())
+		for _, h := range helmChartRefs {
+			_, err := pivnetClient.DeleteHelmChartReference(suiteEnv.ProductSlug, h.ID)
+			Expect(err).ShouldNot(HaveOccurred())
+		}
 	}
 
 	BeforeEach(func() {
@@ -81,6 +97,19 @@ var _ = Describe("Lifecycle test", func() {
 				Description:     description,
 				ReleaseNotesURL: releaseNotesURL,
 				Version:         version,
+			},
+			ImageReferences: []metadata.ImageReference{
+				{
+					Name:      imageName,
+					ImagePath: imagePath,
+					Digest:    imageDigest,
+				},
+			},
+			HelmChartReferences: []metadata.HelmChartReference{
+				{
+					Name:    helmChartName,
+					Version: helmChartVersion,
+				},
 			},
 		}
 
@@ -237,7 +266,7 @@ var _ = Describe("Lifecycle test", func() {
 
 				By("Running the command")
 				session := run(command, stdinContents)
-				Eventually(session, executableTimeout).Should(gexec.Exit(0))
+				Eventually(session, 10 * time.Minute).Should(gexec.Exit(0))
 
 				By("Outputting a valid json response")
 				response := concourse.OutResponse{}

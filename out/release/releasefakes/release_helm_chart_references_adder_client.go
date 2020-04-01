@@ -34,6 +34,20 @@ type ReleaseHelmChartReferencesAdderClient struct {
 		result1 pivnet.HelmChartReference
 		result2 error
 	}
+	DeleteHelmChartReferenceStub        func(string, int) (pivnet.HelmChartReference, error)
+	deleteHelmChartReferenceMutex       sync.RWMutex
+	deleteHelmChartReferenceArgsForCall []struct {
+		arg1 string
+		arg2 int
+	}
+	deleteHelmChartReferenceReturns struct {
+		result1 pivnet.HelmChartReference
+		result2 error
+	}
+	deleteHelmChartReferenceReturnsOnCall map[int]struct {
+		result1 pivnet.HelmChartReference
+		result2 error
+	}
 	GetHelmChartReferenceStub        func(string, int) (pivnet.HelmChartReference, error)
 	getHelmChartReferenceMutex       sync.RWMutex
 	getHelmChartReferenceArgsForCall []struct {
@@ -190,6 +204,70 @@ func (fake *ReleaseHelmChartReferencesAdderClient) CreateHelmChartReferenceRetur
 	}{result1, result2}
 }
 
+func (fake *ReleaseHelmChartReferencesAdderClient) DeleteHelmChartReference(arg1 string, arg2 int) (pivnet.HelmChartReference, error) {
+	fake.deleteHelmChartReferenceMutex.Lock()
+	ret, specificReturn := fake.deleteHelmChartReferenceReturnsOnCall[len(fake.deleteHelmChartReferenceArgsForCall)]
+	fake.deleteHelmChartReferenceArgsForCall = append(fake.deleteHelmChartReferenceArgsForCall, struct {
+		arg1 string
+		arg2 int
+	}{arg1, arg2})
+	fake.recordInvocation("DeleteHelmChartReference", []interface{}{arg1, arg2})
+	fake.deleteHelmChartReferenceMutex.Unlock()
+	if fake.DeleteHelmChartReferenceStub != nil {
+		return fake.DeleteHelmChartReferenceStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.deleteHelmChartReferenceReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *ReleaseHelmChartReferencesAdderClient) DeleteHelmChartReferenceCallCount() int {
+	fake.deleteHelmChartReferenceMutex.RLock()
+	defer fake.deleteHelmChartReferenceMutex.RUnlock()
+	return len(fake.deleteHelmChartReferenceArgsForCall)
+}
+
+func (fake *ReleaseHelmChartReferencesAdderClient) DeleteHelmChartReferenceCalls(stub func(string, int) (pivnet.HelmChartReference, error)) {
+	fake.deleteHelmChartReferenceMutex.Lock()
+	defer fake.deleteHelmChartReferenceMutex.Unlock()
+	fake.DeleteHelmChartReferenceStub = stub
+}
+
+func (fake *ReleaseHelmChartReferencesAdderClient) DeleteHelmChartReferenceArgsForCall(i int) (string, int) {
+	fake.deleteHelmChartReferenceMutex.RLock()
+	defer fake.deleteHelmChartReferenceMutex.RUnlock()
+	argsForCall := fake.deleteHelmChartReferenceArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *ReleaseHelmChartReferencesAdderClient) DeleteHelmChartReferenceReturns(result1 pivnet.HelmChartReference, result2 error) {
+	fake.deleteHelmChartReferenceMutex.Lock()
+	defer fake.deleteHelmChartReferenceMutex.Unlock()
+	fake.DeleteHelmChartReferenceStub = nil
+	fake.deleteHelmChartReferenceReturns = struct {
+		result1 pivnet.HelmChartReference
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ReleaseHelmChartReferencesAdderClient) DeleteHelmChartReferenceReturnsOnCall(i int, result1 pivnet.HelmChartReference, result2 error) {
+	fake.deleteHelmChartReferenceMutex.Lock()
+	defer fake.deleteHelmChartReferenceMutex.Unlock()
+	fake.DeleteHelmChartReferenceStub = nil
+	if fake.deleteHelmChartReferenceReturnsOnCall == nil {
+		fake.deleteHelmChartReferenceReturnsOnCall = make(map[int]struct {
+			result1 pivnet.HelmChartReference
+			result2 error
+		})
+	}
+	fake.deleteHelmChartReferenceReturnsOnCall[i] = struct {
+		result1 pivnet.HelmChartReference
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *ReleaseHelmChartReferencesAdderClient) GetHelmChartReference(arg1 string, arg2 int) (pivnet.HelmChartReference, error) {
 	fake.getHelmChartReferenceMutex.Lock()
 	ret, specificReturn := fake.getHelmChartReferenceReturnsOnCall[len(fake.getHelmChartReferenceArgsForCall)]
@@ -324,6 +402,8 @@ func (fake *ReleaseHelmChartReferencesAdderClient) Invocations() map[string][][]
 	defer fake.addHelmChartReferenceMutex.RUnlock()
 	fake.createHelmChartReferenceMutex.RLock()
 	defer fake.createHelmChartReferenceMutex.RUnlock()
+	fake.deleteHelmChartReferenceMutex.RLock()
+	defer fake.deleteHelmChartReferenceMutex.RUnlock()
 	fake.getHelmChartReferenceMutex.RLock()
 	defer fake.getHelmChartReferenceMutex.RUnlock()
 	fake.helmChartReferencesMutex.RLock()

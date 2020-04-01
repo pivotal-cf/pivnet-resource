@@ -41,6 +41,7 @@ type releaseHelmChartReferencesAdderClient interface {
 	AddHelmChartReference(productSlug string, releaseID int, helmChartReferenceID int) error
 	CreateHelmChartReference(config pivnet.CreateHelmChartReferenceConfig) (pivnet.HelmChartReference, error)
 	GetHelmChartReference(productSlug string, helmChartReferenceID int) (pivnet.HelmChartReference, error)
+	DeleteHelmChartReference(productSlug string, helmChartReferenceID int) (pivnet.HelmChartReference, error)
 }
 
 type helmChartReferenceKey struct {
