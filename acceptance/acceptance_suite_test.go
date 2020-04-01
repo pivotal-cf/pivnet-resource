@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"gopkg.in/yaml.v2"
 	"log"
 	"os"
 
@@ -26,8 +27,8 @@ var (
 	productSlug  string
 	refreshToken string
 
-	pivnetClient *gp.Client
-	additionalBeforeSuite func()
+	pivnetClient                      *gp.Client
+	additionalSynchronizedBeforeSuite func(SuiteEnv)
 )
 
 func TestAcceptance(t *testing.T) {
@@ -35,57 +36,98 @@ func TestAcceptance(t *testing.T) {
 	RunSpecs(t, "Acceptance Suite")
 }
 
-var _ = BeforeSuite(func() {
+type SuiteEnv struct {
+	InPath    string
+	CheckPath string
+	OutPath   string
+
+	Endpoint string
+
+	ProductSlug  string
+	RefreshToken string
+}
+
+var _ = SynchronizedBeforeSuite(func() []byte {
+	suiteEnv := SuiteEnv{}
 	var err error
 	By("Getting product slug from environment variables")
-	productSlug = os.Getenv("PRODUCT_SLUG")
-	Expect(productSlug).NotTo(BeEmpty(), "$PRODUCT_SLUG must be provided")
+	suiteEnv.ProductSlug = os.Getenv("PRODUCT_SLUG")
+	Expect(suiteEnv.ProductSlug).NotTo(BeEmpty(), "$PRODUCT_SLUG must be provided")
 
 	By("Getting endpoint from environment variables")
-	endpoint = os.Getenv("PIVNET_ENDPOINT")
-	Expect(endpoint).NotTo(BeEmpty(), "$PIVNET_ENDPOINT must be provided")
+	suiteEnv.Endpoint = os.Getenv("PIVNET_ENDPOINT")
+	Expect(suiteEnv.Endpoint).NotTo(BeEmpty(), "$PIVNET_ENDPOINT must be provided")
 
 	By("Getting refresh token from environment variables")
-	refreshToken = os.Getenv("PIVNET_RESOURCE_REFRESH_TOKEN")
-	Expect(refreshToken).NotTo(BeEmpty(), "$PIVNET_RESOURCE_REFRESH_TOKEN must be provided")
+	suiteEnv.RefreshToken = os.Getenv("PIVNET_RESOURCE_REFRESH_TOKEN")
+	Expect(suiteEnv.RefreshToken).NotTo(BeEmpty(), "$PIVNET_RESOURCE_REFRESH_TOKEN must be provided")
 
 	By("Compiling check binary")
-	checkPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/check", "-race")
+	suiteEnv.CheckPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/check", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Compiling out binary")
-	outPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/out", "-race")
+	suiteEnv.OutPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/out", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Compiling in binary")
-	inPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/in")
+	suiteEnv.InPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/in")
 	Expect(err).NotTo(HaveOccurred())
 
+	By("Sanitizing suite setup output")
+	ls := getLogShim()
+
+	By("Creating pivnet client for suite setup")
+	pivnetClient = getClient(ls, suiteEnv.Endpoint, suiteEnv.RefreshToken)
+
+	if additionalSynchronizedBeforeSuite != nil {
+		additionalSynchronizedBeforeSuite(suiteEnv)
+	}
+
+	envBytes, err := yaml.Marshal(suiteEnv)
+	Expect(err).ShouldNot(HaveOccurred())
+	return envBytes
+}, func(envBytes []byte) {
+	suiteEnv := SuiteEnv{}
+	err := yaml.Unmarshal(envBytes, &suiteEnv)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	inPath = suiteEnv.InPath
+	checkPath = suiteEnv.CheckPath
+	outPath = suiteEnv.OutPath
+	endpoint = suiteEnv.Endpoint
+	productSlug = suiteEnv.ProductSlug
+	refreshToken = suiteEnv.RefreshToken
+
 	By("Sanitizing acceptance test output")
+	ls := getLogShim()
+
+	By("Creating pivnet client (for out-of-band operations)")
+	pivnetClient = getClient(ls, suiteEnv.Endpoint, suiteEnv.RefreshToken)
+})
+
+func getLogShim() *logshim.LogShim {
 	sanitized := map[string]string{
 		refreshToken: "***sanitized-refresh-token***",
 	}
 	sanitizedWriter := sanitizer.NewSanitizer(sanitized, GinkgoWriter)
 	GinkgoWriter = sanitizedWriter
 
-	By("Creating pivnet client (for out-of-band operations)")
-
 	testLogger := log.New(sanitizedWriter, "", log.LstdFlags)
 	verbose := true
-	ls := logshim.NewLogShim(testLogger, testLogger, verbose)
+	return logshim.NewLogShim(testLogger, testLogger, verbose)
+}
 
+func getClient(ls *logshim.LogShim, endpoint string, refreshToken string) *gp.Client {
 	clientConfig := pivnet.ClientConfig{
 		Host:      endpoint,
 		UserAgent: "pivnet-resource/integration-test",
 	}
 
-	pivnetClient = gp.NewClient(pivnet.NewAccessTokenOrLegacyToken(refreshToken, endpoint, false), clientConfig, ls)
+	return gp.NewClient(pivnet.NewAccessTokenOrLegacyToken(refreshToken, endpoint, false), clientConfig, ls)
+}
 
-	if additionalBeforeSuite != nil {
-		additionalBeforeSuite()
-	}
-})
-
-var _ = AfterSuite(func() {
+var _ = SynchronizedAfterSuite(func() {
+}, func() {
 	gexec.CleanupBuildArtifacts()
 })

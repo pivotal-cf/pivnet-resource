@@ -46,17 +46,17 @@ var _ = Describe("Lifecycle test", func() {
 		rootDir       string
 	)
 
-	additionalBeforeSuite = func() {
+	additionalSynchronizedBeforeSuite = func(suiteEnv SuiteEnv) {
 		By("Clean up product-files")
 
 		By("Get product files")
-		productFiles, err := pivnetClient.ProductFiles(productSlug)
+		productFiles, err := pivnetClient.ProductFiles(suiteEnv.ProductSlug)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Deleting created files on pivnet")
 		for _, p := range productFiles {
 			if strings.Contains(p.Name, filePrefix) {
-				_, err := pivnetClient.DeleteProductFile(productSlug, p.ID)
+				_, err := pivnetClient.DeleteProductFile(suiteEnv.ProductSlug, p.ID)
 				Expect(err).ShouldNot(HaveOccurred())
 			}
 		}
