@@ -59,7 +59,7 @@ file_groups:
 image_references:
 - id: 4567
   name: my image
-  image_path: product_slug-staging/repo_name:tag
+  image_path: repo_name:tag
   digest: sha256:mydigest
   description: |
     some
