@@ -195,7 +195,7 @@ for more details on the structure of the metadata file.
 
 * `file_glob`: *Optional string representing a glob.*
 
-  Glob for matching files to upload.
+  Glob for matching files to upload and attached to release.
 
   If multiple files are matched by the glob, they are all uploaded. If no files
   are matched, release creation fails with an error.
