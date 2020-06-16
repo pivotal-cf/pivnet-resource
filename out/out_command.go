@@ -19,7 +19,6 @@ type OutCommand struct {
 	userGroupsUpdater               userGroupsUpdater
 	releaseFileGroupsAdder          releaseFileGroupsAdder
 	releaseImageReferencesAdder     releaseImageReferencesAdder
-	releaseHelmChartReferencesAdder releaseHelmChartReferencesAdder
 	releaseDependenciesAdder        releaseDependenciesAdder
 	dependencySpecifiersCreator     dependencySpecifiersCreator
 	releaseUpgradePathsAdder        releaseUpgradePathsAdder
@@ -40,7 +39,6 @@ type OutCommandConfig struct {
 	UserGroupsUpdater               userGroupsUpdater
 	ReleaseFileGroupsAdder          releaseFileGroupsAdder
 	ReleaseImageReferencesAdder     releaseImageReferencesAdder
-	ReleaseHelmChartReferencesAdder releaseHelmChartReferencesAdder
 	ReleaseDependenciesAdder        releaseDependenciesAdder
 	DependencySpecifiersCreator     dependencySpecifiersCreator
 	ReleaseUpgradePathsAdder        releaseUpgradePathsAdder
@@ -62,7 +60,6 @@ func NewOutCommand(config OutCommandConfig) OutCommand {
 		userGroupsUpdater:               config.UserGroupsUpdater,
 		releaseFileGroupsAdder:          config.ReleaseFileGroupsAdder,
 		releaseImageReferencesAdder:     config.ReleaseImageReferencesAdder,
-		releaseHelmChartReferencesAdder: config.ReleaseHelmChartReferencesAdder,
 		releaseDependenciesAdder:        config.ReleaseDependenciesAdder,
 		dependencySpecifiersCreator:     config.DependencySpecifiersCreator,
 		releaseUpgradePathsAdder:        config.ReleaseUpgradePathsAdder,
@@ -97,11 +94,6 @@ type releaseFileGroupsAdder interface {
 //go:generate counterfeiter --fake-name ReleaseImageReferencesAdder . releaseImageReferencesAdder
 type releaseImageReferencesAdder interface {
 	AddReleaseImageReferences(release pivnet.Release) error
-}
-
-//go:generate counterfeiter --fake-name ReleaseHelmChartReferencesAdder . releaseHelmChartReferencesAdder
-type releaseHelmChartReferencesAdder interface {
-	AddReleaseHelmChartReferences(release pivnet.Release) error
 }
 
 //go:generate counterfeiter --fake-name ReleaseDependenciesAdder . releaseDependenciesAdder
@@ -199,11 +191,6 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 	}
 
 	err = c.releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
-	if err != nil {
-		return concourse.OutResponse{}, err
-	}
-
-	err = c.releaseHelmChartReferencesAdder.AddReleaseHelmChartReferences(pivnetRelease)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}

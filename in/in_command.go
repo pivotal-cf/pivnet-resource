@@ -43,7 +43,6 @@ type pivnetClient interface {
 	AcceptEULA(productSlug string, releaseID int) error
 	FileGroupsForRelease(productSlug string, releaseID int) ([]pivnet.FileGroup, error)
 	ImageReferencesForRelease(productSlug string, releaseID int) ([]pivnet.ImageReference, error)
-	HelmChartReferencesForRelease(productSlug string, releaseID int) ([]pivnet.HelmChartReference, error)
 	ProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
 	ProductFileForRelease(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
@@ -154,13 +153,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	c.logger.Info("Getting image references")
 
 	imageReferences, err := c.pivnetClient.ImageReferencesForRelease(productSlug, release.ID)
-	if err != nil {
-		return concourse.InResponse{}, err
-	}
-
-	c.logger.Info("Getting helm chart references")
-
-	helmChartReferences, err := c.pivnetClient.HelmChartReferencesForRelease(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
@@ -306,17 +298,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 			Name:               ir.Name,
 			ImagePath:          ir.ImagePath,
 			Digest:             ir.Digest,
-			Description:        ir.Description,
-			DocsURL:            ir.DocsURL,
-			SystemRequirements: ir.SystemRequirements,
-		})
-	}
-
-	for _, ir := range helmChartReferences {
-		mdata.HelmChartReferences = append(mdata.HelmChartReferences, metadata.HelmChartReference{
-			ID:                 ir.ID,
-			Name:               ir.Name,
-			Version:            ir.Version,
 			Description:        ir.Description,
 			DocsURL:            ir.DocsURL,
 			SystemRequirements: ir.SystemRequirements,

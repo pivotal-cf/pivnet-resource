@@ -67,16 +67,6 @@ image_references:
     description
   docs_url: "http://foobar.com/readme.html"
   system_requirements: ["requirement1", "requirement2"]
-helm_chart_references:
-- id: 4567
-  name: mychart
-  version: 1.2.3
-  description: |
-    some
-    multi-line
-    description
-  docs_url: "http://foobar.com/readme.html"
-  system_requirements: ["requirement1", "requirement2"]
 dependency_specifiers:
 - specifier: 1.8.*
   product_slug: some-product
@@ -235,25 +225,6 @@ If provided, it is permitted to be an empty array.
 * `docs_url` *Optional.* Ignored if `id` is provided. A URL for documentation relevant to this image.
 
 * `system_requirements` *Optional.* Ignored if `id` is provided. Additional list of requirements for using this image reference.
-
-## Helm Chart References
-
-This can only be used by products that use the harbor registry.
-
-The top-level `helm_chart_references` key is optional.
-If provided, it is permitted to be an empty array.
-
-* `id` *Optional.* If provided, it will add the existing helm chart reference to the release.
-
-* `name` *Optional.* Ignored if `id` is provided. Required otherwise. Creates a new helm chart reference with the name.
-
-* `version` *Optional.* Ignored if `id` is provided. Required otherwise. Creates a new helm chart reference with the version.
-
-* `description` *Optional.* Ignored if `id` is provided. Creates a new helm chart reference with the description.
-
-* `docs_url` *Optional.* Ignored if `id` is provided. A URL for documentation relevant to this helm chart.
-
-* `system_requirements` *Optional.* Ignored if `id` is provided. Additional list of requirements for using this helm chart reference.
 
 ## Dependency Specifiers
 

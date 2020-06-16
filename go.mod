@@ -13,9 +13,10 @@ require (
 	github.com/h2non/filetype v0.0.0-20180111114405-3af83f124ffa
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
+	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20150917214807-8631ce90f286 // indirect
 	github.com/onsi/ginkgo v1.12.0
-	github.com/onsi/gomega v1.7.1
+	github.com/onsi/gomega v1.9.0
 	github.com/pivotal-cf/go-pivnet/v4 v4.0.3
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/robdimsdale/sanitizer v0.0.0-20160522134901-ab2334cb7539

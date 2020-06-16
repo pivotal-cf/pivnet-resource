@@ -68,14 +68,6 @@ var _ = Describe("Lifecycle test", func() {
 			_, err := pivnetClient.DeleteImageReference(suiteEnv.ProductSlug, i.ID)
 			Expect(err).ShouldNot(HaveOccurred())
 		}
-
-		By("Deleting helm chart references on pivnet")
-		helmChartRefs, err := pivnetClient.HelmChartReferences(suiteEnv.ProductSlug)
-		Expect(err).ShouldNot(HaveOccurred())
-		for _, h := range helmChartRefs {
-			_, err := pivnetClient.DeleteHelmChartReference(suiteEnv.ProductSlug, h.ID)
-			Expect(err).ShouldNot(HaveOccurred())
-		}
 	}
 
 	BeforeEach(func() {
@@ -103,12 +95,6 @@ var _ = Describe("Lifecycle test", func() {
 					Name:      imageName,
 					ImagePath: imagePath,
 					Digest:    imageDigest,
-				},
-			},
-			HelmChartReferences: []metadata.HelmChartReference{
-				{
-					Name:    helmChartName,
-					Version: helmChartVersion,
 				},
 			},
 		}

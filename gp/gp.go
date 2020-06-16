@@ -169,30 +169,6 @@ func (c Client) DeleteImageReference(productSlug string, imageReferenceID int) (
 	return c.client.ImageReferences.Delete(productSlug, imageReferenceID)
 }
 
-func (c Client) HelmChartReferences(productSlug string) ([]pivnet.HelmChartReference, error) {
-	return c.client.HelmChartReferences.List(productSlug)
-}
-
-func (c Client) HelmChartReferencesForRelease(productSlug string, releaseID int) ([]pivnet.HelmChartReference, error) {
-	return c.client.HelmChartReferences.ListForRelease(productSlug, releaseID)
-}
-
-func (c Client) CreateHelmChartReference(config pivnet.CreateHelmChartReferenceConfig) (pivnet.HelmChartReference, error) {
-	return c.client.HelmChartReferences.Create(config)
-}
-
-func (c Client) GetHelmChartReference(productSlug string, helmChartReferenceID int) (pivnet.HelmChartReference, error) {
-	return c.client.HelmChartReferences.Get(productSlug, helmChartReferenceID)
-}
-
-func (c Client) AddHelmChartReference(productSlug string, releaseID int, helmChartReferenceID int) error {
-	return c.client.HelmChartReferences.AddToRelease(productSlug, releaseID, helmChartReferenceID)
-}
-
-func (c Client) DeleteHelmChartReference(productSlug string, helmChartReferenceID int) (pivnet.HelmChartReference, error) {
-	return c.client.HelmChartReferences.Delete(productSlug, helmChartReferenceID)
-}
-
 func (c Client) ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error) {
 	return c.client.ReleaseDependencies.List(productSlug, releaseID)
 }

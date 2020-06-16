@@ -228,15 +228,6 @@ func main() {
 		time.Hour,
 	)
 
-	releaseHelmChartReferencesAdder := release.NewReleaseHelmChartReferencesAdder(
-		ls,
-		client,
-		m,
-		input.Source.ProductSlug,
-		5 * time.Second,
-		time.Hour,
-	)
-
 	releaseDependenciesAdder := release.NewReleaseDependenciesAdder(
 		ls,
 		client,
@@ -286,7 +277,6 @@ func main() {
 		UserGroupsUpdater:               releaseUserGroupsUpdater,
 		ReleaseFileGroupsAdder:          releaseFileGroupsAdder,
 		ReleaseImageReferencesAdder:     releaseImageReferencesAdder,
-		ReleaseHelmChartReferencesAdder: releaseHelmChartReferencesAdder,
 		ReleaseDependenciesAdder:        releaseDependenciesAdder,
 		DependencySpecifiersCreator:     dependencySpecifiersCreator,
 		ReleaseUpgradePathsAdder:        releaseUpgradePathsAdder,

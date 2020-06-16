@@ -31,9 +31,6 @@ var (
 	imagePath string
 	imageDigest string
 
-	helmChartName string
-	helmChartVersion string
-
 	pivnetClient                      *gp.Client
 	additionalSynchronizedBeforeSuite func(SuiteEnv)
 )
@@ -56,9 +53,6 @@ type SuiteEnv struct {
 	ImageName string
 	ImagePath string
 	ImageDigest string
-
-	HelmChartName string
-	HelmChartVersion string
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
@@ -79,14 +73,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	By("Getting image digest from environment variables")
 	suiteEnv.ImageDigest = os.Getenv("IMAGE_DIGEST")
 	Expect(suiteEnv.ImageDigest).NotTo(BeEmpty(), "$IMAGE_DIGEST must be provided")
-
-	By("Getting helm chart name from environment variables")
-	suiteEnv.HelmChartName = os.Getenv("HELM_CHART_NAME")
-	Expect(suiteEnv.HelmChartName).NotTo(BeEmpty(), "$HELM_CHART_NAME must be provided")
-
-	By("Getting helm chart version from environment variables")
-	suiteEnv.HelmChartVersion = os.Getenv("HELM_CHART_VERSION")
-	Expect(suiteEnv.HelmChartVersion).NotTo(BeEmpty(), "$HELM_CHART_VERSION must be provided")
 
 	By("Getting endpoint from environment variables")
 	suiteEnv.Endpoint = os.Getenv("PIVNET_ENDPOINT")
@@ -135,8 +121,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	imageName = suiteEnv.ImageName
 	imagePath = suiteEnv.ImagePath
 	imageDigest = suiteEnv.ImageDigest
-	helmChartName = suiteEnv.HelmChartName
-	helmChartVersion = suiteEnv.HelmChartVersion
 
 	By("Sanitizing acceptance test output")
 	ls := getLogShim()

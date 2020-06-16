@@ -11,7 +11,6 @@ type Metadata struct {
 	UpgradePathSpecifiers []UpgradePathSpecifier `yaml:"upgrade_path_specifiers,omitempty"`
 	FileGroups            []FileGroup            `yaml:"file_groups,omitempty"`
 	ImageReferences       []ImageReference       `yaml:"image_references,omitempty"`
-	HelmChartReferences   []HelmChartReference   `yaml:"helm_chart_references,omitempty"`
 
 	// Deprecated
 	Dependencies []Dependency  `yaml:"dependencies,omitempty"`
@@ -69,15 +68,6 @@ type ImageReference struct {
 	Name               string   `yaml:"name,omitempty"`
 	ImagePath          string   `yaml:"image_path,omitempty"`
 	Digest             string   `yaml:"digest,omitempty"`
-	Description        string   `yaml:"description,omitempty"`
-	DocsURL            string   `yaml:"docs_url,omitempty"`
-	SystemRequirements []string `yaml:"system_requirements,omitempty"`
-}
-
-type HelmChartReference struct {
-	ID                 int      `yaml:"id,omitempty"`
-	Name               string   `yaml:"name,omitempty"`
-	Version            string   `yaml:"version,omitempty"`
 	Description        string   `yaml:"description,omitempty"`
 	DocsURL            string   `yaml:"docs_url,omitempty"`
 	SystemRequirements []string `yaml:"system_requirements,omitempty"`

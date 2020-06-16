@@ -25,7 +25,6 @@ var _ = Describe("Out", func() {
 			userGroupsUpdater               *outfakes.UserGroupsUpdater
 			releaseFileGroupsAdder          *outfakes.ReleaseFileGroupsAdder
 			releaseImageReferencesAdder     *outfakes.ReleaseImageReferencesAdder
-			releaseHelmChartReferencesAdder *outfakes.ReleaseHelmChartReferencesAdder
 			releaseDependenciesAdder        *outfakes.ReleaseDependenciesAdder
 			dependencySpecifiersCreator     *outfakes.DependencySpecifiersCreator
 			releaseUpgradePathsAdder        *outfakes.ReleaseUpgradePathsAdder
@@ -50,7 +49,6 @@ var _ = Describe("Out", func() {
 			updateUserGroupErr               error
 			addReleaseFileGroupsErr          error
 			addReleaseImageReferencesErr     error
-			addReleaseHelmChartReferencesErr error
 			addReleaseDependenciesErr        error
 			createDependencySpecifiersErr    error
 			addReleaseUpgradePathsErr        error
@@ -66,7 +64,6 @@ var _ = Describe("Out", func() {
 			userGroupsUpdater = &outfakes.UserGroupsUpdater{}
 			releaseFileGroupsAdder = &outfakes.ReleaseFileGroupsAdder{}
 			releaseImageReferencesAdder = &outfakes.ReleaseImageReferencesAdder{}
-			releaseHelmChartReferencesAdder = &outfakes.ReleaseHelmChartReferencesAdder{}
 			releaseDependenciesAdder = &outfakes.ReleaseDependenciesAdder{}
 			dependencySpecifiersCreator = &outfakes.DependencySpecifiersCreator{}
 			releaseUpgradePathsAdder = &outfakes.ReleaseUpgradePathsAdder{}
@@ -89,7 +86,6 @@ var _ = Describe("Out", func() {
 			updateUserGroupErr = nil
 			addReleaseFileGroupsErr = nil
 			addReleaseImageReferencesErr = nil
-			addReleaseHelmChartReferencesErr = nil
 			addReleaseDependenciesErr = nil
 			createDependencySpecifiersErr = nil
 			addReleaseUpgradePathsErr = nil
@@ -123,7 +119,6 @@ var _ = Describe("Out", func() {
 				UserGroupsUpdater:               userGroupsUpdater,
 				ReleaseFileGroupsAdder:          releaseFileGroupsAdder,
 				ReleaseImageReferencesAdder:     releaseImageReferencesAdder,
-				ReleaseHelmChartReferencesAdder: releaseHelmChartReferencesAdder,
 				ReleaseDependenciesAdder:        releaseDependenciesAdder,
 				DependencySpecifiersCreator:     dependencySpecifiersCreator,
 				ReleaseUpgradePathsAdder:        releaseUpgradePathsAdder,
@@ -145,7 +140,6 @@ var _ = Describe("Out", func() {
 			uploader.UploadReturns(uploadErr)
 			releaseFileGroupsAdder.AddReleaseFileGroupsReturns(addReleaseFileGroupsErr)
 			releaseImageReferencesAdder.AddReleaseImageReferencesReturns(addReleaseImageReferencesErr)
-			releaseHelmChartReferencesAdder.AddReleaseHelmChartReferencesReturns(addReleaseHelmChartReferencesErr)
 			releaseDependenciesAdder.AddReleaseDependenciesReturns(addReleaseDependenciesErr)
 			dependencySpecifiersCreator.CreateDependencySpecifiersReturns(createDependencySpecifiersErr)
 			releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(addReleaseUpgradePathsErr)
@@ -180,7 +174,6 @@ var _ = Describe("Out", func() {
 
 			Expect(releaseFileGroupsAdder.AddReleaseFileGroupsCallCount()).To(Equal(1))
 			Expect(releaseImageReferencesAdder.AddReleaseImageReferencesCallCount()).To(Equal(1))
-			Expect(releaseHelmChartReferencesAdder.AddReleaseHelmChartReferencesCallCount()).To(Equal(1))
 			Expect(releaseDependenciesAdder.AddReleaseDependenciesCallCount()).To(Equal(1))
 			Expect(dependencySpecifiersCreator.CreateDependencySpecifiersCallCount()).To(Equal(1))
 			Expect(releaseUpgradePathsAdder.AddReleaseUpgradePathsCallCount()).To(Equal(1))
