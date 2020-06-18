@@ -4,7 +4,7 @@ package releasefakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet/v4"
+	"github.com/pivotal-cf/go-pivnet/v5"
 )
 
 type UpgradePathSpecifiersCreatorClient struct {

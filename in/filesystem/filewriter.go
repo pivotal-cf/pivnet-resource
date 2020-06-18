@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pivotal-cf/go-pivnet/v4/logger"
+	"github.com/pivotal-cf/go-pivnet/v5/logger"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"gopkg.in/yaml.v2"
 )

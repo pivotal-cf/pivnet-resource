@@ -4,7 +4,7 @@ package infakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v4"
+	pivnet "github.com/pivotal-cf/go-pivnet/v5"
 )
 
 type FakePivnetClient struct {

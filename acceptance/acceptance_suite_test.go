@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf/go-pivnet/v4"
-	"github.com/pivotal-cf/go-pivnet/v4/logshim"
+	"github.com/pivotal-cf/go-pivnet/v5"
+	"github.com/pivotal-cf/go-pivnet/v5/logshim"
 	"github.com/pivotal-cf/pivnet-resource/gp"
 	"github.com/robdimsdale/sanitizer"
 

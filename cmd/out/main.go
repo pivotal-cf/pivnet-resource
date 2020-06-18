@@ -11,10 +11,10 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/fatih/color"
-	"github.com/pivotal-cf/go-pivnet/v4"
-	"github.com/pivotal-cf/go-pivnet/v4/logshim"
-	"github.com/pivotal-cf/go-pivnet/v4/md5sum"
-	"github.com/pivotal-cf/go-pivnet/v4/sha256sum"
+	"github.com/pivotal-cf/go-pivnet/v5"
+	"github.com/pivotal-cf/go-pivnet/v5/logshim"
+	"github.com/pivotal-cf/go-pivnet/v5/md5sum"
+	"github.com/pivotal-cf/go-pivnet/v5/sha256sum"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/filter"
 	"github.com/pivotal-cf/pivnet-resource/globs"
@@ -29,7 +29,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
-	"github.com/pivotal-cf/go-pivnet/v4/logger"
+	"github.com/pivotal-cf/go-pivnet/v5/logger"
 )
 
 var (

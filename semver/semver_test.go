@@ -4,7 +4,7 @@ import (
 	"log"
 
 	bsemver "github.com/blang/semver"
-	"github.com/pivotal-cf/go-pivnet/v4/logshim"
+	"github.com/pivotal-cf/go-pivnet/v5/logshim"
 	"github.com/pivotal-cf/pivnet-resource/semver"
 
 	. "github.com/onsi/ginkgo"

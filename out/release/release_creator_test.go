@@ -6,9 +6,9 @@ import (
 	"log"
 
 	"github.com/blang/semver"
-	"github.com/pivotal-cf/go-pivnet/v4"
-	"github.com/pivotal-cf/go-pivnet/v4/logger"
-	"github.com/pivotal-cf/go-pivnet/v4/logshim"
+	"github.com/pivotal-cf/go-pivnet/v5"
+	"github.com/pivotal-cf/go-pivnet/v5/logger"
+	"github.com/pivotal-cf/go-pivnet/v5/logshim"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/out/release"
