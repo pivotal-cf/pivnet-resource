@@ -62,6 +62,26 @@ var _ = Describe("UserAgent", func() {
 				"pivnet-resource/0.2.1 (https://some-external-url/pipelines/some-pipeline/resources/some-resource -- some-resource/check)",
 			))
 		})
+
+		Context("when resource name has an emoji", func() {
+			JustBeforeEach(func() {
+				err := os.Setenv("RESOURCE_NAME", "some-resource-☢")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			JustAfterEach(func() {
+				err := os.Unsetenv("RESOURCE_NAME")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("creates user agent string from environment variables with go escaped sequence for emojis", func() {
+				userAgentString := useragent.UserAgent(version, containerType, productSlug)
+
+				Expect(userAgentString).To(Equal(
+					"pivnet-resource/0.2.1 (https://some-external-url/pipelines/some-pipeline/resources/some-resource-\\u2622 -- some-resource-\\u2622/check)",
+				))
+			})
+		})
 	})
 
 	Context("when in/out container environment variables are present", func() {
@@ -112,6 +132,26 @@ var _ = Describe("UserAgent", func() {
 			Expect(userAgentString).To(Equal(
 				"pivnet-resource/0.2.1 (https://some-external-url/pipelines/some-pipeline/jobs/build-job-name/builds/build-name -- my-product/get)",
 			))
+		})
+
+		Context("when job name has an emoji", func() {
+			JustBeforeEach(func() {
+				err := os.Setenv("BUILD_JOB_NAME", "job-☢")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			JustAfterEach(func() {
+				err := os.Unsetenv("BUILD_JOB_NAME")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("creates user agent string from environment variables with go escaped sequence for emojis", func() {
+				userAgentString := useragent.UserAgent(version, containerType, productSlug)
+
+				Expect(userAgentString).To(Equal(
+					"pivnet-resource/0.2.1 (https://some-external-url/pipelines/some-pipeline/jobs/job-\\u2622/builds/build-name -- my-product/get)",
+				))
+			})
 		})
 	})
 })

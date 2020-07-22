@@ -3,6 +3,8 @@ package useragent
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 )
 
 func UserAgent(version, containerType, productSlug string) string {
@@ -13,15 +15,18 @@ func UserAgent(version, containerType, productSlug string) string {
 
 	// check container
 	if resourceName != "" {
-		return fmt.Sprintf(
-			"pivnet-resource/%s (%s/pipelines/%s/resources/%s -- %s/%s)",
-			version,
-			externalURL,
-			pipelineName,
-			resourceName,
-			resourceName,
-			containerType,
-		)
+		return strings.Trim(
+			strconv.QuoteToASCII(
+				fmt.Sprintf(
+					"pivnet-resource/%s (%s/pipelines/%s/resources/%s -- %s/%s)",
+					version,
+					externalURL,
+					pipelineName,
+					resourceName,
+					resourceName,
+					containerType,
+				),
+			), "\"")
 	}
 
 	// in/out containers
@@ -31,14 +36,17 @@ func UserAgent(version, containerType, productSlug string) string {
 	buildJobName := os.Getenv("BUILD_JOB_NAME")
 	buildName := os.Getenv("BUILD_NAME")
 
-	return fmt.Sprintf(
-		"pivnet-resource/%s (%s/pipelines/%s/jobs/%s/builds/%s -- %s/%s)",
-		version,
-		atcExternalURL,
-		buildPipelineName,
-		buildJobName,
-		buildName,
-		productSlug,
-		containerType,
-	)
+	return strings.Trim(
+		strconv.QuoteToASCII(
+			fmt.Sprintf(
+				"pivnet-resource/%s (%s/pipelines/%s/jobs/%s/builds/%s -- %s/%s)",
+				version,
+				atcExternalURL,
+				buildPipelineName,
+				buildJobName,
+				buildName,
+				productSlug,
+				containerType,
+			),
+		), "\"")
 }
