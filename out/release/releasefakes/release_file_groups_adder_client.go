@@ -4,16 +4,16 @@ package releasefakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet/v5"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type ReleaseFileGroupsAdderClient struct {
-	AddFileGroupStub        func(productSlug string, releaseID int, fileGroupID int) error
+	AddFileGroupStub        func(string, int, int) error
 	addFileGroupMutex       sync.RWMutex
 	addFileGroupArgsForCall []struct {
-		productSlug string
-		releaseID   int
-		fileGroupID int
+		arg1 string
+		arg2 int
+		arg3 int
 	}
 	addFileGroupReturns struct {
 		result1 error
@@ -21,10 +21,23 @@ type ReleaseFileGroupsAdderClient struct {
 	addFileGroupReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CreateFileGroupStub        func(config pivnet.CreateFileGroupConfig) (pivnet.FileGroup, error)
+	AddToFileGroupStub        func(string, int, int) error
+	addToFileGroupMutex       sync.RWMutex
+	addToFileGroupArgsForCall []struct {
+		arg1 string
+		arg2 int
+		arg3 int
+	}
+	addToFileGroupReturns struct {
+		result1 error
+	}
+	addToFileGroupReturnsOnCall map[int]struct {
+		result1 error
+	}
+	CreateFileGroupStub        func(pivnet.CreateFileGroupConfig) (pivnet.FileGroup, error)
 	createFileGroupMutex       sync.RWMutex
 	createFileGroupArgsForCall []struct {
-		config pivnet.CreateFileGroupConfig
+		arg1 pivnet.CreateFileGroupConfig
 	}
 	createFileGroupReturns struct {
 		result1 pivnet.FileGroup
@@ -34,40 +47,28 @@ type ReleaseFileGroupsAdderClient struct {
 		result1 pivnet.FileGroup
 		result2 error
 	}
-	AddToFileGroupStub        func(productSlug string, fileGroupID int, productFileID int) error
-	addToFileGroupMutex       sync.RWMutex
-	addToFileGroupArgsForCall []struct {
-		productSlug   string
-		fileGroupID   int
-		productFileID int
-	}
-	addToFileGroupReturns struct {
-		result1 error
-	}
-	addToFileGroupReturnsOnCall map[int]struct {
-		result1 error
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *ReleaseFileGroupsAdderClient) AddFileGroup(productSlug string, releaseID int, fileGroupID int) error {
+func (fake *ReleaseFileGroupsAdderClient) AddFileGroup(arg1 string, arg2 int, arg3 int) error {
 	fake.addFileGroupMutex.Lock()
 	ret, specificReturn := fake.addFileGroupReturnsOnCall[len(fake.addFileGroupArgsForCall)]
 	fake.addFileGroupArgsForCall = append(fake.addFileGroupArgsForCall, struct {
-		productSlug string
-		releaseID   int
-		fileGroupID int
-	}{productSlug, releaseID, fileGroupID})
-	fake.recordInvocation("AddFileGroup", []interface{}{productSlug, releaseID, fileGroupID})
+		arg1 string
+		arg2 int
+		arg3 int
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("AddFileGroup", []interface{}{arg1, arg2, arg3})
 	fake.addFileGroupMutex.Unlock()
 	if fake.AddFileGroupStub != nil {
-		return fake.AddFileGroupStub(productSlug, releaseID, fileGroupID)
+		return fake.AddFileGroupStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.addFileGroupReturns.result1
+	fakeReturns := fake.addFileGroupReturns
+	return fakeReturns.result1
 }
 
 func (fake *ReleaseFileGroupsAdderClient) AddFileGroupCallCount() int {
@@ -76,13 +77,22 @@ func (fake *ReleaseFileGroupsAdderClient) AddFileGroupCallCount() int {
 	return len(fake.addFileGroupArgsForCall)
 }
 
+func (fake *ReleaseFileGroupsAdderClient) AddFileGroupCalls(stub func(string, int, int) error) {
+	fake.addFileGroupMutex.Lock()
+	defer fake.addFileGroupMutex.Unlock()
+	fake.AddFileGroupStub = stub
+}
+
 func (fake *ReleaseFileGroupsAdderClient) AddFileGroupArgsForCall(i int) (string, int, int) {
 	fake.addFileGroupMutex.RLock()
 	defer fake.addFileGroupMutex.RUnlock()
-	return fake.addFileGroupArgsForCall[i].productSlug, fake.addFileGroupArgsForCall[i].releaseID, fake.addFileGroupArgsForCall[i].fileGroupID
+	argsForCall := fake.addFileGroupArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *ReleaseFileGroupsAdderClient) AddFileGroupReturns(result1 error) {
+	fake.addFileGroupMutex.Lock()
+	defer fake.addFileGroupMutex.Unlock()
 	fake.AddFileGroupStub = nil
 	fake.addFileGroupReturns = struct {
 		result1 error
@@ -90,6 +100,8 @@ func (fake *ReleaseFileGroupsAdderClient) AddFileGroupReturns(result1 error) {
 }
 
 func (fake *ReleaseFileGroupsAdderClient) AddFileGroupReturnsOnCall(i int, result1 error) {
+	fake.addFileGroupMutex.Lock()
+	defer fake.addFileGroupMutex.Unlock()
 	fake.AddFileGroupStub = nil
 	if fake.addFileGroupReturnsOnCall == nil {
 		fake.addFileGroupReturnsOnCall = make(map[int]struct {
@@ -101,21 +113,84 @@ func (fake *ReleaseFileGroupsAdderClient) AddFileGroupReturnsOnCall(i int, resul
 	}{result1}
 }
 
-func (fake *ReleaseFileGroupsAdderClient) CreateFileGroup(config pivnet.CreateFileGroupConfig) (pivnet.FileGroup, error) {
+func (fake *ReleaseFileGroupsAdderClient) AddToFileGroup(arg1 string, arg2 int, arg3 int) error {
+	fake.addToFileGroupMutex.Lock()
+	ret, specificReturn := fake.addToFileGroupReturnsOnCall[len(fake.addToFileGroupArgsForCall)]
+	fake.addToFileGroupArgsForCall = append(fake.addToFileGroupArgsForCall, struct {
+		arg1 string
+		arg2 int
+		arg3 int
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("AddToFileGroup", []interface{}{arg1, arg2, arg3})
+	fake.addToFileGroupMutex.Unlock()
+	if fake.AddToFileGroupStub != nil {
+		return fake.AddToFileGroupStub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.addToFileGroupReturns
+	return fakeReturns.result1
+}
+
+func (fake *ReleaseFileGroupsAdderClient) AddToFileGroupCallCount() int {
+	fake.addToFileGroupMutex.RLock()
+	defer fake.addToFileGroupMutex.RUnlock()
+	return len(fake.addToFileGroupArgsForCall)
+}
+
+func (fake *ReleaseFileGroupsAdderClient) AddToFileGroupCalls(stub func(string, int, int) error) {
+	fake.addToFileGroupMutex.Lock()
+	defer fake.addToFileGroupMutex.Unlock()
+	fake.AddToFileGroupStub = stub
+}
+
+func (fake *ReleaseFileGroupsAdderClient) AddToFileGroupArgsForCall(i int) (string, int, int) {
+	fake.addToFileGroupMutex.RLock()
+	defer fake.addToFileGroupMutex.RUnlock()
+	argsForCall := fake.addToFileGroupArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *ReleaseFileGroupsAdderClient) AddToFileGroupReturns(result1 error) {
+	fake.addToFileGroupMutex.Lock()
+	defer fake.addToFileGroupMutex.Unlock()
+	fake.AddToFileGroupStub = nil
+	fake.addToFileGroupReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *ReleaseFileGroupsAdderClient) AddToFileGroupReturnsOnCall(i int, result1 error) {
+	fake.addToFileGroupMutex.Lock()
+	defer fake.addToFileGroupMutex.Unlock()
+	fake.AddToFileGroupStub = nil
+	if fake.addToFileGroupReturnsOnCall == nil {
+		fake.addToFileGroupReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.addToFileGroupReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *ReleaseFileGroupsAdderClient) CreateFileGroup(arg1 pivnet.CreateFileGroupConfig) (pivnet.FileGroup, error) {
 	fake.createFileGroupMutex.Lock()
 	ret, specificReturn := fake.createFileGroupReturnsOnCall[len(fake.createFileGroupArgsForCall)]
 	fake.createFileGroupArgsForCall = append(fake.createFileGroupArgsForCall, struct {
-		config pivnet.CreateFileGroupConfig
-	}{config})
-	fake.recordInvocation("CreateFileGroup", []interface{}{config})
+		arg1 pivnet.CreateFileGroupConfig
+	}{arg1})
+	fake.recordInvocation("CreateFileGroup", []interface{}{arg1})
 	fake.createFileGroupMutex.Unlock()
 	if fake.CreateFileGroupStub != nil {
-		return fake.CreateFileGroupStub(config)
+		return fake.CreateFileGroupStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.createFileGroupReturns.result1, fake.createFileGroupReturns.result2
+	fakeReturns := fake.createFileGroupReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *ReleaseFileGroupsAdderClient) CreateFileGroupCallCount() int {
@@ -124,13 +199,22 @@ func (fake *ReleaseFileGroupsAdderClient) CreateFileGroupCallCount() int {
 	return len(fake.createFileGroupArgsForCall)
 }
 
+func (fake *ReleaseFileGroupsAdderClient) CreateFileGroupCalls(stub func(pivnet.CreateFileGroupConfig) (pivnet.FileGroup, error)) {
+	fake.createFileGroupMutex.Lock()
+	defer fake.createFileGroupMutex.Unlock()
+	fake.CreateFileGroupStub = stub
+}
+
 func (fake *ReleaseFileGroupsAdderClient) CreateFileGroupArgsForCall(i int) pivnet.CreateFileGroupConfig {
 	fake.createFileGroupMutex.RLock()
 	defer fake.createFileGroupMutex.RUnlock()
-	return fake.createFileGroupArgsForCall[i].config
+	argsForCall := fake.createFileGroupArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *ReleaseFileGroupsAdderClient) CreateFileGroupReturns(result1 pivnet.FileGroup, result2 error) {
+	fake.createFileGroupMutex.Lock()
+	defer fake.createFileGroupMutex.Unlock()
 	fake.CreateFileGroupStub = nil
 	fake.createFileGroupReturns = struct {
 		result1 pivnet.FileGroup
@@ -139,6 +223,8 @@ func (fake *ReleaseFileGroupsAdderClient) CreateFileGroupReturns(result1 pivnet.
 }
 
 func (fake *ReleaseFileGroupsAdderClient) CreateFileGroupReturnsOnCall(i int, result1 pivnet.FileGroup, result2 error) {
+	fake.createFileGroupMutex.Lock()
+	defer fake.createFileGroupMutex.Unlock()
 	fake.CreateFileGroupStub = nil
 	if fake.createFileGroupReturnsOnCall == nil {
 		fake.createFileGroupReturnsOnCall = make(map[int]struct {
@@ -152,65 +238,15 @@ func (fake *ReleaseFileGroupsAdderClient) CreateFileGroupReturnsOnCall(i int, re
 	}{result1, result2}
 }
 
-func (fake *ReleaseFileGroupsAdderClient) AddToFileGroup(productSlug string, fileGroupID int, productFileID int) error {
-	fake.addToFileGroupMutex.Lock()
-	ret, specificReturn := fake.addToFileGroupReturnsOnCall[len(fake.addToFileGroupArgsForCall)]
-	fake.addToFileGroupArgsForCall = append(fake.addToFileGroupArgsForCall, struct {
-		productSlug   string
-		fileGroupID   int
-		productFileID int
-	}{productSlug, fileGroupID, productFileID})
-	fake.recordInvocation("AddToFileGroup", []interface{}{productSlug, fileGroupID, productFileID})
-	fake.addToFileGroupMutex.Unlock()
-	if fake.AddToFileGroupStub != nil {
-		return fake.AddToFileGroupStub(productSlug, fileGroupID, productFileID)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.addToFileGroupReturns.result1
-}
-
-func (fake *ReleaseFileGroupsAdderClient) AddToFileGroupCallCount() int {
-	fake.addToFileGroupMutex.RLock()
-	defer fake.addToFileGroupMutex.RUnlock()
-	return len(fake.addToFileGroupArgsForCall)
-}
-
-func (fake *ReleaseFileGroupsAdderClient) AddToFileGroupArgsForCall(i int) (string, int, int) {
-	fake.addToFileGroupMutex.RLock()
-	defer fake.addToFileGroupMutex.RUnlock()
-	return fake.addToFileGroupArgsForCall[i].productSlug, fake.addToFileGroupArgsForCall[i].fileGroupID, fake.addToFileGroupArgsForCall[i].productFileID
-}
-
-func (fake *ReleaseFileGroupsAdderClient) AddToFileGroupReturns(result1 error) {
-	fake.AddToFileGroupStub = nil
-	fake.addToFileGroupReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *ReleaseFileGroupsAdderClient) AddToFileGroupReturnsOnCall(i int, result1 error) {
-	fake.AddToFileGroupStub = nil
-	if fake.addToFileGroupReturnsOnCall == nil {
-		fake.addToFileGroupReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.addToFileGroupReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *ReleaseFileGroupsAdderClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.addFileGroupMutex.RLock()
 	defer fake.addFileGroupMutex.RUnlock()
-	fake.createFileGroupMutex.RLock()
-	defer fake.createFileGroupMutex.RUnlock()
 	fake.addToFileGroupMutex.RLock()
 	defer fake.addToFileGroupMutex.RUnlock()
+	fake.createFileGroupMutex.RLock()
+	defer fake.createFileGroupMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

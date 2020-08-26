@@ -8,10 +8,10 @@ import (
 )
 
 type FakeFileWriter struct {
-	WriteMetadataJSONFileStub        func(mdata metadata.Metadata) error
+	WriteMetadataJSONFileStub        func(metadata.Metadata) error
 	writeMetadataJSONFileMutex       sync.RWMutex
 	writeMetadataJSONFileArgsForCall []struct {
-		mdata metadata.Metadata
+		arg1 metadata.Metadata
 	}
 	writeMetadataJSONFileReturns struct {
 		result1 error
@@ -19,10 +19,10 @@ type FakeFileWriter struct {
 	writeMetadataJSONFileReturnsOnCall map[int]struct {
 		result1 error
 	}
-	WriteMetadataYAMLFileStub        func(mdata metadata.Metadata) error
+	WriteMetadataYAMLFileStub        func(metadata.Metadata) error
 	writeMetadataYAMLFileMutex       sync.RWMutex
 	writeMetadataYAMLFileArgsForCall []struct {
-		mdata metadata.Metadata
+		arg1 metadata.Metadata
 	}
 	writeMetadataYAMLFileReturns struct {
 		result1 error
@@ -30,10 +30,10 @@ type FakeFileWriter struct {
 	writeMetadataYAMLFileReturnsOnCall map[int]struct {
 		result1 error
 	}
-	WriteVersionFileStub        func(versionWithFingerprint string) error
+	WriteVersionFileStub        func(string) error
 	writeVersionFileMutex       sync.RWMutex
 	writeVersionFileArgsForCall []struct {
-		versionWithFingerprint string
+		arg1 string
 	}
 	writeVersionFileReturns struct {
 		result1 error
@@ -45,21 +45,22 @@ type FakeFileWriter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeFileWriter) WriteMetadataJSONFile(mdata metadata.Metadata) error {
+func (fake *FakeFileWriter) WriteMetadataJSONFile(arg1 metadata.Metadata) error {
 	fake.writeMetadataJSONFileMutex.Lock()
 	ret, specificReturn := fake.writeMetadataJSONFileReturnsOnCall[len(fake.writeMetadataJSONFileArgsForCall)]
 	fake.writeMetadataJSONFileArgsForCall = append(fake.writeMetadataJSONFileArgsForCall, struct {
-		mdata metadata.Metadata
-	}{mdata})
-	fake.recordInvocation("WriteMetadataJSONFile", []interface{}{mdata})
+		arg1 metadata.Metadata
+	}{arg1})
+	fake.recordInvocation("WriteMetadataJSONFile", []interface{}{arg1})
 	fake.writeMetadataJSONFileMutex.Unlock()
 	if fake.WriteMetadataJSONFileStub != nil {
-		return fake.WriteMetadataJSONFileStub(mdata)
+		return fake.WriteMetadataJSONFileStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.writeMetadataJSONFileReturns.result1
+	fakeReturns := fake.writeMetadataJSONFileReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeFileWriter) WriteMetadataJSONFileCallCount() int {
@@ -68,13 +69,22 @@ func (fake *FakeFileWriter) WriteMetadataJSONFileCallCount() int {
 	return len(fake.writeMetadataJSONFileArgsForCall)
 }
 
+func (fake *FakeFileWriter) WriteMetadataJSONFileCalls(stub func(metadata.Metadata) error) {
+	fake.writeMetadataJSONFileMutex.Lock()
+	defer fake.writeMetadataJSONFileMutex.Unlock()
+	fake.WriteMetadataJSONFileStub = stub
+}
+
 func (fake *FakeFileWriter) WriteMetadataJSONFileArgsForCall(i int) metadata.Metadata {
 	fake.writeMetadataJSONFileMutex.RLock()
 	defer fake.writeMetadataJSONFileMutex.RUnlock()
-	return fake.writeMetadataJSONFileArgsForCall[i].mdata
+	argsForCall := fake.writeMetadataJSONFileArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeFileWriter) WriteMetadataJSONFileReturns(result1 error) {
+	fake.writeMetadataJSONFileMutex.Lock()
+	defer fake.writeMetadataJSONFileMutex.Unlock()
 	fake.WriteMetadataJSONFileStub = nil
 	fake.writeMetadataJSONFileReturns = struct {
 		result1 error
@@ -82,6 +92,8 @@ func (fake *FakeFileWriter) WriteMetadataJSONFileReturns(result1 error) {
 }
 
 func (fake *FakeFileWriter) WriteMetadataJSONFileReturnsOnCall(i int, result1 error) {
+	fake.writeMetadataJSONFileMutex.Lock()
+	defer fake.writeMetadataJSONFileMutex.Unlock()
 	fake.WriteMetadataJSONFileStub = nil
 	if fake.writeMetadataJSONFileReturnsOnCall == nil {
 		fake.writeMetadataJSONFileReturnsOnCall = make(map[int]struct {
@@ -93,21 +105,22 @@ func (fake *FakeFileWriter) WriteMetadataJSONFileReturnsOnCall(i int, result1 er
 	}{result1}
 }
 
-func (fake *FakeFileWriter) WriteMetadataYAMLFile(mdata metadata.Metadata) error {
+func (fake *FakeFileWriter) WriteMetadataYAMLFile(arg1 metadata.Metadata) error {
 	fake.writeMetadataYAMLFileMutex.Lock()
 	ret, specificReturn := fake.writeMetadataYAMLFileReturnsOnCall[len(fake.writeMetadataYAMLFileArgsForCall)]
 	fake.writeMetadataYAMLFileArgsForCall = append(fake.writeMetadataYAMLFileArgsForCall, struct {
-		mdata metadata.Metadata
-	}{mdata})
-	fake.recordInvocation("WriteMetadataYAMLFile", []interface{}{mdata})
+		arg1 metadata.Metadata
+	}{arg1})
+	fake.recordInvocation("WriteMetadataYAMLFile", []interface{}{arg1})
 	fake.writeMetadataYAMLFileMutex.Unlock()
 	if fake.WriteMetadataYAMLFileStub != nil {
-		return fake.WriteMetadataYAMLFileStub(mdata)
+		return fake.WriteMetadataYAMLFileStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.writeMetadataYAMLFileReturns.result1
+	fakeReturns := fake.writeMetadataYAMLFileReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeFileWriter) WriteMetadataYAMLFileCallCount() int {
@@ -116,13 +129,22 @@ func (fake *FakeFileWriter) WriteMetadataYAMLFileCallCount() int {
 	return len(fake.writeMetadataYAMLFileArgsForCall)
 }
 
+func (fake *FakeFileWriter) WriteMetadataYAMLFileCalls(stub func(metadata.Metadata) error) {
+	fake.writeMetadataYAMLFileMutex.Lock()
+	defer fake.writeMetadataYAMLFileMutex.Unlock()
+	fake.WriteMetadataYAMLFileStub = stub
+}
+
 func (fake *FakeFileWriter) WriteMetadataYAMLFileArgsForCall(i int) metadata.Metadata {
 	fake.writeMetadataYAMLFileMutex.RLock()
 	defer fake.writeMetadataYAMLFileMutex.RUnlock()
-	return fake.writeMetadataYAMLFileArgsForCall[i].mdata
+	argsForCall := fake.writeMetadataYAMLFileArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeFileWriter) WriteMetadataYAMLFileReturns(result1 error) {
+	fake.writeMetadataYAMLFileMutex.Lock()
+	defer fake.writeMetadataYAMLFileMutex.Unlock()
 	fake.WriteMetadataYAMLFileStub = nil
 	fake.writeMetadataYAMLFileReturns = struct {
 		result1 error
@@ -130,6 +152,8 @@ func (fake *FakeFileWriter) WriteMetadataYAMLFileReturns(result1 error) {
 }
 
 func (fake *FakeFileWriter) WriteMetadataYAMLFileReturnsOnCall(i int, result1 error) {
+	fake.writeMetadataYAMLFileMutex.Lock()
+	defer fake.writeMetadataYAMLFileMutex.Unlock()
 	fake.WriteMetadataYAMLFileStub = nil
 	if fake.writeMetadataYAMLFileReturnsOnCall == nil {
 		fake.writeMetadataYAMLFileReturnsOnCall = make(map[int]struct {
@@ -141,21 +165,22 @@ func (fake *FakeFileWriter) WriteMetadataYAMLFileReturnsOnCall(i int, result1 er
 	}{result1}
 }
 
-func (fake *FakeFileWriter) WriteVersionFile(versionWithFingerprint string) error {
+func (fake *FakeFileWriter) WriteVersionFile(arg1 string) error {
 	fake.writeVersionFileMutex.Lock()
 	ret, specificReturn := fake.writeVersionFileReturnsOnCall[len(fake.writeVersionFileArgsForCall)]
 	fake.writeVersionFileArgsForCall = append(fake.writeVersionFileArgsForCall, struct {
-		versionWithFingerprint string
-	}{versionWithFingerprint})
-	fake.recordInvocation("WriteVersionFile", []interface{}{versionWithFingerprint})
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("WriteVersionFile", []interface{}{arg1})
 	fake.writeVersionFileMutex.Unlock()
 	if fake.WriteVersionFileStub != nil {
-		return fake.WriteVersionFileStub(versionWithFingerprint)
+		return fake.WriteVersionFileStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.writeVersionFileReturns.result1
+	fakeReturns := fake.writeVersionFileReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeFileWriter) WriteVersionFileCallCount() int {
@@ -164,13 +189,22 @@ func (fake *FakeFileWriter) WriteVersionFileCallCount() int {
 	return len(fake.writeVersionFileArgsForCall)
 }
 
+func (fake *FakeFileWriter) WriteVersionFileCalls(stub func(string) error) {
+	fake.writeVersionFileMutex.Lock()
+	defer fake.writeVersionFileMutex.Unlock()
+	fake.WriteVersionFileStub = stub
+}
+
 func (fake *FakeFileWriter) WriteVersionFileArgsForCall(i int) string {
 	fake.writeVersionFileMutex.RLock()
 	defer fake.writeVersionFileMutex.RUnlock()
-	return fake.writeVersionFileArgsForCall[i].versionWithFingerprint
+	argsForCall := fake.writeVersionFileArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeFileWriter) WriteVersionFileReturns(result1 error) {
+	fake.writeVersionFileMutex.Lock()
+	defer fake.writeVersionFileMutex.Unlock()
 	fake.WriteVersionFileStub = nil
 	fake.writeVersionFileReturns = struct {
 		result1 error
@@ -178,6 +212,8 @@ func (fake *FakeFileWriter) WriteVersionFileReturns(result1 error) {
 }
 
 func (fake *FakeFileWriter) WriteVersionFileReturnsOnCall(i int, result1 error) {
+	fake.writeVersionFileMutex.Lock()
+	defer fake.writeVersionFileMutex.Unlock()
 	fake.WriteVersionFileStub = nil
 	if fake.writeVersionFileReturnsOnCall == nil {
 		fake.writeVersionFileReturnsOnCall = make(map[int]struct {

@@ -4,14 +4,14 @@ package outfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v5"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type ReleaseUpgradePathsAdder struct {
-	AddReleaseUpgradePathsStub        func(release pivnet.Release) error
+	AddReleaseUpgradePathsStub        func(pivnet.Release) error
 	addReleaseUpgradePathsMutex       sync.RWMutex
 	addReleaseUpgradePathsArgsForCall []struct {
-		release pivnet.Release
+		arg1 pivnet.Release
 	}
 	addReleaseUpgradePathsReturns struct {
 		result1 error
@@ -23,21 +23,22 @@ type ReleaseUpgradePathsAdder struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *ReleaseUpgradePathsAdder) AddReleaseUpgradePaths(release pivnet.Release) error {
+func (fake *ReleaseUpgradePathsAdder) AddReleaseUpgradePaths(arg1 pivnet.Release) error {
 	fake.addReleaseUpgradePathsMutex.Lock()
 	ret, specificReturn := fake.addReleaseUpgradePathsReturnsOnCall[len(fake.addReleaseUpgradePathsArgsForCall)]
 	fake.addReleaseUpgradePathsArgsForCall = append(fake.addReleaseUpgradePathsArgsForCall, struct {
-		release pivnet.Release
-	}{release})
-	fake.recordInvocation("AddReleaseUpgradePaths", []interface{}{release})
+		arg1 pivnet.Release
+	}{arg1})
+	fake.recordInvocation("AddReleaseUpgradePaths", []interface{}{arg1})
 	fake.addReleaseUpgradePathsMutex.Unlock()
 	if fake.AddReleaseUpgradePathsStub != nil {
-		return fake.AddReleaseUpgradePathsStub(release)
+		return fake.AddReleaseUpgradePathsStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.addReleaseUpgradePathsReturns.result1
+	fakeReturns := fake.addReleaseUpgradePathsReturns
+	return fakeReturns.result1
 }
 
 func (fake *ReleaseUpgradePathsAdder) AddReleaseUpgradePathsCallCount() int {
@@ -46,13 +47,22 @@ func (fake *ReleaseUpgradePathsAdder) AddReleaseUpgradePathsCallCount() int {
 	return len(fake.addReleaseUpgradePathsArgsForCall)
 }
 
+func (fake *ReleaseUpgradePathsAdder) AddReleaseUpgradePathsCalls(stub func(pivnet.Release) error) {
+	fake.addReleaseUpgradePathsMutex.Lock()
+	defer fake.addReleaseUpgradePathsMutex.Unlock()
+	fake.AddReleaseUpgradePathsStub = stub
+}
+
 func (fake *ReleaseUpgradePathsAdder) AddReleaseUpgradePathsArgsForCall(i int) pivnet.Release {
 	fake.addReleaseUpgradePathsMutex.RLock()
 	defer fake.addReleaseUpgradePathsMutex.RUnlock()
-	return fake.addReleaseUpgradePathsArgsForCall[i].release
+	argsForCall := fake.addReleaseUpgradePathsArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *ReleaseUpgradePathsAdder) AddReleaseUpgradePathsReturns(result1 error) {
+	fake.addReleaseUpgradePathsMutex.Lock()
+	defer fake.addReleaseUpgradePathsMutex.Unlock()
 	fake.AddReleaseUpgradePathsStub = nil
 	fake.addReleaseUpgradePathsReturns = struct {
 		result1 error
@@ -60,6 +70,8 @@ func (fake *ReleaseUpgradePathsAdder) AddReleaseUpgradePathsReturns(result1 erro
 }
 
 func (fake *ReleaseUpgradePathsAdder) AddReleaseUpgradePathsReturnsOnCall(i int, result1 error) {
+	fake.addReleaseUpgradePathsMutex.Lock()
+	defer fake.addReleaseUpgradePathsMutex.Unlock()
 	fake.AddReleaseUpgradePathsStub = nil
 	if fake.addReleaseUpgradePathsReturnsOnCall == nil {
 		fake.addReleaseUpgradePathsReturnsOnCall = make(map[int]struct {

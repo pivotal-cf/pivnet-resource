@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v5"
-	"github.com/pivotal-cf/go-pivnet/v5/logger"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
+	"github.com/pivotal-cf/go-pivnet/v6/logger"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/versions"
@@ -42,7 +42,7 @@ type pivnetClient interface {
 	GetRelease(productSlug string, version string) (pivnet.Release, error)
 	AcceptEULA(productSlug string, releaseID int) error
 	FileGroupsForRelease(productSlug string, releaseID int) ([]pivnet.FileGroup, error)
-	ImageReferencesForRelease(productSlug string, releaseID int) ([]pivnet.ImageReference, error)
+	ArtifactReferencesForRelease(productSlug string, releaseID int) ([]pivnet.ArtifactReference, error)
 	ProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
 	ProductFileForRelease(productSlug string, releaseID int, productFileID int) (pivnet.ProductFile, error)
 	ReleaseDependencies(productSlug string, releaseID int) ([]pivnet.ReleaseDependency, error)
@@ -150,9 +150,9 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		allProductFiles = append(allProductFiles, fg.ProductFiles...)
 	}
 
-	c.logger.Info("Getting image references")
+	c.logger.Info("Getting artifact references")
 
-	imageReferences, err := c.pivnetClient.ImageReferencesForRelease(productSlug, release.ID)
+	artifactReferences, err := c.pivnetClient.ArtifactReferencesForRelease(productSlug, release.ID)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
@@ -292,11 +292,11 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		mdata.FileGroups = append(mdata.FileGroups, mfg)
 	}
 
-	for _, ir := range imageReferences {
-		mdata.ImageReferences = append(mdata.ImageReferences, metadata.ImageReference{
+	for _, ir := range artifactReferences {
+		mdata.ArtifactReferences = append(mdata.ArtifactReferences, metadata.ArtifactReference{
 			ID:                 ir.ID,
 			Name:               ir.Name,
-			ImagePath:          ir.ImagePath,
+			ArtifactPath:       ir.ArtifactPath,
 			Digest:             ir.Digest,
 			Description:        ir.Description,
 			DocsURL:            ir.DocsURL,

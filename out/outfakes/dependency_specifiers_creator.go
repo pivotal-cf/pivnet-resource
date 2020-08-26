@@ -4,14 +4,14 @@ package outfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v5"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type DependencySpecifiersCreator struct {
-	CreateDependencySpecifiersStub        func(release pivnet.Release) error
+	CreateDependencySpecifiersStub        func(pivnet.Release) error
 	createDependencySpecifiersMutex       sync.RWMutex
 	createDependencySpecifiersArgsForCall []struct {
-		release pivnet.Release
+		arg1 pivnet.Release
 	}
 	createDependencySpecifiersReturns struct {
 		result1 error
@@ -23,21 +23,22 @@ type DependencySpecifiersCreator struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *DependencySpecifiersCreator) CreateDependencySpecifiers(release pivnet.Release) error {
+func (fake *DependencySpecifiersCreator) CreateDependencySpecifiers(arg1 pivnet.Release) error {
 	fake.createDependencySpecifiersMutex.Lock()
 	ret, specificReturn := fake.createDependencySpecifiersReturnsOnCall[len(fake.createDependencySpecifiersArgsForCall)]
 	fake.createDependencySpecifiersArgsForCall = append(fake.createDependencySpecifiersArgsForCall, struct {
-		release pivnet.Release
-	}{release})
-	fake.recordInvocation("CreateDependencySpecifiers", []interface{}{release})
+		arg1 pivnet.Release
+	}{arg1})
+	fake.recordInvocation("CreateDependencySpecifiers", []interface{}{arg1})
 	fake.createDependencySpecifiersMutex.Unlock()
 	if fake.CreateDependencySpecifiersStub != nil {
-		return fake.CreateDependencySpecifiersStub(release)
+		return fake.CreateDependencySpecifiersStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.createDependencySpecifiersReturns.result1
+	fakeReturns := fake.createDependencySpecifiersReturns
+	return fakeReturns.result1
 }
 
 func (fake *DependencySpecifiersCreator) CreateDependencySpecifiersCallCount() int {
@@ -46,13 +47,22 @@ func (fake *DependencySpecifiersCreator) CreateDependencySpecifiersCallCount() i
 	return len(fake.createDependencySpecifiersArgsForCall)
 }
 
+func (fake *DependencySpecifiersCreator) CreateDependencySpecifiersCalls(stub func(pivnet.Release) error) {
+	fake.createDependencySpecifiersMutex.Lock()
+	defer fake.createDependencySpecifiersMutex.Unlock()
+	fake.CreateDependencySpecifiersStub = stub
+}
+
 func (fake *DependencySpecifiersCreator) CreateDependencySpecifiersArgsForCall(i int) pivnet.Release {
 	fake.createDependencySpecifiersMutex.RLock()
 	defer fake.createDependencySpecifiersMutex.RUnlock()
-	return fake.createDependencySpecifiersArgsForCall[i].release
+	argsForCall := fake.createDependencySpecifiersArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *DependencySpecifiersCreator) CreateDependencySpecifiersReturns(result1 error) {
+	fake.createDependencySpecifiersMutex.Lock()
+	defer fake.createDependencySpecifiersMutex.Unlock()
 	fake.CreateDependencySpecifiersStub = nil
 	fake.createDependencySpecifiersReturns = struct {
 		result1 error
@@ -60,6 +70,8 @@ func (fake *DependencySpecifiersCreator) CreateDependencySpecifiersReturns(resul
 }
 
 func (fake *DependencySpecifiersCreator) CreateDependencySpecifiersReturnsOnCall(i int, result1 error) {
+	fake.createDependencySpecifiersMutex.Lock()
+	defer fake.createDependencySpecifiersMutex.Unlock()
 	fake.CreateDependencySpecifiersStub = nil
 	if fake.createDependencySpecifiersReturnsOnCall == nil {
 		fake.createDependencySpecifiersReturnsOnCall = make(map[int]struct {

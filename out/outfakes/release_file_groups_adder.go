@@ -4,14 +4,14 @@ package outfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v5"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type ReleaseFileGroupsAdder struct {
-	AddReleaseFileGroupsStub        func(release pivnet.Release) error
+	AddReleaseFileGroupsStub        func(pivnet.Release) error
 	addReleaseFileGroupsMutex       sync.RWMutex
 	addReleaseFileGroupsArgsForCall []struct {
-		release pivnet.Release
+		arg1 pivnet.Release
 	}
 	addReleaseFileGroupsReturns struct {
 		result1 error
@@ -23,21 +23,22 @@ type ReleaseFileGroupsAdder struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *ReleaseFileGroupsAdder) AddReleaseFileGroups(release pivnet.Release) error {
+func (fake *ReleaseFileGroupsAdder) AddReleaseFileGroups(arg1 pivnet.Release) error {
 	fake.addReleaseFileGroupsMutex.Lock()
 	ret, specificReturn := fake.addReleaseFileGroupsReturnsOnCall[len(fake.addReleaseFileGroupsArgsForCall)]
 	fake.addReleaseFileGroupsArgsForCall = append(fake.addReleaseFileGroupsArgsForCall, struct {
-		release pivnet.Release
-	}{release})
-	fake.recordInvocation("AddReleaseFileGroups", []interface{}{release})
+		arg1 pivnet.Release
+	}{arg1})
+	fake.recordInvocation("AddReleaseFileGroups", []interface{}{arg1})
 	fake.addReleaseFileGroupsMutex.Unlock()
 	if fake.AddReleaseFileGroupsStub != nil {
-		return fake.AddReleaseFileGroupsStub(release)
+		return fake.AddReleaseFileGroupsStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.addReleaseFileGroupsReturns.result1
+	fakeReturns := fake.addReleaseFileGroupsReturns
+	return fakeReturns.result1
 }
 
 func (fake *ReleaseFileGroupsAdder) AddReleaseFileGroupsCallCount() int {
@@ -46,13 +47,22 @@ func (fake *ReleaseFileGroupsAdder) AddReleaseFileGroupsCallCount() int {
 	return len(fake.addReleaseFileGroupsArgsForCall)
 }
 
+func (fake *ReleaseFileGroupsAdder) AddReleaseFileGroupsCalls(stub func(pivnet.Release) error) {
+	fake.addReleaseFileGroupsMutex.Lock()
+	defer fake.addReleaseFileGroupsMutex.Unlock()
+	fake.AddReleaseFileGroupsStub = stub
+}
+
 func (fake *ReleaseFileGroupsAdder) AddReleaseFileGroupsArgsForCall(i int) pivnet.Release {
 	fake.addReleaseFileGroupsMutex.RLock()
 	defer fake.addReleaseFileGroupsMutex.RUnlock()
-	return fake.addReleaseFileGroupsArgsForCall[i].release
+	argsForCall := fake.addReleaseFileGroupsArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *ReleaseFileGroupsAdder) AddReleaseFileGroupsReturns(result1 error) {
+	fake.addReleaseFileGroupsMutex.Lock()
+	defer fake.addReleaseFileGroupsMutex.Unlock()
 	fake.AddReleaseFileGroupsStub = nil
 	fake.addReleaseFileGroupsReturns = struct {
 		result1 error
@@ -60,6 +70,8 @@ func (fake *ReleaseFileGroupsAdder) AddReleaseFileGroupsReturns(result1 error) {
 }
 
 func (fake *ReleaseFileGroupsAdder) AddReleaseFileGroupsReturnsOnCall(i int, result1 error) {
+	fake.addReleaseFileGroupsMutex.Lock()
+	defer fake.addReleaseFileGroupsMutex.Unlock()
 	fake.AddReleaseFileGroupsStub = nil
 	if fake.addReleaseFileGroupsReturnsOnCall == nil {
 		fake.addReleaseFileGroupsReturnsOnCall = make(map[int]struct {

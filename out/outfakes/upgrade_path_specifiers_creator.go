@@ -4,14 +4,14 @@ package outfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v5"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type UpgradePathSpecifiersCreator struct {
-	CreateUpgradePathSpecifiersStub        func(release pivnet.Release) error
+	CreateUpgradePathSpecifiersStub        func(pivnet.Release) error
 	createUpgradePathSpecifiersMutex       sync.RWMutex
 	createUpgradePathSpecifiersArgsForCall []struct {
-		release pivnet.Release
+		arg1 pivnet.Release
 	}
 	createUpgradePathSpecifiersReturns struct {
 		result1 error
@@ -23,21 +23,22 @@ type UpgradePathSpecifiersCreator struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *UpgradePathSpecifiersCreator) CreateUpgradePathSpecifiers(release pivnet.Release) error {
+func (fake *UpgradePathSpecifiersCreator) CreateUpgradePathSpecifiers(arg1 pivnet.Release) error {
 	fake.createUpgradePathSpecifiersMutex.Lock()
 	ret, specificReturn := fake.createUpgradePathSpecifiersReturnsOnCall[len(fake.createUpgradePathSpecifiersArgsForCall)]
 	fake.createUpgradePathSpecifiersArgsForCall = append(fake.createUpgradePathSpecifiersArgsForCall, struct {
-		release pivnet.Release
-	}{release})
-	fake.recordInvocation("CreateUpgradePathSpecifiers", []interface{}{release})
+		arg1 pivnet.Release
+	}{arg1})
+	fake.recordInvocation("CreateUpgradePathSpecifiers", []interface{}{arg1})
 	fake.createUpgradePathSpecifiersMutex.Unlock()
 	if fake.CreateUpgradePathSpecifiersStub != nil {
-		return fake.CreateUpgradePathSpecifiersStub(release)
+		return fake.CreateUpgradePathSpecifiersStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.createUpgradePathSpecifiersReturns.result1
+	fakeReturns := fake.createUpgradePathSpecifiersReturns
+	return fakeReturns.result1
 }
 
 func (fake *UpgradePathSpecifiersCreator) CreateUpgradePathSpecifiersCallCount() int {
@@ -46,13 +47,22 @@ func (fake *UpgradePathSpecifiersCreator) CreateUpgradePathSpecifiersCallCount()
 	return len(fake.createUpgradePathSpecifiersArgsForCall)
 }
 
+func (fake *UpgradePathSpecifiersCreator) CreateUpgradePathSpecifiersCalls(stub func(pivnet.Release) error) {
+	fake.createUpgradePathSpecifiersMutex.Lock()
+	defer fake.createUpgradePathSpecifiersMutex.Unlock()
+	fake.CreateUpgradePathSpecifiersStub = stub
+}
+
 func (fake *UpgradePathSpecifiersCreator) CreateUpgradePathSpecifiersArgsForCall(i int) pivnet.Release {
 	fake.createUpgradePathSpecifiersMutex.RLock()
 	defer fake.createUpgradePathSpecifiersMutex.RUnlock()
-	return fake.createUpgradePathSpecifiersArgsForCall[i].release
+	argsForCall := fake.createUpgradePathSpecifiersArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *UpgradePathSpecifiersCreator) CreateUpgradePathSpecifiersReturns(result1 error) {
+	fake.createUpgradePathSpecifiersMutex.Lock()
+	defer fake.createUpgradePathSpecifiersMutex.Unlock()
 	fake.CreateUpgradePathSpecifiersStub = nil
 	fake.createUpgradePathSpecifiersReturns = struct {
 		result1 error
@@ -60,6 +70,8 @@ func (fake *UpgradePathSpecifiersCreator) CreateUpgradePathSpecifiersReturns(res
 }
 
 func (fake *UpgradePathSpecifiersCreator) CreateUpgradePathSpecifiersReturnsOnCall(i int, result1 error) {
+	fake.createUpgradePathSpecifiersMutex.Lock()
+	defer fake.createUpgradePathSpecifiersMutex.Unlock()
 	fake.CreateUpgradePathSpecifiersStub = nil
 	if fake.createUpgradePathSpecifiersReturnsOnCall == nil {
 		fake.createUpgradePathSpecifiersReturnsOnCall = make(map[int]struct {

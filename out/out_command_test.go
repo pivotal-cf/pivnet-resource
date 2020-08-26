@@ -4,9 +4,9 @@ import (
 	"errors"
 	"log"
 
-	"github.com/pivotal-cf/go-pivnet/v5"
-	"github.com/pivotal-cf/go-pivnet/v5/logger"
-	"github.com/pivotal-cf/go-pivnet/v5/logshim"
+	"github.com/pivotal-cf/go-pivnet/v6"
+	"github.com/pivotal-cf/go-pivnet/v6/logger"
+	"github.com/pivotal-cf/go-pivnet/v6/logshim"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/out"
@@ -24,7 +24,7 @@ var _ = Describe("Out", func() {
 			finalizer                       *outfakes.Finalizer
 			userGroupsUpdater               *outfakes.UserGroupsUpdater
 			releaseFileGroupsAdder          *outfakes.ReleaseFileGroupsAdder
-			releaseImageReferencesAdder     *outfakes.ReleaseImageReferencesAdder
+			releaseArtifactReferencesAdder  *outfakes.ReleaseArtifactReferencesAdder
 			releaseDependenciesAdder        *outfakes.ReleaseDependenciesAdder
 			dependencySpecifiersCreator     *outfakes.DependencySpecifiersCreator
 			releaseUpgradePathsAdder        *outfakes.ReleaseUpgradePathsAdder
@@ -48,7 +48,7 @@ var _ = Describe("Out", func() {
 			uploadErr                        error
 			updateUserGroupErr               error
 			addReleaseFileGroupsErr          error
-			addReleaseImageReferencesErr     error
+			addReleaseArtifactReferencesErr  error
 			addReleaseDependenciesErr        error
 			createDependencySpecifiersErr    error
 			addReleaseUpgradePathsErr        error
@@ -63,7 +63,7 @@ var _ = Describe("Out", func() {
 			finalizer = &outfakes.Finalizer{}
 			userGroupsUpdater = &outfakes.UserGroupsUpdater{}
 			releaseFileGroupsAdder = &outfakes.ReleaseFileGroupsAdder{}
-			releaseImageReferencesAdder = &outfakes.ReleaseImageReferencesAdder{}
+			releaseArtifactReferencesAdder = &outfakes.ReleaseArtifactReferencesAdder{}
 			releaseDependenciesAdder = &outfakes.ReleaseDependenciesAdder{}
 			dependencySpecifiersCreator = &outfakes.DependencySpecifiersCreator{}
 			releaseUpgradePathsAdder = &outfakes.ReleaseUpgradePathsAdder{}
@@ -85,7 +85,7 @@ var _ = Describe("Out", func() {
 			uploadErr = nil
 			updateUserGroupErr = nil
 			addReleaseFileGroupsErr = nil
-			addReleaseImageReferencesErr = nil
+			addReleaseArtifactReferencesErr = nil
 			addReleaseDependenciesErr = nil
 			createDependencySpecifiersErr = nil
 			addReleaseUpgradePathsErr = nil
@@ -118,7 +118,7 @@ var _ = Describe("Out", func() {
 				Finalizer:                       finalizer,
 				UserGroupsUpdater:               userGroupsUpdater,
 				ReleaseFileGroupsAdder:          releaseFileGroupsAdder,
-				ReleaseImageReferencesAdder:     releaseImageReferencesAdder,
+				ReleaseArtifactReferencesAdder:  releaseArtifactReferencesAdder,
 				ReleaseDependenciesAdder:        releaseDependenciesAdder,
 				DependencySpecifiersCreator:     dependencySpecifiersCreator,
 				ReleaseUpgradePathsAdder:        releaseUpgradePathsAdder,
@@ -139,7 +139,7 @@ var _ = Describe("Out", func() {
 
 			uploader.UploadReturns(uploadErr)
 			releaseFileGroupsAdder.AddReleaseFileGroupsReturns(addReleaseFileGroupsErr)
-			releaseImageReferencesAdder.AddReleaseImageReferencesReturns(addReleaseImageReferencesErr)
+			releaseArtifactReferencesAdder.AddReleaseArtifactReferencesReturns(addReleaseArtifactReferencesErr)
 			releaseDependenciesAdder.AddReleaseDependenciesReturns(addReleaseDependenciesErr)
 			dependencySpecifiersCreator.CreateDependencySpecifiersReturns(createDependencySpecifiersErr)
 			releaseUpgradePathsAdder.AddReleaseUpgradePathsReturns(addReleaseUpgradePathsErr)
@@ -173,7 +173,7 @@ var _ = Describe("Out", func() {
 			Expect(globber.ExactGlobsCallCount()).To(Equal(1))
 
 			Expect(releaseFileGroupsAdder.AddReleaseFileGroupsCallCount()).To(Equal(1))
-			Expect(releaseImageReferencesAdder.AddReleaseImageReferencesCallCount()).To(Equal(1))
+			Expect(releaseArtifactReferencesAdder.AddReleaseArtifactReferencesCallCount()).To(Equal(1))
 			Expect(releaseDependenciesAdder.AddReleaseDependenciesCallCount()).To(Equal(1))
 			Expect(dependencySpecifiersCreator.CreateDependencySpecifiersCallCount()).To(Equal(1))
 			Expect(releaseUpgradePathsAdder.AddReleaseUpgradePathsCallCount()).To(Equal(1))

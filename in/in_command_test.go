@@ -7,9 +7,9 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/go-pivnet/v5"
-	"github.com/pivotal-cf/go-pivnet/v5/logger"
-	"github.com/pivotal-cf/go-pivnet/v5/logshim"
+	"github.com/pivotal-cf/go-pivnet/v6"
+	"github.com/pivotal-cf/go-pivnet/v6/logger"
+	"github.com/pivotal-cf/go-pivnet/v6/logshim"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/in"
 	"github.com/pivotal-cf/pivnet-resource/in/infakes"
@@ -41,7 +41,7 @@ var _ = Describe("In", func() {
 
 		filteredProductFiles []pivnet.ProductFile
 
-		imageReferences     []pivnet.ImageReference
+		artifactReferences  []pivnet.ArtifactReference
 
 		releaseDependencies   []pivnet.ReleaseDependency
 		dependencySpecifiers  []pivnet.DependencySpecifier
@@ -73,7 +73,7 @@ var _ = Describe("In", func() {
 		releaseUpgradePathsErr   error
 		upgradePathSpecifiersErr error
 		fileGroupsErr            error
-		imageReferencesErr       error
+		artifactReferencesErr    error
 	)
 
 	BeforeEach(func() {
@@ -97,7 +97,7 @@ var _ = Describe("In", func() {
 		releaseUpgradePathsErr = nil
 		upgradePathSpecifiersErr = nil
 		fileGroupsErr = nil
-		imageReferencesErr = nil
+		artifactReferencesErr = nil
 
 		version = "C"
 		fingerprint = "fingerprint-0"
@@ -135,10 +135,10 @@ var _ = Describe("In", func() {
 				ID:           1234,
 				Name:         "product file 1234",
 				AWSObjectKey: downloadFilepaths[0],
-				FileType:           pivnet.FileTypeSoftware,
-				FileVersion:        "some-file-version 1234",
-				SHA256:             fileContentsSHA256s[0],
-				MD5:                fileContentsMD5s[0],
+				FileType:     pivnet.FileTypeSoftware,
+				FileVersion:  "some-file-version 1234",
+				SHA256:       fileContentsSHA256s[0],
+				MD5:          fileContentsMD5s[0],
 				Links: &pivnet.Links{
 					Download: map[string]string{
 						"href": "foo",
@@ -149,10 +149,10 @@ var _ = Describe("In", func() {
 				ID:           3456,
 				Name:         "product file 3456",
 				AWSObjectKey: downloadFilepaths[1],
-				FileType:           pivnet.FileTypeSoftware,
-				FileVersion:        "some-file-version 3456",
-				SHA256:             fileContentsSHA256s[1],
-				MD5:                fileContentsMD5s[1],
+				FileType:     pivnet.FileTypeSoftware,
+				FileVersion:  "some-file-version 3456",
+				SHA256:       fileContentsSHA256s[1],
+				MD5:          fileContentsMD5s[1],
 				Links: &pivnet.Links{
 					Download: map[string]string{
 						"href": "bar",
@@ -166,10 +166,10 @@ var _ = Describe("In", func() {
 				ID:           4567,
 				Name:         "product file 4567",
 				AWSObjectKey: downloadFilepaths[2],
-				FileType:           pivnet.FileTypeSoftware,
-				FileVersion:        "some-file-version 4567",
-				SHA256:             fileContentsSHA256s[2],
-				MD5:                fileContentsMD5s[2],
+				FileType:     pivnet.FileTypeSoftware,
+				FileVersion:  "some-file-version 4567",
+				SHA256:       fileContentsSHA256s[2],
+				MD5:          fileContentsMD5s[2],
 				Links: &pivnet.Links{
 					Download: map[string]string{
 						"href": "bar",
@@ -183,10 +183,10 @@ var _ = Describe("In", func() {
 				ID:           5678,
 				Name:         "product file 5678",
 				AWSObjectKey: downloadFilepaths[3],
-				FileType:           pivnet.FileTypeSoftware,
-				FileVersion:        "some-file-version 5678",
-				SHA256:             fileContentsSHA256s[3],
-				MD5:                fileContentsMD5s[3],
+				FileType:     pivnet.FileTypeSoftware,
+				FileVersion:  "some-file-version 5678",
+				SHA256:       fileContentsSHA256s[3],
+				MD5:          fileContentsMD5s[3],
 				Links: &pivnet.Links{
 					Download: map[string]string{
 						"href": "bar",
@@ -219,11 +219,11 @@ var _ = Describe("In", func() {
 			},
 		}
 
-		imageReferences = []pivnet.ImageReference{
+		artifactReferences = []pivnet.ArtifactReference{
 			{
 				ID:                 101,
-				Name:               "image1",
-				ImagePath:          "my/path:1",
+				Name:               "artifact1",
+				ArtifactPath:       "my/path:1",
 				Digest:             "mydigest1",
 				Description:        "my description 1",
 				DocsURL:            "my.docs.url:1",
@@ -231,8 +231,8 @@ var _ = Describe("In", func() {
 			},
 			{
 				ID:                 102,
-				Name:               "image2",
-				ImagePath:          "my/path:2",
+				Name:               "artifact2",
+				ArtifactPath:       "my/path:2",
 				Digest:             "mydigest2",
 				Description:        "my description 2",
 				DocsURL:            "my.docs.url:2",
@@ -243,7 +243,7 @@ var _ = Describe("In", func() {
 		release = pivnet.Release{
 			Version:                version,
 			SoftwareFilesUpdatedAt: actualFingerprint,
-			ID: 1234,
+			ID:                     1234,
 			Links: &pivnet.Links{
 				ProductFiles: map[string]string{
 					"href": "some-file-path",
@@ -319,7 +319,7 @@ var _ = Describe("In", func() {
 		fakePivnetClient.ReleaseUpgradePathsReturns(releaseUpgradePaths, releaseUpgradePathsErr)
 		fakePivnetClient.UpgradePathSpecifiersReturns(upgradePathSpecifiers, upgradePathSpecifiersErr)
 		fakePivnetClient.FileGroupsForReleaseReturns(fileGroups, fileGroupsErr)
-		fakePivnetClient.ImageReferencesForReleaseReturns(imageReferences, imageReferencesErr)
+		fakePivnetClient.ArtifactReferencesForReleaseReturns(artifactReferences, artifactReferencesErr)
 
 		fakeFilter.ProductFileKeysByGlobsReturns(filteredProductFiles, filterErr)
 		fakeDownloader.DownloadReturns(downloadFilepaths, downloadErr)
@@ -390,7 +390,7 @@ var _ = Describe("In", func() {
 		validateReleaseProductFilesMetadata(invokedMetadata, releaseProductFiles)
 		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateFileGroupsMetadata(invokedMetadata, fileGroups)
-		validateImageReferencesMetadata(invokedMetadata, imageReferences)
+		validateArtifactReferencesMetadata(invokedMetadata, artifactReferences)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateDependencySpecifiersMetadata(invokedMetadata, dependencySpecifiers)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
@@ -412,7 +412,7 @@ var _ = Describe("In", func() {
 		validateReleaseProductFilesMetadata(invokedMetadata, releaseProductFiles)
 		validateProductFilesMetadata(invokedMetadata, filteredProductFiles)
 		validateFileGroupsMetadata(invokedMetadata, fileGroups)
-		validateImageReferencesMetadata(invokedMetadata, imageReferences)
+		validateArtifactReferencesMetadata(invokedMetadata, artifactReferences)
 		validateReleaseDependenciesMetadata(invokedMetadata, releaseDependencies)
 		validateDependencySpecifiersMetadata(invokedMetadata, dependencySpecifiers)
 		validateReleaseUpgradePathsMetadata(invokedMetadata, releaseUpgradePaths)
@@ -431,7 +431,7 @@ var _ = Describe("In", func() {
 		expectedProductFiles := releaseProductFiles
 		expectedProductFiles = append(expectedProductFiles, fileGroup1ProductFiles[0])
 		expectedProductFiles = append(expectedProductFiles, fileGroup2ProductFiles[0])
-		
+
 		Expect(fakeDownloader.DownloadCallCount()).To(Equal(1))
 		invokedProductFiles, _, _ := fakeDownloader.DownloadArgsForCall(0)
 		Expect(invokedProductFiles).To(Equal(filteredProductFiles))
@@ -508,16 +508,16 @@ var _ = Describe("In", func() {
 		})
 	})
 
-	Context("when getting image references returns error", func() {
+	Context("when getting artifact references returns error", func() {
 		BeforeEach(func() {
-			imageReferencesErr = fmt.Errorf("some image reference error")
+			artifactReferencesErr = fmt.Errorf("some artifact reference error")
 		})
 
 		It("returns error", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).To(HaveOccurred())
 
-			Expect(err).To(Equal(imageReferencesErr))
+			Expect(err).To(Equal(artifactReferencesErr))
 		})
 	})
 
@@ -782,20 +782,20 @@ var validateProductFilesMetadata = func(
 	}
 }
 
-var validateImageReferencesMetadata = func(
+var validateArtifactReferencesMetadata = func(
 	writtenMetadata metadata.Metadata,
-	imageReferences []pivnet.ImageReference,
+	artifactReferences []pivnet.ArtifactReference,
 ) {
-	Expect(writtenMetadata.ImageReferences).To(HaveLen(len(imageReferences)))
+	Expect(writtenMetadata.ArtifactReferences).To(HaveLen(len(artifactReferences)))
 
-	for i, imageReference := range imageReferences {
-		Expect(writtenMetadata.ImageReferences[i].ID).To(Equal(imageReference.ID))
-		Expect(writtenMetadata.ImageReferences[i].Name).To(Equal(imageReference.Name))
-		Expect(writtenMetadata.ImageReferences[i].ImagePath).To(Equal(imageReference.ImagePath))
-		Expect(writtenMetadata.ImageReferences[i].Digest).To(Equal(imageReference.Digest))
-		Expect(writtenMetadata.ImageReferences[i].Description).To(Equal(imageReference.Description))
-		Expect(writtenMetadata.ImageReferences[i].DocsURL).To(Equal(imageReference.DocsURL))
-		Expect(writtenMetadata.ImageReferences[i].SystemRequirements).To(Equal(imageReference.SystemRequirements))
+	for i, artifactReference := range artifactReferences {
+		Expect(writtenMetadata.ArtifactReferences[i].ID).To(Equal(artifactReference.ID))
+		Expect(writtenMetadata.ArtifactReferences[i].Name).To(Equal(artifactReference.Name))
+		Expect(writtenMetadata.ArtifactReferences[i].ArtifactPath).To(Equal(artifactReference.ArtifactPath))
+		Expect(writtenMetadata.ArtifactReferences[i].Digest).To(Equal(artifactReference.Digest))
+		Expect(writtenMetadata.ArtifactReferences[i].Description).To(Equal(artifactReference.Description))
+		Expect(writtenMetadata.ArtifactReferences[i].DocsURL).To(Equal(artifactReference.DocsURL))
+		Expect(writtenMetadata.ArtifactReferences[i].SystemRequirements).To(Equal(artifactReference.SystemRequirements))
 	}
 }
 

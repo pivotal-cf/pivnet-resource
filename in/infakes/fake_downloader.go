@@ -4,16 +4,16 @@ package infakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v5"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type FakeDownloader struct {
-	DownloadStub        func(productFiles []pivnet.ProductFile, productSlug string, releaseID int) ([]string, error)
+	DownloadStub        func([]pivnet.ProductFile, string, int) ([]string, error)
 	downloadMutex       sync.RWMutex
 	downloadArgsForCall []struct {
-		productFiles []pivnet.ProductFile
-		productSlug  string
-		releaseID    int
+		arg1 []pivnet.ProductFile
+		arg2 string
+		arg3 int
 	}
 	downloadReturns struct {
 		result1 []string
@@ -27,28 +27,29 @@ type FakeDownloader struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeDownloader) Download(productFiles []pivnet.ProductFile, productSlug string, releaseID int) ([]string, error) {
-	var productFilesCopy []pivnet.ProductFile
-	if productFiles != nil {
-		productFilesCopy = make([]pivnet.ProductFile, len(productFiles))
-		copy(productFilesCopy, productFiles)
+func (fake *FakeDownloader) Download(arg1 []pivnet.ProductFile, arg2 string, arg3 int) ([]string, error) {
+	var arg1Copy []pivnet.ProductFile
+	if arg1 != nil {
+		arg1Copy = make([]pivnet.ProductFile, len(arg1))
+		copy(arg1Copy, arg1)
 	}
 	fake.downloadMutex.Lock()
 	ret, specificReturn := fake.downloadReturnsOnCall[len(fake.downloadArgsForCall)]
 	fake.downloadArgsForCall = append(fake.downloadArgsForCall, struct {
-		productFiles []pivnet.ProductFile
-		productSlug  string
-		releaseID    int
-	}{productFilesCopy, productSlug, releaseID})
-	fake.recordInvocation("Download", []interface{}{productFilesCopy, productSlug, releaseID})
+		arg1 []pivnet.ProductFile
+		arg2 string
+		arg3 int
+	}{arg1Copy, arg2, arg3})
+	fake.recordInvocation("Download", []interface{}{arg1Copy, arg2, arg3})
 	fake.downloadMutex.Unlock()
 	if fake.DownloadStub != nil {
-		return fake.DownloadStub(productFiles, productSlug, releaseID)
+		return fake.DownloadStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.downloadReturns.result1, fake.downloadReturns.result2
+	fakeReturns := fake.downloadReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeDownloader) DownloadCallCount() int {
@@ -57,13 +58,22 @@ func (fake *FakeDownloader) DownloadCallCount() int {
 	return len(fake.downloadArgsForCall)
 }
 
+func (fake *FakeDownloader) DownloadCalls(stub func([]pivnet.ProductFile, string, int) ([]string, error)) {
+	fake.downloadMutex.Lock()
+	defer fake.downloadMutex.Unlock()
+	fake.DownloadStub = stub
+}
+
 func (fake *FakeDownloader) DownloadArgsForCall(i int) ([]pivnet.ProductFile, string, int) {
 	fake.downloadMutex.RLock()
 	defer fake.downloadMutex.RUnlock()
-	return fake.downloadArgsForCall[i].productFiles, fake.downloadArgsForCall[i].productSlug, fake.downloadArgsForCall[i].releaseID
+	argsForCall := fake.downloadArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeDownloader) DownloadReturns(result1 []string, result2 error) {
+	fake.downloadMutex.Lock()
+	defer fake.downloadMutex.Unlock()
 	fake.DownloadStub = nil
 	fake.downloadReturns = struct {
 		result1 []string
@@ -72,6 +82,8 @@ func (fake *FakeDownloader) DownloadReturns(result1 []string, result2 error) {
 }
 
 func (fake *FakeDownloader) DownloadReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.downloadMutex.Lock()
+	defer fake.downloadMutex.Unlock()
 	fake.DownloadStub = nil
 	if fake.downloadReturnsOnCall == nil {
 		fake.downloadReturnsOnCall = make(map[int]struct {

@@ -11,10 +11,10 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/fatih/color"
-	"github.com/pivotal-cf/go-pivnet/v5"
-	"github.com/pivotal-cf/go-pivnet/v5/logshim"
-	"github.com/pivotal-cf/go-pivnet/v5/md5sum"
-	"github.com/pivotal-cf/go-pivnet/v5/sha256sum"
+	"github.com/pivotal-cf/go-pivnet/v6"
+	"github.com/pivotal-cf/go-pivnet/v6/logshim"
+	"github.com/pivotal-cf/go-pivnet/v6/md5sum"
+	"github.com/pivotal-cf/go-pivnet/v6/sha256sum"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/filter"
 	"github.com/pivotal-cf/pivnet-resource/globs"
@@ -29,7 +29,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/useragent"
 	"github.com/pivotal-cf/pivnet-resource/validator"
 	"github.com/robdimsdale/sanitizer"
-	"github.com/pivotal-cf/go-pivnet/v5/logger"
+	"github.com/pivotal-cf/go-pivnet/v6/logger"
 )
 
 var (
@@ -219,7 +219,7 @@ func main() {
 		input.Source.ProductSlug,
 	)
 
-	releaseImageReferencesAdder := release.NewReleaseImageReferencesAdder(
+	releaseArtifactReferencesAdder := release.NewReleaseArtifactReferencesAdder(
 		ls,
 		client,
 		m,
@@ -276,7 +276,7 @@ func main() {
 		Uploader:                        releaseUploader,
 		UserGroupsUpdater:               releaseUserGroupsUpdater,
 		ReleaseFileGroupsAdder:          releaseFileGroupsAdder,
-		ReleaseImageReferencesAdder:     releaseImageReferencesAdder,
+		ReleaseArtifactReferencesAdder:  releaseArtifactReferencesAdder,
 		ReleaseDependenciesAdder:        releaseDependenciesAdder,
 		DependencySpecifiersCreator:     dependencySpecifiersCreator,
 		ReleaseUpgradePathsAdder:        releaseUpgradePathsAdder,

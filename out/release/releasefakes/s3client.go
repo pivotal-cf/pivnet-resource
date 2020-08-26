@@ -50,7 +50,8 @@ func (fake *S3Client) ComputeAWSObjectKey(arg1 string) (string, string, error) {
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
 	}
-	return fake.computeAWSObjectKeyReturns.result1, fake.computeAWSObjectKeyReturns.result2, fake.computeAWSObjectKeyReturns.result3
+	fakeReturns := fake.computeAWSObjectKeyReturns
+	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
 }
 
 func (fake *S3Client) ComputeAWSObjectKeyCallCount() int {
@@ -59,13 +60,22 @@ func (fake *S3Client) ComputeAWSObjectKeyCallCount() int {
 	return len(fake.computeAWSObjectKeyArgsForCall)
 }
 
+func (fake *S3Client) ComputeAWSObjectKeyCalls(stub func(string) (string, string, error)) {
+	fake.computeAWSObjectKeyMutex.Lock()
+	defer fake.computeAWSObjectKeyMutex.Unlock()
+	fake.ComputeAWSObjectKeyStub = stub
+}
+
 func (fake *S3Client) ComputeAWSObjectKeyArgsForCall(i int) string {
 	fake.computeAWSObjectKeyMutex.RLock()
 	defer fake.computeAWSObjectKeyMutex.RUnlock()
-	return fake.computeAWSObjectKeyArgsForCall[i].arg1
+	argsForCall := fake.computeAWSObjectKeyArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *S3Client) ComputeAWSObjectKeyReturns(result1 string, result2 string, result3 error) {
+	fake.computeAWSObjectKeyMutex.Lock()
+	defer fake.computeAWSObjectKeyMutex.Unlock()
 	fake.ComputeAWSObjectKeyStub = nil
 	fake.computeAWSObjectKeyReturns = struct {
 		result1 string
@@ -75,6 +85,8 @@ func (fake *S3Client) ComputeAWSObjectKeyReturns(result1 string, result2 string,
 }
 
 func (fake *S3Client) ComputeAWSObjectKeyReturnsOnCall(i int, result1 string, result2 string, result3 error) {
+	fake.computeAWSObjectKeyMutex.Lock()
+	defer fake.computeAWSObjectKeyMutex.Unlock()
 	fake.ComputeAWSObjectKeyStub = nil
 	if fake.computeAWSObjectKeyReturnsOnCall == nil {
 		fake.computeAWSObjectKeyReturnsOnCall = make(map[int]struct {
@@ -104,7 +116,8 @@ func (fake *S3Client) UploadFile(arg1 string) error {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.uploadFileReturns.result1
+	fakeReturns := fake.uploadFileReturns
+	return fakeReturns.result1
 }
 
 func (fake *S3Client) UploadFileCallCount() int {
@@ -113,13 +126,22 @@ func (fake *S3Client) UploadFileCallCount() int {
 	return len(fake.uploadFileArgsForCall)
 }
 
+func (fake *S3Client) UploadFileCalls(stub func(string) error) {
+	fake.uploadFileMutex.Lock()
+	defer fake.uploadFileMutex.Unlock()
+	fake.UploadFileStub = stub
+}
+
 func (fake *S3Client) UploadFileArgsForCall(i int) string {
 	fake.uploadFileMutex.RLock()
 	defer fake.uploadFileMutex.RUnlock()
-	return fake.uploadFileArgsForCall[i].arg1
+	argsForCall := fake.uploadFileArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *S3Client) UploadFileReturns(result1 error) {
+	fake.uploadFileMutex.Lock()
+	defer fake.uploadFileMutex.Unlock()
 	fake.UploadFileStub = nil
 	fake.uploadFileReturns = struct {
 		result1 error
@@ -127,6 +149,8 @@ func (fake *S3Client) UploadFileReturns(result1 error) {
 }
 
 func (fake *S3Client) UploadFileReturnsOnCall(i int, result1 error) {
+	fake.uploadFileMutex.Lock()
+	defer fake.uploadFileMutex.Unlock()
 	fake.UploadFileStub = nil
 	if fake.uploadFileReturnsOnCall == nil {
 		fake.uploadFileReturnsOnCall = make(map[int]struct {

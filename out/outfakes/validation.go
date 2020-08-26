@@ -8,8 +8,9 @@ import (
 type Validation struct {
 	ValidateStub        func() error
 	validateMutex       sync.RWMutex
-	validateArgsForCall []struct{}
-	validateReturns     struct {
+	validateArgsForCall []struct {
+	}
+	validateReturns struct {
 		result1 error
 	}
 	validateReturnsOnCall map[int]struct {
@@ -22,7 +23,8 @@ type Validation struct {
 func (fake *Validation) Validate() error {
 	fake.validateMutex.Lock()
 	ret, specificReturn := fake.validateReturnsOnCall[len(fake.validateArgsForCall)]
-	fake.validateArgsForCall = append(fake.validateArgsForCall, struct{}{})
+	fake.validateArgsForCall = append(fake.validateArgsForCall, struct {
+	}{})
 	fake.recordInvocation("Validate", []interface{}{})
 	fake.validateMutex.Unlock()
 	if fake.ValidateStub != nil {
@@ -31,7 +33,8 @@ func (fake *Validation) Validate() error {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.validateReturns.result1
+	fakeReturns := fake.validateReturns
+	return fakeReturns.result1
 }
 
 func (fake *Validation) ValidateCallCount() int {
@@ -40,7 +43,15 @@ func (fake *Validation) ValidateCallCount() int {
 	return len(fake.validateArgsForCall)
 }
 
+func (fake *Validation) ValidateCalls(stub func() error) {
+	fake.validateMutex.Lock()
+	defer fake.validateMutex.Unlock()
+	fake.ValidateStub = stub
+}
+
 func (fake *Validation) ValidateReturns(result1 error) {
+	fake.validateMutex.Lock()
+	defer fake.validateMutex.Unlock()
 	fake.ValidateStub = nil
 	fake.validateReturns = struct {
 		result1 error
@@ -48,6 +59,8 @@ func (fake *Validation) ValidateReturns(result1 error) {
 }
 
 func (fake *Validation) ValidateReturnsOnCall(i int, result1 error) {
+	fake.validateMutex.Lock()
+	defer fake.validateMutex.Unlock()
 	fake.ValidateStub = nil
 	if fake.validateReturnsOnCall == nil {
 		fake.validateReturnsOnCall = make(map[int]struct {

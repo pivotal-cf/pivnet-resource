@@ -8,10 +8,10 @@ import (
 )
 
 type FakeS3PrefixFetcher struct {
-	S3PrefixForProductSlugStub        func(productSlug string) (string, error)
+	S3PrefixForProductSlugStub        func(string) (string, error)
 	s3PrefixForProductSlugMutex       sync.RWMutex
 	s3PrefixForProductSlugArgsForCall []struct {
-		productSlug string
+		arg1 string
 	}
 	s3PrefixForProductSlugReturns struct {
 		result1 string
@@ -25,21 +25,22 @@ type FakeS3PrefixFetcher struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeS3PrefixFetcher) S3PrefixForProductSlug(productSlug string) (string, error) {
+func (fake *FakeS3PrefixFetcher) S3PrefixForProductSlug(arg1 string) (string, error) {
 	fake.s3PrefixForProductSlugMutex.Lock()
 	ret, specificReturn := fake.s3PrefixForProductSlugReturnsOnCall[len(fake.s3PrefixForProductSlugArgsForCall)]
 	fake.s3PrefixForProductSlugArgsForCall = append(fake.s3PrefixForProductSlugArgsForCall, struct {
-		productSlug string
-	}{productSlug})
-	fake.recordInvocation("S3PrefixForProductSlug", []interface{}{productSlug})
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("S3PrefixForProductSlug", []interface{}{arg1})
 	fake.s3PrefixForProductSlugMutex.Unlock()
 	if fake.S3PrefixForProductSlugStub != nil {
-		return fake.S3PrefixForProductSlugStub(productSlug)
+		return fake.S3PrefixForProductSlugStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.s3PrefixForProductSlugReturns.result1, fake.s3PrefixForProductSlugReturns.result2
+	fakeReturns := fake.s3PrefixForProductSlugReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeS3PrefixFetcher) S3PrefixForProductSlugCallCount() int {
@@ -48,13 +49,22 @@ func (fake *FakeS3PrefixFetcher) S3PrefixForProductSlugCallCount() int {
 	return len(fake.s3PrefixForProductSlugArgsForCall)
 }
 
+func (fake *FakeS3PrefixFetcher) S3PrefixForProductSlugCalls(stub func(string) (string, error)) {
+	fake.s3PrefixForProductSlugMutex.Lock()
+	defer fake.s3PrefixForProductSlugMutex.Unlock()
+	fake.S3PrefixForProductSlugStub = stub
+}
+
 func (fake *FakeS3PrefixFetcher) S3PrefixForProductSlugArgsForCall(i int) string {
 	fake.s3PrefixForProductSlugMutex.RLock()
 	defer fake.s3PrefixForProductSlugMutex.RUnlock()
-	return fake.s3PrefixForProductSlugArgsForCall[i].productSlug
+	argsForCall := fake.s3PrefixForProductSlugArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeS3PrefixFetcher) S3PrefixForProductSlugReturns(result1 string, result2 error) {
+	fake.s3PrefixForProductSlugMutex.Lock()
+	defer fake.s3PrefixForProductSlugMutex.Unlock()
 	fake.S3PrefixForProductSlugStub = nil
 	fake.s3PrefixForProductSlugReturns = struct {
 		result1 string
@@ -63,6 +73,8 @@ func (fake *FakeS3PrefixFetcher) S3PrefixForProductSlugReturns(result1 string, r
 }
 
 func (fake *FakeS3PrefixFetcher) S3PrefixForProductSlugReturnsOnCall(i int, result1 string, result2 error) {
+	fake.s3PrefixForProductSlugMutex.Lock()
+	defer fake.s3PrefixForProductSlugMutex.Unlock()
 	fake.S3PrefixForProductSlugStub = nil
 	if fake.s3PrefixForProductSlugReturnsOnCall == nil {
 		fake.s3PrefixForProductSlugReturnsOnCall = make(map[int]struct {

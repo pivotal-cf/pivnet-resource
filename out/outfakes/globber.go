@@ -8,8 +8,9 @@ import (
 type Globber struct {
 	ExactGlobsStub        func() ([]string, error)
 	exactGlobsMutex       sync.RWMutex
-	exactGlobsArgsForCall []struct{}
-	exactGlobsReturns     struct {
+	exactGlobsArgsForCall []struct {
+	}
+	exactGlobsReturns struct {
 		result1 []string
 		result2 error
 	}
@@ -24,7 +25,8 @@ type Globber struct {
 func (fake *Globber) ExactGlobs() ([]string, error) {
 	fake.exactGlobsMutex.Lock()
 	ret, specificReturn := fake.exactGlobsReturnsOnCall[len(fake.exactGlobsArgsForCall)]
-	fake.exactGlobsArgsForCall = append(fake.exactGlobsArgsForCall, struct{}{})
+	fake.exactGlobsArgsForCall = append(fake.exactGlobsArgsForCall, struct {
+	}{})
 	fake.recordInvocation("ExactGlobs", []interface{}{})
 	fake.exactGlobsMutex.Unlock()
 	if fake.ExactGlobsStub != nil {
@@ -33,7 +35,8 @@ func (fake *Globber) ExactGlobs() ([]string, error) {
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.exactGlobsReturns.result1, fake.exactGlobsReturns.result2
+	fakeReturns := fake.exactGlobsReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *Globber) ExactGlobsCallCount() int {
@@ -42,7 +45,15 @@ func (fake *Globber) ExactGlobsCallCount() int {
 	return len(fake.exactGlobsArgsForCall)
 }
 
+func (fake *Globber) ExactGlobsCalls(stub func() ([]string, error)) {
+	fake.exactGlobsMutex.Lock()
+	defer fake.exactGlobsMutex.Unlock()
+	fake.ExactGlobsStub = stub
+}
+
 func (fake *Globber) ExactGlobsReturns(result1 []string, result2 error) {
+	fake.exactGlobsMutex.Lock()
+	defer fake.exactGlobsMutex.Unlock()
 	fake.ExactGlobsStub = nil
 	fake.exactGlobsReturns = struct {
 		result1 []string
@@ -51,6 +62,8 @@ func (fake *Globber) ExactGlobsReturns(result1 []string, result2 error) {
 }
 
 func (fake *Globber) ExactGlobsReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.exactGlobsMutex.Lock()
+	defer fake.exactGlobsMutex.Unlock()
 	fake.ExactGlobsStub = nil
 	if fake.exactGlobsReturnsOnCall == nil {
 		fake.exactGlobsReturnsOnCall = make(map[int]struct {

@@ -4,14 +4,14 @@ package outfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v5"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type UserGroupsUpdater struct {
-	UpdateUserGroupsStub        func(release pivnet.Release) (pivnet.Release, error)
+	UpdateUserGroupsStub        func(pivnet.Release) (pivnet.Release, error)
 	updateUserGroupsMutex       sync.RWMutex
 	updateUserGroupsArgsForCall []struct {
-		release pivnet.Release
+		arg1 pivnet.Release
 	}
 	updateUserGroupsReturns struct {
 		result1 pivnet.Release
@@ -25,21 +25,22 @@ type UserGroupsUpdater struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *UserGroupsUpdater) UpdateUserGroups(release pivnet.Release) (pivnet.Release, error) {
+func (fake *UserGroupsUpdater) UpdateUserGroups(arg1 pivnet.Release) (pivnet.Release, error) {
 	fake.updateUserGroupsMutex.Lock()
 	ret, specificReturn := fake.updateUserGroupsReturnsOnCall[len(fake.updateUserGroupsArgsForCall)]
 	fake.updateUserGroupsArgsForCall = append(fake.updateUserGroupsArgsForCall, struct {
-		release pivnet.Release
-	}{release})
-	fake.recordInvocation("UpdateUserGroups", []interface{}{release})
+		arg1 pivnet.Release
+	}{arg1})
+	fake.recordInvocation("UpdateUserGroups", []interface{}{arg1})
 	fake.updateUserGroupsMutex.Unlock()
 	if fake.UpdateUserGroupsStub != nil {
-		return fake.UpdateUserGroupsStub(release)
+		return fake.UpdateUserGroupsStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.updateUserGroupsReturns.result1, fake.updateUserGroupsReturns.result2
+	fakeReturns := fake.updateUserGroupsReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *UserGroupsUpdater) UpdateUserGroupsCallCount() int {
@@ -48,13 +49,22 @@ func (fake *UserGroupsUpdater) UpdateUserGroupsCallCount() int {
 	return len(fake.updateUserGroupsArgsForCall)
 }
 
+func (fake *UserGroupsUpdater) UpdateUserGroupsCalls(stub func(pivnet.Release) (pivnet.Release, error)) {
+	fake.updateUserGroupsMutex.Lock()
+	defer fake.updateUserGroupsMutex.Unlock()
+	fake.UpdateUserGroupsStub = stub
+}
+
 func (fake *UserGroupsUpdater) UpdateUserGroupsArgsForCall(i int) pivnet.Release {
 	fake.updateUserGroupsMutex.RLock()
 	defer fake.updateUserGroupsMutex.RUnlock()
-	return fake.updateUserGroupsArgsForCall[i].release
+	argsForCall := fake.updateUserGroupsArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *UserGroupsUpdater) UpdateUserGroupsReturns(result1 pivnet.Release, result2 error) {
+	fake.updateUserGroupsMutex.Lock()
+	defer fake.updateUserGroupsMutex.Unlock()
 	fake.UpdateUserGroupsStub = nil
 	fake.updateUserGroupsReturns = struct {
 		result1 pivnet.Release
@@ -63,6 +73,8 @@ func (fake *UserGroupsUpdater) UpdateUserGroupsReturns(result1 pivnet.Release, r
 }
 
 func (fake *UserGroupsUpdater) UpdateUserGroupsReturnsOnCall(i int, result1 pivnet.Release, result2 error) {
+	fake.updateUserGroupsMutex.Lock()
+	defer fake.updateUserGroupsMutex.Unlock()
 	fake.UpdateUserGroupsStub = nil
 	if fake.updateUserGroupsReturnsOnCall == nil {
 		fake.updateUserGroupsReturnsOnCall = make(map[int]struct {

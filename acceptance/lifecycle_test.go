@@ -13,7 +13,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf/go-pivnet/v5"
+	"github.com/pivotal-cf/go-pivnet/v6"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/versions"
@@ -61,11 +61,11 @@ var _ = Describe("Lifecycle test", func() {
 			}
 		}
 
-		By("Deleting image references on pivnet")
-		imageRefs, err := pivnetClient.ImageReferences(suiteEnv.ProductSlug)
+		By("Deleting artifact references on pivnet")
+		artifactRefs, err := pivnetClient.ArtifactReferences(suiteEnv.ProductSlug)
 		Expect(err).ShouldNot(HaveOccurred())
-		for _, i := range imageRefs {
-			_, err := pivnetClient.DeleteImageReference(suiteEnv.ProductSlug, i.ID)
+		for _, i := range artifactRefs {
+			_, err := pivnetClient.DeleteArtifactReference(suiteEnv.ProductSlug, i.ID)
 			Expect(err).ShouldNot(HaveOccurred())
 		}
 	}
@@ -90,11 +90,11 @@ var _ = Describe("Lifecycle test", func() {
 				ReleaseNotesURL: releaseNotesURL,
 				Version:         version,
 			},
-			ImageReferences: []metadata.ImageReference{
+			ArtifactReferences: []metadata.ArtifactReference{
 				{
-					Name:      imageName,
-					ImagePath: imagePath,
-					Digest:    imageDigest,
+					Name:         artifactName,
+					ArtifactPath: artifactPath,
+					Digest:       artifactDigest,
 				},
 			},
 		}

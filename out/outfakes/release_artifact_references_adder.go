@@ -8,10 +8,10 @@ import (
 )
 
 type ReleaseArtifactReferencesAdder struct {
-	AddReleaseArtifactReferencesStub        func(release pivnet.Release) error
+	AddReleaseArtifactReferencesStub        func(pivnet.Release) error
 	addReleaseArtifactReferencesMutex       sync.RWMutex
 	addReleaseArtifactReferencesArgsForCall []struct {
-		release pivnet.Release
+		arg1 pivnet.Release
 	}
 	addReleaseArtifactReferencesReturns struct {
 		result1 error
@@ -23,21 +23,22 @@ type ReleaseArtifactReferencesAdder struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *ReleaseArtifactReferencesAdder) AddReleaseArtifactReferences(release pivnet.Release) error {
+func (fake *ReleaseArtifactReferencesAdder) AddReleaseArtifactReferences(arg1 pivnet.Release) error {
 	fake.addReleaseArtifactReferencesMutex.Lock()
 	ret, specificReturn := fake.addReleaseArtifactReferencesReturnsOnCall[len(fake.addReleaseArtifactReferencesArgsForCall)]
 	fake.addReleaseArtifactReferencesArgsForCall = append(fake.addReleaseArtifactReferencesArgsForCall, struct {
-		release pivnet.Release
-	}{release})
-	fake.recordInvocation("AddReleaseArtifactReferences", []interface{}{release})
+		arg1 pivnet.Release
+	}{arg1})
+	fake.recordInvocation("AddReleaseArtifactReferences", []interface{}{arg1})
 	fake.addReleaseArtifactReferencesMutex.Unlock()
 	if fake.AddReleaseArtifactReferencesStub != nil {
-		return fake.AddReleaseArtifactReferencesStub(release)
+		return fake.AddReleaseArtifactReferencesStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.addReleaseArtifactReferencesReturns.result1
+	fakeReturns := fake.addReleaseArtifactReferencesReturns
+	return fakeReturns.result1
 }
 
 func (fake *ReleaseArtifactReferencesAdder) AddReleaseArtifactReferencesCallCount() int {
@@ -46,13 +47,22 @@ func (fake *ReleaseArtifactReferencesAdder) AddReleaseArtifactReferencesCallCoun
 	return len(fake.addReleaseArtifactReferencesArgsForCall)
 }
 
+func (fake *ReleaseArtifactReferencesAdder) AddReleaseArtifactReferencesCalls(stub func(pivnet.Release) error) {
+	fake.addReleaseArtifactReferencesMutex.Lock()
+	defer fake.addReleaseArtifactReferencesMutex.Unlock()
+	fake.AddReleaseArtifactReferencesStub = stub
+}
+
 func (fake *ReleaseArtifactReferencesAdder) AddReleaseArtifactReferencesArgsForCall(i int) pivnet.Release {
 	fake.addReleaseArtifactReferencesMutex.RLock()
 	defer fake.addReleaseArtifactReferencesMutex.RUnlock()
-	return fake.addReleaseArtifactReferencesArgsForCall[i].release
+	argsForCall := fake.addReleaseArtifactReferencesArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *ReleaseArtifactReferencesAdder) AddReleaseArtifactReferencesReturns(result1 error) {
+	fake.addReleaseArtifactReferencesMutex.Lock()
+	defer fake.addReleaseArtifactReferencesMutex.Unlock()
 	fake.AddReleaseArtifactReferencesStub = nil
 	fake.addReleaseArtifactReferencesReturns = struct {
 		result1 error
@@ -60,6 +70,8 @@ func (fake *ReleaseArtifactReferencesAdder) AddReleaseArtifactReferencesReturns(
 }
 
 func (fake *ReleaseArtifactReferencesAdder) AddReleaseArtifactReferencesReturnsOnCall(i int, result1 error) {
+	fake.addReleaseArtifactReferencesMutex.Lock()
+	defer fake.addReleaseArtifactReferencesMutex.Unlock()
 	fake.AddReleaseArtifactReferencesStub = nil
 	if fake.addReleaseArtifactReferencesReturnsOnCall == nil {
 		fake.addReleaseArtifactReferencesReturnsOnCall = make(map[int]struct {
