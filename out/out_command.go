@@ -3,8 +3,8 @@ package out
 import (
 	"fmt"
 
-	"github.com/pivotal-cf/go-pivnet/v5"
-	"github.com/pivotal-cf/go-pivnet/v5/logger"
+	"github.com/pivotal-cf/go-pivnet/v6"
+	"github.com/pivotal-cf/go-pivnet/v6/logger"
 	"github.com/pivotal-cf/pivnet-resource/concourse"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 )
@@ -18,7 +18,7 @@ type OutCommand struct {
 	creator                         creator
 	userGroupsUpdater               userGroupsUpdater
 	releaseFileGroupsAdder          releaseFileGroupsAdder
-	releaseImageReferencesAdder     releaseImageReferencesAdder
+	releaseArtifactReferencesAdder  releaseArtifactReferencesAdder
 	releaseDependenciesAdder        releaseDependenciesAdder
 	dependencySpecifiersCreator     dependencySpecifiersCreator
 	releaseUpgradePathsAdder        releaseUpgradePathsAdder
@@ -38,7 +38,7 @@ type OutCommandConfig struct {
 	Creator                         creator
 	UserGroupsUpdater               userGroupsUpdater
 	ReleaseFileGroupsAdder          releaseFileGroupsAdder
-	ReleaseImageReferencesAdder     releaseImageReferencesAdder
+	ReleaseArtifactReferencesAdder  releaseArtifactReferencesAdder
 	ReleaseDependenciesAdder        releaseDependenciesAdder
 	DependencySpecifiersCreator     dependencySpecifiersCreator
 	ReleaseUpgradePathsAdder        releaseUpgradePathsAdder
@@ -59,7 +59,7 @@ func NewOutCommand(config OutCommandConfig) OutCommand {
 		creator:                         config.Creator,
 		userGroupsUpdater:               config.UserGroupsUpdater,
 		releaseFileGroupsAdder:          config.ReleaseFileGroupsAdder,
-		releaseImageReferencesAdder:     config.ReleaseImageReferencesAdder,
+		releaseArtifactReferencesAdder:  config.ReleaseArtifactReferencesAdder,
 		releaseDependenciesAdder:        config.ReleaseDependenciesAdder,
 		dependencySpecifiersCreator:     config.DependencySpecifiersCreator,
 		releaseUpgradePathsAdder:        config.ReleaseUpgradePathsAdder,
@@ -91,9 +91,9 @@ type releaseFileGroupsAdder interface {
 	AddReleaseFileGroups(release pivnet.Release) error
 }
 
-//go:generate counterfeiter --fake-name ReleaseImageReferencesAdder . releaseImageReferencesAdder
-type releaseImageReferencesAdder interface {
-	AddReleaseImageReferences(release pivnet.Release) error
+//go:generate counterfeiter --fake-name ReleaseArtifactReferencesAdder . releaseArtifactReferencesAdder
+type releaseArtifactReferencesAdder interface {
+	AddReleaseArtifactReferences(release pivnet.Release) error
 }
 
 //go:generate counterfeiter --fake-name ReleaseDependenciesAdder . releaseDependenciesAdder
@@ -190,7 +190,7 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		return concourse.OutResponse{}, err
 	}
 
-	err = c.releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
+	err = c.releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}

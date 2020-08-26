@@ -4,14 +4,14 @@ package outfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v5"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type ReleaseDependenciesAdder struct {
-	AddReleaseDependenciesStub        func(release pivnet.Release) error
+	AddReleaseDependenciesStub        func(pivnet.Release) error
 	addReleaseDependenciesMutex       sync.RWMutex
 	addReleaseDependenciesArgsForCall []struct {
-		release pivnet.Release
+		arg1 pivnet.Release
 	}
 	addReleaseDependenciesReturns struct {
 		result1 error
@@ -23,21 +23,22 @@ type ReleaseDependenciesAdder struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *ReleaseDependenciesAdder) AddReleaseDependencies(release pivnet.Release) error {
+func (fake *ReleaseDependenciesAdder) AddReleaseDependencies(arg1 pivnet.Release) error {
 	fake.addReleaseDependenciesMutex.Lock()
 	ret, specificReturn := fake.addReleaseDependenciesReturnsOnCall[len(fake.addReleaseDependenciesArgsForCall)]
 	fake.addReleaseDependenciesArgsForCall = append(fake.addReleaseDependenciesArgsForCall, struct {
-		release pivnet.Release
-	}{release})
-	fake.recordInvocation("AddReleaseDependencies", []interface{}{release})
+		arg1 pivnet.Release
+	}{arg1})
+	fake.recordInvocation("AddReleaseDependencies", []interface{}{arg1})
 	fake.addReleaseDependenciesMutex.Unlock()
 	if fake.AddReleaseDependenciesStub != nil {
-		return fake.AddReleaseDependenciesStub(release)
+		return fake.AddReleaseDependenciesStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.addReleaseDependenciesReturns.result1
+	fakeReturns := fake.addReleaseDependenciesReturns
+	return fakeReturns.result1
 }
 
 func (fake *ReleaseDependenciesAdder) AddReleaseDependenciesCallCount() int {
@@ -46,13 +47,22 @@ func (fake *ReleaseDependenciesAdder) AddReleaseDependenciesCallCount() int {
 	return len(fake.addReleaseDependenciesArgsForCall)
 }
 
+func (fake *ReleaseDependenciesAdder) AddReleaseDependenciesCalls(stub func(pivnet.Release) error) {
+	fake.addReleaseDependenciesMutex.Lock()
+	defer fake.addReleaseDependenciesMutex.Unlock()
+	fake.AddReleaseDependenciesStub = stub
+}
+
 func (fake *ReleaseDependenciesAdder) AddReleaseDependenciesArgsForCall(i int) pivnet.Release {
 	fake.addReleaseDependenciesMutex.RLock()
 	defer fake.addReleaseDependenciesMutex.RUnlock()
-	return fake.addReleaseDependenciesArgsForCall[i].release
+	argsForCall := fake.addReleaseDependenciesArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *ReleaseDependenciesAdder) AddReleaseDependenciesReturns(result1 error) {
+	fake.addReleaseDependenciesMutex.Lock()
+	defer fake.addReleaseDependenciesMutex.Unlock()
 	fake.AddReleaseDependenciesStub = nil
 	fake.addReleaseDependenciesReturns = struct {
 		result1 error
@@ -60,6 +70,8 @@ func (fake *ReleaseDependenciesAdder) AddReleaseDependenciesReturns(result1 erro
 }
 
 func (fake *ReleaseDependenciesAdder) AddReleaseDependenciesReturnsOnCall(i int, result1 error) {
+	fake.addReleaseDependenciesMutex.Lock()
+	defer fake.addReleaseDependenciesMutex.Unlock()
 	fake.AddReleaseDependenciesStub = nil
 	if fake.addReleaseDependenciesReturnsOnCall == nil {
 		fake.addReleaseDependenciesReturnsOnCall = make(map[int]struct {

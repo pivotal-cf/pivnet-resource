@@ -8,11 +8,11 @@ import (
 )
 
 type Finalizer struct {
-	FinalizeStub        func(productSlug string, releaseVersion string) (concourse.OutResponse, error)
+	FinalizeStub        func(string, string) (concourse.OutResponse, error)
 	finalizeMutex       sync.RWMutex
 	finalizeArgsForCall []struct {
-		productSlug    string
-		releaseVersion string
+		arg1 string
+		arg2 string
 	}
 	finalizeReturns struct {
 		result1 concourse.OutResponse
@@ -26,22 +26,23 @@ type Finalizer struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Finalizer) Finalize(productSlug string, releaseVersion string) (concourse.OutResponse, error) {
+func (fake *Finalizer) Finalize(arg1 string, arg2 string) (concourse.OutResponse, error) {
 	fake.finalizeMutex.Lock()
 	ret, specificReturn := fake.finalizeReturnsOnCall[len(fake.finalizeArgsForCall)]
 	fake.finalizeArgsForCall = append(fake.finalizeArgsForCall, struct {
-		productSlug    string
-		releaseVersion string
-	}{productSlug, releaseVersion})
-	fake.recordInvocation("Finalize", []interface{}{productSlug, releaseVersion})
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("Finalize", []interface{}{arg1, arg2})
 	fake.finalizeMutex.Unlock()
 	if fake.FinalizeStub != nil {
-		return fake.FinalizeStub(productSlug, releaseVersion)
+		return fake.FinalizeStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.finalizeReturns.result1, fake.finalizeReturns.result2
+	fakeReturns := fake.finalizeReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *Finalizer) FinalizeCallCount() int {
@@ -50,13 +51,22 @@ func (fake *Finalizer) FinalizeCallCount() int {
 	return len(fake.finalizeArgsForCall)
 }
 
+func (fake *Finalizer) FinalizeCalls(stub func(string, string) (concourse.OutResponse, error)) {
+	fake.finalizeMutex.Lock()
+	defer fake.finalizeMutex.Unlock()
+	fake.FinalizeStub = stub
+}
+
 func (fake *Finalizer) FinalizeArgsForCall(i int) (string, string) {
 	fake.finalizeMutex.RLock()
 	defer fake.finalizeMutex.RUnlock()
-	return fake.finalizeArgsForCall[i].productSlug, fake.finalizeArgsForCall[i].releaseVersion
+	argsForCall := fake.finalizeArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *Finalizer) FinalizeReturns(result1 concourse.OutResponse, result2 error) {
+	fake.finalizeMutex.Lock()
+	defer fake.finalizeMutex.Unlock()
 	fake.FinalizeStub = nil
 	fake.finalizeReturns = struct {
 		result1 concourse.OutResponse
@@ -65,6 +75,8 @@ func (fake *Finalizer) FinalizeReturns(result1 concourse.OutResponse, result2 er
 }
 
 func (fake *Finalizer) FinalizeReturnsOnCall(i int, result1 concourse.OutResponse, result2 error) {
+	fake.finalizeMutex.Lock()
+	defer fake.finalizeMutex.Unlock()
 	fake.FinalizeStub = nil
 	if fake.finalizeReturnsOnCall == nil {
 		fake.finalizeReturnsOnCall = make(map[int]struct {

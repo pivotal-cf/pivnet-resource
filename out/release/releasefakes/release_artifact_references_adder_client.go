@@ -21,6 +21,19 @@ type ReleaseArtifactReferencesAdderClient struct {
 	addArtifactReferenceReturnsOnCall map[int]struct {
 		result1 error
 	}
+	ArtifactReferencesStub        func(string) ([]pivnet.ArtifactReference, error)
+	artifactReferencesMutex       sync.RWMutex
+	artifactReferencesArgsForCall []struct {
+		arg1 string
+	}
+	artifactReferencesReturns struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
+	}
+	artifactReferencesReturnsOnCall map[int]struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
+	}
 	CreateArtifactReferenceStub        func(pivnet.CreateArtifactReferenceConfig) (pivnet.ArtifactReference, error)
 	createArtifactReferenceMutex       sync.RWMutex
 	createArtifactReferenceArgsForCall []struct {
@@ -60,19 +73,6 @@ type ReleaseArtifactReferencesAdderClient struct {
 	}
 	getArtifactReferenceReturnsOnCall map[int]struct {
 		result1 pivnet.ArtifactReference
-		result2 error
-	}
-	ArtifactReferencesStub        func(string) ([]pivnet.ArtifactReference, error)
-	artifactReferencesMutex       sync.RWMutex
-	artifactReferencesArgsForCall []struct {
-		arg1 string
-	}
-	artifactReferencesReturns struct {
-		result1 []pivnet.ArtifactReference
-		result2 error
-	}
-	artifactReferencesReturnsOnCall map[int]struct {
-		result1 []pivnet.ArtifactReference
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -139,6 +139,69 @@ func (fake *ReleaseArtifactReferencesAdderClient) AddArtifactReferenceReturnsOnC
 	fake.addArtifactReferenceReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferences(arg1 string) ([]pivnet.ArtifactReference, error) {
+	fake.artifactReferencesMutex.Lock()
+	ret, specificReturn := fake.artifactReferencesReturnsOnCall[len(fake.artifactReferencesArgsForCall)]
+	fake.artifactReferencesArgsForCall = append(fake.artifactReferencesArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("ArtifactReferences", []interface{}{arg1})
+	fake.artifactReferencesMutex.Unlock()
+	if fake.ArtifactReferencesStub != nil {
+		return fake.ArtifactReferencesStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.artifactReferencesReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesCallCount() int {
+	fake.artifactReferencesMutex.RLock()
+	defer fake.artifactReferencesMutex.RUnlock()
+	return len(fake.artifactReferencesArgsForCall)
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesCalls(stub func(string) ([]pivnet.ArtifactReference, error)) {
+	fake.artifactReferencesMutex.Lock()
+	defer fake.artifactReferencesMutex.Unlock()
+	fake.ArtifactReferencesStub = stub
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesArgsForCall(i int) string {
+	fake.artifactReferencesMutex.RLock()
+	defer fake.artifactReferencesMutex.RUnlock()
+	argsForCall := fake.artifactReferencesArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesReturns(result1 []pivnet.ArtifactReference, result2 error) {
+	fake.artifactReferencesMutex.Lock()
+	defer fake.artifactReferencesMutex.Unlock()
+	fake.ArtifactReferencesStub = nil
+	fake.artifactReferencesReturns = struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesReturnsOnCall(i int, result1 []pivnet.ArtifactReference, result2 error) {
+	fake.artifactReferencesMutex.Lock()
+	defer fake.artifactReferencesMutex.Unlock()
+	fake.ArtifactReferencesStub = nil
+	if fake.artifactReferencesReturnsOnCall == nil {
+		fake.artifactReferencesReturnsOnCall = make(map[int]struct {
+			result1 []pivnet.ArtifactReference
+			result2 error
+		})
+	}
+	fake.artifactReferencesReturnsOnCall[i] = struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *ReleaseArtifactReferencesAdderClient) CreateArtifactReference(arg1 pivnet.CreateArtifactReferenceConfig) (pivnet.ArtifactReference, error) {
@@ -332,82 +395,19 @@ func (fake *ReleaseArtifactReferencesAdderClient) GetArtifactReferenceReturnsOnC
 	}{result1, result2}
 }
 
-func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferences(arg1 string) ([]pivnet.ArtifactReference, error) {
-	fake.artifactReferencesMutex.Lock()
-	ret, specificReturn := fake.artifactReferencesReturnsOnCall[len(fake.artifactReferencesArgsForCall)]
-	fake.artifactReferencesArgsForCall = append(fake.artifactReferencesArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	fake.recordInvocation("ArtifactReferences", []interface{}{arg1})
-	fake.artifactReferencesMutex.Unlock()
-	if fake.ArtifactReferencesStub != nil {
-		return fake.ArtifactReferencesStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	fakeReturns := fake.artifactReferencesReturns
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesCallCount() int {
-	fake.artifactReferencesMutex.RLock()
-	defer fake.artifactReferencesMutex.RUnlock()
-	return len(fake.artifactReferencesArgsForCall)
-}
-
-func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesCalls(stub func(string) ([]pivnet.ArtifactReference, error)) {
-	fake.artifactReferencesMutex.Lock()
-	defer fake.artifactReferencesMutex.Unlock()
-	fake.ArtifactReferencesStub = stub
-}
-
-func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesArgsForCall(i int) string {
-	fake.artifactReferencesMutex.RLock()
-	defer fake.artifactReferencesMutex.RUnlock()
-	argsForCall := fake.artifactReferencesArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesReturns(result1 []pivnet.ArtifactReference, result2 error) {
-	fake.artifactReferencesMutex.Lock()
-	defer fake.artifactReferencesMutex.Unlock()
-	fake.ArtifactReferencesStub = nil
-	fake.artifactReferencesReturns = struct {
-		result1 []pivnet.ArtifactReference
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesReturnsOnCall(i int, result1 []pivnet.ArtifactReference, result2 error) {
-	fake.artifactReferencesMutex.Lock()
-	defer fake.artifactReferencesMutex.Unlock()
-	fake.ArtifactReferencesStub = nil
-	if fake.artifactReferencesReturnsOnCall == nil {
-		fake.artifactReferencesReturnsOnCall = make(map[int]struct {
-			result1 []pivnet.ArtifactReference
-			result2 error
-		})
-	}
-	fake.artifactReferencesReturnsOnCall[i] = struct {
-		result1 []pivnet.ArtifactReference
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *ReleaseArtifactReferencesAdderClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.addArtifactReferenceMutex.RLock()
 	defer fake.addArtifactReferenceMutex.RUnlock()
+	fake.artifactReferencesMutex.RLock()
+	defer fake.artifactReferencesMutex.RUnlock()
 	fake.createArtifactReferenceMutex.RLock()
 	defer fake.createArtifactReferenceMutex.RUnlock()
 	fake.deleteArtifactReferenceMutex.RLock()
 	defer fake.deleteArtifactReferenceMutex.RUnlock()
 	fake.getArtifactReferenceMutex.RLock()
 	defer fake.getArtifactReferenceMutex.RUnlock()
-	fake.artifactReferencesMutex.RLock()
-	defer fake.artifactReferencesMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

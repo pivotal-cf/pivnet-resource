@@ -4,7 +4,7 @@ package releasefakes
 import (
 	"sync"
 
-	go_pivnet "github.com/pivotal-cf/go-pivnet/v5"
+	go_pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type UpdateClient struct {

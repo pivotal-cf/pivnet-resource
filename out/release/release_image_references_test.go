@@ -4,9 +4,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/pivotal-cf/go-pivnet/v5"
-	"github.com/pivotal-cf/go-pivnet/v5/logger"
-	"github.com/pivotal-cf/go-pivnet/v5/logshim"
+	"github.com/pivotal-cf/go-pivnet/v6"
+	"github.com/pivotal-cf/go-pivnet/v6/logger"
+	"github.com/pivotal-cf/go-pivnet/v6/logshim"
 	"github.com/pivotal-cf/pivnet-resource/metadata"
 	"github.com/pivotal-cf/pivnet-resource/out/release"
 	"github.com/pivotal-cf/pivnet-resource/out/release/releasefakes"
@@ -16,26 +16,26 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("ReleaseImageReferencesAdder", func() {
-	Describe("AddReleaseImageReferences", func() {
+var _ = Describe("ReleaseArtifactReferencesAdder", func() {
+	Describe("AddReleaseArtifactReferences", func() {
 		var (
 			fakeLogger logger.Logger
 
-			pivnetClient *releasefakes.ReleaseImageReferencesAdderClient
+			pivnetClient *releasefakes.ReleaseArtifactReferencesAdderClient
 
 			mdata metadata.Metadata
 
 			productSlug   string
 			pivnetRelease pivnet.Release
 
-			releaseImageReferencesAdder release.ReleaseImageReferencesAdder
+			releaseArtifactReferencesAdder release.ReleaseArtifactReferencesAdder
 		)
 
 		BeforeEach(func() {
 			logger := log.New(GinkgoWriter, "", log.LstdFlags)
 			fakeLogger = logshim.NewLogShim(logger, logger, true)
 
-			pivnetClient = &releasefakes.ReleaseImageReferencesAdderClient{}
+			pivnetClient = &releasefakes.ReleaseArtifactReferencesAdderClient{}
 
 			productSlug = "some-product-slug"
 
@@ -57,11 +57,11 @@ var _ = Describe("ReleaseImageReferencesAdder", func() {
 				ProductFiles: []metadata.ProductFile{},
 			}
 
-			pivnetClient.AddImageReferenceReturns(nil)
+			pivnetClient.AddArtifactReferenceReturns(nil)
 		})
 
 		JustBeforeEach(func() {
-			releaseImageReferencesAdder = release.NewReleaseImageReferencesAdder(
+			releaseArtifactReferencesAdder = release.NewReleaseArtifactReferencesAdder(
 				fakeLogger,
 				pivnetClient,
 				mdata,
@@ -71,193 +71,193 @@ var _ = Describe("ReleaseImageReferencesAdder", func() {
 			)
 		})
 
-		Context("when release ImageReferences are provided", func() {
+		Context("when release ArtifactReferences are provided", func() {
 			var (
-				ref1 pivnet.ImageReference
-				ref2 pivnet.ImageReference
+				ref1 pivnet.ArtifactReference
+				ref2 pivnet.ArtifactReference
 			)
 			BeforeEach(func() {
-				mdata.ImageReferences = []metadata.ImageReference{
+				mdata.ArtifactReferences = []metadata.artifactReference{
 					{
-						ID: 9876,
-						Name: "my-difficult-image",
+						ID:   9876,
+						Name: "my-difficult-artifact",
 					},
 					{
-						ID:        1234,
-						Name:      "new-image-reference",
-						ImagePath: "my/path:123",
-						Digest:    "sha256:mydigest",
+						ID:           1234,
+						Name:         "new-artifact-reference",
+						ArtifactPath: "my/path:123",
+						Digest:       "sha256:mydigest",
 					},
 				}
 
-				ref1 = pivnet.ImageReference{
-					ID:                 9876,
-					ReplicationStatus:  pivnet.Complete,
-					Name: "my-difficult-image",
-				}
-				ref2 = pivnet.ImageReference{
-					ID:        1234,
+				ref1 = pivnet.ArtifactReference{
+					ID:                9876,
 					ReplicationStatus: pivnet.Complete,
-					Name:      "new-image-reference",
+					Name:              "my-difficult-artifact",
 				}
-				pivnetClient.GetImageReferenceStub = func(slug string, id int) (pivnet.ImageReference, error) {
+				ref2 = pivnet.ArtifactReference{
+					ID:                1234,
+					ReplicationStatus: pivnet.Complete,
+					Name:              "new-artifact-reference",
+				}
+				pivnetClient.GetArtifactReferenceStub = func(slug string, id int) (pivnet.ArtifactReference, error) {
 					if id == 9876 {
 						return ref1, nil
 					} else if id == 1234 {
 						return ref2, nil
 					} else {
-						return pivnet.ImageReference{}, fmt.Errorf("missing stub for image %d", id)
+						return pivnet.ArtifactReference{}, fmt.Errorf("missing stub for artifact %d", id)
 					}
 				}
 			})
 
-			It("adds the ImageReferences", func() {
-				err := releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
+			It("adds the ArtifactReferences", func() {
+				err := releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(pivnetClient.AddImageReferenceCallCount()).To(Equal(2))
+				Expect(pivnetClient.AddArtifactReferenceCallCount()).To(Equal(2))
 
-				Expect(pivnetClient.GetImageReferenceCallCount()).To(Equal(2))
-				_, imageReferenceID := pivnetClient.GetImageReferenceArgsForCall(0)
-				Expect(imageReferenceID).To(Equal(9876))
-				_, imageReferenceID = pivnetClient.GetImageReferenceArgsForCall(1)
-				Expect(imageReferenceID).To(Equal(1234))
+				Expect(pivnetClient.GetArtifactReferenceCallCount()).To(Equal(2))
+				_, artifactReferenceID := pivnetClient.GetArtifactReferenceArgsForCall(0)
+				Expect(artifactReferenceID).To(Equal(9876))
+				_, artifactReferenceID = pivnetClient.GetArtifactReferenceArgsForCall(1)
+				Expect(artifactReferenceID).To(Equal(1234))
 			})
 
-			Context("when the image reference ID is set to 0", func() {
+			Context("when the artifact reference ID is set to 0", func() {
 				BeforeEach(func() {
-					pivnetClient.CreateImageReferenceReturns(ref2, nil)
-					mdata.ImageReferences[1].ID = 0
+					pivnetClient.CreateArtifactReferenceReturns(ref2, nil)
+					mdata.ArtifactReferences[1].ID = 0
 				})
 
-				It("creates a new image reference", func() {
-					err := releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
+				It("creates a new artifact reference", func() {
+					err := releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(pivnetClient.AddImageReferenceCallCount()).To(Equal(2))
-					Expect(pivnetClient.CreateImageReferenceCallCount()).To(Equal(1))
+					Expect(pivnetClient.AddArtifactReferenceCallCount()).To(Equal(2))
+					Expect(pivnetClient.CreateArtifactReferenceCallCount()).To(Equal(1))
 				})
 
-				Context("when name, imagePath, and digest are the same as an existing image reference", func() {
+				Context("when name, artifactPath, and digest are the same as an existing artifact reference", func() {
 					BeforeEach(func() {
-						pivnetClient.ImageReferencesReturns(
-							[]pivnet.ImageReference{
+						pivnetClient.ArtifactReferencesReturns(
+							[]pivnet.ArtifactReference{
 								{
-									ID:        1234,
-									Name:      "new-image-reference",
-									ImagePath: "my/path:123",
-									Digest:    "sha256:mydigest",
+									ID:           1234,
+									Name:         "new-artifact-reference",
+									ArtifactPath: "my/path:123",
+									Digest:       "sha256:mydigest",
 								},
 							}, nil)
 					})
 
-					It("does uses the existing image reference", func() {
-						err := releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
+					It("does uses the existing artifact reference", func() {
+						err := releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(pivnetClient.CreateImageReferenceCallCount()).To(Equal(0))
-						Expect(pivnetClient.AddImageReferenceCallCount()).To(Equal(2))
-						_, _, imageReferenceID := pivnetClient.AddImageReferenceArgsForCall(0)
-						Expect(imageReferenceID).To(Equal(9876))
-						_, _, imageReferenceID = pivnetClient.AddImageReferenceArgsForCall(1)
-						Expect(imageReferenceID).To(Equal(1234))
+						Expect(pivnetClient.CreateArtifactReferenceCallCount()).To(Equal(0))
+						Expect(pivnetClient.AddArtifactReferenceCallCount()).To(Equal(2))
+						_, _, artifactReferenceID := pivnetClient.AddArtifactReferenceArgsForCall(0)
+						Expect(artifactReferenceID).To(Equal(9876))
+						_, _, artifactReferenceID = pivnetClient.AddArtifactReferenceArgsForCall(1)
+						Expect(artifactReferenceID).To(Equal(1234))
 					})
 				})
-				Context("when creating the image reference returns an error", func() {
+				Context("when creating the artifact reference returns an error", func() {
 					var (
 						expectedErr error
 					)
 
 					BeforeEach(func() {
-						expectedErr = fmt.Errorf("some image reference error")
-						pivnetClient.CreateImageReferenceReturns(pivnet.ImageReference{}, expectedErr)
+						expectedErr = fmt.Errorf("some artifact reference error")
+						pivnetClient.CreateArtifactReferenceReturns(pivnet.ArtifactReference{}, expectedErr)
 					})
 
 					It("forwards the error", func() {
-						err := releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
+						err := releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
 						Expect(err).To(HaveOccurred())
 
 						Expect(err).To(Equal(expectedErr))
 					})
 				})
 
-				Context("when image replication is in progress", func() {
+				Context("when artifact replication is in progress", func() {
 					BeforeEach(func() {
 						ref1.ReplicationStatus = pivnet.InProgress
-						pivnetClient.GetImageReferenceReturnsOnCall(0, ref1, nil)
+						pivnetClient.GetArtifactReferenceReturnsOnCall(0, ref1, nil)
 						ref1.ReplicationStatus = pivnet.Complete
-						pivnetClient.GetImageReferenceReturnsOnCall(1, ref1, nil)
+						pivnetClient.GetArtifactReferenceReturnsOnCall(1, ref1, nil)
 
 						ref2.ReplicationStatus = pivnet.InProgress
-						pivnetClient.GetImageReferenceReturnsOnCall(2, ref2, nil)
+						pivnetClient.GetArtifactReferenceReturnsOnCall(2, ref2, nil)
 						ref2.ReplicationStatus = pivnet.Complete
-						pivnetClient.GetImageReferenceReturnsOnCall(3, ref2, nil)
+						pivnetClient.GetArtifactReferenceReturnsOnCall(3, ref2, nil)
 					})
 
 					It("waits for replication to complete", func() {
-						err := releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
+						err := releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
 						Expect(err).NotTo(HaveOccurred())
 
-						Expect(pivnetClient.GetImageReferenceCallCount()).To(Equal(4))
-						_, imageReferenceID := pivnetClient.GetImageReferenceArgsForCall(0)
-						Expect(imageReferenceID).To(Equal(9876))
-						_, imageReferenceID = pivnetClient.GetImageReferenceArgsForCall(1)
-						Expect(imageReferenceID).To(Equal(9876))
-						_, imageReferenceID = pivnetClient.GetImageReferenceArgsForCall(2)
-						Expect(imageReferenceID).To(Equal(1234))
-						_, imageReferenceID = pivnetClient.GetImageReferenceArgsForCall(3)
-						Expect(imageReferenceID).To(Equal(1234))
+						Expect(pivnetClient.GetArtifactReferenceCallCount()).To(Equal(4))
+						_, artifactReferenceID := pivnetClient.GetArtifactReferenceArgsForCall(0)
+						Expect(artifactReferenceID).To(Equal(9876))
+						_, artifactReferenceID = pivnetClient.GetArtifactReferenceArgsForCall(1)
+						Expect(artifactReferenceID).To(Equal(9876))
+						_, artifactReferenceID = pivnetClient.GetArtifactReferenceArgsForCall(2)
+						Expect(artifactReferenceID).To(Equal(1234))
+						_, artifactReferenceID = pivnetClient.GetArtifactReferenceArgsForCall(3)
+						Expect(artifactReferenceID).To(Equal(1234))
 					})
 				})
 
-				Context("when image replication fails", func() {
+				Context("when artifact replication fails", func() {
 					BeforeEach(func() {
 						ref1.ReplicationStatus = pivnet.FailedToReplicate
 					})
 
 					It("returns an error", func() {
-						err := releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
+						err := releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
 						Expect(err).To(HaveOccurred())
 
-						expectedErr := fmt.Errorf("image reference with name my-difficult-image failed to replicate")
+						expectedErr := fmt.Errorf("artifact reference with name my-difficult-artifact failed to replicate")
 						Expect(err).To(Equal(expectedErr))
 
-						Expect(pivnetClient.GetImageReferenceCallCount()).To(Equal(1))
-						_, imageReferenceID := pivnetClient.GetImageReferenceArgsForCall(0)
-						Expect(imageReferenceID).To(Equal(9876))
+						Expect(pivnetClient.GetArtifactReferenceCallCount()).To(Equal(1))
+						_, artifactReferenceID := pivnetClient.GetArtifactReferenceArgsForCall(0)
+						Expect(artifactReferenceID).To(Equal(9876))
 					})
 				})
 
-				Context("when checking image replication fails", func() {
+				Context("when checking artifact replication fails", func() {
 					var (
 						expectedErr error
 					)
 					BeforeEach(func() {
 						expectedErr = fmt.Errorf("some network flake")
-						pivnetClient.GetImageReferenceReturnsOnCall(0, pivnet.ImageReference{}, expectedErr)
+						pivnetClient.GetArtifactReferenceReturnsOnCall(0, pivnet.ArtifactReference{}, expectedErr)
 					})
 
 					It("forwards the error", func() {
-						err := releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
+						err := releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
 						Expect(err).To(HaveOccurred())
 						Expect(err).To(Equal(expectedErr))
 
-						Expect(pivnetClient.GetImageReferenceCallCount()).To(Equal(1))
-						_, imageReferenceID := pivnetClient.GetImageReferenceArgsForCall(0)
-						Expect(imageReferenceID).To(Equal(9876))
+						Expect(pivnetClient.GetArtifactReferenceCallCount()).To(Equal(1))
+						_, artifactReferenceID := pivnetClient.GetArtifactReferenceArgsForCall(0)
+						Expect(artifactReferenceID).To(Equal(9876))
 					})
 				})
 
-				Context("when checking image replication times out", func() {
+				Context("when checking artifact replication times out", func() {
 					var (
 						expectedErr error
 					)
 					BeforeEach(func() {
 						ref1.ReplicationStatus = pivnet.InProgress
-						expectedErr = fmt.Errorf("timed out replicating image reference with name: my-difficult-image")
+						expectedErr = fmt.Errorf("timed out replicating artifact reference with name: my-difficult-artifact")
 					})
 
 					It("returns an error", func() {
-						err := releaseImageReferencesAdder.AddReleaseImageReferences(pivnetRelease)
+						err := releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
 						Expect(err).To(HaveOccurred())
 
 						Expect(err).To(Equal(expectedErr))

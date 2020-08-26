@@ -348,9 +348,9 @@ Run the tests with the following command (dummy values must be replaced by user)
 
 ```
 PRODUCT_SLUG=my-product-slug-eg-pivotal-diego-pcf \
-IMAGE_NAME=image-in-dev-registry \
-IMAGE_PATH=path-in-dev-registry:tag \
-IMAGE_DIGEST=sha256:letters \
+ARTIFACT_NAME=image-in-dev-registry \
+ARTIFACT_PATH=path-in-dev-registry:tag \
+ARTIFACT_DIGEST=sha256:letters \
 API_TOKEN=my-token \
 PIVNET_ENDPOINT=some-pivnet-endpoint \
 PIVNET_RESOURCE_REFRESH_TOKEN=some-pivnet-resource-token \

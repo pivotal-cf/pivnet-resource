@@ -6,10 +6,10 @@ import (
 )
 
 type FakeFileSizeGetter struct {
-	FileSizeStub        func(localPath string) (int64, error)
+	FileSizeStub        func(string) (int64, error)
 	fileSizeMutex       sync.RWMutex
 	fileSizeArgsForCall []struct {
-		localPath string
+		arg1 string
 	}
 	fileSizeReturns struct {
 		result1 int64
@@ -23,21 +23,22 @@ type FakeFileSizeGetter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeFileSizeGetter) FileSize(localPath string) (int64, error) {
+func (fake *FakeFileSizeGetter) FileSize(arg1 string) (int64, error) {
 	fake.fileSizeMutex.Lock()
 	ret, specificReturn := fake.fileSizeReturnsOnCall[len(fake.fileSizeArgsForCall)]
 	fake.fileSizeArgsForCall = append(fake.fileSizeArgsForCall, struct {
-		localPath string
-	}{localPath})
-	fake.recordInvocation("FileSize", []interface{}{localPath})
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("FileSize", []interface{}{arg1})
 	fake.fileSizeMutex.Unlock()
 	if fake.FileSizeStub != nil {
-		return fake.FileSizeStub(localPath)
+		return fake.FileSizeStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.fileSizeReturns.result1, fake.fileSizeReturns.result2
+	fakeReturns := fake.fileSizeReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeFileSizeGetter) FileSizeCallCount() int {
@@ -46,13 +47,22 @@ func (fake *FakeFileSizeGetter) FileSizeCallCount() int {
 	return len(fake.fileSizeArgsForCall)
 }
 
+func (fake *FakeFileSizeGetter) FileSizeCalls(stub func(string) (int64, error)) {
+	fake.fileSizeMutex.Lock()
+	defer fake.fileSizeMutex.Unlock()
+	fake.FileSizeStub = stub
+}
+
 func (fake *FakeFileSizeGetter) FileSizeArgsForCall(i int) string {
 	fake.fileSizeMutex.RLock()
 	defer fake.fileSizeMutex.RUnlock()
-	return fake.fileSizeArgsForCall[i].localPath
+	argsForCall := fake.fileSizeArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeFileSizeGetter) FileSizeReturns(result1 int64, result2 error) {
+	fake.fileSizeMutex.Lock()
+	defer fake.fileSizeMutex.Unlock()
 	fake.FileSizeStub = nil
 	fake.fileSizeReturns = struct {
 		result1 int64
@@ -61,6 +71,8 @@ func (fake *FakeFileSizeGetter) FileSizeReturns(result1 int64, result2 error) {
 }
 
 func (fake *FakeFileSizeGetter) FileSizeReturnsOnCall(i int, result1 int64, result2 error) {
+	fake.fileSizeMutex.Lock()
+	defer fake.fileSizeMutex.Unlock()
 	fake.FileSizeStub = nil
 	if fake.fileSizeReturnsOnCall == nil {
 		fake.fileSizeReturnsOnCall = make(map[int]struct {

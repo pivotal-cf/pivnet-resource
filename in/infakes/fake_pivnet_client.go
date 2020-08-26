@@ -4,7 +4,7 @@ package infakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v5"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type FakePivnetClient struct {
@@ -19,6 +19,20 @@ type FakePivnetClient struct {
 	}
 	acceptEULAReturnsOnCall map[int]struct {
 		result1 error
+	}
+	ArtifactReferencesForReleaseStub        func(string, int) ([]pivnet.ArtifactReference, error)
+	artifactReferencesForReleaseMutex       sync.RWMutex
+	artifactReferencesForReleaseArgsForCall []struct {
+		arg1 string
+		arg2 int
+	}
+	artifactReferencesForReleaseReturns struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
+	}
+	artifactReferencesForReleaseReturnsOnCall map[int]struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
 	}
 	DependencySpecifiersStub        func(string, int) ([]pivnet.DependencySpecifier, error)
 	dependencySpecifiersMutex       sync.RWMutex
@@ -60,20 +74,6 @@ type FakePivnetClient struct {
 	}
 	getReleaseReturnsOnCall map[int]struct {
 		result1 pivnet.Release
-		result2 error
-	}
-	ImageReferencesForReleaseStub        func(string, int) ([]pivnet.ImageReference, error)
-	imageReferencesForReleaseMutex       sync.RWMutex
-	imageReferencesForReleaseArgsForCall []struct {
-		arg1 string
-		arg2 int
-	}
-	imageReferencesForReleaseReturns struct {
-		result1 []pivnet.ImageReference
-		result2 error
-	}
-	imageReferencesForReleaseReturnsOnCall map[int]struct {
-		result1 []pivnet.ImageReference
 		result2 error
 	}
 	ProductFileForReleaseStub        func(string, int, int) (pivnet.ProductFile, error)
@@ -210,6 +210,70 @@ func (fake *FakePivnetClient) AcceptEULAReturnsOnCall(i int, result1 error) {
 	fake.acceptEULAReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *FakePivnetClient) ArtifactReferencesForRelease(arg1 string, arg2 int) ([]pivnet.ArtifactReference, error) {
+	fake.artifactReferencesForReleaseMutex.Lock()
+	ret, specificReturn := fake.artifactReferencesForReleaseReturnsOnCall[len(fake.artifactReferencesForReleaseArgsForCall)]
+	fake.artifactReferencesForReleaseArgsForCall = append(fake.artifactReferencesForReleaseArgsForCall, struct {
+		arg1 string
+		arg2 int
+	}{arg1, arg2})
+	fake.recordInvocation("ArtifactReferencesForRelease", []interface{}{arg1, arg2})
+	fake.artifactReferencesForReleaseMutex.Unlock()
+	if fake.ArtifactReferencesForReleaseStub != nil {
+		return fake.ArtifactReferencesForReleaseStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.artifactReferencesForReleaseReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakePivnetClient) ArtifactReferencesForReleaseCallCount() int {
+	fake.artifactReferencesForReleaseMutex.RLock()
+	defer fake.artifactReferencesForReleaseMutex.RUnlock()
+	return len(fake.artifactReferencesForReleaseArgsForCall)
+}
+
+func (fake *FakePivnetClient) ArtifactReferencesForReleaseCalls(stub func(string, int) ([]pivnet.ArtifactReference, error)) {
+	fake.artifactReferencesForReleaseMutex.Lock()
+	defer fake.artifactReferencesForReleaseMutex.Unlock()
+	fake.ArtifactReferencesForReleaseStub = stub
+}
+
+func (fake *FakePivnetClient) ArtifactReferencesForReleaseArgsForCall(i int) (string, int) {
+	fake.artifactReferencesForReleaseMutex.RLock()
+	defer fake.artifactReferencesForReleaseMutex.RUnlock()
+	argsForCall := fake.artifactReferencesForReleaseArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakePivnetClient) ArtifactReferencesForReleaseReturns(result1 []pivnet.ArtifactReference, result2 error) {
+	fake.artifactReferencesForReleaseMutex.Lock()
+	defer fake.artifactReferencesForReleaseMutex.Unlock()
+	fake.ArtifactReferencesForReleaseStub = nil
+	fake.artifactReferencesForReleaseReturns = struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakePivnetClient) ArtifactReferencesForReleaseReturnsOnCall(i int, result1 []pivnet.ArtifactReference, result2 error) {
+	fake.artifactReferencesForReleaseMutex.Lock()
+	defer fake.artifactReferencesForReleaseMutex.Unlock()
+	fake.ArtifactReferencesForReleaseStub = nil
+	if fake.artifactReferencesForReleaseReturnsOnCall == nil {
+		fake.artifactReferencesForReleaseReturnsOnCall = make(map[int]struct {
+			result1 []pivnet.ArtifactReference
+			result2 error
+		})
+	}
+	fake.artifactReferencesForReleaseReturnsOnCall[i] = struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakePivnetClient) DependencySpecifiers(arg1 string, arg2 int) ([]pivnet.DependencySpecifier, error) {
@@ -400,70 +464,6 @@ func (fake *FakePivnetClient) GetReleaseReturnsOnCall(i int, result1 pivnet.Rele
 	}
 	fake.getReleaseReturnsOnCall[i] = struct {
 		result1 pivnet.Release
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakePivnetClient) ImageReferencesForRelease(arg1 string, arg2 int) ([]pivnet.ImageReference, error) {
-	fake.imageReferencesForReleaseMutex.Lock()
-	ret, specificReturn := fake.imageReferencesForReleaseReturnsOnCall[len(fake.imageReferencesForReleaseArgsForCall)]
-	fake.imageReferencesForReleaseArgsForCall = append(fake.imageReferencesForReleaseArgsForCall, struct {
-		arg1 string
-		arg2 int
-	}{arg1, arg2})
-	fake.recordInvocation("ImageReferencesForRelease", []interface{}{arg1, arg2})
-	fake.imageReferencesForReleaseMutex.Unlock()
-	if fake.ImageReferencesForReleaseStub != nil {
-		return fake.ImageReferencesForReleaseStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	fakeReturns := fake.imageReferencesForReleaseReturns
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakePivnetClient) ImageReferencesForReleaseCallCount() int {
-	fake.imageReferencesForReleaseMutex.RLock()
-	defer fake.imageReferencesForReleaseMutex.RUnlock()
-	return len(fake.imageReferencesForReleaseArgsForCall)
-}
-
-func (fake *FakePivnetClient) ImageReferencesForReleaseCalls(stub func(string, int) ([]pivnet.ImageReference, error)) {
-	fake.imageReferencesForReleaseMutex.Lock()
-	defer fake.imageReferencesForReleaseMutex.Unlock()
-	fake.ImageReferencesForReleaseStub = stub
-}
-
-func (fake *FakePivnetClient) ImageReferencesForReleaseArgsForCall(i int) (string, int) {
-	fake.imageReferencesForReleaseMutex.RLock()
-	defer fake.imageReferencesForReleaseMutex.RUnlock()
-	argsForCall := fake.imageReferencesForReleaseArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
-}
-
-func (fake *FakePivnetClient) ImageReferencesForReleaseReturns(result1 []pivnet.ImageReference, result2 error) {
-	fake.imageReferencesForReleaseMutex.Lock()
-	defer fake.imageReferencesForReleaseMutex.Unlock()
-	fake.ImageReferencesForReleaseStub = nil
-	fake.imageReferencesForReleaseReturns = struct {
-		result1 []pivnet.ImageReference
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakePivnetClient) ImageReferencesForReleaseReturnsOnCall(i int, result1 []pivnet.ImageReference, result2 error) {
-	fake.imageReferencesForReleaseMutex.Lock()
-	defer fake.imageReferencesForReleaseMutex.Unlock()
-	fake.ImageReferencesForReleaseStub = nil
-	if fake.imageReferencesForReleaseReturnsOnCall == nil {
-		fake.imageReferencesForReleaseReturnsOnCall = make(map[int]struct {
-			result1 []pivnet.ImageReference
-			result2 error
-		})
-	}
-	fake.imageReferencesForReleaseReturnsOnCall[i] = struct {
-		result1 []pivnet.ImageReference
 		result2 error
 	}{result1, result2}
 }
@@ -794,14 +794,14 @@ func (fake *FakePivnetClient) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.acceptEULAMutex.RLock()
 	defer fake.acceptEULAMutex.RUnlock()
+	fake.artifactReferencesForReleaseMutex.RLock()
+	defer fake.artifactReferencesForReleaseMutex.RUnlock()
 	fake.dependencySpecifiersMutex.RLock()
 	defer fake.dependencySpecifiersMutex.RUnlock()
 	fake.fileGroupsForReleaseMutex.RLock()
 	defer fake.fileGroupsForReleaseMutex.RUnlock()
 	fake.getReleaseMutex.RLock()
 	defer fake.getReleaseMutex.RUnlock()
-	fake.imageReferencesForReleaseMutex.RLock()
-	defer fake.imageReferencesForReleaseMutex.RUnlock()
 	fake.productFileForReleaseMutex.RLock()
 	defer fake.productFileForReleaseMutex.RUnlock()
 	fake.productFilesForReleaseMutex.RLock()

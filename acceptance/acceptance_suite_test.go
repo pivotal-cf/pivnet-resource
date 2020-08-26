@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf/go-pivnet/v5"
-	"github.com/pivotal-cf/go-pivnet/v5/logshim"
+	"github.com/pivotal-cf/go-pivnet/v6"
+	"github.com/pivotal-cf/go-pivnet/v6/logshim"
 	"github.com/pivotal-cf/pivnet-resource/gp"
 	"github.com/robdimsdale/sanitizer"
 
@@ -27,9 +27,9 @@ var (
 
 	productSlug  string
 
-	imageName string
-	imagePath string
-	imageDigest string
+	artifactName string
+	artifactPath string
+	artifactDigest string
 
 	pivnetClient                      *gp.Client
 	additionalSynchronizedBeforeSuite func(SuiteEnv)
@@ -50,9 +50,9 @@ type SuiteEnv struct {
 
 	ProductSlug  string
 
-	ImageName string
-	ImagePath string
-	ImageDigest string
+	ArtifactName   string
+	ArtifactPath   string
+	ArtifactDigest string
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
@@ -62,17 +62,17 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	suiteEnv.ProductSlug = os.Getenv("PRODUCT_SLUG")
 	Expect(suiteEnv.ProductSlug).NotTo(BeEmpty(), "$PRODUCT_SLUG must be provided")
 
-	By("Getting image name from environment variables")
-	suiteEnv.ImageName = os.Getenv("IMAGE_NAME")
-	Expect(suiteEnv.ImageName).NotTo(BeEmpty(), "$IMAGE_NAME must be provided")
+	By("Getting artifact name from environment variables")
+	suiteEnv.ArtifactName = os.Getenv("ARTIFACT_NAME")
+	Expect(suiteEnv.ArtifactName).NotTo(BeEmpty(), "$ARTIFACT_NAME must be provided")
 
-	By("Getting image path from environment variables")
-	suiteEnv.ImagePath = os.Getenv("IMAGE_PATH")
-	Expect(suiteEnv.ImagePath).NotTo(BeEmpty(), "$IMAGE_PATH must be provided")
+	By("Getting artifact path from environment variables")
+	suiteEnv.ArtifactPath = os.Getenv("ARTIFACT_PATH")
+	Expect(suiteEnv.ArtifactPath).NotTo(BeEmpty(), "$ARTIFACT_PATH must be provided")
 
-	By("Getting image digest from environment variables")
-	suiteEnv.ImageDigest = os.Getenv("IMAGE_DIGEST")
-	Expect(suiteEnv.ImageDigest).NotTo(BeEmpty(), "$IMAGE_DIGEST must be provided")
+	By("Getting artifact digest from environment variables")
+	suiteEnv.ArtifactDigest = os.Getenv("ARTIFACT_DIGEST")
+	Expect(suiteEnv.ArtifactDigest).NotTo(BeEmpty(), "$ARTIFACT_DIGEST must be provided")
 
 	By("Getting endpoint from environment variables")
 	suiteEnv.Endpoint = os.Getenv("PIVNET_ENDPOINT")
@@ -118,9 +118,9 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	endpoint = suiteEnv.Endpoint
 	refreshToken = suiteEnv.RefreshToken
 	productSlug = suiteEnv.ProductSlug
-	imageName = suiteEnv.ImageName
-	imagePath = suiteEnv.ImagePath
-	imageDigest = suiteEnv.ImageDigest
+	artifactName = suiteEnv.ArtifactName
+	artifactPath = suiteEnv.ArtifactPath
+	artifactDigest = suiteEnv.ArtifactDigest
 
 	By("Sanitizing acceptance test output")
 	ls := getLogShim()

@@ -6,22 +6,11 @@ import (
 )
 
 type FakeArchive struct {
-	MimetypeStub        func(filename string) string
-	mimetypeMutex       sync.RWMutex
-	mimetypeArgsForCall []struct {
-		filename string
-	}
-	mimetypeReturns struct {
-		result1 string
-	}
-	mimetypeReturnsOnCall map[int]struct {
-		result1 string
-	}
-	ExtractStub        func(mime, filename string) error
+	ExtractStub        func(string, string) error
 	extractMutex       sync.RWMutex
 	extractArgsForCall []struct {
-		mime     string
-		filename string
+		arg1 string
+		arg2 string
 	}
 	extractReturns struct {
 		result1 error
@@ -29,74 +18,38 @@ type FakeArchive struct {
 	extractReturnsOnCall map[int]struct {
 		result1 error
 	}
+	MimetypeStub        func(string) string
+	mimetypeMutex       sync.RWMutex
+	mimetypeArgsForCall []struct {
+		arg1 string
+	}
+	mimetypeReturns struct {
+		result1 string
+	}
+	mimetypeReturnsOnCall map[int]struct {
+		result1 string
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeArchive) Mimetype(filename string) string {
-	fake.mimetypeMutex.Lock()
-	ret, specificReturn := fake.mimetypeReturnsOnCall[len(fake.mimetypeArgsForCall)]
-	fake.mimetypeArgsForCall = append(fake.mimetypeArgsForCall, struct {
-		filename string
-	}{filename})
-	fake.recordInvocation("Mimetype", []interface{}{filename})
-	fake.mimetypeMutex.Unlock()
-	if fake.MimetypeStub != nil {
-		return fake.MimetypeStub(filename)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.mimetypeReturns.result1
-}
-
-func (fake *FakeArchive) MimetypeCallCount() int {
-	fake.mimetypeMutex.RLock()
-	defer fake.mimetypeMutex.RUnlock()
-	return len(fake.mimetypeArgsForCall)
-}
-
-func (fake *FakeArchive) MimetypeArgsForCall(i int) string {
-	fake.mimetypeMutex.RLock()
-	defer fake.mimetypeMutex.RUnlock()
-	return fake.mimetypeArgsForCall[i].filename
-}
-
-func (fake *FakeArchive) MimetypeReturns(result1 string) {
-	fake.MimetypeStub = nil
-	fake.mimetypeReturns = struct {
-		result1 string
-	}{result1}
-}
-
-func (fake *FakeArchive) MimetypeReturnsOnCall(i int, result1 string) {
-	fake.MimetypeStub = nil
-	if fake.mimetypeReturnsOnCall == nil {
-		fake.mimetypeReturnsOnCall = make(map[int]struct {
-			result1 string
-		})
-	}
-	fake.mimetypeReturnsOnCall[i] = struct {
-		result1 string
-	}{result1}
-}
-
-func (fake *FakeArchive) Extract(mime string, filename string) error {
+func (fake *FakeArchive) Extract(arg1 string, arg2 string) error {
 	fake.extractMutex.Lock()
 	ret, specificReturn := fake.extractReturnsOnCall[len(fake.extractArgsForCall)]
 	fake.extractArgsForCall = append(fake.extractArgsForCall, struct {
-		mime     string
-		filename string
-	}{mime, filename})
-	fake.recordInvocation("Extract", []interface{}{mime, filename})
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("Extract", []interface{}{arg1, arg2})
 	fake.extractMutex.Unlock()
 	if fake.ExtractStub != nil {
-		return fake.ExtractStub(mime, filename)
+		return fake.ExtractStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.extractReturns.result1
+	fakeReturns := fake.extractReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeArchive) ExtractCallCount() int {
@@ -105,13 +58,22 @@ func (fake *FakeArchive) ExtractCallCount() int {
 	return len(fake.extractArgsForCall)
 }
 
+func (fake *FakeArchive) ExtractCalls(stub func(string, string) error) {
+	fake.extractMutex.Lock()
+	defer fake.extractMutex.Unlock()
+	fake.ExtractStub = stub
+}
+
 func (fake *FakeArchive) ExtractArgsForCall(i int) (string, string) {
 	fake.extractMutex.RLock()
 	defer fake.extractMutex.RUnlock()
-	return fake.extractArgsForCall[i].mime, fake.extractArgsForCall[i].filename
+	argsForCall := fake.extractArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeArchive) ExtractReturns(result1 error) {
+	fake.extractMutex.Lock()
+	defer fake.extractMutex.Unlock()
 	fake.ExtractStub = nil
 	fake.extractReturns = struct {
 		result1 error
@@ -119,6 +81,8 @@ func (fake *FakeArchive) ExtractReturns(result1 error) {
 }
 
 func (fake *FakeArchive) ExtractReturnsOnCall(i int, result1 error) {
+	fake.extractMutex.Lock()
+	defer fake.extractMutex.Unlock()
 	fake.ExtractStub = nil
 	if fake.extractReturnsOnCall == nil {
 		fake.extractReturnsOnCall = make(map[int]struct {
@@ -130,13 +94,73 @@ func (fake *FakeArchive) ExtractReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeArchive) Mimetype(arg1 string) string {
+	fake.mimetypeMutex.Lock()
+	ret, specificReturn := fake.mimetypeReturnsOnCall[len(fake.mimetypeArgsForCall)]
+	fake.mimetypeArgsForCall = append(fake.mimetypeArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("Mimetype", []interface{}{arg1})
+	fake.mimetypeMutex.Unlock()
+	if fake.MimetypeStub != nil {
+		return fake.MimetypeStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.mimetypeReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeArchive) MimetypeCallCount() int {
+	fake.mimetypeMutex.RLock()
+	defer fake.mimetypeMutex.RUnlock()
+	return len(fake.mimetypeArgsForCall)
+}
+
+func (fake *FakeArchive) MimetypeCalls(stub func(string) string) {
+	fake.mimetypeMutex.Lock()
+	defer fake.mimetypeMutex.Unlock()
+	fake.MimetypeStub = stub
+}
+
+func (fake *FakeArchive) MimetypeArgsForCall(i int) string {
+	fake.mimetypeMutex.RLock()
+	defer fake.mimetypeMutex.RUnlock()
+	argsForCall := fake.mimetypeArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeArchive) MimetypeReturns(result1 string) {
+	fake.mimetypeMutex.Lock()
+	defer fake.mimetypeMutex.Unlock()
+	fake.MimetypeStub = nil
+	fake.mimetypeReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *FakeArchive) MimetypeReturnsOnCall(i int, result1 string) {
+	fake.mimetypeMutex.Lock()
+	defer fake.mimetypeMutex.Unlock()
+	fake.MimetypeStub = nil
+	if fake.mimetypeReturnsOnCall == nil {
+		fake.mimetypeReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.mimetypeReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
+}
+
 func (fake *FakeArchive) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.mimetypeMutex.RLock()
-	defer fake.mimetypeMutex.RUnlock()
 	fake.extractMutex.RLock()
 	defer fake.extractMutex.RUnlock()
+	fake.mimetypeMutex.RLock()
+	defer fake.mimetypeMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

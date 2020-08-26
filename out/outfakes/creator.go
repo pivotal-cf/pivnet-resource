@@ -4,14 +4,15 @@ package outfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v5"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type Creator struct {
 	CreateStub        func() (pivnet.Release, error)
 	createMutex       sync.RWMutex
-	createArgsForCall []struct{}
-	createReturns     struct {
+	createArgsForCall []struct {
+	}
+	createReturns struct {
 		result1 pivnet.Release
 		result2 error
 	}
@@ -26,7 +27,8 @@ type Creator struct {
 func (fake *Creator) Create() (pivnet.Release, error) {
 	fake.createMutex.Lock()
 	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
-	fake.createArgsForCall = append(fake.createArgsForCall, struct{}{})
+	fake.createArgsForCall = append(fake.createArgsForCall, struct {
+	}{})
 	fake.recordInvocation("Create", []interface{}{})
 	fake.createMutex.Unlock()
 	if fake.CreateStub != nil {
@@ -35,7 +37,8 @@ func (fake *Creator) Create() (pivnet.Release, error) {
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.createReturns.result1, fake.createReturns.result2
+	fakeReturns := fake.createReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *Creator) CreateCallCount() int {
@@ -44,7 +47,15 @@ func (fake *Creator) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
+func (fake *Creator) CreateCalls(stub func() (pivnet.Release, error)) {
+	fake.createMutex.Lock()
+	defer fake.createMutex.Unlock()
+	fake.CreateStub = stub
+}
+
 func (fake *Creator) CreateReturns(result1 pivnet.Release, result2 error) {
+	fake.createMutex.Lock()
+	defer fake.createMutex.Unlock()
 	fake.CreateStub = nil
 	fake.createReturns = struct {
 		result1 pivnet.Release
@@ -53,6 +64,8 @@ func (fake *Creator) CreateReturns(result1 pivnet.Release, result2 error) {
 }
 
 func (fake *Creator) CreateReturnsOnCall(i int, result1 pivnet.Release, result2 error) {
+	fake.createMutex.Lock()
+	defer fake.createMutex.Unlock()
 	fake.CreateStub = nil
 	if fake.createReturnsOnCall == nil {
 		fake.createReturnsOnCall = make(map[int]struct {

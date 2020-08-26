@@ -4,14 +4,15 @@ package checkfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v5"
+	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 )
 
 type FakePivnetClient struct {
 	ReleaseTypesStub        func() ([]pivnet.ReleaseType, error)
 	releaseTypesMutex       sync.RWMutex
-	releaseTypesArgsForCall []struct{}
-	releaseTypesReturns     struct {
+	releaseTypesArgsForCall []struct {
+	}
+	releaseTypesReturns struct {
 		result1 []pivnet.ReleaseType
 		result2 error
 	}
@@ -39,7 +40,8 @@ type FakePivnetClient struct {
 func (fake *FakePivnetClient) ReleaseTypes() ([]pivnet.ReleaseType, error) {
 	fake.releaseTypesMutex.Lock()
 	ret, specificReturn := fake.releaseTypesReturnsOnCall[len(fake.releaseTypesArgsForCall)]
-	fake.releaseTypesArgsForCall = append(fake.releaseTypesArgsForCall, struct{}{})
+	fake.releaseTypesArgsForCall = append(fake.releaseTypesArgsForCall, struct {
+	}{})
 	fake.recordInvocation("ReleaseTypes", []interface{}{})
 	fake.releaseTypesMutex.Unlock()
 	if fake.ReleaseTypesStub != nil {
@@ -48,7 +50,8 @@ func (fake *FakePivnetClient) ReleaseTypes() ([]pivnet.ReleaseType, error) {
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.releaseTypesReturns.result1, fake.releaseTypesReturns.result2
+	fakeReturns := fake.releaseTypesReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakePivnetClient) ReleaseTypesCallCount() int {
@@ -57,7 +60,15 @@ func (fake *FakePivnetClient) ReleaseTypesCallCount() int {
 	return len(fake.releaseTypesArgsForCall)
 }
 
+func (fake *FakePivnetClient) ReleaseTypesCalls(stub func() ([]pivnet.ReleaseType, error)) {
+	fake.releaseTypesMutex.Lock()
+	defer fake.releaseTypesMutex.Unlock()
+	fake.ReleaseTypesStub = stub
+}
+
 func (fake *FakePivnetClient) ReleaseTypesReturns(result1 []pivnet.ReleaseType, result2 error) {
+	fake.releaseTypesMutex.Lock()
+	defer fake.releaseTypesMutex.Unlock()
 	fake.ReleaseTypesStub = nil
 	fake.releaseTypesReturns = struct {
 		result1 []pivnet.ReleaseType
@@ -66,6 +77,8 @@ func (fake *FakePivnetClient) ReleaseTypesReturns(result1 []pivnet.ReleaseType, 
 }
 
 func (fake *FakePivnetClient) ReleaseTypesReturnsOnCall(i int, result1 []pivnet.ReleaseType, result2 error) {
+	fake.releaseTypesMutex.Lock()
+	defer fake.releaseTypesMutex.Unlock()
 	fake.ReleaseTypesStub = nil
 	if fake.releaseTypesReturnsOnCall == nil {
 		fake.releaseTypesReturnsOnCall = make(map[int]struct {
@@ -93,7 +106,8 @@ func (fake *FakePivnetClient) ReleasesForProductSlug(arg1 string) ([]pivnet.Rele
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.releasesForProductSlugReturns.result1, fake.releasesForProductSlugReturns.result2
+	fakeReturns := fake.releasesForProductSlugReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakePivnetClient) ReleasesForProductSlugCallCount() int {
@@ -102,13 +116,22 @@ func (fake *FakePivnetClient) ReleasesForProductSlugCallCount() int {
 	return len(fake.releasesForProductSlugArgsForCall)
 }
 
+func (fake *FakePivnetClient) ReleasesForProductSlugCalls(stub func(string) ([]pivnet.Release, error)) {
+	fake.releasesForProductSlugMutex.Lock()
+	defer fake.releasesForProductSlugMutex.Unlock()
+	fake.ReleasesForProductSlugStub = stub
+}
+
 func (fake *FakePivnetClient) ReleasesForProductSlugArgsForCall(i int) string {
 	fake.releasesForProductSlugMutex.RLock()
 	defer fake.releasesForProductSlugMutex.RUnlock()
-	return fake.releasesForProductSlugArgsForCall[i].arg1
+	argsForCall := fake.releasesForProductSlugArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakePivnetClient) ReleasesForProductSlugReturns(result1 []pivnet.Release, result2 error) {
+	fake.releasesForProductSlugMutex.Lock()
+	defer fake.releasesForProductSlugMutex.Unlock()
 	fake.ReleasesForProductSlugStub = nil
 	fake.releasesForProductSlugReturns = struct {
 		result1 []pivnet.Release
@@ -117,6 +140,8 @@ func (fake *FakePivnetClient) ReleasesForProductSlugReturns(result1 []pivnet.Rel
 }
 
 func (fake *FakePivnetClient) ReleasesForProductSlugReturnsOnCall(i int, result1 []pivnet.Release, result2 error) {
+	fake.releasesForProductSlugMutex.Lock()
+	defer fake.releasesForProductSlugMutex.Unlock()
 	fake.ReleasesForProductSlugStub = nil
 	if fake.releasesForProductSlugReturnsOnCall == nil {
 		fake.releasesForProductSlugReturnsOnCall = make(map[int]struct {

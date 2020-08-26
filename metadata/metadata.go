@@ -10,7 +10,7 @@ type Metadata struct {
 	DependencySpecifiers  []DependencySpecifier  `yaml:"dependency_specifiers,omitempty"`
 	UpgradePathSpecifiers []UpgradePathSpecifier `yaml:"upgrade_path_specifiers,omitempty"`
 	FileGroups            []FileGroup            `yaml:"file_groups,omitempty"`
-	ImageReferences       []ImageReference       `yaml:"image_references,omitempty"`
+	ArtifactReferences    []ArtifactReference    `yaml:"artifact_references,omitempty"`
 
 	// Deprecated
 	Dependencies []Dependency  `yaml:"dependencies,omitempty"`
@@ -63,10 +63,10 @@ type FileGroup struct {
 	ProductFiles []FileGroupProductFile `yaml:"product_files,omitempty"`
 }
 
-type ImageReference struct {
+type ArtifactReference struct {
 	ID                 int      `yaml:"id,omitempty"`
 	Name               string   `yaml:"name,omitempty"`
-	ImagePath          string   `yaml:"image_path,omitempty"`
+	ArtifactPath       string   `yaml:"artifact_path,omitempty"`
 	Digest             string   `yaml:"digest,omitempty"`
 	Description        string   `yaml:"description,omitempty"`
 	DocsURL            string   `yaml:"docs_url,omitempty"`
