@@ -77,7 +77,7 @@ var _ = Describe("ReleaseArtifactReferencesAdder", func() {
 				ref2 pivnet.ArtifactReference
 			)
 			BeforeEach(func() {
-				mdata.ArtifactReferences = []metadata.artifactReference{
+				mdata.ArtifactReferences = []metadata.ArtifactReference{
 					{
 						ID:   9876,
 						Name: "my-difficult-artifact",
