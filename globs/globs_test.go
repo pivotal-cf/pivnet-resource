@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/go-pivnet/v6/logger"
 	"github.com/pivotal-cf/go-pivnet/v6/logshim"
-	"github.com/pivotal-cf/pivnet-resource/globs"
+	"github.com/pivotal-cf/pivnet-resource/v2/globs"
 )
 
 var _ = Describe("Globber", func() {

@@ -4,7 +4,7 @@ package uploaderfakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/pivnet-resource/uploader"
+	"github.com/pivotal-cf/pivnet-resource/v2/uploader"
 )
 
 type FakeS3PrefixFetcher struct {

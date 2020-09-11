@@ -1,14 +1,14 @@
 package s3_test
 
 import (
-	"github.com/pivotal-cf/pivnet-resource/s3/s3fakes"
+	"github.com/pivotal-cf/pivnet-resource/v2/s3/s3fakes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/pivnet-resource/s3"
+	"github.com/pivotal-cf/pivnet-resource/v2/s3"
 )
 
 var _ = Describe("S3 Client", func() {

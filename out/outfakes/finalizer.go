@@ -4,7 +4,7 @@ package outfakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/pivnet-resource/concourse"
+	"github.com/pivotal-cf/pivnet-resource/v2/concourse"
 )
 
 type Finalizer struct {

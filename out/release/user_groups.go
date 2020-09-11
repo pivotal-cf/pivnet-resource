@@ -6,7 +6,7 @@ import (
 
 	pivnet "github.com/pivotal-cf/go-pivnet/v6"
 	"github.com/pivotal-cf/go-pivnet/v6/logger"
-	"github.com/pivotal-cf/pivnet-resource/metadata"
+	"github.com/pivotal-cf/pivnet-resource/v2/metadata"
 )
 
 type UserGroupsUpdater struct {

@@ -8,7 +8,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf/go-pivnet/v6"
 	"github.com/pivotal-cf/go-pivnet/v6/logshim"
-	"github.com/pivotal-cf/pivnet-resource/gp"
+	"github.com/pivotal-cf/pivnet-resource/v2/gp"
 	"github.com/robdimsdale/sanitizer"
 
 	"testing"
@@ -83,15 +83,15 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	Expect(suiteEnv.RefreshToken).NotTo(BeEmpty(), "$PIVNET_RESOURCE_REFRESH_TOKEN must be provided")
 
 	By("Compiling check binary")
-	suiteEnv.CheckPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/check", "-race")
+	suiteEnv.CheckPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/v2/cmd/check", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Compiling out binary")
-	suiteEnv.OutPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/out", "-race")
+	suiteEnv.OutPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/v2/cmd/out", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Compiling in binary")
-	suiteEnv.InPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/cmd/in")
+	suiteEnv.InPath, err = gexec.Build("github.com/pivotal-cf/pivnet-resource/v2/cmd/in")
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Sanitizing suite setup output")

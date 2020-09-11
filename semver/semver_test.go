@@ -5,7 +5,7 @@ import (
 
 	bsemver "github.com/blang/semver"
 	"github.com/pivotal-cf/go-pivnet/v6/logshim"
-	"github.com/pivotal-cf/pivnet-resource/semver"
+	"github.com/pivotal-cf/pivnet-resource/v2/semver"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

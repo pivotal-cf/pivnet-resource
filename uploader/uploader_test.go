@@ -3,8 +3,8 @@ package uploader_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/pivnet-resource/uploader"
-	"github.com/pivotal-cf/pivnet-resource/uploader/uploaderfakes"
+	"github.com/pivotal-cf/pivnet-resource/v2/uploader"
+	"github.com/pivotal-cf/pivnet-resource/v2/uploader/uploaderfakes"
 	"errors"
 	"fmt"
 )

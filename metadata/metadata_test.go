@@ -3,7 +3,7 @@ package metadata_test
 import (
 	"fmt"
 
-	"github.com/pivotal-cf/pivnet-resource/metadata"
+	"github.com/pivotal-cf/pivnet-resource/v2/metadata"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
