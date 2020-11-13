@@ -32,7 +32,7 @@ var _ = Describe("Out", func() {
 
 		releaseType     = pivnet.ReleaseType("Minor Release")
 		releaseDate     = "2015-12-17"
-		eulaSlug        = "pivotal_beta_eula"
+		eulaSlug        = "vmware-prerelease-eula"
 		description     = "this release is for automated-testing only."
 		releaseNotesURL = "https://example.com"
 
@@ -100,15 +100,15 @@ var _ = Describe("Out", func() {
 			By("Creating default request")
 			outRequest = concourse.OutRequest{
 				Source: concourse.Source{
-					APIToken:        refreshToken,
-					ProductSlug:     productSlug,
-					Endpoint:        endpoint,
-					Verbose:	     false,
+					APIToken:    refreshToken,
+					ProductSlug: productSlug,
+					Endpoint:    endpoint,
+					Verbose:     false,
 				},
 				Params: concourse.OutParams{
-					FileGlob:       "",
-					MetadataFile:   metadataFile,
-					Override:       false,
+					FileGlob:     "",
+					MetadataFile: metadataFile,
+					Override:     false,
 				},
 			}
 		})
@@ -146,14 +146,14 @@ var _ = Describe("Out", func() {
 			By("Creating default request")
 			outRequest = concourse.OutRequest{
 				Source: concourse.Source{
-					APIToken:        refreshToken,
-					ProductSlug:     productSlug,
-					Endpoint:        endpoint,
+					APIToken:    refreshToken,
+					ProductSlug: productSlug,
+					Endpoint:    endpoint,
 				},
 				Params: concourse.OutParams{
-					FileGlob:       "",
-					MetadataFile:   metadataFile,
-					Override:       false,
+					FileGlob:     "",
+					MetadataFile: metadataFile,
+					Override:     false,
 				},
 			}
 		})
@@ -178,7 +178,7 @@ var _ = Describe("Out", func() {
 				It("exits with error", func() {
 					session := run(command, stdinContents)
 
-					Eventually(session, 6 * time.Second).Should(gexec.Exit(1))
+					Eventually(session, 6*time.Second).Should(gexec.Exit(1))
 					Expect(session.Err).Should(gbytes.Say("metadata_file"))
 				})
 			})

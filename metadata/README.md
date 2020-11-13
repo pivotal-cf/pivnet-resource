@@ -14,7 +14,7 @@ release:
   id: 12345
   release_type: All-In-One
   release_date: 1997-12-31
-  eula_slug: "pivotal_beta_eula"
+  eula_slug: "vmware-prerelease-eula"
   description: |
     "wow this is a long description for this product (1000 chars max)"
   release_notes_url: http://example.com
@@ -174,10 +174,10 @@ All other keys are optional. The purpose of the keys is as follows:
 * `upload_as` *Optional.* The display name for the file in Pivotal Network.
   This affects only the display name; the filename of the uploaded file remains
   the same as that of the local file.
-  
+
 * `file_type` *Optional.* The type of file. Must be one of `Software`, `Documentation`
   or `Open Source License`. If not specified, defaults to `Software`
-  
+
 * `docs_url` *Optional.* A URL for documentation relevant to this file.
 
 * `system_requirements` *Optional.* Additional list of requirements for using

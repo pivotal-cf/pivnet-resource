@@ -21,7 +21,7 @@ import (
 
 var _ = Describe("In", func() {
 	var (
-		eulaSlug    = "pivotal_beta_eula"
+		eulaSlug    = "vmware-prerelease-eula"
 		releaseType = pivnet.ReleaseType("Minor Release")
 
 		version                string

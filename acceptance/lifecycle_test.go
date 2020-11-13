@@ -26,7 +26,7 @@ var _ = Describe("Lifecycle test", func() {
 	var (
 		releaseType     = "Minor Release"
 		releaseDate     = "2015-12-17"
-		eulaSlug        = "pivotal_beta_eula"
+		eulaSlug        = "vmware-prerelease-eula"
 		description     = "this release is for automated-testing only."
 		releaseNotesURL = "https://example.com"
 
