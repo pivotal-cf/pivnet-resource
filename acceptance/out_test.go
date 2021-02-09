@@ -13,7 +13,7 @@ import (
 
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
-	pivnet "github.com/pivotal-cf/go-pivnet/v6"
+	pivnet "github.com/pivotal-cf/go-pivnet/v7"
 	"github.com/pivotal-cf/pivnet-resource/v2/concourse"
 	"github.com/pivotal-cf/pivnet-resource/v2/metadata"
 	"github.com/pivotal-cf/pivnet-resource/v2/versions"

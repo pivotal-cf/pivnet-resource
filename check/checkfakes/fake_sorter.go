@@ -4,7 +4,7 @@ package checkfakes
 import (
 	"sync"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v6"
+	pivnet "github.com/pivotal-cf/go-pivnet/v7"
 )
 
 type FakeSorter struct {

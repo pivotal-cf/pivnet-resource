@@ -4,9 +4,9 @@ import (
 	"errors"
 	"log"
 
-	"github.com/pivotal-cf/go-pivnet/v6"
-	"github.com/pivotal-cf/go-pivnet/v6/logger"
-	"github.com/pivotal-cf/go-pivnet/v6/logshim"
+	"github.com/pivotal-cf/go-pivnet/v7"
+	"github.com/pivotal-cf/go-pivnet/v7/logger"
+	"github.com/pivotal-cf/go-pivnet/v7/logshim"
 	"github.com/pivotal-cf/pivnet-resource/v2/concourse"
 	"github.com/pivotal-cf/pivnet-resource/v2/metadata"
 	"github.com/pivotal-cf/pivnet-resource/v2/out/release"

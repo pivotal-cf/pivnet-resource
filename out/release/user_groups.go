@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v6"
-	"github.com/pivotal-cf/go-pivnet/v6/logger"
+	pivnet "github.com/pivotal-cf/go-pivnet/v7"
+	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/pivnet-resource/v2/metadata"
 )
 

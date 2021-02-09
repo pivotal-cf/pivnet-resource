@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/pivotal-cf/go-pivnet/v6/download"
+	"github.com/pivotal-cf/go-pivnet/v7/download"
 )
 
 type FakeClient struct {
