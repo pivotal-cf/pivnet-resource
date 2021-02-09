@@ -5,7 +5,7 @@ import (
 
 	pivnet "github.com/pivotal-cf/go-pivnet/v7"
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
-	"github.com/pivotal-cf/pivnet-resource/v2/metadata"
+	"github.com/pivotal-cf/pivnet-resource/v3/metadata"
 )
 
 type DependencySpecifiersCreator struct {

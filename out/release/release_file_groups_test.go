@@ -6,9 +6,9 @@ import (
 	"github.com/pivotal-cf/go-pivnet/v7"
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/go-pivnet/v7/logshim"
-	"github.com/pivotal-cf/pivnet-resource/v2/metadata"
-	"github.com/pivotal-cf/pivnet-resource/v2/out/release"
-	"github.com/pivotal-cf/pivnet-resource/v2/out/release/releasefakes"
+	"github.com/pivotal-cf/pivnet-resource/v3/metadata"
+	"github.com/pivotal-cf/pivnet-resource/v3/out/release"
+	"github.com/pivotal-cf/pivnet-resource/v3/out/release/releasefakes"
 
 	"fmt"
 	. "github.com/onsi/ginkgo"

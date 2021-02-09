@@ -11,8 +11,8 @@ import (
 
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/go-pivnet/v7/logshim"
-	"github.com/pivotal-cf/pivnet-resource/v2/in/filesystem"
-	"github.com/pivotal-cf/pivnet-resource/v2/metadata"
+	"github.com/pivotal-cf/pivnet-resource/v3/in/filesystem"
+	"github.com/pivotal-cf/pivnet-resource/v3/metadata"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

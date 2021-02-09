@@ -10,8 +10,8 @@ import (
 	pivnet "github.com/pivotal-cf/go-pivnet/v7"
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/go-pivnet/v7/logshim"
-	"github.com/pivotal-cf/pivnet-resource/v2/downloader"
-	"github.com/pivotal-cf/pivnet-resource/v2/downloader/downloaderfakes"
+	"github.com/pivotal-cf/pivnet-resource/v3/downloader"
+	"github.com/pivotal-cf/pivnet-resource/v3/downloader/downloaderfakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

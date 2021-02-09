@@ -1,4 +1,4 @@
-module github.com/pivotal-cf/pivnet-resource/v2
+module github.com/pivotal-cf/pivnet-resource/v3
 
 require (
 	github.com/aws/aws-sdk-go v0.0.0-20171017211306-a28db88bdcd8 // indirect

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf/pivnet-resource/v2/concourse"
+	"github.com/pivotal-cf/pivnet-resource/v3/concourse"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

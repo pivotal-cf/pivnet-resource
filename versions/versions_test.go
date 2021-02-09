@@ -3,7 +3,7 @@ package versions_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/pivnet-resource/v2/versions"
+	"github.com/pivotal-cf/pivnet-resource/v3/versions"
 )
 
 var _ = Describe("Versions", func() {

@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf/pivnet-resource/v2/concourse"
+	"github.com/pivotal-cf/pivnet-resource/v3/concourse"
 )
 
 var _ = Describe("Check", func() {

@@ -12,8 +12,8 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf/go-pivnet/v7"
-	"github.com/pivotal-cf/pivnet-resource/v2/concourse"
-	"github.com/pivotal-cf/pivnet-resource/v2/versions"
+	"github.com/pivotal-cf/pivnet-resource/v3/concourse"
+	"github.com/pivotal-cf/pivnet-resource/v3/versions"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

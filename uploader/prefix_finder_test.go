@@ -3,8 +3,8 @@ package uploader_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/pivotal-cf/pivnet-resource/v2/uploader"
-	"github.com/pivotal-cf/pivnet-resource/v2/uploader/uploaderfakes"
+	. "github.com/pivotal-cf/pivnet-resource/v3/uploader"
+	"github.com/pivotal-cf/pivnet-resource/v3/uploader/uploaderfakes"
 )
 
 var _ = Describe("PrefixFetcher", func() {
