@@ -5,9 +5,9 @@ import (
 	"log"
 	"time"
 
-	pivnet "github.com/pivotal-cf/go-pivnet/v6"
-	"github.com/pivotal-cf/go-pivnet/v6/logger"
-	"github.com/pivotal-cf/go-pivnet/v6/logshim"
+	pivnet "github.com/pivotal-cf/go-pivnet/v7"
+	"github.com/pivotal-cf/go-pivnet/v7/logger"
+	"github.com/pivotal-cf/go-pivnet/v7/logshim"
 	"github.com/pivotal-cf/pivnet-resource/v3/metadata"
 	"github.com/pivotal-cf/pivnet-resource/v3/out/release"
 	"github.com/pivotal-cf/pivnet-resource/v3/out/release/releasefakes"

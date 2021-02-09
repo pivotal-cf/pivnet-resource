@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/pivotal-cf/go-pivnet/v6"
-	"github.com/pivotal-cf/go-pivnet/v6/logger"
-	"github.com/pivotal-cf/go-pivnet/v6/logshim"
+	"github.com/pivotal-cf/go-pivnet/v7"
+	"github.com/pivotal-cf/go-pivnet/v7/logger"
+	"github.com/pivotal-cf/go-pivnet/v7/logshim"
 	"github.com/pivotal-cf/pivnet-resource/v3/check"
 	"github.com/pivotal-cf/pivnet-resource/v3/concourse"
 	"github.com/pivotal-cf/pivnet-resource/v3/filter"

@@ -3,8 +3,8 @@ package out
 import (
 	"fmt"
 
-	"github.com/pivotal-cf/go-pivnet/v6"
-	"github.com/pivotal-cf/go-pivnet/v6/logger"
+	"github.com/pivotal-cf/go-pivnet/v7"
+	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/pivnet-resource/v3/concourse"
 	"github.com/pivotal-cf/pivnet-resource/v3/metadata"
 )
