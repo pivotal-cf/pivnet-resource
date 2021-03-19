@@ -1,6 +1,6 @@
 # PivNet Resource
 
-Interact with [Pivotal Network](https://network.pivotal.io) from concourse.
+Interact with [Tanzu Network](https://network.tanzu.vmware.com) from concourse.
 
 ## Installing
 
@@ -40,15 +40,15 @@ resources:
 
 * `api_token`: *Required string.*
 
-  Token from your Pivotal Network profile. Accepts either your Legacy API Token or UAA Refresh Token.
+  Token from your Tanzu Network profile. Accepts either your Legacy API Token or UAA Refresh Token.
 
 * `product_slug`: *Required string.*
 
-  Name of product on Pivotal Network.
+  Name of product on Tanzu Network.
 
 * `release_type`: *Optional boolean.*
 
-  If `true`, lock to a specific Pivotal Network [release type](https://network.pivotal.io/docs/api#releases).
+  If `true`, lock to a specific Tanzu Network [release type](https://network.tanzu.vmware.com/docs/api#releases).
 
 * `copy_metadata`: *Optional boolean.*
 
@@ -69,9 +69,9 @@ resources:
 
 * `endpoint`: *Optional string.*
 
-  Endpoint to use for communicating with Pivotal Network.
+  Endpoint to use for communicating with Tanzu Network.
 
-  Defaults to `https://network.pivotal.io`.
+  Defaults to `https://network.tanzu.vmware.com`.
 
 * `product_version`: *Optional string.*
 
@@ -83,7 +83,7 @@ resources:
 
   Order to use for sorting releases. One of the following:
 
-  - `none`: the order they come back from Pivotal Network.
+  - `none`: the order they come back from Tanzu Network.
   - `semver`: by semantic version, in descending order from the highest-valued version.
   - `last_updated`: by last updated at time, in descending order from the most recently updated version. Please note that if an earlier release is updated then the Pivnet Resource 'check' step will return it again. 
 
@@ -93,14 +93,14 @@ See [example pipeline configurations](https://github.com/pivotal-cf/pivnet-resou
 
 ## Behavior
 
-### `check`: check for new product versions on Pivotal Network
+### `check`: check for new product versions on Tanzu Network
 
 Discovers all versions of the provided product.
 Returned versions are optionally filtered and ordered by the `source` configuration.
 
-### `in`: download the product from Pivotal Network
+### `in`: download the product from Tanzu Network
 
-Downloads the provided product from Pivotal Network. You will be required to accept a
+Downloads the provided product from Tanzu Network. You will be required to accept a
 EULA for any product you're downloading for the first time, as well as if the terms and
 conditions associated with the product change.
 
@@ -119,7 +119,7 @@ for more details on the structure of the metadata file.
 
   If multiple files are matched, they are all downloaded.
   
-  - The globs match on the actual *file names*, not the display names in Pivotal
+  - The globs match on the actual *file names*, not the display names in Tanzu
   Network. This is to provide a more consistent experience between uploading and
   downloading files.
   
@@ -134,7 +134,7 @@ for more details on the structure of the metadata file.
   download any files.
   
   - Files are downloaded to the working directory (e.g. `/tmp/build/get`) and the
-  file names will be the same as they are on Pivotal Network - e.g. a file with
+  file names will be the same as they are on Tanzu Network - e.g. a file with
   name `some-file.txt` will be downloaded to `/tmp/build/get/some-file.txt`.
 
 * `unpack`: *Optional boolean.*
@@ -142,7 +142,7 @@ for more details on the structure of the metadata file.
   If `true`, unpack the downloaded file.
   
   - This can be used to use a root filesystem that is packaged as an archive file on
-  network.pivotal.io as the image to run a given Concourse task.
+  network.tanzu.vmware.com as the image to run a given Concourse task.
 
 More generally, the `unpack` parameter can be used with `get` to pass an image to a task definition,
 as in the below example.
@@ -172,13 +172,13 @@ jobs:
     file: tasks/say-hello.yml
 ```
 
-### `out`: upload a product to Pivotal Network
+### `out`: upload a product to Tanzu Network
 
-Creates a new release on Pivotal Network with the provided version and metadata.
+Creates a new release on Tanzu Network with the provided version and metadata.
 
-It can also upload one or more files to Pivotal Network bucket and calculate the
+It can also upload one or more files to Tanzu Network bucket and calculate the
 MD5 checksum locally for each file in order to add MD5 checksum to the file
-metadata in Pivotal Network. Note that:
+metadata in Tanzu Network. Note that:
 
 * Existing product files with the same AWS key are not deleted and recreated.
 
@@ -209,13 +209,13 @@ for more details on the structure of the metadata file.
 
 * `skip_product_file_polling`: *Optional boolean.*
 
-  If `true`, skip product file validation checks after upload. Pivotal Network still validates the files asynchronously,
+  If `true`, skip product file validation checks after upload. Tanzu Network still validates the files asynchronously,
   but _waiting_ for the results will not happen as part of the `put:` process. **Note:** All associated product files
   in a release must still clear validation before the release can be promoted from _Admins Only_ visibility.
 
 * `override`: *Optional boolean.*
 
-  If `true`, forces a re-upload of releases of releases and versions that are already present on Pivotal Network.
+  If `true`, forces a re-upload of releases of releases and versions that are already present on Tanzu Network.
 
 ### Some common gotchas
 
@@ -297,8 +297,8 @@ In this example we escaped the space between "Binary" and "1.0.11".
 
 ## Integration environment
 
-The Pivotal Network team maintains an integration environment at
-`https://pivnet-integration.cfapps.io/`.
+The Tanzu Network team maintains an integration environment at
+`https://network-integration.tanzu.vmware.com/`.
 
 This environment is useful for teams to develop against, as changes to products
 in this account are separated from the live account.
@@ -312,8 +312,10 @@ resources:
   source:
     api_token: {{api-token}}
     product_slug: p-mysql
-    endpoint: https://pivnet-integration.cfapps.io
+    endpoint: https://network-integration.tanzu.vmware.com
 ```
+
+*The integration environment does not have registry and hence operations regarding artifact references are not enabled on it.*
 
 ## Developing
 
@@ -335,19 +337,19 @@ Install the ginkgo executable with:
 go get -u github.com/onsi/ginkgo/ginkgo
 ```
 
-The tests require a valid Pivotal Network API token and valid AWS S3 configuration.
+The tests require a valid Tanzu Network API token and valid AWS S3 configuration.
 
 Refer to the
-[official docs](https://network.pivotal.io/docs/api#how-to-authenticate)
-for more details on obtaining a Pivotal Network API token.
+[official docs](https://network.tanzu.vmware.com/docs/api#how-to-authenticate)
+for more details on obtaining a Tanzu Network API token.
 
-It is advised to run the acceptance tests against the Pivotal Network integration
-environment endpoint `https://pivnet-integration.cfapps.io`.
+It is advised to run the acceptance tests against the Tanzu Network integration
+environment endpoint `https://network-integration.tanzu.vmware.com`.
 
 Run the tests with the following command (dummy values must be replaced by user):
 
 ```
-PRODUCT_SLUG=my-product-slug-eg-pivotal-diego-pcf \
+PRODUCT_SLUG=my-product-slug-eg-tanzu-diego-pcf \
 ARTIFACT_NAME=image-in-dev-registry \
 ARTIFACT_PATH=path-in-dev-registry:tag \
 ARTIFACT_DIGEST=sha256:letters \
