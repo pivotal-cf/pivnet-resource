@@ -6,6 +6,7 @@ import (
 
 type Metadata struct {
 	Release               *Release               `yaml:"release,omitempty"`
+	ExistingRelease       *ExistingRelease       `yaml:"existing_release,omitempty"`
 	ProductFiles          []ProductFile          `yaml:"product_files,omitempty"`
 	DependencySpecifiers  []DependencySpecifier  `yaml:"dependency_specifiers,omitempty"`
 	UpgradePathSpecifiers []UpgradePathSpecifier `yaml:"upgrade_path_specifiers,omitempty"`
@@ -34,6 +35,10 @@ type Release struct {
 	EndOfGuidanceDate     string               `yaml:"end_of_guidance_date"`
 	EndOfAvailabilityDate string               `yaml:"end_of_availability_date"`
 	ProductFiles          []ReleaseProductFile `yaml:"product_files,omitempty"`
+}
+
+type ExistingRelease struct {
+	ID int `yaml:"id,omitempty"`
 }
 
 type ReleaseProductFile struct {
@@ -116,20 +121,29 @@ func (m Metadata) Validate() ([]string, error) {
 		}
 	}
 
-	if m.Release == nil {
+	if m.Release == nil && m.ExistingRelease == nil {
 		return nil, fmt.Errorf("missing required value %q", "release")
 	}
 
-	if m.Release.Version == "" {
-		return nil, fmt.Errorf("missing required value %q", "version")
-	}
+	if m.ExistingRelease == nil {
+		if m.Release.Version == "" {
+			return nil, fmt.Errorf("missing required value %q", "version")
+		}
 
-	if m.Release.ReleaseType == "" {
-		return nil, fmt.Errorf("missing required value %q", "release_type")
-	}
+		if m.Release.ReleaseType == "" {
+			return nil, fmt.Errorf("missing required value %q", "release_type")
+		}
 
-	if m.Release.EULASlug == "" {
-		return nil, fmt.Errorf("missing required value %q", "eula_slug")
+		if m.Release.EULASlug == "" {
+			return nil, fmt.Errorf("missing required value %q", "eula_slug")
+		}
+	} else {
+		if len(m.ProductFiles) == 0 {
+			return nil, fmt.Errorf(
+				"adding files to an %q must include at least one product file",
+				"existing release",
+			)
+		}
 	}
 
 	for i, d := range m.DependencySpecifiers {

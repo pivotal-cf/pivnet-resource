@@ -245,3 +245,34 @@ Each element in `upgrade_path_specifiers` must have a non-empty value for
 the `specifier` key.
 
 See supported specifier formats in the [Pivnet API docs](https://network.pivotal.io/docs/api#public/docs/api/v2/release_upgrade_path_specifiers.md)
+
+## Updating Files Only
+
+The contents of this metadata (in YAML format) are as follows, for only uploading files to an existing release:
+
+```yaml
+
+---
+existing_release:
+  id: 12345
+product_files:
+- file: relative/path/to/some/product/file
+  id: 9283
+  upload_as: some human-readable name
+  description: |
+    some
+    multi-line
+    description
+- file: another/relative/path/to/some/other/product/file
+  id: 5432
+  upload_as: some other human-readable name
+  description: |
+    some
+    multi-line
+    description
+  file_type: "Software"
+  docs_url: "http://foobar.com/readme.html"
+  system_requirements: ["spinning platters", "das blinkenlights"]
+  platforms: ["Linux"]
+  included_files: ["Component 1", "Another component"]
+```
