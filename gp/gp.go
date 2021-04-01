@@ -65,6 +65,14 @@ func (c Client) GetRelease(productSlug string, version string) (pivnet.Release, 
 	return release, nil
 }
 
+func (c Client) FindRelease(productSlug string, releaseID int) (pivnet.Release, error) {
+	release, err := c.client.Releases.Get(productSlug, releaseID)
+	if err != nil {
+		return pivnet.Release{}, err
+	}
+	return release, nil
+}
+
 func (c Client) UpdateRelease(productSlug string, release pivnet.Release) (pivnet.Release, error) {
 	return c.client.Releases.Update(productSlug, release)
 }
