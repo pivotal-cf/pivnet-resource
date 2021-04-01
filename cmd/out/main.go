@@ -12,6 +12,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pivotal-cf/go-pivnet/v7"
+	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/go-pivnet/v7/logshim"
 	"github.com/pivotal-cf/go-pivnet/v7/md5sum"
 	"github.com/pivotal-cf/go-pivnet/v7/sha256sum"
@@ -29,7 +30,6 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/v3/useragent"
 	"github.com/pivotal-cf/pivnet-resource/v3/validator"
 	"github.com/robdimsdale/sanitizer"
-	"github.com/pivotal-cf/go-pivnet/v7/logger"
 )
 
 var (
@@ -154,9 +154,9 @@ func main() {
 	}
 
 	uploaderClient := uploader.NewClient(uploader.Config{
-		FilepathPrefix: 	filePrefix,
-		SourcesDir:     	sourcesDir,
-		Transport:      	s3Client,
+		FilepathPrefix: filePrefix,
+		SourcesDir:     sourcesDir,
+		Transport:      s3Client,
 	})
 
 	globber := globs.NewGlobber(globs.GlobberConfig{
@@ -186,6 +186,11 @@ func main() {
 		input.Params,
 		input.Source,
 		sourcesDir,
+		input.Source.ProductSlug,
+	)
+
+	releaseFinder := release.NewReleaseFinder(
+		client,
 		input.Source.ProductSlug,
 	)
 
@@ -224,7 +229,7 @@ func main() {
 		client,
 		m,
 		input.Source.ProductSlug,
-		5 * time.Second,
+		5*time.Second,
 		time.Hour,
 	)
 
@@ -267,23 +272,25 @@ func main() {
 	)
 
 	outCmd := out.NewOutCommand(out.OutCommandConfig{
-		Logger:                          ls,
-		OutDir:                          outDir,
-		SourcesDir:                      sourcesDir,
-		GlobClient:                      globber,
-		Validation:                      validation,
-		Creator:                         releaseCreator,
-		Uploader:                        releaseUploader,
-		UserGroupsUpdater:               releaseUserGroupsUpdater,
-		ReleaseFileGroupsAdder:          releaseFileGroupsAdder,
-		ReleaseArtifactReferencesAdder:  releaseArtifactReferencesAdder,
-		ReleaseDependenciesAdder:        releaseDependenciesAdder,
-		DependencySpecifiersCreator:     dependencySpecifiersCreator,
-		ReleaseUpgradePathsAdder:        releaseUpgradePathsAdder,
-		UpgradePathSpecifiersCreator:    upgradePathSpecifiersCreator,
-		Finalizer:                       releaseFinalizer,
-		M:                               m,
-		SkipUpload:                      skipUpload,
+		Logger:                         ls,
+		OutDir:                         outDir,
+		SourcesDir:                     sourcesDir,
+		GlobClient:                     globber,
+		Validation:                     validation,
+		Creator:                        releaseCreator,
+		Finder:                         releaseFinder,
+		Uploader:                       releaseUploader,
+		UserGroupsUpdater:              releaseUserGroupsUpdater,
+		ReleaseFileGroupsAdder:         releaseFileGroupsAdder,
+		ReleaseArtifactReferencesAdder: releaseArtifactReferencesAdder,
+		ReleaseDependenciesAdder:       releaseDependenciesAdder,
+		DependencySpecifiersCreator:    dependencySpecifiersCreator,
+		ReleaseUpgradePathsAdder:       releaseUpgradePathsAdder,
+		UpgradePathSpecifiersCreator:   upgradePathSpecifiersCreator,
+		Finalizer:                      releaseFinalizer,
+		M:                              m,
+		SkipUpload:                     skipUpload,
+		FilesOnly:                      m.ExistingRelease != nil,
 	})
 
 	response, err := outCmd.Run(input)

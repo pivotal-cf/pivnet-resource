@@ -215,7 +215,12 @@ for more details on the structure of the metadata file.
 
 * `override`: *Optional boolean.*
 
-  If `true`, forces a re-upload of releases of releases and versions that are already present on Tanzu Network.
+  If `true`, forces a re-upload of release and versions that are already present on Tanzu Network. It will delete and 
+  re-create the release. To update the files of an existing release, use 
+  [existing_release](https://github.com/pivotal-cf/pivnet-resource/blob/master/metadata).
+
+See [metadata](https://github.com/pivotal-cf/pivnet-resource/blob/master/metadata#updating-files-only)
+for more details on the structure of the metadata file for this use case.
 
 ### Some common gotchas
 

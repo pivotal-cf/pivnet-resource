@@ -2,7 +2,6 @@ package out
 
 import (
 	"fmt"
-
 	"github.com/pivotal-cf/go-pivnet/v7"
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/pivnet-resource/v3/concourse"
@@ -10,70 +9,81 @@ import (
 )
 
 type OutCommand struct {
-	logger                          logger.Logger
-	outDir                          string
-	sourcesDir                      string
-	globClient                      globber
-	validation                      validation
-	creator                         creator
-	userGroupsUpdater               userGroupsUpdater
-	releaseFileGroupsAdder          releaseFileGroupsAdder
-	releaseArtifactReferencesAdder  releaseArtifactReferencesAdder
-	releaseDependenciesAdder        releaseDependenciesAdder
-	dependencySpecifiersCreator     dependencySpecifiersCreator
-	releaseUpgradePathsAdder        releaseUpgradePathsAdder
-	upgradePathSpecifiersCreator    upgradePathSpecifiersCreator
-	finalizer                       finalizer
-	uploader                        uploader
-	m                               metadata.Metadata
-	skipUpload                      bool
+	logger                         logger.Logger
+	outDir                         string
+	sourcesDir                     string
+	globClient                     globber
+	validation                     validation
+	creator                        creator
+	finder                         finder
+	userGroupsUpdater              userGroupsUpdater
+	releaseFileGroupsAdder         releaseFileGroupsAdder
+	releaseArtifactReferencesAdder releaseArtifactReferencesAdder
+	releaseDependenciesAdder       releaseDependenciesAdder
+	dependencySpecifiersCreator    dependencySpecifiersCreator
+	releaseUpgradePathsAdder       releaseUpgradePathsAdder
+	upgradePathSpecifiersCreator   upgradePathSpecifiersCreator
+	finalizer                      finalizer
+	uploader                       uploader
+	m                              metadata.Metadata
+	skipUpload                     bool
+	filesOnly                      bool
 }
 
 type OutCommandConfig struct {
-	Logger                          logger.Logger
-	OutDir                          string
-	SourcesDir                      string
-	GlobClient                      globber
-	Validation                      validation
-	Creator                         creator
-	UserGroupsUpdater               userGroupsUpdater
-	ReleaseFileGroupsAdder          releaseFileGroupsAdder
-	ReleaseArtifactReferencesAdder  releaseArtifactReferencesAdder
-	ReleaseDependenciesAdder        releaseDependenciesAdder
-	DependencySpecifiersCreator     dependencySpecifiersCreator
-	ReleaseUpgradePathsAdder        releaseUpgradePathsAdder
-	UpgradePathSpecifiersCreator    upgradePathSpecifiersCreator
-	Finalizer                       finalizer
-	Uploader                        uploader
-	M                               metadata.Metadata
-	SkipUpload                      bool
+	Logger                         logger.Logger
+	OutDir                         string
+	SourcesDir                     string
+	GlobClient                     globber
+	Validation                     validation
+	Creator                        creator
+	Finder                         finder
+	UserGroupsUpdater              userGroupsUpdater
+	ReleaseFileGroupsAdder         releaseFileGroupsAdder
+	ReleaseArtifactReferencesAdder releaseArtifactReferencesAdder
+	ReleaseDependenciesAdder       releaseDependenciesAdder
+	DependencySpecifiersCreator    dependencySpecifiersCreator
+	ReleaseUpgradePathsAdder       releaseUpgradePathsAdder
+	UpgradePathSpecifiersCreator   upgradePathSpecifiersCreator
+	Finalizer                      finalizer
+	Uploader                       uploader
+	M                              metadata.Metadata
+	SkipUpload                     bool
+	FilesOnly					   bool
 }
 
 func NewOutCommand(config OutCommandConfig) OutCommand {
 	return OutCommand{
-		logger:                          config.Logger,
-		outDir:                          config.OutDir,
-		sourcesDir:                      config.SourcesDir,
-		globClient:                      config.GlobClient,
-		validation:                      config.Validation,
-		creator:                         config.Creator,
-		userGroupsUpdater:               config.UserGroupsUpdater,
-		releaseFileGroupsAdder:          config.ReleaseFileGroupsAdder,
-		releaseArtifactReferencesAdder:  config.ReleaseArtifactReferencesAdder,
-		releaseDependenciesAdder:        config.ReleaseDependenciesAdder,
-		dependencySpecifiersCreator:     config.DependencySpecifiersCreator,
-		releaseUpgradePathsAdder:        config.ReleaseUpgradePathsAdder,
-		upgradePathSpecifiersCreator:    config.UpgradePathSpecifiersCreator,
-		finalizer:                       config.Finalizer,
-		uploader:                        config.Uploader,
-		m:                               config.M,
-		skipUpload:                      config.SkipUpload,
+		logger:                         config.Logger,
+		outDir:                         config.OutDir,
+		sourcesDir:                     config.SourcesDir,
+		globClient:                     config.GlobClient,
+		validation:                     config.Validation,
+		creator:                        config.Creator,
+		finder:                         config.Finder,
+		userGroupsUpdater:              config.UserGroupsUpdater,
+		releaseFileGroupsAdder:         config.ReleaseFileGroupsAdder,
+		releaseArtifactReferencesAdder: config.ReleaseArtifactReferencesAdder,
+		releaseDependenciesAdder:       config.ReleaseDependenciesAdder,
+		dependencySpecifiersCreator:    config.DependencySpecifiersCreator,
+		releaseUpgradePathsAdder:       config.ReleaseUpgradePathsAdder,
+		upgradePathSpecifiersCreator:   config.UpgradePathSpecifiersCreator,
+		finalizer:                      config.Finalizer,
+		uploader:                       config.Uploader,
+		m:                              config.M,
+		skipUpload:                     config.SkipUpload,
+		filesOnly:                      config.FilesOnly,
 	}
 }
 
 //go:generate counterfeiter --fake-name Creator . creator
 type creator interface {
 	Create() (pivnet.Release, error)
+}
+
+//go:generate counterfeiter --fake-name Finder . finder
+type finder interface {
+	Find(i int) (pivnet.Release, error)
 }
 
 //go:generate counterfeiter --fake-name Uploader . uploader
@@ -132,6 +142,7 @@ type globber interface {
 }
 
 func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, error) {
+	var out concourse.OutResponse
 	if c.outDir == "" {
 		return concourse.OutResponse{}, fmt.Errorf("out dir must be provided")
 	}
@@ -170,9 +181,17 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 			)
 	}
 
-	pivnetRelease, err := c.creator.Create()
-	if err != nil {
-		return concourse.OutResponse{}, err
+	var pivnetRelease pivnet.Release
+	if !c.filesOnly {
+		pivnetRelease, err = c.creator.Create()
+		if err != nil {
+			return concourse.OutResponse{}, err
+		}
+	} else {
+		pivnetRelease, err = c.finder.Find(c.m.ExistingRelease.ID)
+		if err != nil {
+			return concourse.OutResponse{}, err
+		}
 	}
 
 	if c.skipUpload {
@@ -185,42 +204,43 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		}
 	}
 
-	err = c.releaseFileGroupsAdder.AddReleaseFileGroups(pivnetRelease)
-	if err != nil {
-		return concourse.OutResponse{}, err
-	}
+	if !c.filesOnly {
+		err = c.releaseFileGroupsAdder.AddReleaseFileGroups(pivnetRelease)
+		if err != nil {
+			return concourse.OutResponse{}, err
+		}
 
-	err = c.releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
-	if err != nil {
-		return concourse.OutResponse{}, err
-	}
+		err = c.releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
+		if err != nil {
+			return concourse.OutResponse{}, err
+		}
 
-	err = c.releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
-	if err != nil {
-		return concourse.OutResponse{}, err
-	}
+		err = c.releaseUpgradePathsAdder.AddReleaseUpgradePaths(pivnetRelease)
+		if err != nil {
+			return concourse.OutResponse{}, err
+		}
 
-	err = c.releaseDependenciesAdder.AddReleaseDependencies(pivnetRelease)
-	if err != nil {
-		return concourse.OutResponse{}, err
-	}
+		err = c.releaseDependenciesAdder.AddReleaseDependencies(pivnetRelease)
+		if err != nil {
+			return concourse.OutResponse{}, err
+		}
 
-	err = c.upgradePathSpecifiersCreator.CreateUpgradePathSpecifiers(pivnetRelease)
-	if err != nil {
-		return concourse.OutResponse{}, err
-	}
+		err = c.upgradePathSpecifiersCreator.CreateUpgradePathSpecifiers(pivnetRelease)
+		if err != nil {
+			return concourse.OutResponse{}, err
+		}
 
-	err = c.dependencySpecifiersCreator.CreateDependencySpecifiers(pivnetRelease)
-	if err != nil {
-		return concourse.OutResponse{}, err
-	}
+		err = c.dependencySpecifiersCreator.CreateDependencySpecifiers(pivnetRelease)
+		if err != nil {
+			return concourse.OutResponse{}, err
+		}
 
-	pivnetRelease, err = c.userGroupsUpdater.UpdateUserGroups(pivnetRelease)
-	if err != nil {
-		return concourse.OutResponse{}, err
+		pivnetRelease, err = c.userGroupsUpdater.UpdateUserGroups(pivnetRelease)
+		if err != nil {
+			return concourse.OutResponse{}, err
+		}
 	}
-
-	out, err := c.finalizer.Finalize(input.Source.ProductSlug, pivnetRelease.Version)
+	out, err = c.finalizer.Finalize(input.Source.ProductSlug, pivnetRelease.Version)
 	if err != nil {
 		return concourse.OutResponse{}, err
 	}
