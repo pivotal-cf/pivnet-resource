@@ -217,6 +217,13 @@ for more details on the structure of the metadata file.
 
   If `true`, forces a re-upload of releases of releases and versions that are already present on Tanzu Network.
 
+* `files_only`: *Optional boolean.*
+
+If `true`, requires an existing release to be passed in and uploads and attaches product files to Tanzu Network.
+
+See [metadata](https://github.com/pivotal-cf/pivnet-resource/blob/master/metadata#updating-files-only)
+for more details on the structure of the metadata file for this use case.
+
 ### Some common gotchas
 
 #### Using glob patterns instead of regex patterns

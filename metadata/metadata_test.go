@@ -191,5 +191,36 @@ var _ = Describe("Metadata", func() {
 				})
 			})
 		})
+
+		Context("When existing release is present", func() {
+			BeforeEach(func() {
+				data = metadata.Metadata{
+					ExistingRelease: &metadata.ExistingRelease{
+						ID: 123,
+					},
+					ProductFiles: []metadata.ProductFile{
+						{File: "hello.txt", Description: "available"},
+					},
+				}
+			})
+
+			It("returns without error", func() {
+				_, err := data.Validate()
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			Context("when product files are empty", func() {
+				BeforeEach(func() {
+					data.ProductFiles = []metadata.ProductFile{}
+				})
+
+				It("returns error", func() {
+					_, err := data.Validate()
+					Expect(err).To(HaveOccurred())
+
+					Expect(err.Error()).To(MatchRegexp("must include at least one product file"))
+				})
+			})
+		})
 	})
 })
