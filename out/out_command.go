@@ -6,7 +6,6 @@ import (
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/pivnet-resource/v3/concourse"
 	"github.com/pivotal-cf/pivnet-resource/v3/metadata"
-	"github.com/pivotal-cf/pivnet-resource/v3/versions"
 )
 
 type OutCommand struct {
@@ -192,15 +191,6 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		if err != nil {
 			return concourse.OutResponse{}, err
 		}
-		outputVersion, err := versions.CombineVersionAndFingerprint(pivnetRelease.Version, pivnetRelease.SoftwareFilesUpdatedAt)
-		if err != nil {
-			return concourse.OutResponse{}, err
-		}
-		out = concourse.OutResponse{
-			Version: concourse.Version{
-				ProductVersion: outputVersion,
-			},
-		}
 	}
 
 	if c.skipUpload {
@@ -248,12 +238,10 @@ func (c OutCommand) Run(input concourse.OutRequest) (concourse.OutResponse, erro
 		if err != nil {
 			return concourse.OutResponse{}, err
 		}
-
-		out, err = c.finalizer.Finalize(input.Source.ProductSlug, pivnetRelease.Version)
-		if err != nil {
-			return concourse.OutResponse{}, err
-		}
-
+	}
+	out, err = c.finalizer.Finalize(input.Source.ProductSlug, pivnetRelease.Version)
+	if err != nil {
+		return concourse.OutResponse{}, err
 	}
 
 	c.logger.Info("Put complete")

@@ -424,7 +424,7 @@ var _ = Describe("Out", func() {
 
 					Expect(response).To(Equal(concourse.OutResponse{
 						Version: concourse.Version{
-							ProductVersion: "existing-product-version#2021-01-01",
+							ProductVersion: "some-new-version",
 						},
 					}))
 
@@ -441,7 +441,7 @@ var _ = Describe("Out", func() {
 					Expect(dependencySpecifiersCreator.CreateDependencySpecifiersCallCount()).To(Equal(0))
 					Expect(releaseUpgradePathsAdder.AddReleaseUpgradePathsCallCount()).To(Equal(0))
 					Expect(upgradePathSpecifiersCreator.CreateUpgradePathSpecifiersCallCount()).To(Equal(0))
-					Expect(finalizer.FinalizeCallCount()).To(Equal(0))
+					Expect(finalizer.FinalizeCallCount()).To(Equal(1))
 				})
 			})
 
