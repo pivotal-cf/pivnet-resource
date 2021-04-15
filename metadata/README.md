@@ -246,9 +246,10 @@ the `specifier` key.
 
 See supported specifier formats in the [Pivnet API docs](https://network.pivotal.io/docs/api#public/docs/api/v2/release_upgrade_path_specifiers.md)
 
-## Updating Files Only
+## Updating A Release
 
-The contents of this metadata (in YAML format) are as follows, for only uploading files to an existing release:
+The contents of this metadata (in YAML format) are as follows. Only permits uploading additional files to an
+existing release with availability not set to 'All Users':
 
 ```yaml
 

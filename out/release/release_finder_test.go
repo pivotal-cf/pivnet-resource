@@ -26,9 +26,6 @@ var _ = Describe("ReleaseFinder", func() {
 
 	Describe("Find", func() {
 
-		Context("", func() {
-
-		})
 		BeforeEach(func() {
 			finder = release.NewReleaseFinder(
 				pivnetClient,

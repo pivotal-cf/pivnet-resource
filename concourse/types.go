@@ -62,7 +62,6 @@ type OutParams struct {
 	MetadataFile           string `json:"metadata_file"`
 	SkipProductFilePolling bool   `json:"skip_product_file_polling"`
 	Override               bool   `json:"override"`
-	FilesOnly              bool   `json:"files_only"`
 }
 
 type OutResponse struct {

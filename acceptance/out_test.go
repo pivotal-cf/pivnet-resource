@@ -413,7 +413,6 @@ var _ = Describe("Out", func() {
 				Expect(err).NotTo(HaveOccurred())
 				releaseID := release.ID
 
-				outRequest.Params.FilesOnly = true
 				stdinContents, err := json.Marshal(outRequest)
 				Expect(err).ShouldNot(HaveOccurred())
 
