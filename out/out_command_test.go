@@ -133,6 +133,7 @@ var _ = Describe("Out", func() {
 					Uploader:                       uploader,
 					M:                              meta,
 					SkipUpload:                     skipUpload,
+					FilesOnly:                      false,
 				}
 
 				cmd = out.NewOutCommand(config)
@@ -381,6 +382,7 @@ var _ = Describe("Out", func() {
 					Uploader:                       uploader,
 					M:                              meta,
 					SkipUpload:                     skipUpload,
+					FilesOnly:                      true,
 				}
 
 				cmd = out.NewOutCommand(config)
