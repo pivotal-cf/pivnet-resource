@@ -464,6 +464,10 @@ var _ = Describe("Out", func() {
 
 				Expect(productFiles).To(HaveLen(1))
 				Expect(productFiles[0].Name).To(Equal(productFileName))
+
+				By("Deleting created file on pivnet")
+				_, err = pivnetClient.DeleteProductFile(productSlug, productFiles[0].ID)
+				Expect(err).ShouldNot(HaveOccurred())
 			})
 		})
 	})
