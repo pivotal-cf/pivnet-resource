@@ -1,6 +1,6 @@
 package uploader
 
-//go:generate counterfeiter --fake-name FakeS3PrefixFetcher . S3PrefixFetcher
+//counterfeiter:generate --fake-name FakeS3PrefixFetcher . S3PrefixFetcher
 type S3PrefixFetcher interface {
 	S3PrefixForProductSlug(productSlug string) (string, error)
 }
@@ -12,7 +12,7 @@ type PrefixFetcher struct {
 
 func NewPrefixFetcher(fetcher S3PrefixFetcher, productSlug string) PrefixFetcher {
 	return PrefixFetcher{
-		productSlug: productSlug,
+		productSlug:     productSlug,
 		s3PrefixFetcher: fetcher,
 	}
 }

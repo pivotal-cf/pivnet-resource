@@ -35,7 +35,7 @@ func NewReleaseArtifactReferencesAdder(
 	}
 }
 
-//go:generate counterfeiter --fake-name ReleaseArtifactReferencesAdderClient . releaseArtifactReferencesAdderClient
+//counterfeiter:generate --fake-name ReleaseArtifactReferencesAdderClient . releaseArtifactReferencesAdderClient
 type releaseArtifactReferencesAdderClient interface {
 	ArtifactReferences(productSlug string) ([]pivnet.ArtifactReference, error)
 	AddArtifactReference(productSlug string, releaseID int, artifactReferenceID int) error

@@ -12,7 +12,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/v3/versions"
 )
 
-//go:generate counterfeiter --fake-name FakeFilter . filterer
+//counterfeiter:generate --fake-name FakeFilter . filterer
 type filterer interface {
 	ProductFileKeysByGlobs(
 		productFiles []pivnet.ProductFile,
@@ -20,24 +20,24 @@ type filterer interface {
 	) ([]pivnet.ProductFile, error)
 }
 
-//go:generate counterfeiter --fake-name FakeDownloader . downloader
+//counterfeiter:generate --fake-name FakeDownloader . downloader
 type downloader interface {
 	Download(productFiles []pivnet.ProductFile, productSlug string, releaseID int) ([]string, error)
 }
 
-//go:generate counterfeiter --fake-name FakeFileSummer . fileSummer
+//counterfeiter:generate --fake-name FakeFileSummer . fileSummer
 type fileSummer interface {
 	SumFile(filepath string) (string, error)
 }
 
-//go:generate counterfeiter --fake-name FakeFileWriter . fileWriter
+//counterfeiter:generate --fake-name FakeFileWriter . fileWriter
 type fileWriter interface {
 	WriteMetadataJSONFile(mdata metadata.Metadata) error
 	WriteMetadataYAMLFile(mdata metadata.Metadata) error
 	WriteVersionFile(versionWithFingerprint string) error
 }
 
-//go:generate counterfeiter --fake-name FakePivnetClient . pivnetClient
+//counterfeiter:generate --fake-name FakePivnetClient . pivnetClient
 type pivnetClient interface {
 	GetRelease(productSlug string, version string) (pivnet.Release, error)
 	AcceptEULA(productSlug string, releaseID int) error
@@ -51,7 +51,7 @@ type pivnetClient interface {
 	UpgradePathSpecifiers(productSlug string, releaseID int) ([]pivnet.UpgradePathSpecifier, error)
 }
 
-//go:generate counterfeiter --fake-name FakeArchive . archive
+//counterfeiter:generate --fake-name FakeArchive . archive
 type archive interface {
 	Mimetype(filename string) string
 	Extract(mime, filename string) error

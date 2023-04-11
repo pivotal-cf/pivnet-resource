@@ -29,7 +29,7 @@ func NewDependencySpecifiersCreator(
 	}
 }
 
-//go:generate counterfeiter --fake-name DependencySpecifiersCreatorClient . dependencySpecifiersCreatorClient
+//counterfeiter:generate --fake-name DependencySpecifiersCreatorClient . dependencySpecifiersCreatorClient
 type dependencySpecifiersCreatorClient interface {
 	CreateDependencySpecifier(productSlug string, releaseID int, dependentProductSlug string, specifier string) (pivnet.DependencySpecifier, error)
 }

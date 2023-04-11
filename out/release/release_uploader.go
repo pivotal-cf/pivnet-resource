@@ -35,7 +35,7 @@ type ProductFileMetadata struct {
 	fileType           string
 }
 
-//go:generate counterfeiter --fake-name UploadClient . uploadClient
+//counterfeiter:generate --fake-name UploadClient . uploadClient
 type uploadClient interface {
 	FindProductForSlug(slug string) (pivnet.Product, error)
 	CreateProductFile(pivnet.CreateProductFileConfig) (pivnet.ProductFile, error)
@@ -45,18 +45,18 @@ type uploadClient interface {
 	DeleteProductFile(productSlug string, releaseID int) (pivnet.ProductFile, error)
 }
 
-//go:generate counterfeiter --fake-name S3Client . s3Client
+//counterfeiter:generate --fake-name S3Client . s3Client
 type s3Client interface {
 	ComputeAWSObjectKey(string) (string, string, error)
 	UploadFile(string) error
 }
 
-//go:generate counterfeiter --fake-name Sha256Summer . sha256Summer
+//counterfeiter:generate --fake-name Sha256Summer . sha256Summer
 type sha256Summer interface {
 	SumFile(filepath string) (string, error)
 }
 
-//go:generate counterfeiter --fake-name Md5Summer . md5Summer
+//counterfeiter:generate --fake-name Md5Summer . md5Summer
 type md5Summer interface {
 	SumFile(filepath string) (string, error)
 }

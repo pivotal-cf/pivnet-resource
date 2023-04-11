@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	pivnet "github.com/pivotal-cf/go-pivnet/v7"
-	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/go-pivnet/v7/download"
+	"github.com/pivotal-cf/go-pivnet/v7/logger"
 )
 
-//go:generate counterfeiter --fake-name FakeClient . client
+//counterfeiter:generate --fake-name FakeClient . client
 type client interface {
 	DownloadProductFile(writer *download.FileInfo, productSlug string, releaseID int, productFileID int, progressWriter io.Writer) error
 }

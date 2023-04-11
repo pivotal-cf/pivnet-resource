@@ -37,7 +37,7 @@ func NewFinalizer(
 	}
 }
 
-//go:generate counterfeiter --fake-name FinalizerClient . finalizerClient
+//counterfeiter:generate --fake-name FinalizerClient . finalizerClient
 type finalizerClient interface {
 	GetRelease(productSlug string, releaseVersion string) (pivnet.Release, error)
 }

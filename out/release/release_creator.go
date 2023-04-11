@@ -23,7 +23,7 @@ type ReleaseCreator struct {
 	source          concourse.Source
 }
 
-//go:generate counterfeiter --fake-name ReleaseClient . releaseClient
+//counterfeiter:generate --fake-name ReleaseClient . releaseClient
 type releaseClient interface {
 	EULAs() ([]pivnet.EULA, error)
 	ReleaseTypes() ([]pivnet.ReleaseType, error)
@@ -32,7 +32,7 @@ type releaseClient interface {
 	DeleteRelease(productSlug string, release pivnet.Release) error
 }
 
-//go:generate counterfeiter --fake-name FakeSemverConverter . semverConverter
+//counterfeiter:generate --fake-name FakeSemverConverter . semverConverter
 type semverConverter interface {
 	ToValidSemver(string) (semver.Version, error)
 }

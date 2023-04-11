@@ -2,6 +2,7 @@ package release
 
 import (
 	"fmt"
+
 	pivnet "github.com/pivotal-cf/go-pivnet/v7"
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/pivnet-resource/v3/metadata"
@@ -28,7 +29,7 @@ func NewUpgradePathSpecifiersCreator(
 	}
 }
 
-//go:generate counterfeiter --fake-name UpgradePathSpecifiersCreatorClient . upgradePathSpecifiersCreatorClient
+//counterfeiter:generate --fake-name UpgradePathSpecifiersCreatorClient . upgradePathSpecifiersCreatorClient
 type upgradePathSpecifiersCreatorClient interface {
 	CreateUpgradePathSpecifier(productSlug string, releaseID int, specifier string) (pivnet.UpgradePathSpecifier, error)
 }

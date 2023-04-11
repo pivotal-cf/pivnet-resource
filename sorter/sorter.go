@@ -10,7 +10,7 @@ import (
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
 )
 
-//go:generate counterfeiter --fake-name FakeSemverConverter . semverConverter
+//counterfeiter:generate --fake-name FakeSemverConverter . semverConverter
 type semverConverter interface {
 	ToValidSemver(string) (semver.Version, error)
 }
