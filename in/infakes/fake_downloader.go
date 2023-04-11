@@ -40,15 +40,16 @@ func (fake *FakeDownloader) Download(arg1 []pivnet.ProductFile, arg2 string, arg
 		arg2 string
 		arg3 int
 	}{arg1Copy, arg2, arg3})
+	stub := fake.DownloadStub
+	fakeReturns := fake.downloadReturns
 	fake.recordInvocation("Download", []interface{}{arg1Copy, arg2, arg3})
 	fake.downloadMutex.Unlock()
-	if fake.DownloadStub != nil {
-		return fake.DownloadStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.downloadReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

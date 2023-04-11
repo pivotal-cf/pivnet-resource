@@ -87,15 +87,16 @@ func (fake *ReleaseArtifactReferencesAdderClient) AddArtifactReference(arg1 stri
 		arg2 int
 		arg3 int
 	}{arg1, arg2, arg3})
+	stub := fake.AddArtifactReferenceStub
+	fakeReturns := fake.addArtifactReferenceReturns
 	fake.recordInvocation("AddArtifactReference", []interface{}{arg1, arg2, arg3})
 	fake.addArtifactReferenceMutex.Unlock()
-	if fake.AddArtifactReferenceStub != nil {
-		return fake.AddArtifactReferenceStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addArtifactReferenceReturns
 	return fakeReturns.result1
 }
 
@@ -147,15 +148,16 @@ func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferences(arg1 string
 	fake.artifactReferencesArgsForCall = append(fake.artifactReferencesArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.ArtifactReferencesStub
+	fakeReturns := fake.artifactReferencesReturns
 	fake.recordInvocation("ArtifactReferences", []interface{}{arg1})
 	fake.artifactReferencesMutex.Unlock()
-	if fake.ArtifactReferencesStub != nil {
-		return fake.ArtifactReferencesStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.artifactReferencesReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -210,15 +212,16 @@ func (fake *ReleaseArtifactReferencesAdderClient) CreateArtifactReference(arg1 p
 	fake.createArtifactReferenceArgsForCall = append(fake.createArtifactReferenceArgsForCall, struct {
 		arg1 pivnet.CreateArtifactReferenceConfig
 	}{arg1})
+	stub := fake.CreateArtifactReferenceStub
+	fakeReturns := fake.createArtifactReferenceReturns
 	fake.recordInvocation("CreateArtifactReference", []interface{}{arg1})
 	fake.createArtifactReferenceMutex.Unlock()
-	if fake.CreateArtifactReferenceStub != nil {
-		return fake.CreateArtifactReferenceStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.createArtifactReferenceReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -274,15 +277,16 @@ func (fake *ReleaseArtifactReferencesAdderClient) DeleteArtifactReference(arg1 s
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.DeleteArtifactReferenceStub
+	fakeReturns := fake.deleteArtifactReferenceReturns
 	fake.recordInvocation("DeleteArtifactReference", []interface{}{arg1, arg2})
 	fake.deleteArtifactReferenceMutex.Unlock()
-	if fake.DeleteArtifactReferenceStub != nil {
-		return fake.DeleteArtifactReferenceStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.deleteArtifactReferenceReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -338,15 +342,16 @@ func (fake *ReleaseArtifactReferencesAdderClient) GetArtifactReference(arg1 stri
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.GetArtifactReferenceStub
+	fakeReturns := fake.getArtifactReferenceReturns
 	fake.recordInvocation("GetArtifactReference", []interface{}{arg1, arg2})
 	fake.getArtifactReferenceMutex.Unlock()
-	if fake.GetArtifactReferenceStub != nil {
-		return fake.GetArtifactReferenceStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.getArtifactReferenceReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

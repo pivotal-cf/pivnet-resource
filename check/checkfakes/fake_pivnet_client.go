@@ -42,15 +42,16 @@ func (fake *FakePivnetClient) ReleaseTypes() ([]pivnet.ReleaseType, error) {
 	ret, specificReturn := fake.releaseTypesReturnsOnCall[len(fake.releaseTypesArgsForCall)]
 	fake.releaseTypesArgsForCall = append(fake.releaseTypesArgsForCall, struct {
 	}{})
+	stub := fake.ReleaseTypesStub
+	fakeReturns := fake.releaseTypesReturns
 	fake.recordInvocation("ReleaseTypes", []interface{}{})
 	fake.releaseTypesMutex.Unlock()
-	if fake.ReleaseTypesStub != nil {
-		return fake.ReleaseTypesStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.releaseTypesReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -98,15 +99,16 @@ func (fake *FakePivnetClient) ReleasesForProductSlug(arg1 string) ([]pivnet.Rele
 	fake.releasesForProductSlugArgsForCall = append(fake.releasesForProductSlugArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.ReleasesForProductSlugStub
+	fakeReturns := fake.releasesForProductSlugReturns
 	fake.recordInvocation("ReleasesForProductSlug", []interface{}{arg1})
 	fake.releasesForProductSlugMutex.Unlock()
-	if fake.ReleasesForProductSlugStub != nil {
-		return fake.ReleasesForProductSlugStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.releasesForProductSlugReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

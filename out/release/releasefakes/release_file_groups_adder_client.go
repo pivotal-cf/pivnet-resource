@@ -59,15 +59,16 @@ func (fake *ReleaseFileGroupsAdderClient) AddFileGroup(arg1 string, arg2 int, ar
 		arg2 int
 		arg3 int
 	}{arg1, arg2, arg3})
+	stub := fake.AddFileGroupStub
+	fakeReturns := fake.addFileGroupReturns
 	fake.recordInvocation("AddFileGroup", []interface{}{arg1, arg2, arg3})
 	fake.addFileGroupMutex.Unlock()
-	if fake.AddFileGroupStub != nil {
-		return fake.AddFileGroupStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addFileGroupReturns
 	return fakeReturns.result1
 }
 
@@ -121,15 +122,16 @@ func (fake *ReleaseFileGroupsAdderClient) AddToFileGroup(arg1 string, arg2 int, 
 		arg2 int
 		arg3 int
 	}{arg1, arg2, arg3})
+	stub := fake.AddToFileGroupStub
+	fakeReturns := fake.addToFileGroupReturns
 	fake.recordInvocation("AddToFileGroup", []interface{}{arg1, arg2, arg3})
 	fake.addToFileGroupMutex.Unlock()
-	if fake.AddToFileGroupStub != nil {
-		return fake.AddToFileGroupStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addToFileGroupReturns
 	return fakeReturns.result1
 }
 
@@ -181,15 +183,16 @@ func (fake *ReleaseFileGroupsAdderClient) CreateFileGroup(arg1 pivnet.CreateFile
 	fake.createFileGroupArgsForCall = append(fake.createFileGroupArgsForCall, struct {
 		arg1 pivnet.CreateFileGroupConfig
 	}{arg1})
+	stub := fake.CreateFileGroupStub
+	fakeReturns := fake.createFileGroupReturns
 	fake.recordInvocation("CreateFileGroup", []interface{}{arg1})
 	fake.createFileGroupMutex.Unlock()
-	if fake.CreateFileGroupStub != nil {
-		return fake.CreateFileGroupStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.createFileGroupReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

@@ -31,15 +31,16 @@ func (fake *FakeS3PrefixFetcher) S3PrefixForProductSlug(arg1 string) (string, er
 	fake.s3PrefixForProductSlugArgsForCall = append(fake.s3PrefixForProductSlugArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.S3PrefixForProductSlugStub
+	fakeReturns := fake.s3PrefixForProductSlugReturns
 	fake.recordInvocation("S3PrefixForProductSlug", []interface{}{arg1})
 	fake.s3PrefixForProductSlugMutex.Unlock()
-	if fake.S3PrefixForProductSlugStub != nil {
-		return fake.S3PrefixForProductSlugStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.s3PrefixForProductSlugReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

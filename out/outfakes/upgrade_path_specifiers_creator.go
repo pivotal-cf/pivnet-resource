@@ -29,15 +29,16 @@ func (fake *UpgradePathSpecifiersCreator) CreateUpgradePathSpecifiers(arg1 pivne
 	fake.createUpgradePathSpecifiersArgsForCall = append(fake.createUpgradePathSpecifiersArgsForCall, struct {
 		arg1 pivnet.Release
 	}{arg1})
+	stub := fake.CreateUpgradePathSpecifiersStub
+	fakeReturns := fake.createUpgradePathSpecifiersReturns
 	fake.recordInvocation("CreateUpgradePathSpecifiers", []interface{}{arg1})
 	fake.createUpgradePathSpecifiersMutex.Unlock()
-	if fake.CreateUpgradePathSpecifiersStub != nil {
-		return fake.CreateUpgradePathSpecifiersStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.createUpgradePathSpecifiersReturns
 	return fakeReturns.result1
 }
 

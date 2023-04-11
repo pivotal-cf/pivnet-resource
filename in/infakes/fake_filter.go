@@ -43,15 +43,16 @@ func (fake *FakeFilter) ProductFileKeysByGlobs(arg1 []pivnet.ProductFile, arg2 [
 		arg1 []pivnet.ProductFile
 		arg2 []string
 	}{arg1Copy, arg2Copy})
+	stub := fake.ProductFileKeysByGlobsStub
+	fakeReturns := fake.productFileKeysByGlobsReturns
 	fake.recordInvocation("ProductFileKeysByGlobs", []interface{}{arg1Copy, arg2Copy})
 	fake.productFileKeysByGlobsMutex.Unlock()
-	if fake.ProductFileKeysByGlobsStub != nil {
-		return fake.ProductFileKeysByGlobsStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.productFileKeysByGlobsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

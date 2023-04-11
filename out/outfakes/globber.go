@@ -27,15 +27,16 @@ func (fake *Globber) ExactGlobs() ([]string, error) {
 	ret, specificReturn := fake.exactGlobsReturnsOnCall[len(fake.exactGlobsArgsForCall)]
 	fake.exactGlobsArgsForCall = append(fake.exactGlobsArgsForCall, struct {
 	}{})
+	stub := fake.ExactGlobsStub
+	fakeReturns := fake.exactGlobsReturns
 	fake.recordInvocation("ExactGlobs", []interface{}{})
 	fake.exactGlobsMutex.Unlock()
-	if fake.ExactGlobsStub != nil {
-		return fake.ExactGlobsStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.exactGlobsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

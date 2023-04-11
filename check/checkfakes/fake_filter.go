@@ -52,15 +52,16 @@ func (fake *FakeFilter) ReleasesByReleaseType(arg1 []pivnet.Release, arg2 pivnet
 		arg1 []pivnet.Release
 		arg2 pivnet.ReleaseType
 	}{arg1Copy, arg2})
+	stub := fake.ReleasesByReleaseTypeStub
+	fakeReturns := fake.releasesByReleaseTypeReturns
 	fake.recordInvocation("ReleasesByReleaseType", []interface{}{arg1Copy, arg2})
 	fake.releasesByReleaseTypeMutex.Unlock()
-	if fake.ReleasesByReleaseTypeStub != nil {
-		return fake.ReleasesByReleaseTypeStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.releasesByReleaseTypeReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -121,15 +122,16 @@ func (fake *FakeFilter) ReleasesByVersion(arg1 []pivnet.Release, arg2 string) ([
 		arg1 []pivnet.Release
 		arg2 string
 	}{arg1Copy, arg2})
+	stub := fake.ReleasesByVersionStub
+	fakeReturns := fake.releasesByVersionReturns
 	fake.recordInvocation("ReleasesByVersion", []interface{}{arg1Copy, arg2})
 	fake.releasesByVersionMutex.Unlock()
-	if fake.ReleasesByVersionStub != nil {
-		return fake.ReleasesByVersionStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.releasesByVersionReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

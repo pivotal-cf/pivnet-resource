@@ -47,15 +47,16 @@ func (fake *UserGroupsUpdaterClient) AddUserGroup(arg1 string, arg2 int, arg3 in
 		arg2 int
 		arg3 int
 	}{arg1, arg2, arg3})
+	stub := fake.AddUserGroupStub
+	fakeReturns := fake.addUserGroupReturns
 	fake.recordInvocation("AddUserGroup", []interface{}{arg1, arg2, arg3})
 	fake.addUserGroupMutex.Unlock()
-	if fake.AddUserGroupStub != nil {
-		return fake.AddUserGroupStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addUserGroupReturns
 	return fakeReturns.result1
 }
 
@@ -108,15 +109,16 @@ func (fake *UserGroupsUpdaterClient) UpdateRelease(arg1 string, arg2 pivnet.Rele
 		arg1 string
 		arg2 pivnet.Release
 	}{arg1, arg2})
+	stub := fake.UpdateReleaseStub
+	fakeReturns := fake.updateReleaseReturns
 	fake.recordInvocation("UpdateRelease", []interface{}{arg1, arg2})
 	fake.updateReleaseMutex.Unlock()
-	if fake.UpdateReleaseStub != nil {
-		return fake.UpdateReleaseStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.updateReleaseReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

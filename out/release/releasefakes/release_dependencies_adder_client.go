@@ -47,15 +47,16 @@ func (fake *ReleaseDependenciesAdderClient) AddReleaseDependency(arg1 string, ar
 		arg2 int
 		arg3 int
 	}{arg1, arg2, arg3})
+	stub := fake.AddReleaseDependencyStub
+	fakeReturns := fake.addReleaseDependencyReturns
 	fake.recordInvocation("AddReleaseDependency", []interface{}{arg1, arg2, arg3})
 	fake.addReleaseDependencyMutex.Unlock()
-	if fake.AddReleaseDependencyStub != nil {
-		return fake.AddReleaseDependencyStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addReleaseDependencyReturns
 	return fakeReturns.result1
 }
 
@@ -108,15 +109,16 @@ func (fake *ReleaseDependenciesAdderClient) GetRelease(arg1 string, arg2 string)
 		arg1 string
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.GetReleaseStub
+	fakeReturns := fake.getReleaseReturns
 	fake.recordInvocation("GetRelease", []interface{}{arg1, arg2})
 	fake.getReleaseMutex.Unlock()
-	if fake.GetReleaseStub != nil {
-		return fake.GetReleaseStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.getReleaseReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

@@ -33,15 +33,16 @@ func (fake *Finalizer) Finalize(arg1 string, arg2 string) (concourse.OutResponse
 		arg1 string
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.FinalizeStub
+	fakeReturns := fake.finalizeReturns
 	fake.recordInvocation("Finalize", []interface{}{arg1, arg2})
 	fake.finalizeMutex.Unlock()
-	if fake.FinalizeStub != nil {
-		return fake.FinalizeStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.finalizeReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

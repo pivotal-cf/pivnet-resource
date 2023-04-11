@@ -29,15 +29,16 @@ func (fake *FakeFileSummer) SumFile(arg1 string) (string, error) {
 	fake.sumFileArgsForCall = append(fake.sumFileArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.SumFileStub
+	fakeReturns := fake.sumFileReturns
 	fake.recordInvocation("SumFile", []interface{}{arg1})
 	fake.sumFileMutex.Unlock()
-	if fake.SumFileStub != nil {
-		return fake.SumFileStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.sumFileReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

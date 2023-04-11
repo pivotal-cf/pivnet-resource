@@ -42,15 +42,16 @@ func (fake *S3Client) ComputeAWSObjectKey(arg1 string) (string, string, error) {
 	fake.computeAWSObjectKeyArgsForCall = append(fake.computeAWSObjectKeyArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.ComputeAWSObjectKeyStub
+	fakeReturns := fake.computeAWSObjectKeyReturns
 	fake.recordInvocation("ComputeAWSObjectKey", []interface{}{arg1})
 	fake.computeAWSObjectKeyMutex.Unlock()
-	if fake.ComputeAWSObjectKeyStub != nil {
-		return fake.ComputeAWSObjectKeyStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
 	}
-	fakeReturns := fake.computeAWSObjectKeyReturns
 	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
 }
 
@@ -108,15 +109,16 @@ func (fake *S3Client) UploadFile(arg1 string) error {
 	fake.uploadFileArgsForCall = append(fake.uploadFileArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.UploadFileStub
+	fakeReturns := fake.uploadFileReturns
 	fake.recordInvocation("UploadFile", []interface{}{arg1})
 	fake.uploadFileMutex.Unlock()
-	if fake.UploadFileStub != nil {
-		return fake.UploadFileStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.uploadFileReturns
 	return fakeReturns.result1
 }
 

@@ -31,15 +31,16 @@ func (fake *FakeSemverConverter) ToValidSemver(arg1 string) (semver.Version, err
 	fake.toValidSemverArgsForCall = append(fake.toValidSemverArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.ToValidSemverStub
+	fakeReturns := fake.toValidSemverReturns
 	fake.recordInvocation("ToValidSemver", []interface{}{arg1})
 	fake.toValidSemverMutex.Unlock()
-	if fake.ToValidSemverStub != nil {
-		return fake.ToValidSemverStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.toValidSemverReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

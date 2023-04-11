@@ -29,15 +29,16 @@ func (fake *ReleaseFileGroupsAdder) AddReleaseFileGroups(arg1 pivnet.Release) er
 	fake.addReleaseFileGroupsArgsForCall = append(fake.addReleaseFileGroupsArgsForCall, struct {
 		arg1 pivnet.Release
 	}{arg1})
+	stub := fake.AddReleaseFileGroupsStub
+	fakeReturns := fake.addReleaseFileGroupsReturns
 	fake.recordInvocation("AddReleaseFileGroups", []interface{}{arg1})
 	fake.addReleaseFileGroupsMutex.Unlock()
-	if fake.AddReleaseFileGroupsStub != nil {
-		return fake.AddReleaseFileGroupsStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addReleaseFileGroupsReturns
 	return fakeReturns.result1
 }
 

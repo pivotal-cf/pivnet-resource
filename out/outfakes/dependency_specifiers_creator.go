@@ -29,15 +29,16 @@ func (fake *DependencySpecifiersCreator) CreateDependencySpecifiers(arg1 pivnet.
 	fake.createDependencySpecifiersArgsForCall = append(fake.createDependencySpecifiersArgsForCall, struct {
 		arg1 pivnet.Release
 	}{arg1})
+	stub := fake.CreateDependencySpecifiersStub
+	fakeReturns := fake.createDependencySpecifiersReturns
 	fake.recordInvocation("CreateDependencySpecifiers", []interface{}{arg1})
 	fake.createDependencySpecifiersMutex.Unlock()
-	if fake.CreateDependencySpecifiersStub != nil {
-		return fake.CreateDependencySpecifiersStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.createDependencySpecifiersReturns
 	return fakeReturns.result1
 }
 

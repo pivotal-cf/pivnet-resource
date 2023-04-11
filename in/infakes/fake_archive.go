@@ -40,15 +40,16 @@ func (fake *FakeArchive) Extract(arg1 string, arg2 string) error {
 		arg1 string
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.ExtractStub
+	fakeReturns := fake.extractReturns
 	fake.recordInvocation("Extract", []interface{}{arg1, arg2})
 	fake.extractMutex.Unlock()
-	if fake.ExtractStub != nil {
-		return fake.ExtractStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.extractReturns
 	return fakeReturns.result1
 }
 
@@ -100,15 +101,16 @@ func (fake *FakeArchive) Mimetype(arg1 string) string {
 	fake.mimetypeArgsForCall = append(fake.mimetypeArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.MimetypeStub
+	fakeReturns := fake.mimetypeReturns
 	fake.recordInvocation("Mimetype", []interface{}{arg1})
 	fake.mimetypeMutex.Unlock()
-	if fake.MimetypeStub != nil {
-		return fake.MimetypeStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.mimetypeReturns
 	return fakeReturns.result1
 }
 

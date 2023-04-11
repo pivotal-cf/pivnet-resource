@@ -38,15 +38,16 @@ func (fake *FakeClient) DownloadProductFile(arg1 *download.FileInfo, arg2 string
 		arg4 int
 		arg5 io.Writer
 	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.DownloadProductFileStub
+	fakeReturns := fake.downloadProductFileReturns
 	fake.recordInvocation("DownloadProductFile", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.downloadProductFileMutex.Unlock()
-	if fake.DownloadProductFileStub != nil {
-		return fake.DownloadProductFileStub(arg1, arg2, arg3, arg4, arg5)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.downloadProductFileReturns
 	return fakeReturns.result1
 }
 
