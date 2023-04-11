@@ -1,4 +1,4 @@
-FROM ubuntu:bionic
+FROM ubuntu:jammy
 
 RUN apt-get update && apt-get install -y unzip ca-certificates && rm -rf /var/lib/apt/lists/*
 
