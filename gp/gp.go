@@ -2,11 +2,12 @@ package gp
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/pivotal-cf/go-pivnet/v7"
 	"github.com/pivotal-cf/go-pivnet/v7/download"
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
-	"io"
-	"net/http"
 )
 
 type Client struct {
@@ -155,6 +156,10 @@ func (c Client) FileGroupsForRelease(productSlug string, releaseID int) ([]pivne
 
 func (c Client) ArtifactReferences(productSlug string) ([]pivnet.ArtifactReference, error) {
 	return c.client.ArtifactReferences.List(productSlug)
+}
+
+func (c Client) ArtifactReferencesForDigest(productSlug string, digest string) ([]pivnet.ArtifactReference, error) {
+	return c.client.ArtifactReferences.ListForDigest(productSlug, digest)
 }
 
 func (c Client) ArtifactReferencesForRelease(productSlug string, releaseID int) ([]pivnet.ArtifactReference, error) {
