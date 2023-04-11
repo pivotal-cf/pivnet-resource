@@ -34,6 +34,20 @@ type ReleaseArtifactReferencesAdderClient struct {
 		result1 []pivnet.ArtifactReference
 		result2 error
 	}
+	ArtifactReferencesForDigestStub        func(string, string) ([]pivnet.ArtifactReference, error)
+	artifactReferencesForDigestMutex       sync.RWMutex
+	artifactReferencesForDigestArgsForCall []struct {
+		arg1 string
+		arg2 string
+	}
+	artifactReferencesForDigestReturns struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
+	}
+	artifactReferencesForDigestReturnsOnCall map[int]struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
+	}
 	CreateArtifactReferenceStub        func(pivnet.CreateArtifactReferenceConfig) (pivnet.ArtifactReference, error)
 	createArtifactReferenceMutex       sync.RWMutex
 	createArtifactReferenceArgsForCall []struct {
@@ -201,6 +215,71 @@ func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesReturnsOnCal
 		})
 	}
 	fake.artifactReferencesReturnsOnCall[i] = struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesForDigest(arg1 string, arg2 string) ([]pivnet.ArtifactReference, error) {
+	fake.artifactReferencesForDigestMutex.Lock()
+	ret, specificReturn := fake.artifactReferencesForDigestReturnsOnCall[len(fake.artifactReferencesForDigestArgsForCall)]
+	fake.artifactReferencesForDigestArgsForCall = append(fake.artifactReferencesForDigestArgsForCall, struct {
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	stub := fake.ArtifactReferencesForDigestStub
+	fakeReturns := fake.artifactReferencesForDigestReturns
+	fake.recordInvocation("ArtifactReferencesForDigest", []interface{}{arg1, arg2})
+	fake.artifactReferencesForDigestMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesForDigestCallCount() int {
+	fake.artifactReferencesForDigestMutex.RLock()
+	defer fake.artifactReferencesForDigestMutex.RUnlock()
+	return len(fake.artifactReferencesForDigestArgsForCall)
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesForDigestCalls(stub func(string, string) ([]pivnet.ArtifactReference, error)) {
+	fake.artifactReferencesForDigestMutex.Lock()
+	defer fake.artifactReferencesForDigestMutex.Unlock()
+	fake.ArtifactReferencesForDigestStub = stub
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesForDigestArgsForCall(i int) (string, string) {
+	fake.artifactReferencesForDigestMutex.RLock()
+	defer fake.artifactReferencesForDigestMutex.RUnlock()
+	argsForCall := fake.artifactReferencesForDigestArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesForDigestReturns(result1 []pivnet.ArtifactReference, result2 error) {
+	fake.artifactReferencesForDigestMutex.Lock()
+	defer fake.artifactReferencesForDigestMutex.Unlock()
+	fake.ArtifactReferencesForDigestStub = nil
+	fake.artifactReferencesForDigestReturns = struct {
+		result1 []pivnet.ArtifactReference
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ReleaseArtifactReferencesAdderClient) ArtifactReferencesForDigestReturnsOnCall(i int, result1 []pivnet.ArtifactReference, result2 error) {
+	fake.artifactReferencesForDigestMutex.Lock()
+	defer fake.artifactReferencesForDigestMutex.Unlock()
+	fake.ArtifactReferencesForDigestStub = nil
+	if fake.artifactReferencesForDigestReturnsOnCall == nil {
+		fake.artifactReferencesForDigestReturnsOnCall = make(map[int]struct {
+			result1 []pivnet.ArtifactReference
+			result2 error
+		})
+	}
+	fake.artifactReferencesForDigestReturnsOnCall[i] = struct {
 		result1 []pivnet.ArtifactReference
 		result2 error
 	}{result1, result2}
@@ -407,6 +486,8 @@ func (fake *ReleaseArtifactReferencesAdderClient) Invocations() map[string][][]i
 	defer fake.addArtifactReferenceMutex.RUnlock()
 	fake.artifactReferencesMutex.RLock()
 	defer fake.artifactReferencesMutex.RUnlock()
+	fake.artifactReferencesForDigestMutex.RLock()
+	defer fake.artifactReferencesForDigestMutex.RUnlock()
 	fake.createArtifactReferenceMutex.RLock()
 	defer fake.createArtifactReferenceMutex.RUnlock()
 	fake.deleteArtifactReferenceMutex.RLock()

@@ -2,10 +2,11 @@ package release
 
 import (
 	"fmt"
+	"time"
+
 	pivnet "github.com/pivotal-cf/go-pivnet/v7"
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/pivnet-resource/v3/metadata"
-	"time"
 )
 
 type ReleaseArtifactReferencesAdder struct {
@@ -38,6 +39,7 @@ func NewReleaseArtifactReferencesAdder(
 //counterfeiter:generate --fake-name ReleaseArtifactReferencesAdderClient . releaseArtifactReferencesAdderClient
 type releaseArtifactReferencesAdderClient interface {
 	ArtifactReferences(productSlug string) ([]pivnet.ArtifactReference, error)
+	ArtifactReferencesForDigest(productSlug string, digest string) ([]pivnet.ArtifactReference, error)
 	AddArtifactReference(productSlug string, releaseID int, artifactReferenceID int) error
 	CreateArtifactReference(config pivnet.CreateArtifactReferenceConfig) (pivnet.ArtifactReference, error)
 	GetArtifactReference(productSlug string, artifactReferenceID int) (pivnet.ArtifactReference, error)
@@ -51,33 +53,18 @@ type artifactReferenceKey struct {
 }
 
 func (rf ReleaseArtifactReferencesAdder) AddReleaseArtifactReferences(release pivnet.Release) error {
-	productArtifactReferences, err := rf.pivnet.ArtifactReferences(rf.productSlug)
-	if err != nil {
-		return err
-	}
-
-	var productArtifactReferenceMap = map[artifactReferenceKey]int{}
-	for _, productArtifactReference := range productArtifactReferences {
-		productArtifactReferenceMap[artifactReferenceKey{
-			productArtifactReference.Name,
-			productArtifactReference.ArtifactPath,
-			productArtifactReference.Digest,
-		}] = productArtifactReference.ID
-	}
-
 	// add references to product
 	for i, artifactReference := range rf.metadata.ArtifactReferences {
 		var artifactReferenceID = artifactReference.ID
 
 		if artifactReferenceID == 0 {
-			foundArtifactReferenceId := productArtifactReferenceMap[artifactReferenceKey{
-				artifactReference.Name,
-				artifactReference.ArtifactPath,
-				artifactReference.Digest,
-			}]
+			foundArtifactReferences, err := rf.pivnet.ArtifactReferencesForDigest(rf.productSlug, artifactReference.Digest)
+			if err != nil {
+				return err
+			}
 
-			if foundArtifactReferenceId != 0 {
-				artifactReferenceID = foundArtifactReferenceId
+			if len(foundArtifactReferences) > 0 {
+				artifactReferenceID = foundArtifactReferences[0].ID
 			} else {
 				rf.logger.Info(fmt.Sprintf(
 					"Creating artifact reference with name: %s",

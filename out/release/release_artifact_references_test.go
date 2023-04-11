@@ -1,6 +1,7 @@
 package release_test
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/v3/out/release"
 	"github.com/pivotal-cf/pivnet-resource/v3/out/release/releasefakes"
 
-	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -76,6 +76,7 @@ var _ = Describe("ReleaseArtifactReferencesAdder", func() {
 				ref1 pivnet.ArtifactReference
 				ref2 pivnet.ArtifactReference
 			)
+
 			BeforeEach(func() {
 				mdata.ArtifactReferences = []metadata.ArtifactReference{
 					{
@@ -124,37 +125,56 @@ var _ = Describe("ReleaseArtifactReferencesAdder", func() {
 				Expect(artifactReferenceID).To(Equal(1234))
 			})
 
+			It("does not attempt to create new artifact references", func() {
+				err := releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(pivnetClient.CreateArtifactReferenceCallCount()).To(Equal(0))
+			})
+
 			Context("when the artifact reference ID is set to 0", func() {
 				BeforeEach(func() {
-					pivnetClient.CreateArtifactReferenceReturns(ref2, nil)
-					mdata.ArtifactReferences[1].ID = 0
+					pivnetClient.CreateArtifactReferenceReturns(ref1, nil)
+					mdata.ArtifactReferences[0].ID = 0
 				})
 
 				It("creates a new artifact reference", func() {
 					err := releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(pivnetClient.AddArtifactReferenceCallCount()).To(Equal(2))
 					Expect(pivnetClient.CreateArtifactReferenceCallCount()).To(Equal(1))
+					Expect(pivnetClient.AddArtifactReferenceCallCount()).To(Equal(2))
 				})
 
-				Context("when name, artifactPath, and digest are the same as an existing artifact reference", func() {
+				Context("when the digest is the same as an existing artifact reference", func() {
 					BeforeEach(func() {
-						pivnetClient.ArtifactReferencesReturns(
-							[]pivnet.ArtifactReference{
-								{
-									ID:           1234,
-									Name:         "new-artifact-reference",
-									ArtifactPath: "my/path:123",
-									Digest:       "sha256:mydigest",
-								},
-							}, nil)
+						mdata.ArtifactReferences[0].Digest = "sha256:difficultdigest"
+						mdata.ArtifactReferences[1].ID = 0
+
+						pivnetClient.ArtifactReferencesForDigestStub = func(slug string, digest string) ([]pivnet.ArtifactReference, error) {
+							if digest == "sha256:difficultdigest" {
+								return []pivnet.ArtifactReference{}, nil
+							} else if digest == "sha256:mydigest" {
+								return []pivnet.ArtifactReference{
+									{
+										ID:           1234,
+										Name:         "new-artifact-reference",
+										ArtifactPath: "my/path:123",
+										Digest:       "sha256:mydigest",
+									},
+								}, nil
+							} else {
+								return []pivnet.ArtifactReference{}, fmt.Errorf("missing stub for artifact digest %q", digest)
+							}
+						}
 					})
 
-					It("does uses the existing artifact reference", func() {
+					It("uses the existing artifact reference", func() {
 						err := releaseArtifactReferencesAdder.AddReleaseArtifactReferences(pivnetRelease)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(pivnetClient.CreateArtifactReferenceCallCount()).To(Equal(0))
+
+						Expect(pivnetClient.CreateArtifactReferenceCallCount()).To(Equal(1))
+
 						Expect(pivnetClient.AddArtifactReferenceCallCount()).To(Equal(2))
 						_, _, artifactReferenceID := pivnetClient.AddArtifactReferenceArgsForCall(0)
 						Expect(artifactReferenceID).To(Equal(9876))
