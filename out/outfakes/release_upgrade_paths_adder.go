@@ -29,15 +29,16 @@ func (fake *ReleaseUpgradePathsAdder) AddReleaseUpgradePaths(arg1 pivnet.Release
 	fake.addReleaseUpgradePathsArgsForCall = append(fake.addReleaseUpgradePathsArgsForCall, struct {
 		arg1 pivnet.Release
 	}{arg1})
+	stub := fake.AddReleaseUpgradePathsStub
+	fakeReturns := fake.addReleaseUpgradePathsReturns
 	fake.recordInvocation("AddReleaseUpgradePaths", []interface{}{arg1})
 	fake.addReleaseUpgradePathsMutex.Unlock()
-	if fake.AddReleaseUpgradePathsStub != nil {
-		return fake.AddReleaseUpgradePathsStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addReleaseUpgradePathsReturns
 	return fakeReturns.result1
 }
 

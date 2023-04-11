@@ -49,15 +49,16 @@ func (fake *FakeSorter) SortByLastUpdated(arg1 []pivnet.Release) ([]pivnet.Relea
 	fake.sortByLastUpdatedArgsForCall = append(fake.sortByLastUpdatedArgsForCall, struct {
 		arg1 []pivnet.Release
 	}{arg1Copy})
+	stub := fake.SortByLastUpdatedStub
+	fakeReturns := fake.sortByLastUpdatedReturns
 	fake.recordInvocation("SortByLastUpdated", []interface{}{arg1Copy})
 	fake.sortByLastUpdatedMutex.Unlock()
-	if fake.SortByLastUpdatedStub != nil {
-		return fake.SortByLastUpdatedStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.sortByLastUpdatedReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -117,15 +118,16 @@ func (fake *FakeSorter) SortBySemver(arg1 []pivnet.Release) ([]pivnet.Release, e
 	fake.sortBySemverArgsForCall = append(fake.sortBySemverArgsForCall, struct {
 		arg1 []pivnet.Release
 	}{arg1Copy})
+	stub := fake.SortBySemverStub
+	fakeReturns := fake.sortBySemverReturns
 	fake.recordInvocation("SortBySemver", []interface{}{arg1Copy})
 	fake.sortBySemverMutex.Unlock()
-	if fake.SortBySemverStub != nil {
-		return fake.SortBySemverStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.sortBySemverReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

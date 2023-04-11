@@ -29,15 +29,16 @@ func (fake *FakeFileSizeGetter) FileSize(arg1 string) (int64, error) {
 	fake.fileSizeArgsForCall = append(fake.fileSizeArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.FileSizeStub
+	fakeReturns := fake.fileSizeReturns
 	fake.recordInvocation("FileSize", []interface{}{arg1})
 	fake.fileSizeMutex.Unlock()
-	if fake.FileSizeStub != nil {
-		return fake.FileSizeStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.fileSizeReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

@@ -35,15 +35,16 @@ func (fake *UpgradePathSpecifiersCreatorClient) CreateUpgradePathSpecifier(arg1 
 		arg2 int
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.CreateUpgradePathSpecifierStub
+	fakeReturns := fake.createUpgradePathSpecifierReturns
 	fake.recordInvocation("CreateUpgradePathSpecifier", []interface{}{arg1, arg2, arg3})
 	fake.createUpgradePathSpecifierMutex.Unlock()
-	if fake.CreateUpgradePathSpecifierStub != nil {
-		return fake.CreateUpgradePathSpecifierStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.createUpgradePathSpecifierReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

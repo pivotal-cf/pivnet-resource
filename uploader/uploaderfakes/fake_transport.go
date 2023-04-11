@@ -31,15 +31,16 @@ func (fake *FakeTransport) Upload(arg1 string, arg2 string, arg3 string) error {
 		arg2 string
 		arg3 string
 	}{arg1, arg2, arg3})
+	stub := fake.UploadStub
+	fakeReturns := fake.uploadReturns
 	fake.recordInvocation("Upload", []interface{}{arg1, arg2, arg3})
 	fake.uploadMutex.Unlock()
-	if fake.UploadStub != nil {
-		return fake.UploadStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.uploadReturns
 	return fakeReturns.result1
 }
 

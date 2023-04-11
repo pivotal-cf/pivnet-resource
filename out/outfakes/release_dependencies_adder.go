@@ -29,15 +29,16 @@ func (fake *ReleaseDependenciesAdder) AddReleaseDependencies(arg1 pivnet.Release
 	fake.addReleaseDependenciesArgsForCall = append(fake.addReleaseDependenciesArgsForCall, struct {
 		arg1 pivnet.Release
 	}{arg1})
+	stub := fake.AddReleaseDependenciesStub
+	fakeReturns := fake.addReleaseDependenciesReturns
 	fake.recordInvocation("AddReleaseDependencies", []interface{}{arg1})
 	fake.addReleaseDependenciesMutex.Unlock()
-	if fake.AddReleaseDependenciesStub != nil {
-		return fake.AddReleaseDependenciesStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addReleaseDependenciesReturns
 	return fakeReturns.result1
 }
 

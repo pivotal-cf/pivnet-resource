@@ -36,15 +36,16 @@ func (fake *Uploader) Upload(arg1 pivnet.Release, arg2 []string) error {
 		arg1 pivnet.Release
 		arg2 []string
 	}{arg1, arg2Copy})
+	stub := fake.UploadStub
+	fakeReturns := fake.uploadReturns
 	fake.recordInvocation("Upload", []interface{}{arg1, arg2Copy})
 	fake.uploadMutex.Unlock()
-	if fake.UploadStub != nil {
-		return fake.UploadStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.uploadReturns
 	return fakeReturns.result1
 }
 

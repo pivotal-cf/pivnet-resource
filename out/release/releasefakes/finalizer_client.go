@@ -33,15 +33,16 @@ func (fake *FinalizerClient) GetRelease(arg1 string, arg2 string) (pivnet.Releas
 		arg1 string
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.GetReleaseStub
+	fakeReturns := fake.getReleaseReturns
 	fake.recordInvocation("GetRelease", []interface{}{arg1, arg2})
 	fake.getReleaseMutex.Unlock()
-	if fake.GetReleaseStub != nil {
-		return fake.GetReleaseStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.getReleaseReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

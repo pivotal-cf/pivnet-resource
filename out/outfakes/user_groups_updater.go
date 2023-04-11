@@ -31,15 +31,16 @@ func (fake *UserGroupsUpdater) UpdateUserGroups(arg1 pivnet.Release) (pivnet.Rel
 	fake.updateUserGroupsArgsForCall = append(fake.updateUserGroupsArgsForCall, struct {
 		arg1 pivnet.Release
 	}{arg1})
+	stub := fake.UpdateUserGroupsStub
+	fakeReturns := fake.updateUserGroupsReturns
 	fake.recordInvocation("UpdateUserGroups", []interface{}{arg1})
 	fake.updateUserGroupsMutex.Unlock()
-	if fake.UpdateUserGroupsStub != nil {
-		return fake.UpdateUserGroupsStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.updateUserGroupsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

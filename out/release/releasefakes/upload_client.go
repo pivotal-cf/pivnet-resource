@@ -100,15 +100,16 @@ func (fake *UploadClient) AddProductFile(arg1 string, arg2 int, arg3 int) error 
 		arg2 int
 		arg3 int
 	}{arg1, arg2, arg3})
+	stub := fake.AddProductFileStub
+	fakeReturns := fake.addProductFileReturns
 	fake.recordInvocation("AddProductFile", []interface{}{arg1, arg2, arg3})
 	fake.addProductFileMutex.Unlock()
-	if fake.AddProductFileStub != nil {
-		return fake.AddProductFileStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addProductFileReturns
 	return fakeReturns.result1
 }
 
@@ -160,15 +161,16 @@ func (fake *UploadClient) CreateProductFile(arg1 pivnet.CreateProductFileConfig)
 	fake.createProductFileArgsForCall = append(fake.createProductFileArgsForCall, struct {
 		arg1 pivnet.CreateProductFileConfig
 	}{arg1})
+	stub := fake.CreateProductFileStub
+	fakeReturns := fake.createProductFileReturns
 	fake.recordInvocation("CreateProductFile", []interface{}{arg1})
 	fake.createProductFileMutex.Unlock()
-	if fake.CreateProductFileStub != nil {
-		return fake.CreateProductFileStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.createProductFileReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -224,15 +226,16 @@ func (fake *UploadClient) DeleteProductFile(arg1 string, arg2 int) (pivnet.Produ
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.DeleteProductFileStub
+	fakeReturns := fake.deleteProductFileReturns
 	fake.recordInvocation("DeleteProductFile", []interface{}{arg1, arg2})
 	fake.deleteProductFileMutex.Unlock()
-	if fake.DeleteProductFileStub != nil {
-		return fake.DeleteProductFileStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.deleteProductFileReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -287,15 +290,16 @@ func (fake *UploadClient) FindProductForSlug(arg1 string) (pivnet.Product, error
 	fake.findProductForSlugArgsForCall = append(fake.findProductForSlugArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.FindProductForSlugStub
+	fakeReturns := fake.findProductForSlugReturns
 	fake.recordInvocation("FindProductForSlug", []interface{}{arg1})
 	fake.findProductForSlugMutex.Unlock()
-	if fake.FindProductForSlugStub != nil {
-		return fake.FindProductForSlugStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.findProductForSlugReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -351,15 +355,16 @@ func (fake *UploadClient) ProductFile(arg1 string, arg2 int) (pivnet.ProductFile
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.ProductFileStub
+	fakeReturns := fake.productFileReturns
 	fake.recordInvocation("ProductFile", []interface{}{arg1, arg2})
 	fake.productFileMutex.Unlock()
-	if fake.ProductFileStub != nil {
-		return fake.ProductFileStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.productFileReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -414,15 +419,16 @@ func (fake *UploadClient) ProductFiles(arg1 string) ([]pivnet.ProductFile, error
 	fake.productFilesArgsForCall = append(fake.productFilesArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.ProductFilesStub
+	fakeReturns := fake.productFilesReturns
 	fake.recordInvocation("ProductFiles", []interface{}{arg1})
 	fake.productFilesMutex.Unlock()
-	if fake.ProductFilesStub != nil {
-		return fake.ProductFilesStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.productFilesReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

@@ -46,15 +46,16 @@ func (fake *ReleaseUpgradePathsAdderClient) AddReleaseUpgradePath(arg1 string, a
 		arg2 int
 		arg3 int
 	}{arg1, arg2, arg3})
+	stub := fake.AddReleaseUpgradePathStub
+	fakeReturns := fake.addReleaseUpgradePathReturns
 	fake.recordInvocation("AddReleaseUpgradePath", []interface{}{arg1, arg2, arg3})
 	fake.addReleaseUpgradePathMutex.Unlock()
-	if fake.AddReleaseUpgradePathStub != nil {
-		return fake.AddReleaseUpgradePathStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addReleaseUpgradePathReturns
 	return fakeReturns.result1
 }
 
@@ -106,15 +107,16 @@ func (fake *ReleaseUpgradePathsAdderClient) ReleasesForProductSlug(arg1 string) 
 	fake.releasesForProductSlugArgsForCall = append(fake.releasesForProductSlugArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.ReleasesForProductSlugStub
+	fakeReturns := fake.releasesForProductSlugReturns
 	fake.recordInvocation("ReleasesForProductSlug", []interface{}{arg1})
 	fake.releasesForProductSlugMutex.Unlock()
-	if fake.ReleasesForProductSlugStub != nil {
-		return fake.ReleasesForProductSlugStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.releasesForProductSlugReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

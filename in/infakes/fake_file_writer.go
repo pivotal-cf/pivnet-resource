@@ -51,15 +51,16 @@ func (fake *FakeFileWriter) WriteMetadataJSONFile(arg1 metadata.Metadata) error 
 	fake.writeMetadataJSONFileArgsForCall = append(fake.writeMetadataJSONFileArgsForCall, struct {
 		arg1 metadata.Metadata
 	}{arg1})
+	stub := fake.WriteMetadataJSONFileStub
+	fakeReturns := fake.writeMetadataJSONFileReturns
 	fake.recordInvocation("WriteMetadataJSONFile", []interface{}{arg1})
 	fake.writeMetadataJSONFileMutex.Unlock()
-	if fake.WriteMetadataJSONFileStub != nil {
-		return fake.WriteMetadataJSONFileStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.writeMetadataJSONFileReturns
 	return fakeReturns.result1
 }
 
@@ -111,15 +112,16 @@ func (fake *FakeFileWriter) WriteMetadataYAMLFile(arg1 metadata.Metadata) error 
 	fake.writeMetadataYAMLFileArgsForCall = append(fake.writeMetadataYAMLFileArgsForCall, struct {
 		arg1 metadata.Metadata
 	}{arg1})
+	stub := fake.WriteMetadataYAMLFileStub
+	fakeReturns := fake.writeMetadataYAMLFileReturns
 	fake.recordInvocation("WriteMetadataYAMLFile", []interface{}{arg1})
 	fake.writeMetadataYAMLFileMutex.Unlock()
-	if fake.WriteMetadataYAMLFileStub != nil {
-		return fake.WriteMetadataYAMLFileStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.writeMetadataYAMLFileReturns
 	return fakeReturns.result1
 }
 
@@ -171,15 +173,16 @@ func (fake *FakeFileWriter) WriteVersionFile(arg1 string) error {
 	fake.writeVersionFileArgsForCall = append(fake.writeVersionFileArgsForCall, struct {
 		arg1 string
 	}{arg1})
+	stub := fake.WriteVersionFileStub
+	fakeReturns := fake.writeVersionFileReturns
 	fake.recordInvocation("WriteVersionFile", []interface{}{arg1})
 	fake.writeVersionFileMutex.Unlock()
-	if fake.WriteVersionFileStub != nil {
-		return fake.WriteVersionFileStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.writeVersionFileReturns
 	return fakeReturns.result1
 }
 

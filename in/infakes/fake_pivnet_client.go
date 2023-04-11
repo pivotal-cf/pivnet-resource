@@ -158,15 +158,16 @@ func (fake *FakePivnetClient) AcceptEULA(arg1 string, arg2 int) error {
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.AcceptEULAStub
+	fakeReturns := fake.acceptEULAReturns
 	fake.recordInvocation("AcceptEULA", []interface{}{arg1, arg2})
 	fake.acceptEULAMutex.Unlock()
-	if fake.AcceptEULAStub != nil {
-		return fake.AcceptEULAStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.acceptEULAReturns
 	return fakeReturns.result1
 }
 
@@ -219,15 +220,16 @@ func (fake *FakePivnetClient) ArtifactReferencesForRelease(arg1 string, arg2 int
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.ArtifactReferencesForReleaseStub
+	fakeReturns := fake.artifactReferencesForReleaseReturns
 	fake.recordInvocation("ArtifactReferencesForRelease", []interface{}{arg1, arg2})
 	fake.artifactReferencesForReleaseMutex.Unlock()
-	if fake.ArtifactReferencesForReleaseStub != nil {
-		return fake.ArtifactReferencesForReleaseStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.artifactReferencesForReleaseReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -283,15 +285,16 @@ func (fake *FakePivnetClient) DependencySpecifiers(arg1 string, arg2 int) ([]piv
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.DependencySpecifiersStub
+	fakeReturns := fake.dependencySpecifiersReturns
 	fake.recordInvocation("DependencySpecifiers", []interface{}{arg1, arg2})
 	fake.dependencySpecifiersMutex.Unlock()
-	if fake.DependencySpecifiersStub != nil {
-		return fake.DependencySpecifiersStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.dependencySpecifiersReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -347,15 +350,16 @@ func (fake *FakePivnetClient) FileGroupsForRelease(arg1 string, arg2 int) ([]piv
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.FileGroupsForReleaseStub
+	fakeReturns := fake.fileGroupsForReleaseReturns
 	fake.recordInvocation("FileGroupsForRelease", []interface{}{arg1, arg2})
 	fake.fileGroupsForReleaseMutex.Unlock()
-	if fake.FileGroupsForReleaseStub != nil {
-		return fake.FileGroupsForReleaseStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.fileGroupsForReleaseReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -411,15 +415,16 @@ func (fake *FakePivnetClient) GetRelease(arg1 string, arg2 string) (pivnet.Relea
 		arg1 string
 		arg2 string
 	}{arg1, arg2})
+	stub := fake.GetReleaseStub
+	fakeReturns := fake.getReleaseReturns
 	fake.recordInvocation("GetRelease", []interface{}{arg1, arg2})
 	fake.getReleaseMutex.Unlock()
-	if fake.GetReleaseStub != nil {
-		return fake.GetReleaseStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.getReleaseReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -476,15 +481,16 @@ func (fake *FakePivnetClient) ProductFileForRelease(arg1 string, arg2 int, arg3 
 		arg2 int
 		arg3 int
 	}{arg1, arg2, arg3})
+	stub := fake.ProductFileForReleaseStub
+	fakeReturns := fake.productFileForReleaseReturns
 	fake.recordInvocation("ProductFileForRelease", []interface{}{arg1, arg2, arg3})
 	fake.productFileForReleaseMutex.Unlock()
-	if fake.ProductFileForReleaseStub != nil {
-		return fake.ProductFileForReleaseStub(arg1, arg2, arg3)
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.productFileForReleaseReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -540,15 +546,16 @@ func (fake *FakePivnetClient) ProductFilesForRelease(arg1 string, arg2 int) ([]p
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.ProductFilesForReleaseStub
+	fakeReturns := fake.productFilesForReleaseReturns
 	fake.recordInvocation("ProductFilesForRelease", []interface{}{arg1, arg2})
 	fake.productFilesForReleaseMutex.Unlock()
-	if fake.ProductFilesForReleaseStub != nil {
-		return fake.ProductFilesForReleaseStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.productFilesForReleaseReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -604,15 +611,16 @@ func (fake *FakePivnetClient) ReleaseDependencies(arg1 string, arg2 int) ([]pivn
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.ReleaseDependenciesStub
+	fakeReturns := fake.releaseDependenciesReturns
 	fake.recordInvocation("ReleaseDependencies", []interface{}{arg1, arg2})
 	fake.releaseDependenciesMutex.Unlock()
-	if fake.ReleaseDependenciesStub != nil {
-		return fake.ReleaseDependenciesStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.releaseDependenciesReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -668,15 +676,16 @@ func (fake *FakePivnetClient) ReleaseUpgradePaths(arg1 string, arg2 int) ([]pivn
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.ReleaseUpgradePathsStub
+	fakeReturns := fake.releaseUpgradePathsReturns
 	fake.recordInvocation("ReleaseUpgradePaths", []interface{}{arg1, arg2})
 	fake.releaseUpgradePathsMutex.Unlock()
-	if fake.ReleaseUpgradePathsStub != nil {
-		return fake.ReleaseUpgradePathsStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.releaseUpgradePathsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -732,15 +741,16 @@ func (fake *FakePivnetClient) UpgradePathSpecifiers(arg1 string, arg2 int) ([]pi
 		arg1 string
 		arg2 int
 	}{arg1, arg2})
+	stub := fake.UpgradePathSpecifiersStub
+	fakeReturns := fake.upgradePathSpecifiersReturns
 	fake.recordInvocation("UpgradePathSpecifiers", []interface{}{arg1, arg2})
 	fake.upgradePathSpecifiersMutex.Unlock()
-	if fake.UpgradePathSpecifiersStub != nil {
-		return fake.UpgradePathSpecifiersStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.upgradePathSpecifiersReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

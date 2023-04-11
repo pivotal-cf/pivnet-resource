@@ -29,15 +29,16 @@ func (fake *ReleaseArtifactReferencesAdder) AddReleaseArtifactReferences(arg1 pi
 	fake.addReleaseArtifactReferencesArgsForCall = append(fake.addReleaseArtifactReferencesArgsForCall, struct {
 		arg1 pivnet.Release
 	}{arg1})
+	stub := fake.AddReleaseArtifactReferencesStub
+	fakeReturns := fake.addReleaseArtifactReferencesReturns
 	fake.recordInvocation("AddReleaseArtifactReferences", []interface{}{arg1})
 	fake.addReleaseArtifactReferencesMutex.Unlock()
-	if fake.AddReleaseArtifactReferencesStub != nil {
-		return fake.AddReleaseArtifactReferencesStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addReleaseArtifactReferencesReturns
 	return fakeReturns.result1
 }
 
