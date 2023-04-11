@@ -30,7 +30,7 @@ func NewUserGroupsUpdater(
 	}
 }
 
-//go:generate counterfeiter --fake-name UserGroupsUpdaterClient . userGroupsUpdaterClient
+//counterfeiter:generate --fake-name UserGroupsUpdaterClient . userGroupsUpdaterClient
 type userGroupsUpdaterClient interface {
 	UpdateRelease(productSlug string, release pivnet.Release) (pivnet.Release, error)
 	AddUserGroup(productSlug string, releaseID int, userGroupID int) error

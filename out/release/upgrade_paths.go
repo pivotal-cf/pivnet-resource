@@ -32,13 +32,13 @@ func NewReleaseUpgradePathsAdder(
 	}
 }
 
-//go:generate counterfeiter --fake-name ReleaseUpgradePathsAdderClient . releaseUpgradePathsAdderClient
+//counterfeiter:generate --fake-name ReleaseUpgradePathsAdderClient . releaseUpgradePathsAdderClient
 type releaseUpgradePathsAdderClient interface {
 	AddReleaseUpgradePath(productSlug string, releaseID int, previousReleaseID int) error
 	ReleasesForProductSlug(productSlug string) ([]pivnet.Release, error)
 }
 
-//go:generate counterfeiter --fake-name FakeFilter . filter
+//counterfeiter:generate --fake-name FakeFilter . filter
 type filter interface {
 	ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error)
 }

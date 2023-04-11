@@ -2,6 +2,7 @@ package release
 
 import (
 	"fmt"
+
 	pivnet "github.com/pivotal-cf/go-pivnet/v7"
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/pivnet-resource/v3/metadata"
@@ -28,7 +29,7 @@ func NewReleaseFileGroupsAdder(
 	}
 }
 
-//go:generate counterfeiter --fake-name ReleaseFileGroupsAdderClient . releaseFileGroupsAdderClient
+//counterfeiter:generate --fake-name ReleaseFileGroupsAdderClient . releaseFileGroupsAdderClient
 type releaseFileGroupsAdderClient interface {
 	AddFileGroup(productSlug string, releaseID int, fileGroupID int) error
 	CreateFileGroup(config pivnet.CreateFileGroupConfig) (pivnet.FileGroup, error)

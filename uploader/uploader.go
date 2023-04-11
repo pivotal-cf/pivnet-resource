@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-//go:generate counterfeiter --fake-name FakeTransport . transport
+//counterfeiter:generate --fake-name FakeTransport . transport
 type transport interface {
 	Upload(fileGlob string, filepathPrefix string, sourcesDir string) error
 }
@@ -34,8 +34,7 @@ func NewClient(config Config) *Client {
 	}
 }
 
-func (c Client) UploadFile(exactGlob string) (error) {
-	
+func (c Client) UploadFile(exactGlob string) error {
 	_, remoteDir, err := c.ComputeAWSObjectKey(exactGlob)
 	if err != nil {
 		return err
@@ -71,5 +70,4 @@ func (c Client) ComputeAWSObjectKey(exactGlob string) (string, string, error) {
 
 	remotePath := fmt.Sprintf("%s%s", remoteDir, filename)
 	return remotePath, remoteDir, nil
-
 }

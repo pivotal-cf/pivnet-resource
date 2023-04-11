@@ -3,11 +3,11 @@ package release
 import "github.com/pivotal-cf/go-pivnet/v7"
 
 type ReleaseFinder struct {
-	pivnet finderClient
+	pivnet      finderClient
 	productSlug string
 }
 
-//go:generate counterfeiter --fake-name=FinderClient . finderClient
+//counterfeiter:generate --fake-name=FinderClient . finderClient
 type finderClient interface {
 	FindRelease(productSlug string, releaseID int) (pivnet.Release, error)
 }
@@ -17,7 +17,7 @@ func NewReleaseFinder(
 	productSlug string,
 ) ReleaseFinder {
 	return ReleaseFinder{
-		pivnet: pivnet,
+		pivnet:      pivnet,
 		productSlug: productSlug,
 	}
 }

@@ -11,12 +11,12 @@ import (
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
 )
 
-//go:generate counterfeiter --fake-name FakeFileSizeGetter . fileSizeGetter
+//counterfeiter:generate --fake-name FakeFileSizeGetter . fileSizeGetter
 type fileSizeGetter interface {
-	FileSize (localPath string) (int64, error)
+	FileSize(localPath string) (int64, error)
 }
 
-type FileSizeGetter struct {}
+type FileSizeGetter struct{}
 
 func (f FileSizeGetter) FileSize(localPath string) (int64, error) {
 	fileInfo, err := os.Lstat(localPath)
@@ -28,12 +28,12 @@ func (f FileSizeGetter) FileSize(localPath string) (int64, error) {
 }
 
 type Client struct {
-	bucket          string
+	bucket string
 
 	logger logger.Logger
 	stderr io.Writer
 
-	s3client s3resource.S3Client
+	s3client       s3resource.S3Client
 	fileSizeGetter fileSizeGetter
 }
 
@@ -47,7 +47,7 @@ type NewClientConfig struct {
 	Logger            logger.Logger
 	Stderr            io.Writer
 	SkipSSLValidation bool
-	FileSizeGetter fileSizeGetter
+	FileSizeGetter    fileSizeGetter
 }
 
 func NewClient(config NewClientConfig) *Client {
@@ -71,11 +71,11 @@ func NewClient(config NewClientConfig) *Client {
 	)
 
 	return &Client{
-		bucket:          config.Bucket,
-		stderr:          config.Stderr,
-		logger:          config.Logger,
-		s3client:        s3client,
-		fileSizeGetter:  config.FileSizeGetter,
+		bucket:         config.Bucket,
+		stderr:         config.Stderr,
+		logger:         config.Logger,
+		s3client:       s3client,
+		fileSizeGetter: config.FileSizeGetter,
 	}
 }
 

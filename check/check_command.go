@@ -12,19 +12,19 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/v3/versions"
 )
 
-//go:generate counterfeiter --fake-name FakeFilter . filter
+//counterfeiter:generate --fake-name FakeFilter . filter
 type filter interface {
 	ReleasesByReleaseType(releases []pivnet.Release, releaseType pivnet.ReleaseType) ([]pivnet.Release, error)
 	ReleasesByVersion(releases []pivnet.Release, version string) ([]pivnet.Release, error)
 }
 
-//go:generate counterfeiter --fake-name FakeSorter . sorter
+//counterfeiter:generate --fake-name FakeSorter . sorter
 type sorter interface {
 	SortBySemver([]pivnet.Release) ([]pivnet.Release, error)
 	SortByLastUpdated([]pivnet.Release) ([]pivnet.Release, error)
 }
 
-//go:generate counterfeiter --fake-name FakePivnetClient . pivnetClient
+//counterfeiter:generate --fake-name FakePivnetClient . pivnetClient
 type pivnetClient interface {
 	ReleaseTypes() ([]pivnet.ReleaseType, error)
 	ReleasesForProductSlug(string) ([]pivnet.Release, error)

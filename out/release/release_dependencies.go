@@ -29,7 +29,7 @@ func NewReleaseDependenciesAdder(
 	}
 }
 
-//go:generate counterfeiter --fake-name ReleaseDependenciesAdderClient . releaseDependenciesAdderClient
+//counterfeiter:generate --fake-name ReleaseDependenciesAdderClient . releaseDependenciesAdderClient
 type releaseDependenciesAdderClient interface {
 	AddReleaseDependency(productSlug string, releaseID int, dependentReleaseID int) error
 	GetRelease(productSlug string, releaseVersion string) (pivnet.Release, error)

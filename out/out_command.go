@@ -2,6 +2,7 @@ package out
 
 import (
 	"fmt"
+
 	"github.com/pivotal-cf/go-pivnet/v7"
 	"github.com/pivotal-cf/go-pivnet/v7/logger"
 	"github.com/pivotal-cf/pivnet-resource/v3/concourse"
@@ -49,7 +50,7 @@ type OutCommandConfig struct {
 	Uploader                       uploader
 	M                              metadata.Metadata
 	SkipUpload                     bool
-	FilesOnly					   bool
+	FilesOnly                      bool
 }
 
 func NewOutCommand(config OutCommandConfig) OutCommand {
@@ -76,67 +77,67 @@ func NewOutCommand(config OutCommandConfig) OutCommand {
 	}
 }
 
-//go:generate counterfeiter --fake-name Creator . creator
+//counterfeiter:generate --fake-name Creator . creator
 type creator interface {
 	Create() (pivnet.Release, error)
 }
 
-//go:generate counterfeiter --fake-name Finder . finder
+//counterfeiter:generate --fake-name Finder . finder
 type finder interface {
 	Find(i int) (pivnet.Release, error)
 }
 
-//go:generate counterfeiter --fake-name Uploader . uploader
+//counterfeiter:generate --fake-name Uploader . uploader
 type uploader interface {
 	Upload(release pivnet.Release, exactGlobs []string) error
 }
 
-//go:generate counterfeiter --fake-name UserGroupsUpdater . userGroupsUpdater
+//counterfeiter:generate --fake-name UserGroupsUpdater . userGroupsUpdater
 type userGroupsUpdater interface {
 	UpdateUserGroups(release pivnet.Release) (pivnet.Release, error)
 }
 
-//go:generate counterfeiter --fake-name ReleaseFileGroupsAdder . releaseFileGroupsAdder
+//counterfeiter:generate --fake-name ReleaseFileGroupsAdder . releaseFileGroupsAdder
 type releaseFileGroupsAdder interface {
 	AddReleaseFileGroups(release pivnet.Release) error
 }
 
-//go:generate counterfeiter --fake-name ReleaseArtifactReferencesAdder . releaseArtifactReferencesAdder
+//counterfeiter:generate --fake-name ReleaseArtifactReferencesAdder . releaseArtifactReferencesAdder
 type releaseArtifactReferencesAdder interface {
 	AddReleaseArtifactReferences(release pivnet.Release) error
 }
 
-//go:generate counterfeiter --fake-name ReleaseDependenciesAdder . releaseDependenciesAdder
+//counterfeiter:generate --fake-name ReleaseDependenciesAdder . releaseDependenciesAdder
 type releaseDependenciesAdder interface {
 	AddReleaseDependencies(release pivnet.Release) error
 }
 
-//go:generate counterfeiter --fake-name DependencySpecifiersCreator . dependencySpecifiersCreator
+//counterfeiter:generate --fake-name DependencySpecifiersCreator . dependencySpecifiersCreator
 type dependencySpecifiersCreator interface {
 	CreateDependencySpecifiers(release pivnet.Release) error
 }
 
-//go:generate counterfeiter --fake-name ReleaseUpgradePathsAdder . releaseUpgradePathsAdder
+//counterfeiter:generate --fake-name ReleaseUpgradePathsAdder . releaseUpgradePathsAdder
 type releaseUpgradePathsAdder interface {
 	AddReleaseUpgradePaths(release pivnet.Release) error
 }
 
-//go:generate counterfeiter --fake-name UpgradePathSpecifiersCreator . upgradePathSpecifiersCreator
+//counterfeiter:generate --fake-name UpgradePathSpecifiersCreator . upgradePathSpecifiersCreator
 type upgradePathSpecifiersCreator interface {
 	CreateUpgradePathSpecifiers(release pivnet.Release) error
 }
 
-//go:generate counterfeiter --fake-name Finalizer . finalizer
+//counterfeiter:generate --fake-name Finalizer . finalizer
 type finalizer interface {
 	Finalize(productSlug string, releaseVersion string) (concourse.OutResponse, error)
 }
 
-//go:generate counterfeiter --fake-name Validation . validation
+//counterfeiter:generate --fake-name Validation . validation
 type validation interface {
 	Validate() error
 }
 
-//go:generate counterfeiter --fake-name Globber . globber
+//counterfeiter:generate --fake-name Globber . globber
 type globber interface {
 	ExactGlobs() ([]string, error)
 }
