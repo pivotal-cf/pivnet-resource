@@ -36,12 +36,12 @@ require (
 	github.com/smartystreets/assertions v0.0.0-20170925172151-0b37b35ec743 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20170825221426-e5b2b7c91115 // indirect
 	github.com/stretchr/testify v0.0.0-20171018052257-2aa2c176b9da // indirect
-	golang.org/x/mod v0.7.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
-	golang.org/x/tools v0.5.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/tools v0.6.0 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.26 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/h2non/filetype.v1 v1.0.5 // indirect
