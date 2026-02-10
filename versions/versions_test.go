@@ -144,4 +144,18 @@ var _ = Describe("Versions", func() {
 			})
 		})
 	})
+
+	Describe("VersionOnly", func() {
+		It("returns only the version part when fingerprint is present", func() {
+			Expect(versions.VersionOnly("1.2.3#2024-01-15T12:00:00Z")).To(Equal("1.2.3"))
+		})
+
+		It("returns the full string when no delimiter is present", func() {
+			Expect(versions.VersionOnly("1.2.3")).To(Equal("1.2.3"))
+		})
+
+		It("returns the version part when fingerprint contains the delimiter", func() {
+			Expect(versions.VersionOnly("1.2.3#fingerprint-with#hash")).To(Equal("1.2.3"))
+		})
+	})
 })

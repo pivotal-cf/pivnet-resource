@@ -447,4 +447,75 @@ var _ = Describe("Check", func() {
 			})
 		})
 	})
+
+	Context("when product_version_only is true", func() {
+		BeforeEach(func() {
+			checkRequest.Source.ProductVersionOnly = true
+
+			checkRequest.Source.SortBy = concourse.SortBySemver
+			fakeSorter.SortBySemverReturns([]pivnet.Release{
+				allReleases[1], // 2.3.4
+				allReleases[2], // 1.2.4
+				allReleases[0], // 1.2.3
+			}, nil)
+		})
+
+		It("returns only product versions without fingerprint", func() {
+			// Set "since" to oldest version so Since() returns all 3 versions (otherwise empty version returns only latest)
+			checkRequest.Version = concourse.Version{ProductVersion: "1.2.3"}
+
+			response, err := checkCommand.Run(checkRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(response).To(HaveLen(3))
+			// Reverse() returns oldest-first: 1.2.3, 1.2.4, 2.3.4
+			Expect(response[0].ProductVersion).To(Equal("1.2.3"))
+			Expect(response[1].ProductVersion).To(Equal("1.2.4"))
+			Expect(response[2].ProductVersion).To(Equal("2.3.4"))
+		})
+
+		It("compares since using version only when current version has fingerprint", func() {
+			checkRequest.Version = concourse.Version{
+				ProductVersion: "1.2.3#time1",
+			}
+
+			response, err := checkCommand.Run(checkRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Should return 1.2.3 and newer (1.2.4, 2.3.4); VersionOnly("1.2.3#time1") = "1.2.3" so all 3 returned. Reverse gives oldest-first.
+			Expect(response).To(HaveLen(3))
+			Expect(response[0].ProductVersion).To(Equal("1.2.3"))
+			Expect(response[1].ProductVersion).To(Equal("1.2.4"))
+			Expect(response[2].ProductVersion).To(Equal("2.3.4"))
+		})
+
+		Context("when multiple releases have the same product version", func() {
+			BeforeEach(func() {
+				releasesWithDuplicateVersion := []pivnet.Release{
+					{ID: 1, Version: "1.2.3", SoftwareFilesUpdatedAt: "time1"},
+					{ID: 2, Version: "1.2.3", SoftwareFilesUpdatedAt: "time2"},
+					{ID: 3, Version: "2.0.0", SoftwareFilesUpdatedAt: "time3"},
+				}
+				allReleases = releasesWithDuplicateVersion
+				filteredReleases = releasesWithDuplicateVersion
+				fakePivnetClient.ReleasesForProductSlugReturns(releasesWithDuplicateVersion, nil)
+				fakeFilter.ReleasesByReleaseTypeReturns(releasesWithDuplicateVersion, nil)
+				fakeFilter.ReleasesByVersionReturns(releasesWithDuplicateVersion, nil)
+				fakeSorter.SortBySemverReturns(releasesWithDuplicateVersion, nil)
+			})
+
+			It("deduplicates by product version and returns one entry per version", func() {
+				// Set "since" to newest (2.0.0) so Since() returns both versions [1.2.3, 2.0.0]; Reverse gives newest-first
+				checkRequest.Version = concourse.Version{ProductVersion: "2.0.0"}
+
+				response, err := checkCommand.Run(checkRequest)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response).To(HaveLen(2))
+				// vs = ["1.2.3", "2.0.0"] (deduped), Since(..., "2.0.0") -> ["1.2.3","2.0.0"], Reverse -> ["2.0.0","1.2.3"]
+				Expect(response[0].ProductVersion).To(Equal("2.0.0"))
+				Expect(response[1].ProductVersion).To(Equal("1.2.3"))
+			})
+		})
+	})
 })

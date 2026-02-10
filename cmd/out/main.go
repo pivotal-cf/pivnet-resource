@@ -269,6 +269,7 @@ func main() {
 		m,
 		sourcesDir,
 		input.Source.ProductSlug,
+		input.Source.ProductVersionOnly,
 	)
 
 	outCmd := out.NewOutCommand(out.OutCommandConfig{

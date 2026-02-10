@@ -26,8 +26,9 @@ var _ = Describe("ReleaseFinalizer", func() {
 
 			mdata metadata.Metadata
 
-			productSlug   string
-			pivnetRelease pivnet.Release
+			productSlug        string
+			productVersionOnly bool
+			pivnetRelease      pivnet.Release
 
 			releaseErr error
 
@@ -43,6 +44,7 @@ var _ = Describe("ReleaseFinalizer", func() {
 			params = concourse.OutParams{}
 
 			productSlug = "some-product-slug"
+			productVersionOnly = false
 
 			pivnetRelease = pivnet.Release{
 				Availability: "Admins Only",
@@ -74,12 +76,13 @@ var _ = Describe("ReleaseFinalizer", func() {
 				mdata,
 				"/some/sources/dir",
 				productSlug,
+				productVersionOnly,
 			)
 
 			fakePivnet.GetReleaseReturns(pivnetRelease, releaseErr)
 		})
 
-		It("returns a final concourse out response", func() {
+		It("returns a final concourse out response with version and fingerprint", func() {
 			response, err := finalizer.Finalize(productSlug, pivnetRelease.Version)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -90,6 +93,21 @@ var _ = Describe("ReleaseFinalizer", func() {
 			Expect(response.Metadata).To(ContainElement(concourse.Metadata{Name: "version", Value: "some-version"}))
 			Expect(response.Metadata).To(ContainElement(concourse.Metadata{Name: "controlled", Value: "false"}))
 			Expect(response.Metadata).To(ContainElement(concourse.Metadata{Name: "eula_slug", Value: "a_eula_slug"}))
+		})
+
+		Context("when product_version_only is true", func() {
+			BeforeEach(func() {
+				productVersionOnly = true
+			})
+
+			It("returns version without fingerprint", func() {
+				response, err := finalizer.Finalize(productSlug, pivnetRelease.Version)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(response.Version).To(Equal(concourse.Version{
+					ProductVersion: "some-version",
+				}))
+			})
 		})
 
 		Context("when getting the release returns an error", func() {

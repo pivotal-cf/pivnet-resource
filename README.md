@@ -79,6 +79,10 @@ resources:
 
   Empty values match all product versions.
 
+* `product_version_only`: *Optional boolean.*
+
+  When `true`, the resource triggers only when a new product version is released. Changes to metadata or to the software-files updated timestamp for the same version do not trigger a new version. The version passed to `get` is the product version only (no fingerprint). Defaults to `false`; when `false`, the resource uses version and fingerprint so that metadata-only updates can trigger (see `sort_by: last_updated`).
+
 * `sort_by`: *Optional string.*
 
   Order to use for sorting releases. One of the following:

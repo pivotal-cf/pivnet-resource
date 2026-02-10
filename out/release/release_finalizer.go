@@ -11,12 +11,13 @@ import (
 )
 
 type ReleaseFinalizer struct {
-	logger      logger.Logger
-	pivnet      finalizerClient
-	metadata    metadata.Metadata
-	params      concourse.OutParams
-	sourcesDir  string
-	productSlug string
+	logger             logger.Logger
+	pivnet             finalizerClient
+	metadata           metadata.Metadata
+	params             concourse.OutParams
+	sourcesDir         string
+	productSlug        string
+	productVersionOnly bool
 }
 
 func NewFinalizer(
@@ -26,14 +27,16 @@ func NewFinalizer(
 	metadata metadata.Metadata,
 	sourcesDir,
 	productSlug string,
+	productVersionOnly bool,
 ) ReleaseFinalizer {
 	return ReleaseFinalizer{
-		pivnet:      pivnetClient,
-		logger:      logger,
-		params:      params,
-		metadata:    metadata,
-		sourcesDir:  sourcesDir,
-		productSlug: productSlug,
+		pivnet:             pivnetClient,
+		logger:             logger,
+		params:             params,
+		metadata:           metadata,
+		sourcesDir:         sourcesDir,
+		productSlug:        productSlug,
+		productVersionOnly: productVersionOnly,
 	}
 }
 
@@ -48,9 +51,15 @@ func (rf ReleaseFinalizer) Finalize(productSlug string, releaseVersion string) (
 		return concourse.OutResponse{}, err
 	}
 
-	outputVersion, err := versions.CombineVersionAndFingerprint(newRelease.Version, newRelease.SoftwareFilesUpdatedAt)
-	if err != nil {
-		return concourse.OutResponse{}, err // this will never return an error
+	var outputVersion string
+	if rf.productVersionOnly {
+		outputVersion = newRelease.Version
+	} else {
+		var err error
+		outputVersion, err = versions.CombineVersionAndFingerprint(newRelease.Version, newRelease.SoftwareFilesUpdatedAt)
+		if err != nil {
+			return concourse.OutResponse{}, err // this will never return an error
+		}
 	}
 
 	metadata := []concourse.Metadata{

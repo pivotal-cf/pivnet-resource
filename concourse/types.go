@@ -9,15 +9,16 @@ const (
 )
 
 type Source struct {
-	APIToken          string `json:"api_token"`
-	ProductSlug       string `json:"product_slug"`
-	ProductVersion    string `json:"product_version"`
-	Endpoint          string `json:"endpoint"`
-	ReleaseType       string `json:"release_type"`
-	SortBy            SortBy `json:"sort_by"`
-	SkipSSLValidation bool   `json:"skip_ssl_verification"`
-	CopyMetadata      bool   `json:"copy_metadata"`
-	Verbose           bool   `json:"verbose"`
+	APIToken           string `json:"api_token"`
+	ProductSlug        string `json:"product_slug"`
+	ProductVersion     string `json:"product_version"`
+	Endpoint           string `json:"endpoint"`
+	ReleaseType        string `json:"release_type"`
+	SortBy             SortBy `json:"sort_by"`
+	SkipSSLValidation  bool   `json:"skip_ssl_verification"`
+	CopyMetadata       bool   `json:"copy_metadata"`
+	ProductVersionOnly bool   `json:"product_version_only"`
+	Verbose            bool   `json:"verbose"`
 }
 
 type CheckRequest struct {

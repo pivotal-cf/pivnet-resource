@@ -114,7 +114,8 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	vs, err := releaseVersions(releases)
+	productVersionOnly := input.Source.ProductVersionOnly
+	vs, err := releaseVersions(releases, productVersionOnly)
 	if err != nil {
 		// Untested because versions.CombineVersionAndFingerprint cannot be forced to return an error.
 		return concourse.CheckResponse{}, err
@@ -126,7 +127,11 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 
 	c.logger.Info("Gathering new versions")
 
-	newVersions, err := versions.Since(vs, input.Version.ProductVersion)
+	sinceVersion := input.Version.ProductVersion
+	if productVersionOnly {
+		sinceVersion = versions.VersionOnly(sinceVersion)
+	}
+	newVersions, err := versions.Since(vs, sinceVersion)
 	if err != nil {
 		// Untested because versions.Since cannot be forced to return an error.
 		return nil, err
@@ -213,9 +218,21 @@ func containsString(strings []string, str string) bool {
 	return false
 }
 
-func releaseVersions(releases []pivnet.Release) ([]string, error) {
-	releaseVersions := make([]string, len(releases))
+func releaseVersions(releases []pivnet.Release, productVersionOnly bool) ([]string, error) {
+	if productVersionOnly {
+		seen := make(map[string]bool)
+		var result []string
+		for _, r := range releases {
+			if seen[r.Version] {
+				continue
+			}
+			seen[r.Version] = true
+			result = append(result, r.Version)
+		}
+		return result, nil
+	}
 
+	releaseVersions := make([]string, len(releases))
 	var err error
 	for i, r := range releases {
 		releaseVersions[i], err = versions.CombineVersionAndFingerprint(r.Version, r.SoftwareFilesUpdatedAt)
