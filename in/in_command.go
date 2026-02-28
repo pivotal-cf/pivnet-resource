@@ -112,18 +112,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 		return concourse.InResponse{}, err
 	}
 
-	if fingerprint != "" {
-		actualFingerprint := release.SoftwareFilesUpdatedAt
-		if actualFingerprint != fingerprint {
-			return concourse.InResponse{}, fmt.Errorf(
-				"provided fingerprint: '%s' does not match actual fingerprint (from pivnet): '%s' - %s",
-				fingerprint,
-				actualFingerprint,
-				"pivnet does not support downloading old versions of a release",
-			)
-		}
-	}
-
 	c.logger.Info(fmt.Sprintf("Accepting EULA for release with ID: %d", release.ID))
 
 	err = c.pivnetClient.AcceptEULA(productSlug, release.ID)
@@ -148,6 +136,25 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	allProductFiles := releaseProductFiles
 	for _, fg := range fileGroups {
 		allProductFiles = append(allProductFiles, fg.ProductFiles...)
+	}
+
+	// Compute fingerprint from product files so we only trigger when files change (TNZ-22056)
+	fileMetadata := make([]versions.FileMetadata, 0, len(allProductFiles))
+	seen := make(map[int]bool)
+	for _, pf := range allProductFiles {
+		if !seen[pf.ID] {
+			seen[pf.ID] = true
+			fileMetadata = append(fileMetadata, versions.FileMetadata{ID: pf.ID, ReleasedAt: pf.ReleasedAt})
+		}
+	}
+	actualFingerprint := versions.FingerprintFromFileMetadata(fileMetadata)
+	if fingerprint != "" && actualFingerprint != fingerprint {
+		return concourse.InResponse{}, fmt.Errorf(
+			"provided fingerprint: '%s' does not match actual fingerprint (from product files): '%s' - %s",
+			fingerprint,
+			actualFingerprint,
+			"pivnet does not support downloading old versions of a release",
+		)
 	}
 
 	c.logger.Info("Getting artifact references")
@@ -194,7 +201,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Info("Creating metadata")
 
-	versionWithFingerprint, err := versions.CombineVersionAndFingerprint(version, fingerprint)
+	versionWithFingerprint, err := versions.CombineVersionAndFingerprint(version, actualFingerprint)
 
 	mdata := metadata.Metadata{
 		Release: &metadata.Release{

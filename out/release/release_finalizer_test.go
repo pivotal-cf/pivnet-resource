@@ -11,6 +11,7 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/v3/metadata"
 	"github.com/pivotal-cf/pivnet-resource/v3/out/release"
 	"github.com/pivotal-cf/pivnet-resource/v3/out/release/releasefakes"
+	"github.com/pivotal-cf/pivnet-resource/v3/versions"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -51,7 +52,6 @@ var _ = Describe("ReleaseFinalizer", func() {
 				EULA: &pivnet.EULA{
 					Slug: "a_eula_slug",
 				},
-				SoftwareFilesUpdatedAt: "some-new-time",
 			}
 
 			mdata = metadata.Metadata{
@@ -77,14 +77,23 @@ var _ = Describe("ReleaseFinalizer", func() {
 			)
 
 			fakePivnet.GetReleaseReturns(pivnetRelease, releaseErr)
+			// Stub product files for file-based fingerprint (TNZ-22056)
+			fakePivnet.ProductFilesForReleaseReturns([]pivnet.ProductFile{
+				{ID: 1, ReleasedAt: "some-new-time"},
+			}, nil)
+			fakePivnet.FileGroupsForReleaseReturns([]pivnet.FileGroup{}, nil)
 		})
 
 		It("returns a final concourse out response", func() {
 			response, err := finalizer.Finalize(productSlug, pivnetRelease.Version)
 			Expect(err).NotTo(HaveOccurred())
 
+			expectedFingerprint := versions.FingerprintFromFileMetadata([]versions.FileMetadata{
+				{ID: 1, ReleasedAt: "some-new-time"},
+			})
+			expectedVersion, _ := versions.CombineVersionAndFingerprint("some-version", expectedFingerprint)
 			Expect(response.Version).To(Equal(concourse.Version{
-				ProductVersion: "some-version#some-new-time",
+				ProductVersion: expectedVersion,
 			}))
 
 			Expect(response.Metadata).To(ContainElement(concourse.Metadata{Name: "version", Value: "some-version"}))

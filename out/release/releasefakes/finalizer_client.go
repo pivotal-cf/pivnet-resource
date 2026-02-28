@@ -8,6 +8,20 @@ import (
 )
 
 type FinalizerClient struct {
+	FileGroupsForReleaseStub        func(string, int) ([]pivnet.FileGroup, error)
+	fileGroupsForReleaseMutex       sync.RWMutex
+	fileGroupsForReleaseArgsForCall []struct {
+		arg1 string
+		arg2 int
+	}
+	fileGroupsForReleaseReturns struct {
+		result1 []pivnet.FileGroup
+		result2 error
+	}
+	fileGroupsForReleaseReturnsOnCall map[int]struct {
+		result1 []pivnet.FileGroup
+		result2 error
+	}
 	GetReleaseStub        func(string, string) (pivnet.Release, error)
 	getReleaseMutex       sync.RWMutex
 	getReleaseArgsForCall []struct {
@@ -22,8 +36,87 @@ type FinalizerClient struct {
 		result1 pivnet.Release
 		result2 error
 	}
+	ProductFilesForReleaseStub        func(string, int) ([]pivnet.ProductFile, error)
+	productFilesForReleaseMutex       sync.RWMutex
+	productFilesForReleaseArgsForCall []struct {
+		arg1 string
+		arg2 int
+	}
+	productFilesForReleaseReturns struct {
+		result1 []pivnet.ProductFile
+		result2 error
+	}
+	productFilesForReleaseReturnsOnCall map[int]struct {
+		result1 []pivnet.ProductFile
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FinalizerClient) FileGroupsForRelease(arg1 string, arg2 int) ([]pivnet.FileGroup, error) {
+	fake.fileGroupsForReleaseMutex.Lock()
+	ret, specificReturn := fake.fileGroupsForReleaseReturnsOnCall[len(fake.fileGroupsForReleaseArgsForCall)]
+	fake.fileGroupsForReleaseArgsForCall = append(fake.fileGroupsForReleaseArgsForCall, struct {
+		arg1 string
+		arg2 int
+	}{arg1, arg2})
+	stub := fake.FileGroupsForReleaseStub
+	fakeReturns := fake.fileGroupsForReleaseReturns
+	fake.recordInvocation("FileGroupsForRelease", []interface{}{arg1, arg2})
+	fake.fileGroupsForReleaseMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FinalizerClient) FileGroupsForReleaseCallCount() int {
+	fake.fileGroupsForReleaseMutex.RLock()
+	defer fake.fileGroupsForReleaseMutex.RUnlock()
+	return len(fake.fileGroupsForReleaseArgsForCall)
+}
+
+func (fake *FinalizerClient) FileGroupsForReleaseCalls(stub func(string, int) ([]pivnet.FileGroup, error)) {
+	fake.fileGroupsForReleaseMutex.Lock()
+	defer fake.fileGroupsForReleaseMutex.Unlock()
+	fake.FileGroupsForReleaseStub = stub
+}
+
+func (fake *FinalizerClient) FileGroupsForReleaseArgsForCall(i int) (string, int) {
+	fake.fileGroupsForReleaseMutex.RLock()
+	defer fake.fileGroupsForReleaseMutex.RUnlock()
+	argsForCall := fake.fileGroupsForReleaseArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FinalizerClient) FileGroupsForReleaseReturns(result1 []pivnet.FileGroup, result2 error) {
+	fake.fileGroupsForReleaseMutex.Lock()
+	defer fake.fileGroupsForReleaseMutex.Unlock()
+	fake.FileGroupsForReleaseStub = nil
+	fake.fileGroupsForReleaseReturns = struct {
+		result1 []pivnet.FileGroup
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FinalizerClient) FileGroupsForReleaseReturnsOnCall(i int, result1 []pivnet.FileGroup, result2 error) {
+	fake.fileGroupsForReleaseMutex.Lock()
+	defer fake.fileGroupsForReleaseMutex.Unlock()
+	fake.FileGroupsForReleaseStub = nil
+	if fake.fileGroupsForReleaseReturnsOnCall == nil {
+		fake.fileGroupsForReleaseReturnsOnCall = make(map[int]struct {
+			result1 []pivnet.FileGroup
+			result2 error
+		})
+	}
+	fake.fileGroupsForReleaseReturnsOnCall[i] = struct {
+		result1 []pivnet.FileGroup
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FinalizerClient) GetRelease(arg1 string, arg2 string) (pivnet.Release, error) {
@@ -91,11 +184,80 @@ func (fake *FinalizerClient) GetReleaseReturnsOnCall(i int, result1 pivnet.Relea
 	}{result1, result2}
 }
 
+func (fake *FinalizerClient) ProductFilesForRelease(arg1 string, arg2 int) ([]pivnet.ProductFile, error) {
+	fake.productFilesForReleaseMutex.Lock()
+	ret, specificReturn := fake.productFilesForReleaseReturnsOnCall[len(fake.productFilesForReleaseArgsForCall)]
+	fake.productFilesForReleaseArgsForCall = append(fake.productFilesForReleaseArgsForCall, struct {
+		arg1 string
+		arg2 int
+	}{arg1, arg2})
+	stub := fake.ProductFilesForReleaseStub
+	fakeReturns := fake.productFilesForReleaseReturns
+	fake.recordInvocation("ProductFilesForRelease", []interface{}{arg1, arg2})
+	fake.productFilesForReleaseMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FinalizerClient) ProductFilesForReleaseCallCount() int {
+	fake.productFilesForReleaseMutex.RLock()
+	defer fake.productFilesForReleaseMutex.RUnlock()
+	return len(fake.productFilesForReleaseArgsForCall)
+}
+
+func (fake *FinalizerClient) ProductFilesForReleaseCalls(stub func(string, int) ([]pivnet.ProductFile, error)) {
+	fake.productFilesForReleaseMutex.Lock()
+	defer fake.productFilesForReleaseMutex.Unlock()
+	fake.ProductFilesForReleaseStub = stub
+}
+
+func (fake *FinalizerClient) ProductFilesForReleaseArgsForCall(i int) (string, int) {
+	fake.productFilesForReleaseMutex.RLock()
+	defer fake.productFilesForReleaseMutex.RUnlock()
+	argsForCall := fake.productFilesForReleaseArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FinalizerClient) ProductFilesForReleaseReturns(result1 []pivnet.ProductFile, result2 error) {
+	fake.productFilesForReleaseMutex.Lock()
+	defer fake.productFilesForReleaseMutex.Unlock()
+	fake.ProductFilesForReleaseStub = nil
+	fake.productFilesForReleaseReturns = struct {
+		result1 []pivnet.ProductFile
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FinalizerClient) ProductFilesForReleaseReturnsOnCall(i int, result1 []pivnet.ProductFile, result2 error) {
+	fake.productFilesForReleaseMutex.Lock()
+	defer fake.productFilesForReleaseMutex.Unlock()
+	fake.ProductFilesForReleaseStub = nil
+	if fake.productFilesForReleaseReturnsOnCall == nil {
+		fake.productFilesForReleaseReturnsOnCall = make(map[int]struct {
+			result1 []pivnet.ProductFile
+			result2 error
+		})
+	}
+	fake.productFilesForReleaseReturnsOnCall[i] = struct {
+		result1 []pivnet.ProductFile
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FinalizerClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.fileGroupsForReleaseMutex.RLock()
+	defer fake.fileGroupsForReleaseMutex.RUnlock()
 	fake.getReleaseMutex.RLock()
 	defer fake.getReleaseMutex.RUnlock()
+	fake.productFilesForReleaseMutex.RLock()
+	defer fake.productFilesForReleaseMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -40,6 +40,8 @@ func NewFinalizer(
 //counterfeiter:generate --fake-name FinalizerClient . finalizerClient
 type finalizerClient interface {
 	GetRelease(productSlug string, releaseVersion string) (pivnet.Release, error)
+	ProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
+	FileGroupsForRelease(productSlug string, releaseID int) ([]pivnet.FileGroup, error)
 }
 
 func (rf ReleaseFinalizer) Finalize(productSlug string, releaseVersion string) (concourse.OutResponse, error) {
@@ -48,7 +50,34 @@ func (rf ReleaseFinalizer) Finalize(productSlug string, releaseVersion string) (
 		return concourse.OutResponse{}, err
 	}
 
-	outputVersion, err := versions.CombineVersionAndFingerprint(newRelease.Version, newRelease.SoftwareFilesUpdatedAt)
+	// Compute fingerprint from product files so version only changes when files change (TNZ-22056)
+	releaseProductFiles, err := rf.pivnet.ProductFilesForRelease(productSlug, newRelease.ID)
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+	fileGroups, err := rf.pivnet.FileGroupsForRelease(productSlug, newRelease.ID)
+	if err != nil {
+		return concourse.OutResponse{}, err
+	}
+	seen := make(map[int]bool)
+	var fileMetadata []versions.FileMetadata
+	for _, pf := range releaseProductFiles {
+		if !seen[pf.ID] {
+			seen[pf.ID] = true
+			fileMetadata = append(fileMetadata, versions.FileMetadata{ID: pf.ID, ReleasedAt: pf.ReleasedAt})
+		}
+	}
+	for _, fg := range fileGroups {
+		for _, pf := range fg.ProductFiles {
+			if !seen[pf.ID] {
+				seen[pf.ID] = true
+				fileMetadata = append(fileMetadata, versions.FileMetadata{ID: pf.ID, ReleasedAt: pf.ReleasedAt})
+			}
+		}
+	}
+	fingerprint := versions.FingerprintFromFileMetadata(fileMetadata)
+
+	outputVersion, err := versions.CombineVersionAndFingerprint(newRelease.Version, fingerprint)
 	if err != nil {
 		return concourse.OutResponse{}, err // this will never return an error
 	}

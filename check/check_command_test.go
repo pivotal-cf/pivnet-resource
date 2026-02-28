@@ -86,9 +86,12 @@ var _ = Describe("Check", func() {
 			},
 		}
 
+		// Compute expected versions from file-based fingerprint (TNZ-22056)
 		versionsWithFingerprints = make([]string, len(allReleases))
 		for i, r := range allReleases {
-			v, err := versions.CombineVersionAndFingerprint(r.Version, r.SoftwareFilesUpdatedAt)
+			fileMetadata := []versions.FileMetadata{{ID: r.ID, ReleasedAt: r.SoftwareFilesUpdatedAt}}
+			fingerprint := versions.FingerprintFromFileMetadata(fileMetadata)
+			v, err := versions.CombineVersionAndFingerprint(r.Version, fingerprint)
 			Expect(err).NotTo(HaveOccurred())
 			versionsWithFingerprints[i] = v
 		}
@@ -114,6 +117,16 @@ var _ = Describe("Check", func() {
 	JustBeforeEach(func() {
 		fakePivnetClient.ReleaseTypesReturns(releaseTypes, releaseTypesErr)
 		fakePivnetClient.ReleasesForProductSlugReturns(allReleases, releasesErr)
+		// Stub product files and file groups for file-based fingerprint (TNZ-22056)
+		fakePivnetClient.ProductFilesForReleaseStub = func(_ string, releaseID int) ([]pivnet.ProductFile, error) {
+			for _, r := range allReleases {
+				if r.ID == releaseID {
+					return []pivnet.ProductFile{{ID: r.ID, ReleasedAt: r.SoftwareFilesUpdatedAt}}, nil
+				}
+			}
+			return nil, nil
+		}
+		fakePivnetClient.FileGroupsForReleaseReturns([]pivnet.FileGroup{}, nil)
 
 		fakeFilter.ReleasesByReleaseTypeReturns(filteredReleases, releasesByReleaseTypeErr)
 		fakeFilter.ReleasesByVersionReturns(filteredReleases, releasesByVersionErr)
@@ -214,6 +227,18 @@ var _ = Describe("Check", func() {
 			Expect(err).To(HaveOccurred())
 
 			Expect(err.Error()).To(ContainSubstring("some error"))
+		})
+	})
+
+	Context("when there is an error getting product files for a release", func() {
+		BeforeEach(func() {
+			fakePivnetClient.ProductFilesForReleaseReturns(nil, fmt.Errorf("product files error"))
+		})
+
+		It("returns an error", func() {
+			_, err := checkCommand.Run(checkRequest)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("product files error"))
 		})
 	})
 

@@ -49,7 +49,6 @@ var _ = Describe("In", func() {
 		upgradePathSpecifiers []pivnet.UpgradePathSpecifier
 
 		version                string
-		fingerprint            string
 		actualFingerprint      string
 		versionWithFingerprint string
 
@@ -100,8 +99,6 @@ var _ = Describe("In", func() {
 		artifactReferencesErr = nil
 
 		version = "C"
-		fingerprint = "fingerprint-0"
-		actualFingerprint = fingerprint
 
 		fileContentsSHA256s = []string{
 			"some-sha256 1234",
@@ -116,10 +113,6 @@ var _ = Describe("In", func() {
 			"some-md5 4567",
 			"some-md5 5678",
 		}
-
-		var err error
-		versionWithFingerprint, err = versions.CombineVersionAndFingerprint(version, fingerprint)
-		Expect(err).NotTo(HaveOccurred())
 
 		downloadFilepaths = []string{
 			"file-1234",
@@ -137,6 +130,7 @@ var _ = Describe("In", func() {
 				AWSObjectKey: downloadFilepaths[0],
 				FileType:     pivnet.FileTypeSoftware,
 				FileVersion:  "some-file-version 1234",
+				ReleasedAt:   "2021-01-01T00:00:00Z",
 				SHA256:       fileContentsSHA256s[0],
 				MD5:          fileContentsMD5s[0],
 				Links: &pivnet.Links{
@@ -151,6 +145,7 @@ var _ = Describe("In", func() {
 				AWSObjectKey: downloadFilepaths[1],
 				FileType:     pivnet.FileTypeSoftware,
 				FileVersion:  "some-file-version 3456",
+				ReleasedAt:   "2021-01-02T00:00:00Z",
 				SHA256:       fileContentsSHA256s[1],
 				MD5:          fileContentsMD5s[1],
 				Links: &pivnet.Links{
@@ -168,6 +163,7 @@ var _ = Describe("In", func() {
 				AWSObjectKey: downloadFilepaths[2],
 				FileType:     pivnet.FileTypeSoftware,
 				FileVersion:  "some-file-version 4567",
+				ReleasedAt:   "2021-01-03T00:00:00Z",
 				SHA256:       fileContentsSHA256s[2],
 				MD5:          fileContentsMD5s[2],
 				Links: &pivnet.Links{
@@ -185,6 +181,7 @@ var _ = Describe("In", func() {
 				AWSObjectKey: downloadFilepaths[3],
 				FileType:     pivnet.FileTypeSoftware,
 				FileVersion:  "some-file-version 5678",
+				ReleasedAt:   "2021-01-04T00:00:00Z",
 				SHA256:       fileContentsSHA256s[3],
 				MD5:          fileContentsMD5s[3],
 				Links: &pivnet.Links{
@@ -219,6 +216,28 @@ var _ = Describe("In", func() {
 			},
 		}
 
+		// Compute fingerprint from product files (TNZ-22056) to match in command behavior
+		seen := make(map[int]bool)
+		var fileMetadata []versions.FileMetadata
+		for _, pf := range releaseProductFiles {
+			if !seen[pf.ID] {
+				seen[pf.ID] = true
+				fileMetadata = append(fileMetadata, versions.FileMetadata{ID: pf.ID, ReleasedAt: pf.ReleasedAt})
+			}
+		}
+		for _, fg := range fileGroups {
+			for _, pf := range fg.ProductFiles {
+				if !seen[pf.ID] {
+					seen[pf.ID] = true
+					fileMetadata = append(fileMetadata, versions.FileMetadata{ID: pf.ID, ReleasedAt: pf.ReleasedAt})
+				}
+			}
+		}
+		actualFingerprint = versions.FingerprintFromFileMetadata(fileMetadata)
+		var err error
+		versionWithFingerprint, err = versions.CombineVersionAndFingerprint(version, actualFingerprint)
+		Expect(err).NotTo(HaveOccurred())
+
 		artifactReferences = []pivnet.ArtifactReference{
 			{
 				ID:                 101,
@@ -241,9 +260,8 @@ var _ = Describe("In", func() {
 		}
 
 		release = pivnet.Release{
-			Version:                version,
-			SoftwareFilesUpdatedAt: actualFingerprint,
-			ID:                     1234,
+			Version: version,
+			ID:      1234,
 			Links: &pivnet.Links{
 				ProductFiles: map[string]string{
 					"href": "some-file-path",
@@ -308,8 +326,6 @@ var _ = Describe("In", func() {
 	})
 
 	JustBeforeEach(func() {
-		release.SoftwareFilesUpdatedAt = actualFingerprint
-
 		fakePivnetClient.GetReleaseReturns(release, getReleaseErr)
 		fakePivnetClient.AcceptEULAReturns(acceptEULAErr)
 		fakePivnetClient.ProductFilesForReleaseReturns(releaseProductFiles, productFilesErr)
@@ -467,18 +483,17 @@ var _ = Describe("In", func() {
 
 	Context("when actual fingerprint is different than provided", func() {
 		BeforeEach(func() {
-			actualFingerprint = "different fingerprint"
+			// Request version with a fingerprint that won't match product files
+			inRequest.Version = concourse.Version{
+				ProductVersion: version + "#wrong-fingerprint",
+			}
 		})
 
 		It("returns the error", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(MatchRegexp(
-				".*provided.*'%s'.*actual.*'%s'.*",
-				fingerprint,
-				actualFingerprint,
-			))
+			Expect(err.Error()).To(ContainSubstring("does not match actual fingerprint"))
+			Expect(err.Error()).To(ContainSubstring("product files"))
 		})
 	})
 

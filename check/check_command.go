@@ -28,6 +28,8 @@ type sorter interface {
 type pivnetClient interface {
 	ReleaseTypes() ([]pivnet.ReleaseType, error)
 	ReleasesForProductSlug(string) ([]pivnet.Release, error)
+	ProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error)
+	FileGroupsForRelease(productSlug string, releaseID int) ([]pivnet.FileGroup, error)
 }
 
 type CheckCommand struct {
@@ -114,7 +116,7 @@ func (c *CheckCommand) Run(input concourse.CheckRequest) (concourse.CheckRespons
 		}
 	}
 
-	vs, err := releaseVersions(releases)
+	vs, err := c.releaseVersions(productSlug, releases)
 	if err != nil {
 		// Untested because versions.CombineVersionAndFingerprint cannot be forced to return an error.
 		return concourse.CheckResponse{}, err
@@ -213,16 +215,53 @@ func containsString(strings []string, str string) bool {
 	return false
 }
 
-func releaseVersions(releases []pivnet.Release) ([]string, error) {
+func (c *CheckCommand) releaseVersions(productSlug string, releases []pivnet.Release) ([]string, error) {
 	releaseVersions := make([]string, len(releases))
 
-	var err error
 	for i, r := range releases {
-		releaseVersions[i], err = versions.CombineVersionAndFingerprint(r.Version, r.SoftwareFilesUpdatedAt)
+		allFiles, err := c.allProductFilesForRelease(productSlug, r.ID)
+		if err != nil {
+			return nil, err
+		}
+		fileMetadata := make([]versions.FileMetadata, 0, len(allFiles))
+		for _, pf := range allFiles {
+			fileMetadata = append(fileMetadata, versions.FileMetadata{ID: pf.ID, ReleasedAt: pf.ReleasedAt})
+		}
+		fingerprint := versions.FingerprintFromFileMetadata(fileMetadata)
+		releaseVersions[i], err = versions.CombineVersionAndFingerprint(r.Version, fingerprint)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	return releaseVersions, nil
+}
+
+// allProductFilesForRelease returns release product files plus file group product files (deduped by ID).
+func (c *CheckCommand) allProductFilesForRelease(productSlug string, releaseID int) ([]pivnet.ProductFile, error) {
+	releaseProductFiles, err := c.pivnetClient.ProductFilesForRelease(productSlug, releaseID)
+	if err != nil {
+		return nil, err
+	}
+	fileGroups, err := c.pivnetClient.FileGroupsForRelease(productSlug, releaseID)
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[int]bool)
+	var all []pivnet.ProductFile
+	for _, pf := range releaseProductFiles {
+		if !seen[pf.ID] {
+			seen[pf.ID] = true
+			all = append(all, pf)
+		}
+	}
+	for _, fg := range fileGroups {
+		for _, pf := range fg.ProductFiles {
+			if !seen[pf.ID] {
+				seen[pf.ID] = true
+				all = append(all, pf)
+			}
+		}
+	}
+	return all, nil
 }

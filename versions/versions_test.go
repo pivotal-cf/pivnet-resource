@@ -144,4 +144,41 @@ var _ = Describe("Versions", func() {
 			})
 		})
 	})
+
+	Describe("FingerprintFromFileMetadata", func() {
+		It("returns empty string for empty input", func() {
+			Expect(versions.FingerprintFromFileMetadata(nil)).To(Equal(""))
+			Expect(versions.FingerprintFromFileMetadata([]versions.FileMetadata{})).To(Equal(""))
+		})
+
+		It("returns deterministic fingerprint for one file", func() {
+			fp := versions.FingerprintFromFileMetadata([]versions.FileMetadata{
+				{ID: 1, ReleasedAt: "2021-01-01T00:00:00Z"},
+			})
+			Expect(fp).To(HaveLen(64)) // SHA256 hex
+			Expect(versions.FingerprintFromFileMetadata([]versions.FileMetadata{
+				{ID: 1, ReleasedAt: "2021-01-01T00:00:00Z"},
+			})).To(Equal(fp))
+		})
+
+		It("returns same fingerprint for same files in different order", func() {
+			files1 := []versions.FileMetadata{
+				{ID: 1, ReleasedAt: "a"},
+				{ID: 2, ReleasedAt: "b"},
+			}
+			files2 := []versions.FileMetadata{
+				{ID: 2, ReleasedAt: "b"},
+				{ID: 1, ReleasedAt: "a"},
+			}
+			Expect(versions.FingerprintFromFileMetadata(files1)).To(Equal(versions.FingerprintFromFileMetadata(files2)))
+		})
+
+		It("returns different fingerprint when file IDs or ReleasedAt differ", func() {
+			fp1 := versions.FingerprintFromFileMetadata([]versions.FileMetadata{{ID: 1, ReleasedAt: "a"}})
+			fp2 := versions.FingerprintFromFileMetadata([]versions.FileMetadata{{ID: 2, ReleasedAt: "a"}})
+			fp3 := versions.FingerprintFromFileMetadata([]versions.FileMetadata{{ID: 1, ReleasedAt: "b"}})
+			Expect(fp1).NotTo(Equal(fp2))
+			Expect(fp1).NotTo(Equal(fp3))
+		})
+	})
 })
