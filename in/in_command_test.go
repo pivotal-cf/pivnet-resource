@@ -367,12 +367,18 @@ var _ = Describe("In", func() {
 		)
 	})
 
-	It("invokes the version file writer with downloaded version and fingerprint", func() {
+	It("invokes the version file writer with product version only", func() {
 		_, err := inCommand.Run(inRequest)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(fakeFileWriter.WriteVersionFileCallCount()).To(Equal(1))
-		Expect(fakeFileWriter.WriteVersionFileArgsForCall(0)).To(Equal(versionWithFingerprint))
+		Expect(fakeFileWriter.WriteVersionFileArgsForCall(0)).To(Equal(version))
+	})
+
+	It("returns response with product version only", func() {
+		response, err := inCommand.Run(inRequest)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(response.Version.ProductVersion).To(Equal(version))
 	})
 
 	It("invokes the json metadata file writer with correct metadata", func() {
@@ -446,9 +452,24 @@ var _ = Describe("In", func() {
 			}
 		})
 
-		It("returns without error (does not compare against actual fingerprint)", func() {
+		It("returns without error and writes version only", func() {
 			_, err := inCommand.Run(inRequest)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeFileWriter.WriteVersionFileArgsForCall(0)).To(Equal(version))
+		})
+	})
+
+	Context("when version is provided with fingerprint (legacy format)", func() {
+		BeforeEach(func() {
+			inRequest.Version = concourse.Version{
+				ProductVersion: versionWithFingerprint,
+			}
+		})
+
+		It("strips fingerprint and writes version only", func() {
+			_, err := inCommand.Run(inRequest)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeFileWriter.WriteVersionFileArgsForCall(0)).To(Equal(version))
 		})
 	})
 
@@ -462,23 +483,6 @@ var _ = Describe("In", func() {
 			Expect(err).To(HaveOccurred())
 
 			Expect(err).To(Equal(getReleaseErr))
-		})
-	})
-
-	Context("when actual fingerprint is different than provided", func() {
-		BeforeEach(func() {
-			actualFingerprint = "different fingerprint"
-		})
-
-		It("returns the error", func() {
-			_, err := inCommand.Run(inRequest)
-			Expect(err).To(HaveOccurred())
-
-			Expect(err.Error()).To(MatchRegexp(
-				".*provided.*'%s'.*actual.*'%s'.*",
-				fingerprint,
-				actualFingerprint,
-			))
 		})
 	})
 

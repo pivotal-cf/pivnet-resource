@@ -46,3 +46,10 @@ func CombineVersionAndFingerprint(version string, fingerprint string) (string, e
 func combineVersionAndFingerprint(version string, fingerprint string) string {
 	return fmt.Sprintf("%s%s%s", version, fingerprintDelimiter, fingerprint)
 }
+
+// VersionOnly returns the product version part of a version string, stripping any
+// fingerprint after the delimiter. If there is no delimiter, the full string is returned.
+func VersionOnly(versionWithOptionalFingerprint string) string {
+	split := strings.SplitN(versionWithOptionalFingerprint, fingerprintDelimiter, 2)
+	return split[0]
+}
