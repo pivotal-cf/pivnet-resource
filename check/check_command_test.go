@@ -14,7 +14,6 @@ import (
 	"github.com/pivotal-cf/pivnet-resource/v3/check"
 	"github.com/pivotal-cf/pivnet-resource/v3/check/checkfakes"
 	"github.com/pivotal-cf/pivnet-resource/v3/concourse"
-	"github.com/pivotal-cf/pivnet-resource/v3/versions"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -30,7 +29,7 @@ var _ = Describe("Check", func() {
 		checkRequest concourse.CheckRequest
 		checkCommand *check.CheckCommand
 
-		versionsWithFingerprints []string
+		expectedVersions []string // product version only, same order as releaseVersions from check
 
 		releaseTypes    []pivnet.ReleaseType
 		releaseTypesErr error
@@ -86,11 +85,9 @@ var _ = Describe("Check", func() {
 			},
 		}
 
-		versionsWithFingerprints = make([]string, len(allReleases))
+		expectedVersions = make([]string, len(allReleases))
 		for i, r := range allReleases {
-			v, err := versions.CombineVersionAndFingerprint(r.Version, r.SoftwareFilesUpdatedAt)
-			Expect(err).NotTo(HaveOccurred())
-			versionsWithFingerprints[i] = v
+			expectedVersions[i] = r.Version
 		}
 
 		filteredReleases = allReleases
@@ -139,10 +136,8 @@ var _ = Describe("Check", func() {
 		response, err := checkCommand.Run(checkRequest)
 		Expect(err).NotTo(HaveOccurred())
 
-		expectedVersionWithFingerprint := versionsWithFingerprints[0]
-
 		Expect(response).To(HaveLen(1))
-		Expect(response[0].ProductVersion).To(Equal(expectedVersionWithFingerprint))
+		Expect(response[0].ProductVersion).To(Equal(expectedVersions[0]))
 	})
 
 	Context("when no releases are returned", func() {
@@ -220,10 +215,8 @@ var _ = Describe("Check", func() {
 	Describe("when a version is provided", func() {
 		Context("when the version is the latest", func() {
 			BeforeEach(func() {
-				versionWithFingerprint := versionsWithFingerprints[0]
-
 				checkRequest.Version = concourse.Version{
-					ProductVersion: versionWithFingerprint,
+					ProductVersion: expectedVersions[0], // 1.2.3
 				}
 			})
 
@@ -231,19 +224,15 @@ var _ = Describe("Check", func() {
 				response, err := checkCommand.Run(checkRequest)
 				Expect(err).NotTo(HaveOccurred())
 
-				versionWithFingerprintA := versionsWithFingerprints[0]
-
 				Expect(response).To(HaveLen(1))
-				Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintA))
+				Expect(response[0].ProductVersion).To(Equal(expectedVersions[0]))
 			})
 		})
 
 		Context("when the version is not the latest", func() {
 			BeforeEach(func() {
-				versionWithFingerprint := versionsWithFingerprints[2] // 1.2.4#time3
-
 				checkRequest.Version = concourse.Version{
-					ProductVersion: versionWithFingerprint,
+					ProductVersion: expectedVersions[2], // 1.2.4
 				}
 			})
 
@@ -251,15 +240,32 @@ var _ = Describe("Check", func() {
 				response, err := checkCommand.Run(checkRequest)
 				Expect(err).NotTo(HaveOccurred())
 
-				versionWithFingerprintA := versionsWithFingerprints[0] // 1.2.3#time1
-				versionWithFingerprintB := versionsWithFingerprints[1] // 2.3.4#time2
-				versionWithFingerprintC := versionsWithFingerprints[2] // 1.2.4#time3
-
+				// vs order is 1.2.3, 2.3.4, 1.2.4; Since(1.2.4) then Reverse => 1.2.4, 2.3.4, 1.2.3
 				Expect(response).To(HaveLen(3))
-				Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintC))
-				Expect(response[1].ProductVersion).To(Equal(versionWithFingerprintB))
-				Expect(response[2].ProductVersion).To(Equal(versionWithFingerprintA))
+				Expect(response[0].ProductVersion).To(Equal("1.2.4"))
+				Expect(response[1].ProductVersion).To(Equal("2.3.4"))
+				Expect(response[2].ProductVersion).To(Equal("1.2.3"))
 			})
+		})
+	})
+
+	Context("when multiple releases have the same product version", func() {
+		BeforeEach(func() {
+			allReleases = []pivnet.Release{
+				{ID: 1, Version: "1.2.3", ReleaseType: releaseTypes[0], SoftwareFilesUpdatedAt: "time1"},
+				{ID: 2, Version: "1.2.3", ReleaseType: releaseTypes[1], SoftwareFilesUpdatedAt: "time2"},
+				{ID: 3, Version: "2.0.0", ReleaseType: releaseTypes[2], SoftwareFilesUpdatedAt: "time3"},
+			}
+			expectedVersions = []string{"1.2.3", "2.0.0"}
+			filteredReleases = allReleases
+		})
+
+		It("deduplicates by product version and returns one entry per version", func() {
+			response, err := checkCommand.Run(checkRequest)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(response).To(HaveLen(1))
+			Expect(response[0].ProductVersion).To(Equal("1.2.3"))
 		})
 	})
 
@@ -274,10 +280,8 @@ var _ = Describe("Check", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			versionWithFingerprintC := versionsWithFingerprints[1]
-
 			Expect(response).To(HaveLen(1))
-			Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintC))
+			Expect(response[0].ProductVersion).To(Equal(expectedVersions[1])) // 2.3.4
 		})
 
 		Context("when the release type is invalid", func() {
@@ -325,10 +329,8 @@ var _ = Describe("Check", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
-			versionWithFingerprintC := versionsWithFingerprints[1]
-
 			Expect(response).To(HaveLen(1))
-			Expect(response[0].ProductVersion).To(Equal(versionWithFingerprintC))
+			Expect(response[0].ProductVersion).To(Equal(expectedVersions[1])) // 2.3.4
 		})
 
 		Context("when filtering returns an error", func() {
@@ -360,7 +362,7 @@ var _ = Describe("Check", func() {
 			}
 
 			checkRequest.Version = concourse.Version{
-				ProductVersion: versionsWithFingerprints[0], // 1.2.3#time1
+				ProductVersion: "1.2.3",
 			}
 
 			fakeSorter.SortBySemverReturns(semverOrderedReleases, nil)
@@ -370,10 +372,11 @@ var _ = Describe("Check", func() {
 			response, err := checkCommand.Run(checkRequest)
 			Expect(err).NotTo(HaveOccurred())
 
+			// vs = 2.3.4, 1.2.4, 1.2.3; Since(1.2.3) then Reverse => 1.2.3, 1.2.4, 2.3.4
 			Expect(response).To(HaveLen(3))
-			Expect(response[0].ProductVersion).To(Equal(versionsWithFingerprints[0]))
-			Expect(response[1].ProductVersion).To(Equal(versionsWithFingerprints[2]))
-			Expect(response[2].ProductVersion).To(Equal(versionsWithFingerprints[1]))
+			Expect(response[0].ProductVersion).To(Equal("1.2.3"))
+			Expect(response[1].ProductVersion).To(Equal("1.2.4"))
+			Expect(response[2].ProductVersion).To(Equal("2.3.4"))
 
 			Expect(fakeSorter.SortBySemverCallCount()).To(Equal(1))
 		})
@@ -413,7 +416,7 @@ var _ = Describe("Check", func() {
 			}
 
 			checkRequest.Version = concourse.Version{
-				ProductVersion: versionsWithFingerprints[0], // 1.2.3#time1
+				ProductVersion: "1.2.3",
 			}
 
 			fakeSorter.SortByLastUpdatedReturns(releases, nil)

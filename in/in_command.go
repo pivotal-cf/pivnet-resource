@@ -94,12 +94,7 @@ func NewInCommand(
 func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error) {
 	productSlug := input.Source.ProductSlug
 
-	version, fingerprint, err := versions.SplitIntoVersionAndFingerprint(input.Version.ProductVersion)
-	if err != nil {
-		c.logger.Info("Parsing of fingerprint failed; continuing without it")
-		version = input.Version.ProductVersion
-		fingerprint = ""
-	}
+	version := versions.VersionOnly(input.Version.ProductVersion)
 
 	c.logger.Info(fmt.Sprintf(
 		"Getting release for product slug: '%s' and product version: '%s'",
@@ -110,18 +105,6 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 	release, err := c.pivnetClient.GetRelease(productSlug, version)
 	if err != nil {
 		return concourse.InResponse{}, err
-	}
-
-	if fingerprint != "" {
-		actualFingerprint := release.SoftwareFilesUpdatedAt
-		if actualFingerprint != fingerprint {
-			return concourse.InResponse{}, fmt.Errorf(
-				"provided fingerprint: '%s' does not match actual fingerprint (from pivnet): '%s' - %s",
-				fingerprint,
-				actualFingerprint,
-				"pivnet does not support downloading old versions of a release",
-			)
-		}
 	}
 
 	c.logger.Info(fmt.Sprintf("Accepting EULA for release with ID: %d", release.ID))
@@ -194,7 +177,8 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Info("Creating metadata")
 
-	versionWithFingerprint, err := versions.CombineVersionAndFingerprint(version, fingerprint)
+	// Emit product version only (no fingerprint)
+	versionToWrite := version
 
 	mdata := metadata.Metadata{
 		Release: &metadata.Release{
@@ -306,7 +290,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	c.logger.Info("Writing metadata files")
 
-	err = c.fileWriter.WriteVersionFile(versionWithFingerprint)
+	err = c.fileWriter.WriteVersionFile(versionToWrite)
 	if err != nil {
 		return concourse.InResponse{}, err
 	}
@@ -325,7 +309,7 @@ func (c *InCommand) Run(input concourse.InRequest) (concourse.InResponse, error)
 
 	out := concourse.InResponse{
 		Version: concourse.Version{
-			ProductVersion: versionWithFingerprint,
+			ProductVersion: versionToWrite,
 		},
 		Metadata: concourseMetadata,
 	}
