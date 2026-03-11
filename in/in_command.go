@@ -34,7 +34,7 @@ type fileSummer interface {
 type fileWriter interface {
 	WriteMetadataJSONFile(mdata metadata.Metadata) error
 	WriteMetadataYAMLFile(mdata metadata.Metadata) error
-	WriteVersionFile(versionWithFingerprint string) error
+	WriteVersionFile(versionToWrite string) error
 }
 
 //counterfeiter:generate --fake-name FakePivnetClient . pivnetClient
