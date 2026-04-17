@@ -98,11 +98,17 @@ See [example pipeline configurations](https://github.com/pivotal-cf/pivnet-resou
 Discovers all versions of the provided product.
 Returned versions are optionally filtered and ordered by the `source` configuration.
 
+Each version’s `product_version` is the **release version string** from Tanzu Network (for example `2.0.2`). The resource does **not** append a timestamp or other suffix, so metadata-only changes to a release do not surface as a new Concourse version when that semver is unchanged.
+
+If you previously pinned versions from an older resource image, they may look like `2.0.2#2017-03-23T12:00:00.000Z`. That form is still accepted as input to `check`; only the part before `#` is used when comparing and matching releases.
+
 ### `in`: download the product from Tanzu Network
 
 Downloads the provided product from Tanzu Network. You will be required to accept a
 EULA for any product you're downloading for the first time, as well as if the terms and
 conditions associated with the product change.
+
+The `version` in the response and the `version` file written to the task directory contain the **release version string only** (no `#…` suffix). You may still pass a legacy `version#timestamp` pin from an older pipeline; the suffix is ignored when resolving the release.
 
 The metadata for the product is written to both `metadata.json` and
 `metadata.yaml` in the working directory (typically `/tmp/build/get`).
@@ -175,6 +181,8 @@ jobs:
 ### `out`: upload a product to Tanzu Network
 
 Creates a new release on Tanzu Network with the provided version and metadata.
+
+The `version` returned from `out` may still include a `#…` suffix derived from Tanzu Network. That applies only to **`out`**; **`check`** and **`in`** use the release version string without that suffix (see above).
 
 It can also upload one or more files to Tanzu Network bucket and calculate the
 MD5 checksum locally for each file in order to add MD5 checksum to the file
@@ -295,10 +303,10 @@ in your `check-resource` command for it to work properly. Eg:
 ```
 fly -t pivnet check-resource \
   --resource pivnet-resource-bug-152616708/binary-buildpack \
-  --from product_version:Binary\ 1.0.11#2017-03-23T13:57:51.214Z
+  --from product_version:Binary\ 1.0.11
 ```
 
-In this example we escaped the space between "Binary" and "1.0.11".
+In this example we escaped the space between "Binary" and "1.0.11". If you are continuing from an older pinned version, `--from` may still use the legacy form `Binary\ 1.0.11#2017-03-23T13:57:51.214Z`; the resource accepts it, but `check` / `in` treat the release as identified by the part before `#`.
 
 ## Integration environment
 
